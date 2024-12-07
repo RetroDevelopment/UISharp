@@ -5,7 +5,16 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Windows\MainWindow.cs" />
+    <EmbeddedResource Include="Windows\main.xml" />
+    <Compile Include="Windows\MainWindow.cs">
+      <DependentUpon>main.xml</DependentUpon>
+    </Compile>
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\RetroDev.OpenUI\RetroDev.OpenUI.csproj" />

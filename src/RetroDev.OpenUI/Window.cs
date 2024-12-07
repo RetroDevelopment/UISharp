@@ -1,26 +1,40 @@
 ﻿using RetroDev.OpenUI.Components;
+using RetroDev.OpenUI.Components.Containers;
 using RetroDev.OpenUI.Core;
 using RetroDev.OpenUI.Core.Coordinates;
-using RetroDev.OpenUI.Core.Events;
 using RetroDev.OpenUI.Core.Internal;
+using RetroDev.OpenUI.Events;
+using RetroDev.OpenUI.Graphics;
 
 namespace RetroDev.OpenUI;
 
 /// <summary>
 /// Displays and manage a window.
 /// </summary>
-public class Window : Component
+[EditorSettings(allow: false)]
+public class Window : Container, IContainer
 {
-    private readonly Application _parentApplication;
+    private readonly IWindowManager _windowManager;
 
-    public Window(Application parent, IWindowManager? windowManager = null) : base(parent.LifeCycle,
-                                                                                   windowManager ?? new SDLWindowManager(parent.LifeCycle),
-                                                                                   parent._svgEngine,
-                                                                                   parent._fontEngine)
+    protected override ComponentVisibility DefaultVisibility => ComponentVisibility.Collapsed;
+
+    /// <summary>
+    /// Raised when <see langword="this" /> <see cref="Window"/> has been initialized.
+    /// This happens when all the initial <see cref="UIComponent"/> have been added to the window.
+    /// </summary>
+    public event TypeSafeEventHandler<Window, EventArgs> Initialized = (_, _) => { };
+
+    /// <inheritdoc/>
+    protected override Size ComputeSizeHint() => Size.Zero; // Maybe 800x600? Or half screen resolution=
+
+    public override IEnumerable<UIComponent> Children => GetChildren();
+
+    public Window(Application parent, IWindowManager? windowManager = null) : base(parent)
     {
-        _parentApplication = parent;
+        _windowManager = windowManager ?? new SDLWindowManager(parent.LifeCycle);
+        Application._eventSystem.Render += EventSystem_Render;
         parent.AddWindow(this);
-        VisibilityChange += (_, _) => _windowManager.Visible = Visible;
+        Visibility.ValueChange += (_, args) => _windowManager.Visible = args.CurrentValue == ComponentVisibility.Visible;
         parent._eventSystem.MousePress += EventSystem_MousePress;
         parent._eventSystem.MouseRelease += EventSystem_MouseRelease;
         parent._eventSystem.MouseMove += EventSystem_MouseMove;
@@ -28,28 +42,56 @@ public class Window : Component
         parent._eventSystem.KeyRelease += EventSystem_KeyRelease;
     }
 
+    /// <summary>
+    /// Adds a component to this window.
+    /// </summary>
+    /// <param name="component">The component to add.</param>
+    public void AddComponent(UIComponent component)
+    {
+        AddChild(component);
+    }
+
+    /// <summary>
+    /// Removes a component from this window.
+    /// </summary>
+    /// <param name="component">The component to remove.</param>
+    /// <returns><see langword="true" /> if the component has been successfully removed, otherwise <see langword="false"/>
+    /// (for example, if the component has never been added).
+    /// </returns>
+    public bool RemoveComponent(UIComponent component)
+    {
+        return RemoveChild(component);
+    }
+
+    /// <summary>
+    /// Notifies the <see cref="Initialized"/> listeners that <see langword="this" /> window has been initialized.
+    /// </summary>
+    public void OnInitialized()
+    {
+        Initialized.Invoke(this, EventArgs.Empty);
+    }
+
+    private void EventSystem_Render(IEventSystem sender, EventArgs e)
+    {
+        var renderingEngine = _windowManager.RenderingEngine;
+        renderingEngine.InitializeFrame();
+        var canvas = new Canvas(renderingEngine, Application.LifeCycle);
+        var renderingEventArgs = new RenderingEventArgs(canvas);
+        OnRenderFrame(renderingEventArgs);
+        renderingEngine.FinalizeFrame();
+    }
+
     public void Shutdown()
     {
-        _parentApplication._eventSystem.MousePress -= EventSystem_MousePress;
-        _renderingEngine.Shutdown();
-    }
-
-    protected internal override void Render()
-    {
-        _renderingEngine.InitializeFrame();
-        base.Render();
-        _renderingEngine.FinalizeFrame();
-    }
-
-    protected override void Render(Canvas canvas)
-    {
+        Application._eventSystem.MousePress -= EventSystem_MousePress;
+        _windowManager.Shutdown();
     }
 
     private void EventSystem_MousePress(object? sender, WindowEventArgs<MouseEventArgs> windowArgs)
     {
         if (windowArgs.WindowId.Equals(_windowManager.WindowId))
         {
-            OnMousePress(this, windowArgs.Args);
+            OnMousePress(windowArgs.Args);
         }
     }
 
@@ -57,7 +99,7 @@ public class Window : Component
     {
         if (windowArgs.WindowId.Equals(_windowManager.WindowId))
         {
-            OnMouseRelease(this, windowArgs.Args);
+            OnMouseRelease(windowArgs.Args);
         }
 
     }
@@ -66,7 +108,7 @@ public class Window : Component
     {
         if (windowArgs.WindowId.Equals(_windowManager.WindowId))
         {
-            OnMouseMove(this, windowArgs.Args);
+            OnMouseMove(windowArgs.Args);
         }
     }
 
@@ -74,7 +116,7 @@ public class Window : Component
     {
         if (windowArgs.WindowId.Equals(_windowManager.WindowId))
         {
-            OnKeyPress(this, windowArgs.Args);
+            OnKeyPress(windowArgs.Args);
         }
     }
 
@@ -82,7 +124,7 @@ public class Window : Component
     {
         if (windowArgs.WindowId.Equals(_windowManager.WindowId))
         {
-            OnKeyRelease(this, windowArgs.Args);
+            OnKeyRelease(windowArgs.Args);
         }
     }
 }

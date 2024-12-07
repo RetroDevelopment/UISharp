@@ -1,6 +1,15 @@
-﻿using RetroDev.OpenUI.Core;
+﻿using System.ComponentModel.Design;
+using OpenTK.Graphics.OpenGL;
+using RetroDev.OpenUI.Components;
+using RetroDev.OpenUI.Core;
 using RetroDev.OpenUI.Core.Internal;
+using RetroDev.OpenUI.Events;
+using RetroDev.OpenUI.Events.Internal;
 using RetroDev.OpenUI.Exceptions;
+using RetroDev.OpenUI.Graphics;
+using RetroDev.OpenUI.Graphics.Internal;
+using RetroDev.OpenUI.Resources;
+using RetroDev.OpenUI.UIDefinition;
 
 namespace RetroDev.OpenUI;
 
@@ -18,8 +27,10 @@ public class Application : IDisposable
     // ===========================
     private readonly IUIEnvironment _uiEnvironment;
     internal readonly IEventSystem _eventSystem;
-    internal readonly ISVGRenderingEngine _svgEngine;
-    internal readonly IFontRenderingEngine _fontEngine;
+
+    public IFontServices FontServices => new FontServices();
+    public IResourceManager ResourceManager { get; }
+    public UIDefinitionManager UIDefinitionManager => new UIDefinitionManager(this);
 
     internal LifeCycle LifeCycle { get; } = new();
 
@@ -28,25 +39,17 @@ public class Application : IDisposable
     /// </summary>
     /// <param name="uIEnvironment">The UI environment used to manage the main application status.</param>
     /// <param name="eventSystem">The event system used in this application.</param>
-    /// <param name="svgEngine">The SVG rendering engine responsible of rendering svg images into a byte array.</param>
-    /// <param name="fontEngine">The rendering engine responsible of rendering text into a byte array.</param>
+    /// <param name="resourceManager">The object that loads resources from the project.</param>
     /// <remarks>The application, as well as all the UI related operations, must run in the same thread as this constructor is invoked.</remarks>
-    public Application(IUIEnvironment uIEnvironment, IEventSystem eventSystem, ISVGRenderingEngine svgEngine, IFontRenderingEngine fontEngine)
+    public Application(IUIEnvironment? uIEnvironment = null, IEventSystem? eventSystem = null, IResourceManager? resourceManager = null)
     {
-        _uiEnvironment = uIEnvironment;
-        _eventSystem = eventSystem;
-        _svgEngine = svgEngine;
-        _fontEngine = fontEngine;
+        _uiEnvironment = uIEnvironment ?? new SDLUIEnvironment();
+        _eventSystem = eventSystem ?? new SDLEventSystem();
+        ResourceManager = resourceManager ?? new EmbeddedResourceManager();
         LifeCycle.RegisterUIThread();
         LifeCycle.CurrentState = LifeCycle.State.INIT;
         _uiEnvironment.Initialize();
     }
-
-    /// <summary>
-    /// Creates a new application.
-    /// </summary>
-    /// <remarks>The application, as well as all the UI related operations, must run in the same thread as this constructor is invoked.</remarks>
-    public Application() : this(new SDLUIEnvironment(), new SDLEventSystem(), new SvgRenderingEngine(), new SkiaFontRenderingEngine()) { }
 
     /// <summary>
     /// Start the application loop. The calling thread will be the UI 
@@ -60,16 +63,53 @@ public class Application : IDisposable
     {
         LifeCycle.ThrowIfNotOnUIThread();
         _eventSystem.ApplicationQuit += (_, _) => _shoudQuit = true;
+        _eventSystem.BeforeRender += EventSystem_BeforeRender;
+        _eventSystem.InvalidateRendering();
 
         while (!_shoudQuit)
         {
             LifeCycle.CurrentState = LifeCycle.State.EVENT_POLL;
             _eventSystem.ProcessEvents();
-            LifeCycle.CurrentState = LifeCycle.State.RENDERING;
-            _windows.ForEach(window => { window.Render(); });
         }
 
         LifeCycle.CurrentState = LifeCycle.State.QUIT;
+    }
+
+    /// <summary>
+    /// Creates and shows the window with type <typeparamref name="TWindow"/>.
+    /// If <typeparamref name="TWindow"/> is FooWindow, creates an insteance of FooWindow and initializes it
+    /// with the value provided in ResourceManager["foo"], which is expected to start with the fooWindow tag.
+    /// </summary>
+    /// <typeparam name="TWindow">The type of the window to show.</typeparam>
+    /// <returns>The window instance</returns>
+    /// <exception cref="InvalidOperationException">If it was not possible to locate the window.</exception>
+    public TWindow ShowWindow<TWindow>() where TWindow : Window
+    {
+        var resourceName = typeof(TWindow).Name;
+        if (resourceName.ToLower().EndsWith("window"))
+        {
+            resourceName = resourceName.Substring(0, resourceName.Length - "window".Length).ToLower();
+        }
+
+        return ShowWindow<TWindow>(resourceName);
+    }
+
+    /// <summary>
+    /// Creates and shows the window with type <typeparamref name="TWindow"/>  and it initializes it from the
+    /// window resource identified by <paramref name="windowName"/>.
+    /// </summary>
+    /// <typeparam name="TWindow">The type of the window to show.</typeparam>
+    /// <param name="windowName">The window resouce identifier.</param>
+    /// <returns>The window instance</returns>
+    /// <exception cref="InvalidOperationException">If it was not possible to locate the window.</exception>
+    public TWindow ShowWindow<TWindow>(string windowName) where TWindow : Window
+    {
+        var windowXmlDefinition = ResourceManager.Windows[windowName];
+        var component = UIDefinitionManager.CreateUIComponent(windowXmlDefinition);
+        if (component is not TWindow) throw new InvalidOperationException($"Expected a window of type {typeof(TWindow)} but type {component.GetType()} found instead");
+        var window = (TWindow)component;
+        window.Visibility.Value = ComponentVisibility.Visible;
+        return window;
     }
 
     /// <summary>
@@ -107,6 +147,12 @@ public class Application : IDisposable
         LifeCycle.ThrowIfNotOnUIThread();
         LifeCycle.ThrowIfPropertyCannotBeSet();
         _windows.Add(window);
+    }
+
+    private void EventSystem_BeforeRender(IEventSystem sender, EventArgs e)
+    {
+        _windows.ForEach(w => w.OnRepositionChildren());
+        LifeCycle.CurrentState = LifeCycle.State.RENDERING;
     }
 
     private void DisposeManagedResources() { }

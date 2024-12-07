@@ -1,85 +1,79 @@
-﻿using RetroDev.OpenUI;
-using RetroDev.OpenUI.Components;
-using RetroDev.OpenUI.Core;
+﻿using RetroDev.OpenIDE.Windows;
+using RetroDev.OpenUI;
 
 namespace RetroDev.OpenIDE;
 
-class MyComponent : Component
-{
-    private int width;
-    private int height;
+// Second MVP target: are uncertain things feasable?
+// O. Understand why grid layout has 1 pixel margin between components!
+// O. Test on Linux?
+// O. Implement rounded rectangles, borders, etc. in OpenGL
+// O. Implement C++ bindings for getting the input key characters depending on layout
+// O. UIComponent split into ApplicationComponent (with only Application class) and derived UIComponent and MVVPComponent.
+// O. Implement better binders and UIPropertyList<>, maybe call it BindableProperty
+// O. Implement windows resizing and events
+// O. More windows events and features (window size, title etc.)
+// O. Have AutoSize -> (AutoWidth{hint,stretch}, AutoHeight{hint,stretch}, HorizontalAlignment{left, center, right}, VerticalAlignment{top, center, bottom} -> maybe extend xml? <button autoSize.autoWidth="hint" /> or <button autosize="(hint,hint)(left,center)" />
+// O. Do we need ClipArea? Isn't it the same as AbsoluteSize?
 
-    public MyComponent(Component parent) : base(parent) { }
+// Third MVP target: all the rest to make a finished MVP
 
-    protected override void Render(Canvas canvas)
-    {
-        if (!canvas.TextureExists("bg"))
-        {
-            canvas.CreateTexture("bg", new RgbaImage([100, 100, 100, 100], 1, 1));
-        }
+//DONE
+// X. Manage fous for components. 2 properties: IsFocusable and Focus.
+// X. Implement UIComponent.RequestFocus(UIComponent); which will manage focus change from current component to new one.
+// X. Implement EditBox component with a focus when clicking and insert + delete. Keep it simple
+// X. Implement CheckBox (keep it simple, Checked true or false and simple image) and ProgressBar
+// X. Implement ScrollView! that will be used for many components
+// X. XML to define UI
+// X. Implement asset reader
+// X. Better exceptions (for xml parsing for example and assetNOtFound exception)
+// X. Implement ListBox
+// X. Implement TreeView
+// Obis (basic MVP). => Implement minimal OpenIDE app that reads a xml and displays it (+ file system watcher to sync UI in real time)
 
-        if (!canvas.TextureExists("x"))
-        {
-            canvas.CreateTexture("x", new RgbaImage([255, 255, 255, 255,
-                                                255, 0, 0, 255,
-                                                0, 255, 0, 255,
-                                                0, 0, 255, 255], 2, 2));
-        }
+//TODO
+// O. Implement rounded rectangles, borders, etc. in OpenGL
+// O. Implement C++ bindings for getting the input key characters depending on layout
+// O. Implement windows resizing and events
+// O. More windows events and features (window size, title etc.)
+// O. Implement logic for checking loops (e.g. SizeHint does not call RelativeDrawingArea, AddChild() do not create loops, etc.)
 
-        if (!canvas.TextureExists("img"))
-        {
-            var svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100\" height=\"100\"><circle cx=\"50\" cy=\"50\" r=\"40\" stroke=\"white\" stroke-width=\"2\" fill=\"red\" /></svg>";
-            canvas.CreateSvgTexture("img", svg);
-        }
+// O. Implement ContextMenu
+// O. Implement layouts! GridLayout, VerticalLayout, HorizontalLayout, GridBagLayout, etc.
+// 8. Implement DropDown
+// 9. Implement margins in all compoentns
+// O. Implement colors and theming
+// O. Implement text resources and languages
+// O. Implement font size and font selection from file
+// ===
+// O. Implement button logic (focus colors, 3 states clicking, etc.)
+// O. Implement logging
+// O. Implement complex focus logic (focus change on tab finding the next focusable object, and maybe focus groups).
+// O. Implement dispatcher and syncrhonization context WPF
+// => cleanup (e.g. remove svg converter, revisit interfaces: no need for skia interfaces?)
 
-        if (!canvas.TextureExists("txt"))
-        {
-            (this.width, this.height) = canvas.CreateTextTexture("txt", "Hello World!", 20);
-        }
+// 1a. Implement logging
+// 2a. Implement look and feel
+// 3a. C++ platform specifics (modal windows, convert keyboard to character based on window layout, special handling of window resizing for Windows 10/11)
+// 4a. SVG to Opengl?
+// 5a. Optimize! (texture atlas, instance rendering, retained mode with glScissor to update only part of the screen)
+// 6a. Versioning and build pipelines?
+// 7a. Validators? Maybe intercept valueChange of components to add validation logic. Something builtin in framework?
+// 8a. Material design? Like add PBR and lighting.
+// 9a. Logging
 
-        canvas.RenderTexture("bg", new(new(0, 0), new(Width, Height)));
-        canvas.RenderTexture("x", new(new(50, 50), new(100, 100)));
-        canvas.RenderTexture("img", new(new(100, 100), new(50, 50)));
-        canvas.RenderTexture("txt", new(new(0, 0), new(width, height)));
-    }
-}
+// SELLING POINTS
+// 1. OpenGL and svg vector graphics (efficient, high quality, support for 3d rendering)
+// 2. Allow flexible UI (dynamically load xml UI)
+// 3. Simplicity for medium size projects (easier than WPF)
+// 4. Cross platofrm (Window, mac, linux)
+// 5. Testable (create UI integration tests)
 
 internal class Program
 {
     static void Main(string[] _)
     {
         var application = new Application();
-        var window = new Window(application);
-        var component = new MyComponent(window);
-        window.X = 10;
-        window.Y = 30;
-        window.Width = 800;
-        window.Height = 600;
-        component.X = 50;
-        component.Y = 20;
-        component.Width = 400;
-        component.Height = 200;
-        window.Visible = true;
-        component.Visible = true;
-
-        // Assuming `window` is an instance of your Window class
-        component.MousePress += (sender, args) =>
-            Console.WriteLine($"MousePress: Button = {args.Button}, Position = ({args.AbsoluteLocation.X}, {args.AbsoluteLocation.Y})");
-
-        component.MouseRelease += (sender, args) =>
-            Console.WriteLine($"MouseRelease: Button = {args.Button}, Position = ({args.AbsoluteLocation.X}, {args.AbsoluteLocation.Y})");
-
-        component.MouseMove += (sender, args) =>
-            Console.WriteLine($"MouseMove: Position = ({args.AbsoluteLocation.X}, {args.AbsoluteLocation.Y})");
-
-        component.KeyPress += (sender, args) =>
-            Console.WriteLine($"KeyPress: Key = {args.Button}");
-
-        component.KeyRelease += (sender, args) =>
-            Console.WriteLine($"KeyRelease: Key = {args.Button}");
-
-        component.KeyPress += (sender, args) => component.X++;
-
+        application.ShowWindow<MainWindow>();
         application.Run();
     }
 }
