@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.Design;
-using OpenTK.Graphics.OpenGL;
-using RetroDev.OpenUI.Components;
+﻿using RetroDev.OpenUI.Components;
 using RetroDev.OpenUI.Core;
 using RetroDev.OpenUI.Core.Internal;
 using RetroDev.OpenUI.Events;
@@ -8,6 +6,7 @@ using RetroDev.OpenUI.Events.Internal;
 using RetroDev.OpenUI.Exceptions;
 using RetroDev.OpenUI.Graphics;
 using RetroDev.OpenUI.Graphics.Internal;
+using RetroDev.OpenUI.Logging;
 using RetroDev.OpenUI.Resources;
 using RetroDev.OpenUI.UIDefinition;
 
@@ -28,6 +27,11 @@ public class Application : IDisposable
     private readonly IUIEnvironment _uiEnvironment;
     internal readonly IEventSystem _eventSystem;
 
+    /// <summary>
+    /// The logging injected implementation.
+    /// </summary>
+    public ILogger Logger { get; set; }
+
     public IFontServices FontServices => new FontServices();
     public IResourceManager ResourceManager { get; }
     public UIDefinitionManager UIDefinitionManager => new UIDefinitionManager(this);
@@ -40,12 +44,17 @@ public class Application : IDisposable
     /// <param name="uIEnvironment">The UI environment used to manage the main application status.</param>
     /// <param name="eventSystem">The event system used in this application.</param>
     /// <param name="resourceManager">The object that loads resources from the project.</param>
+    /// <param name="logger">The logging implementation.</param>
     /// <remarks>The application, as well as all the UI related operations, must run in the same thread as this constructor is invoked.</remarks>
-    public Application(IUIEnvironment? uIEnvironment = null, IEventSystem? eventSystem = null, IResourceManager? resourceManager = null)
+    public Application(IUIEnvironment? uIEnvironment = null,
+                       IEventSystem? eventSystem = null,
+                       IResourceManager? resourceManager = null,
+                       ILogger? logger = null)
     {
-        _uiEnvironment = uIEnvironment ?? new SDLUIEnvironment();
-        _eventSystem = eventSystem ?? new SDLEventSystem();
+        _uiEnvironment = uIEnvironment ?? new SDLUIEnvironment(this);
+        _eventSystem = eventSystem ?? new SDLEventSystem(this);
         ResourceManager = resourceManager ?? new EmbeddedResourceManager();
+        Logger = logger ?? new ConsoleLogger();
         LifeCycle.RegisterUIThread();
         LifeCycle.CurrentState = LifeCycle.State.INIT;
         _uiEnvironment.Initialize();
@@ -62,6 +71,8 @@ public class Application : IDisposable
     public void Run()
     {
         LifeCycle.ThrowIfNotOnUIThread();
+
+        Logger.LogInfo("Application started");
         _eventSystem.ApplicationQuit += (_, _) => _shoudQuit = true;
         _eventSystem.BeforeRender += EventSystem_BeforeRender;
         _eventSystem.InvalidateRendering();
@@ -73,6 +84,7 @@ public class Application : IDisposable
         }
 
         LifeCycle.CurrentState = LifeCycle.State.QUIT;
+        Logger.LogInfo("Application terminated");
     }
 
     /// <summary>
@@ -86,6 +98,7 @@ public class Application : IDisposable
     public TWindow ShowWindow<TWindow>() where TWindow : Window
     {
         var resourceName = typeof(TWindow).Name;
+
         if (resourceName.ToLower().EndsWith("window"))
         {
             resourceName = resourceName.Substring(0, resourceName.Length - "window".Length).ToLower();
@@ -104,6 +117,7 @@ public class Application : IDisposable
     /// <exception cref="InvalidOperationException">If it was not possible to locate the window.</exception>
     public TWindow ShowWindow<TWindow>(string windowName) where TWindow : Window
     {
+        Logger.LogInfo($"Showing window {windowName}");
         var windowXmlDefinition = ResourceManager.Windows[windowName];
         var component = UIDefinitionManager.CreateUIComponent(windowXmlDefinition);
         if (component is not TWindow) throw new InvalidOperationException($"Expected a window of type {typeof(TWindow)} but type {component.GetType()} found instead");

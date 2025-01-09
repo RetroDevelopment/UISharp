@@ -1,8 +1,10 @@
 ﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Text;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Core.Internal;
 using RetroDev.OpenUI.Events;
+using RetroDev.OpenUI.Utils;
 using SDL2;
 using static SDL2.SDL;
 
@@ -11,13 +13,15 @@ namespace RetroDev.OpenUI.Events.Internal;
 /// <summary>
 /// Manages UI events using SDL.
 /// </summary>
-internal class SDLEventSystem : IEventSystem
+/// <param name="application">The sapplication using this event system.</param>
+internal class SDLEventSystem(Application application) : IEventSystem
 {
     private enum SDL_CustomEventType : uint
     {
         SDL_INVALIDE_RENDERING = SDL_EventType.SDL_USEREVENT + 1 // Custom event type, starting from SDL_USEREVENT
     }
 
+    private Application _application = application;
     private bool _invalidated = true; // TODO: add invalidation logic per component. And maybe glScissor for retained mode. Or detect actual UI property change. If not do not invalidate.
 
     /// <summary>
@@ -51,6 +55,13 @@ internal class SDLEventSystem : IEventSystem
     public event TypeSafeEventHandler<IEventSystem, WindowEventArgs<KeyEventArgs>> KeyRelease = (_, _) => { };
 
     /// <summary>
+    /// Text is inserted from keyboard. This event is useful for text insert in edit boxes or other text insert
+    /// UI components. The text input event must take into account key combinations like SHIFT + LETTER, and map it
+    /// to the appropriate string depending on keyboard layout.
+    /// </summary>
+    public event TypeSafeEventHandler<IEventSystem, WindowEventArgs<TextInputEventArgs>> TextInput = (_, _) => { };
+
+    /// <summary>
     /// Before rendering.
     /// </summary>
     public event TypeSafeEventHandler<IEventSystem, EventArgs> BeforeRender = (_, _) => { };
@@ -65,6 +76,7 @@ internal class SDLEventSystem : IEventSystem
     /// </summary>
     public void ProcessEvents()
     {
+        SDL.SDL_StartTextInput();
         SDL_WaitEvent(out var currentEvent);
 
         var stopwatch = Stopwatch.StartNew();
@@ -74,14 +86,18 @@ internal class SDLEventSystem : IEventSystem
             switch (currentEvent.type)
             {
                 case SDL_EventType.SDL_QUIT:
-                    ApplicationQuit.Invoke(this, EventArgs.Empty);
+                    var quitEventArgs = EventArgs.Empty;
+                    quitEventArgs.Log("quit", _application.Logger);
+                    ApplicationQuit.Invoke(this, quitEventArgs);
                     break;
 
                 case SDL_EventType.SDL_MOUSEBUTTONDOWN:
                     var buttonDownEvent = currentEvent.button;
                     var mouseButtonDownWindowId = GetWidnowIdFromButtonEvent(buttonDownEvent);
                     var mouseButtonDownButton = GetMouseButton(buttonDownEvent);
-                    MousePress.Invoke(this, new(mouseButtonDownWindowId, new(new(buttonDownEvent.x, buttonDownEvent.y), new(buttonDownEvent.x, buttonDownEvent.y), mouseButtonDownButton)));
+                    var mouseButtonDownArgs = new WindowEventArgs<MouseEventArgs>(mouseButtonDownWindowId, new(new(buttonDownEvent.x, buttonDownEvent.y), new(buttonDownEvent.x, buttonDownEvent.y), mouseButtonDownButton));
+                    mouseButtonDownArgs.Log("mouseDown", _application.Logger);
+                    MousePress.Invoke(this, mouseButtonDownArgs);
                     _invalidated = true;
                     break;
 
@@ -89,7 +105,9 @@ internal class SDLEventSystem : IEventSystem
                     var buttonUpEvent = currentEvent.button;
                     var mouseButtonUpWindowId = GetWidnowIdFromButtonEvent(buttonUpEvent);
                     var mouseButtonUpButton = GetMouseButton(buttonUpEvent);
-                    MouseRelease.Invoke(this, new(mouseButtonUpWindowId, new(new(buttonUpEvent.x, buttonUpEvent.y), new(buttonUpEvent.x, buttonUpEvent.y), mouseButtonUpButton)));
+                    var mouseButtonUpArgs = new WindowEventArgs<MouseEventArgs>(mouseButtonUpWindowId, new(new(buttonUpEvent.x, buttonUpEvent.y), new(buttonUpEvent.x, buttonUpEvent.y), mouseButtonUpButton));
+                    mouseButtonUpArgs.Log("mouseDown", _application.Logger);
+                    MouseRelease.Invoke(this, mouseButtonUpArgs);
                     _invalidated = true;
                     break;
 
@@ -97,7 +115,9 @@ internal class SDLEventSystem : IEventSystem
                     var motionEvent = currentEvent.motion;
                     var mouseButtonMoveWindowId = GetWidnowIdFromMotionEvent(motionEvent);
                     var mouseButtonMoveButton = MouseButton.None;
-                    MouseMove.Invoke(this, new(mouseButtonMoveWindowId, new(new(motionEvent.x, motionEvent.y), new(motionEvent.x, motionEvent.y), mouseButtonMoveButton)));
+                    var mouseMotionMoveArgs = new WindowEventArgs<MouseEventArgs>(mouseButtonMoveWindowId, new(new(motionEvent.x, motionEvent.y), new(motionEvent.x, motionEvent.y), mouseButtonMoveButton));
+                    mouseMotionMoveArgs.Log("mouseMove", _application.Logger);
+                    MouseMove.Invoke(this, mouseMotionMoveArgs);
                     _invalidated = true;
                     break;
 
@@ -105,7 +125,9 @@ internal class SDLEventSystem : IEventSystem
                     var keyDownEvent = currentEvent.key;
                     var keyDownWindowId = GetWidnowIdFromKeyboardEvent(keyDownEvent);
                     var keyDownKey = KeyMapping.ToKeyButton(keyDownEvent.keysym.sym);
-                    KeyPress.Invoke(this, new(keyDownWindowId, new(keyDownKey)));
+                    var keyDownArgs = new WindowEventArgs<KeyEventArgs>(keyDownWindowId, new(keyDownKey));
+                    keyDownArgs.Log("keyDown", _application.Logger);
+                    KeyPress.Invoke(this, keyDownArgs);
                     _invalidated = true;
                     break;
 
@@ -113,7 +135,16 @@ internal class SDLEventSystem : IEventSystem
                     var keyUpEvent = currentEvent.key;
                     var keyUpWindowId = GetWidnowIdFromKeyboardEvent(keyUpEvent);
                     var keyUpKey = KeyMapping.ToKeyButton(keyUpEvent.keysym.sym);
-                    KeyRelease.Invoke(this, new(keyUpWindowId, new(keyUpKey)));
+                    var keyUpArgs = new WindowEventArgs<KeyEventArgs>(keyUpWindowId, new(keyUpKey));
+                    KeyRelease.Invoke(this, keyUpArgs);
+                    _invalidated = true;
+                    break;
+                case SDL_EventType.SDL_TEXTINPUT:
+                    var textInputEvent = currentEvent.text;
+                    var inputText = GetString(textInputEvent);
+                    var inputTextWindowId = GetWindowIdFromTextInputEvent(textInputEvent);
+                    var textInputArgs = new WindowEventArgs<TextInputEventArgs>(inputTextWindowId, new(inputText));
+                    TextInput.Invoke(this, textInputArgs);
                     _invalidated = true;
                     break;
             }
@@ -121,6 +152,7 @@ internal class SDLEventSystem : IEventSystem
             if (stopwatch.ElapsedMilliseconds > 10) break;
         } while (SDL_PollEvent(out currentEvent) != 0);
 
+        SDL.SDL_StopTextInput();
         if (_invalidated) EmitRenderingEvents();
     }
 
@@ -130,10 +162,41 @@ internal class SDLEventSystem : IEventSystem
     public void InvalidateRendering()
     {
         if (_invalidated) return;
-        SDL_Event invalidateEvent = new SDL_Event();
+        var invalidateEvent = new SDL_Event();
         invalidateEvent.type = (SDL_EventType)SDL_CustomEventType.SDL_INVALIDE_RENDERING; // Set the event type
         SDL_PushEvent(ref invalidateEvent);
         _invalidated = true;
+    }
+
+    private static string GetString(SDL_TextInputEvent textInputEvent)
+    {
+        var inputText = string.Empty;
+
+        unsafe
+        {
+            var textPtr = textInputEvent.text;
+
+            // Determine the length of the null-terminated string
+            var length = 0;
+            while (textPtr[length] != 0)
+            {
+                length++;
+            }
+
+            // Allocate a managed byte array to hold the text
+            var textBytes = new byte[length];
+
+            // Copy the bytes from the unmanaged pointer to the managed array
+            for (var i = 0; i < length; i++)
+            {
+                textBytes[i] = textPtr[i];
+            }
+
+            // Convert the byte array to a C# string
+            inputText = Encoding.UTF8.GetString(textBytes);
+        }
+
+        return inputText;
     }
 
     private static SDLWindowId GetWidnowIdFromButtonEvent(SDL_MouseButtonEvent mouseButtonEvent) =>
@@ -144,6 +207,9 @@ internal class SDLEventSystem : IEventSystem
 
     private static SDLWindowId GetWidnowIdFromKeyboardEvent(SDL_KeyboardEvent keyboardEvent) =>
         new((int)keyboardEvent.windowID);
+
+    private static SDLWindowId GetWindowIdFromTextInputEvent(SDL_TextInputEvent textInputEvent) =>
+        new((int)textInputEvent.windowID);
 
     private static MouseButton GetMouseButton(SDL_MouseButtonEvent currentEvent) => currentEvent.button switch
     {

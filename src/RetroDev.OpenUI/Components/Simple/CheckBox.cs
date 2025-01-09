@@ -52,7 +52,7 @@ public class CheckBox : UIComponent
 
         if (Checked)
         {
-            canvas.Render(new Triangle(new(100, 0, 0, 255)), new(Point.Zero, size));
+            canvas.Render(new Circle(new(100, 0, 0, 255)), new(Point.Zero, size));
         }
     }
 

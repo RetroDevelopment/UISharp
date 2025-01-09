@@ -1,7 +1,7 @@
 ﻿using RetroDev.OpenUI.Events;
-using RetroDev.OpenUI.Events.Internal;
 using RetroDev.OpenUI.Exceptions;
 using RetroDev.OpenUI.Graphics.Internal.OpenGL;
+using RetroDev.OpenUI.Utils;
 using SDL2;
 
 namespace RetroDev.OpenUI.Core.Internal;
@@ -9,22 +9,22 @@ namespace RetroDev.OpenUI.Core.Internal;
 // TODO: add more window options (size, location, style like without borders, etc.)
 internal class SDLWindowManager : IWindowManager
 {
-    private readonly LifeCycle _lifeCycle;
+    private readonly Application _application;
     private readonly IntPtr _window;
     private bool _visible;
 
-    public SDLWindowManager(LifeCycle lifeCycle)
+    public SDLWindowManager(Application application)
     {
-        _lifeCycle = lifeCycle;
+        _application = application;
 
         // TODO: this is opengl specific code but also sdl specific code. Where to place it?
-        SDLCheck(() => SDL.SDL_GL_SetAttribute(SDL.SDL_GLattr.SDL_GL_CONTEXT_MAJOR_VERSION, 3));
-        SDLCheck(() => SDL.SDL_GL_SetAttribute(SDL.SDL_GLattr.SDL_GL_CONTEXT_MINOR_VERSION, 3));
-        SDLCheck(() => SDL.SDL_GL_SetAttribute(SDL.SDL_GLattr.SDL_GL_CONTEXT_PROFILE_MASK, SDL.SDL_GLprofile.SDL_GL_CONTEXT_PROFILE_CORE));
+        LoggingUtils.SDLCheck(() => SDL.SDL_GL_SetAttribute(SDL.SDL_GLattr.SDL_GL_CONTEXT_MAJOR_VERSION, 3), application.Logger);
+        LoggingUtils.SDLCheck(() => SDL.SDL_GL_SetAttribute(SDL.SDL_GLattr.SDL_GL_CONTEXT_MINOR_VERSION, 3), application.Logger);
+        LoggingUtils.SDLCheck(() => SDL.SDL_GL_SetAttribute(SDL.SDL_GLattr.SDL_GL_CONTEXT_PROFILE_MASK, SDL.SDL_GLprofile.SDL_GL_CONTEXT_PROFILE_CORE), application.Logger);
 
         // Enable multisampling and set the number of samples
-        SDLCheck(() => SDL.SDL_GL_SetAttribute(SDL.SDL_GLattr.SDL_GL_MULTISAMPLEBUFFERS, 1)); // Enable multisampling
-        SDLCheck(() => SDL.SDL_GL_SetAttribute(SDL.SDL_GLattr.SDL_GL_MULTISAMPLESAMPLES, 16));  // Number of samples (e.g., 4 for 4x MSAA)
+        LoggingUtils.SDLCheck(() => SDL.SDL_GL_SetAttribute(SDL.SDL_GLattr.SDL_GL_MULTISAMPLEBUFFERS, 1), application.Logger); // Enable multisampling
+        LoggingUtils.SDLCheck(() => SDL.SDL_GL_SetAttribute(SDL.SDL_GLattr.SDL_GL_MULTISAMPLESAMPLES, 16), application.Logger);  // Number of samples (e.g., 4 for 4x MSAA)
 
         _window = SDL.SDL_CreateWindow("Test widnow",
                                        SDL.SDL_WINDOWPOS_CENTERED,
@@ -33,7 +33,7 @@ internal class SDLWindowManager : IWindowManager
                                        SDL.SDL_WindowFlags.SDL_WINDOW_HIDDEN | SDL.SDL_WindowFlags.SDL_WINDOW_OPENGL);
 
         if (_window == IntPtr.Zero) throw new UIInitializationException($"Error creating window: {SDL.SDL_GetError()}");
-        RenderingEngine = new OpenGLRenderingEngine(_lifeCycle, _window);
+        RenderingEngine = new OpenGLRenderingEngine(_application, _window);
         WindowId = new SDLWindowId((int)SDL.SDL_GetWindowID(_window));
     }
 
@@ -56,13 +56,13 @@ internal class SDLWindowManager : IWindowManager
     {
         get
         {
-            _lifeCycle.ThrowIfNotOnUIThread();
+            _application.LifeCycle.ThrowIfNotOnUIThread();
             return _visible;
         }
 
         set
         {
-            _lifeCycle.ThrowIfNotOnUIThread();
+            _application.LifeCycle.ThrowIfNotOnUIThread();
             _visible = value;
 
             if (value)
@@ -81,15 +81,8 @@ internal class SDLWindowManager : IWindowManager
     /// </summary>
     public void Shutdown()
     {
-        _lifeCycle.ThrowIfNotOnUIThread();
+        _application.LifeCycle.ThrowIfNotOnUIThread();
         RenderingEngine.Shutdown();
         if (_window != IntPtr.Zero) SDL.SDL_DestroyWindow(_window);
     }
-
-    private void SDLCheck(Func<int> action)
-    {
-        var returnValue = action();
-        if (returnValue != 0) throw new RenderingException($"Error occurred when rendering: {SDL.SDL_GetError()}");
-    }
-
 }

@@ -1,4 +1,5 @@
-﻿using OpenTK;
+﻿using System.Numerics;
+using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using RetroDev.OpenUI.Core;
 using RetroDev.OpenUI.Core.Coordinates;
@@ -7,7 +8,9 @@ using RetroDev.OpenUI.Events.Internal;
 using RetroDev.OpenUI.Exceptions;
 using RetroDev.OpenUI.Graphics.Shapes;
 using RetroDev.OpenUI.Resources;
+using RetroDev.OpenUI.Utils;
 using SDL2;
+using SixLabors.Fonts.Unicode;
 using static RetroDev.OpenUI.Graphics.Internal.OpenGL.Model2D;
 
 namespace RetroDev.OpenUI.Graphics.Internal.OpenGL;
@@ -61,7 +64,7 @@ internal class OpenGLRenderingEngine : IRenderingEngine
         }
     }
 
-    private readonly LifeCycle _lifeCycle;
+    private readonly Application _application;
     private readonly nint _window;
     private readonly nint _glContext;
     private readonly ShaderProgram _shader;
@@ -69,19 +72,17 @@ internal class OpenGLRenderingEngine : IRenderingEngine
 
     private readonly int _defaultTexture;
 
-    private Model2D? _triangleModel;
-    private Model2D? _squareModel;
-    private Model2D? _circleModel;
+    private readonly ProceduralModelGenerator _modelGenerator;
 
     /// <summary>
     /// The víewport size in pixels.
     /// </summary>
     public Size ViewportSize { get; set; }
 
-    public OpenGLRenderingEngine(LifeCycle lifeCycle, nint window)
+    public OpenGLRenderingEngine(Application application, nint window)
     {
-        _lifeCycle = lifeCycle;
-        _lifeCycle.ThrowIfNotOnUIThread();
+        _application = application;
+        _application.LifeCycle.ThrowIfNotOnUIThread();
         _window = window;
 
         var shaderResources = new EmbeddedShaderResources();
@@ -92,11 +93,12 @@ internal class OpenGLRenderingEngine : IRenderingEngine
             throw new UIInitializationException($"Unable to create OpenGL context: {SDL.SDL_GetError()}");
         }
 
-        SDLCheck(() => SDL.SDL_GL_MakeCurrent(window, _glContext));
+        LoggingUtils.SDLCheck(() => SDL.SDL_GL_MakeCurrent(window, _glContext), _application.Logger);
         GL.LoadBindings(new SDL2OpenGLBindings()); // Load OpenGL.NET bindings
-        SDLCheck(() => SDL.SDL_GL_SetSwapInterval(1)); // Enable VSync
-        _shader = new ShaderProgram([new(ShaderType.VertexShader, shaderResources["default.vert"]),
-                                     new(ShaderType.FragmentShader, shaderResources["default.frag"])]);
+        LoggingUtils.SDLCheck(() => SDL.SDL_GL_SetSwapInterval(1), application.Logger, warning: true); // Enable VSync
+        _shader = new ShaderProgram([new(ShaderType.VertexShader, shaderResources["default.vert"], _application.Logger),
+                                     new(ShaderType.FragmentShader, shaderResources["default.frag"], _application.Logger)],
+                                     _application.Logger);
 
         // SDLCheck(() => SDL.SDL_GL_SetSwapInterval(0)); // This will run the CPU and GPU at 100%
         // GL.Enable(EnableCap.Multisample); // TODO: should enable anti aliasing
@@ -105,9 +107,9 @@ internal class OpenGLRenderingEngine : IRenderingEngine
         GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
         ViewportSize = new(800, 600); // TODO: SDLWindowEngine will need to update this property when the window size change
-        Load2DModels();
 
         _defaultTexture = CreateTexture(new RgbaImage([0, 0, 0, 0], 1, 1));
+        _modelGenerator = new ProceduralModelGenerator();
     }
 
     /// <summary>
@@ -117,7 +119,7 @@ internal class OpenGLRenderingEngine : IRenderingEngine
     /// <returns>The store texture unique identifier used when referencing this texture.</returns>
     public int CreateTexture(RgbaImage image)
     {
-        _lifeCycle.ThrowIfNotOnUIThread(); // TODO: texture creation not on UI rendering
+        _application.LifeCycle.ThrowIfNotOnUIThread(); // TODO: texture creation not on UI rendering
         // TODO: now a new texture is created for each text. we will need to probably use a special model with vertices
         // for each caracter and map it to texture atlas with uv mapping. Text will be the most performance critical
         // issue since there will be a lot of text and that changes often. Plus implement texture garbage collection for text.
@@ -149,25 +151,6 @@ internal class OpenGLRenderingEngine : IRenderingEngine
     }
 
     /// <summary>
-    /// Renders a triangle.
-    /// </summary>
-    /// <param name="triangle">The triangle shape attributes.</param>
-    /// <param name="area">The drawing rectangular area.</param>
-    /// <param name="clippingArea">
-    /// The area outside of which, pixel shapes won't be rendered.
-    /// If <see langword="null" /> no clipping area will be specified.
-    /// </param>
-    public void Render(Triangle triangle, Area area, Area? clippingArea)
-    {
-        _lifeCycle.ThrowIfNotOnRenderingPhase();
-        _shader.Use();
-        _shader.SetTransform(area.GetTransformMatrix(ViewportSize));
-        _shader.SetFillColor(triangle.BackgroundColor.ToOpenGLColor());
-        _shader.SetClipArea(clippingArea?.ToOpenGLArea(ViewportSize));
-        _triangleModel!.Render(triangle.TextureID ?? _defaultTexture);
-    }
-
-    /// <summary>
     /// Renders a rectangle.
     /// </summary>
     /// <param name="rectangle">The rectangle shape attributes.</param>
@@ -178,12 +161,7 @@ internal class OpenGLRenderingEngine : IRenderingEngine
     /// </param>
     public void Render(Rectangle rectangle, Area area, Area? clippingArea)
     {
-        _lifeCycle.ThrowIfNotOnRenderingPhase();
-        _shader.Use();
-        _shader.SetTransform(area.GetTransformMatrix(ViewportSize));
-        _shader.SetFillColor(rectangle.BackgroundColor.ToOpenGLColor());
-        _shader.SetClipArea(clippingArea?.ToOpenGLArea(ViewportSize));
-        _squareModel!.Render(rectangle.TextureID ?? _defaultTexture);
+        RenderShape(rectangle, area, clippingArea, _modelGenerator.Rectangle);
     }
 
     /// <summary>
@@ -197,12 +175,7 @@ internal class OpenGLRenderingEngine : IRenderingEngine
     /// </param>
     public void Render(Circle circle, Area area, Area? clippingArea)
     {
-        _lifeCycle.ThrowIfNotOnRenderingPhase();
-        _shader.Use();
-        _shader.SetTransform(area.GetTransformMatrix(ViewportSize));
-        _shader.SetFillColor(circle.BackgroundColor.ToOpenGLColor());
-        _shader.SetClipArea(clippingArea?.ToOpenGLArea(ViewportSize));
-        _circleModel!.Render(circle.TextureID ?? _defaultTexture);
+        RenderShape(circle, area, clippingArea, _modelGenerator.Circle);
     }
 
     /// <summary>
@@ -216,10 +189,12 @@ internal class OpenGLRenderingEngine : IRenderingEngine
     /// </param>
     public void Render(Text text, Area area, Area? clippingArea)
     {
-        _lifeCycle.ThrowIfNotOnRenderingPhase();
+        _application.LifeCycle.ThrowIfNotOnRenderingPhase();
+        if (string.IsNullOrEmpty(text.Value)) return;
+
         if (!_textCache.TryGetValue(text.Value, out var textureId))
         {
-            var textureImage = new SkiaFontRenderingEngine().ConvertTextToRgbaImage(text.Value, 20, text.ForegroundColor);
+            var textureImage = new SixLaborsFontRenderingEngine().ConvertTextToRgbaImage(text.Value, 20, text.ForegroundColor);
             textureId = CreateTexture(textureImage);
             _textCache[text.Value] = textureId;
         }
@@ -227,10 +202,13 @@ internal class OpenGLRenderingEngine : IRenderingEngine
         text.TextureID = textureId;
 
         _shader.Use();
-        _shader.SetTransform(area.GetTransformMatrix(ViewportSize));
+        _shader.SetTransform([area.GetTransformMatrix(ViewportSize, 0.0f, 0.0f),
+                              area.GetTransformMatrix(ViewportSize, 0.0f, null)]);
+        _shader.SetProjection(ViewportSize.GetPorjectionMatrix());
         _shader.SetFillColor(text.BackgroundColor.ToOpenGLColor());
-        _shader.SetClipArea(clippingArea?.ToOpenGLArea(ViewportSize));
-        _squareModel!.Render(text.TextureID.Value);
+        _shader.SetClipArea(clippingArea?.ToVector4(ViewportSize));
+        _shader.SetOffsetMultiplier(OpenTK.Mathematics.Vector2.Zero);
+        _modelGenerator.Rectangle.Render(text.TextureID.Value);
     }
 
     /// <summary>
@@ -238,8 +216,8 @@ internal class OpenGLRenderingEngine : IRenderingEngine
     /// </summary>
     public void InitializeFrame()
     {
-        _lifeCycle.ThrowIfNotOnRenderingPhase();
-        SDLCheck(() => SDL.SDL_GL_MakeCurrent(_window, _glContext));
+        _application.LifeCycle.ThrowIfNotOnRenderingPhase();
+        LoggingUtils.SDLCheck(() => SDL.SDL_GL_MakeCurrent(_window, _glContext), _application.Logger);
         GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f); // Dark gray background
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
     }
@@ -249,7 +227,7 @@ internal class OpenGLRenderingEngine : IRenderingEngine
     /// </summary>
     public void FinalizeFrame()
     {
-        _lifeCycle.ThrowIfNotOnRenderingPhase();
+        _application.LifeCycle.ThrowIfNotOnRenderingPhase();
         SDL.SDL_GL_SwapWindow(_window);
     }
 
@@ -258,50 +236,79 @@ internal class OpenGLRenderingEngine : IRenderingEngine
     /// </summary>
     public void Shutdown()
     {
-        _lifeCycle.ThrowIfNotOnUIThread();
+        _application.LifeCycle.ThrowIfNotOnUIThread();
         _shader.Close();
     }
 
-    private void Load2DModels()
+    private void RenderShape(IShape shape, Area area, Area? clippingArea, Model2D openglShape)
     {
-        LoadTriangleModel();
-        LoadSquareModel();
-        LoadCircleModel();
-    }
+        // TODO: use barycentric coordinates
+        _application.LifeCycle.ThrowIfNotOnRenderingPhase();
+        Validate(shape, area);
 
-    private void LoadTriangleModel()
-    {
-        var triangle = new TriangleAttributes(new(-1, -1), new(0, 1), new(1, -1));
-        _triangleModel = new Model2D([triangle]);
-    }
+        var radiusX = 0.0f;
+        var radiusY = 0.0f;
 
-    private void LoadSquareModel()
-    {
-        var leftTriangle = new TriangleAttributes(new(-1, 1), new(-1, -1), new(1, -1));
-        var rightTriangle = new TriangleAttributes(new(-1, 1), new(1, 1), new(1, -1));
-        _squareModel = new Model2D([leftTriangle, rightTriangle]);
-    }
-
-    private void LoadCircleModel()
-    {
-        var triangles = new List<TriangleAttributes>();
-        var angleStepRadians = 2.0 * Math.PI / 360.0; // Draw a triangle for each 1 degree angle
-        var center = Point.Zero;
-
-        for (var angle = 0.0; angle < 2.0 * Math.PI; angle += angleStepRadians)
+        if (shape is Rectangle rectangle)
         {
-            var firstPoint = new Point((float)Math.Cos(angle), (float)Math.Sin(angle));
-            var secondPoint = new Point((float)Math.Cos(angle + angleStepRadians), (float)Math.Sin(angle + angleStepRadians));
-            triangles.Add(new TriangleAttributes(center, firstPoint, secondPoint));
+            radiusX = rectangle.CornerRadiusX ?? 0.0f;
+            radiusY = rectangle.CornerRadiusY ?? 0.0f;
         }
 
-        _circleModel = new Model2D(triangles);
+        GenericRender(shape.BackgroundColor, area, clippingArea, shape.Rotation, null, radiusX, radiusY, openglShape, shape.TextureID);
+        GenericRender(shape.BorderColor, area, clippingArea, shape.Rotation, shape.BorderThickness, radiusX, radiusY, openglShape, shape.TextureID);
     }
 
-    // TODO: move this as common method. Maybe in a SDL superclass
-    private void SDLCheck(Func<int> action)
+    private void GenericRender(Color color,
+                               Area area,
+                               Area? clippingArea,
+                               float rotation,
+                               PixelUnit? borderThickness,
+                               float xRadius,
+                               float yRadius,
+                               Model2D openglShape,
+                               int? textureId)
     {
-        var returnValue = action();
-        if (returnValue != 0) throw new RenderingException($"Error occurred when rendering: {SDL.SDL_GetError()}");
+        // TODO: use barycentric coordinates
+        _application.LifeCycle.ThrowIfNotOnRenderingPhase();
+
+        if (color.IsTransparent) return;
+
+        _shader.Use();
+
+        _shader.SetTransform([area.GetTransformMatrix(ViewportSize, rotation, 0.0f),
+                              area.GetTransformMatrix(ViewportSize, rotation, borderThickness)]);
+        _shader.SetProjection(ViewportSize.GetPorjectionMatrix());
+        _shader.SetFillColor(color.ToOpenGLColor());
+        _shader.SetClipArea(clippingArea?.ToVector4(ViewportSize));
+        _shader.SetOffsetMultiplier(NormalizeRadius(xRadius, yRadius, area.Size));
+        openglShape.Render(textureId ?? _defaultTexture);
     }
+
+    private void Validate(IShape shape, Area area)
+    {
+        var maximumBorderThickness = Math.Min(area.Size.Width, area.Size.Height);
+        if (shape.BorderThickness != null && shape.BorderThickness.Value > maximumBorderThickness)
+        {
+            throw new ArgumentException($"Border thickness {shape.BorderThickness} pixels exceed maximum allowed size of {maximumBorderThickness}");
+        }
+
+        if (area.Size.Width < 0.0f) throw new ArgumentException($"Shape negative width ({area.Size.Width}) not allowed");
+        if (area.Size.Height < 0.0f) throw new ArgumentException($"Shape negative height ({area.Size.Height}) not allowed");
+        if (shape is Rectangle rectangle)
+        {
+            if (rectangle.CornerRadiusX != null && rectangle.CornerRadiusX.Value > area.Size.Width / 2.0)
+            {
+                throw new ArgumentException($"Corner radius {rectangle.CornerRadiusX} is too big for rectangle with size {area.Size}");
+            }
+
+            if (rectangle.CornerRadiusY != null && rectangle.CornerRadiusY.Value > area.Size.Height / 2.0)
+            {
+                throw new ArgumentException($"Corner radius {rectangle.CornerRadiusY} is too big for rectangle with size {area.Size}");
+            }
+        }
+    }
+
+    private OpenTK.Mathematics.Vector2 NormalizeRadius(PixelUnit xRadius, PixelUnit yRadius, Size size) =>
+        new OpenTK.Mathematics.Vector2(xRadius / size.Width, yRadius / size.Height);
 }

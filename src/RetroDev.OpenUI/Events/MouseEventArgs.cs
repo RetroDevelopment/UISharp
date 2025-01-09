@@ -28,4 +28,7 @@ public class MouseEventArgs(Point absoluteLocation, Point relativeLocation, Mous
     /// The mouse button pressed, if any.
     /// </summary>
     public MouseButton Button { get; } = button;
+
+    /// <inheritdoc />
+    public override string ToString() => $"locationAbs={AbsoluteLocation}, locationRel={RelativeLocation}, button={Button}";
 }

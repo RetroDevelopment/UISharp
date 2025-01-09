@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,10 +20,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="OpenTK.Graphics" Version="4.8.2" />
+    <PackageReference Include="OpenTK.Graphics" Version="4.9.1" />
     <PackageReference Include="ppy.SDL2-CS" Version="1.0.82" />
-    <PackageReference Include="SkiaSharp" Version="2.88.8" />
-    <PackageReference Include="SkiaSharp.Svg" Version="1.60.0" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.6" />
+    <PackageReference Include="SixLabors.Fonts" Version="2.0.6" />
+    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.4" />
   </ItemGroup>
 
 </Project>

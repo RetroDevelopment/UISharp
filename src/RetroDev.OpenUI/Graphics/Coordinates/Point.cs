@@ -35,6 +35,20 @@ public record Point(PixelUnit X, PixelUnit Y)
     public Point Clamp(Point topLeft, Point bottomRight) =>
         new(Math.Clamp(X, topLeft.X, bottomRight.X), Math.Clamp(Y, topLeft.Y, bottomRight.Y));
 
+    /// <summary>
+    /// Converts <see langword="this" /> coordinate (assuming it is a screen coordinate) into
+    /// a cartesian coordinate whose origin is in the center of the given <paramref name="area"/>.
+    /// </summary>
+    /// <param name="areaSize">The size of the area whose cartesian coordinate origin lies.</param>
+    /// <returns>The cartesian point.</returns>
+    public Point FromScreenToCartesian(Size areaSize)
+    {
+        var area = new Area(Zero, areaSize);
+        var center = area.Center;
+
+        return new(X - center.X, center.Y - Y);
+    }
+
     public static Point operator +(Point p1, Point p2) => new(p1.X + p2.X, p1.Y + p2.Y);
     public static Point operator -(Point p1, Point p2) => new(p1.X - p2.X, p1.Y - p2.Y);
 }

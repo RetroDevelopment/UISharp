@@ -24,4 +24,8 @@ public class MouseDragArgs(Point clickPointAbsolute, Point lastClickPointAbsolut
     /// Movement since last mouse location was captured.
     /// </summary>
     public Point Offset { get; } = offset;
+
+    /// <inheritdoc />
+    public override string ToString() => 
+        $"clickPointAbs={ClickPointAbsolute}, lastClickPointAbs={LastClickPointAbsolute}, offset={Offset}";
 }

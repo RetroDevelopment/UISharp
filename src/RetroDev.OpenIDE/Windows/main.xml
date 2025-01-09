@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <mainWindow width="800" height="600">
-    <gridLayout id="mainLayout" rows="1" columns="3" columnSizes="200px;*;200px">
+    <gridLayout id="mainLayout" rows="1" columns="3" columnSizes="200px;*;250px">
         <gridLayout id="controlLayout" rows="7" columns="1" rowSizes="50px;30px;30px;30px;200px;50px;*">
             <gridLayout id="fileInput" rows="1" columns="2" columnSizes="50px;*">
                 <label text="File:" />

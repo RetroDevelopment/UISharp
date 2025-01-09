@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Numerics;
 
 namespace RetroDev.OpenUI.Core.Coordinates;
 
@@ -26,7 +27,7 @@ public record Area(Point TopLeft, Size Size)
     /// </summary>
     public Point BottomRight => new(TopLeft.X + Size.Width, TopLeft.Y + Size.Height);
 
-    public Area(Point topLeft, Point bottomRight) : this(topLeft, new Size(bottomRight.X - topLeft.X + 1, bottomRight.Y - topLeft.Y + 1)) { }
+    public Area(Point topLeft, Point bottomRight) : this(topLeft, new Size(bottomRight.X - topLeft.X, bottomRight.Y - topLeft.Y)) { }
 
     /// <summary>
     /// Transforms <see langword="this"/> area into an absolute area relative to the given <paramref name="container"/>.

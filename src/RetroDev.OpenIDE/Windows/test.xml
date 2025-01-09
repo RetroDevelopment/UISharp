@@ -5,14 +5,7 @@
         <button text="2" autowidth="match.parent" autoheight="match.parent" />
         <button text="3" autowidth="match.parent" autoheight="match.parent" />
         <button text="4" autowidth="match.parent" autoheight="match.parent" />
-        <button text="5" autowidth="match.parent" autoheight="match.parent" />
-        <gridlayout columns="2" rows="2">
-            <progressbar  />
-            <editbox  />
-            <label text="Hello" />
-            <scrollview autowidth="match.parent">
-                <label width="100" height="100" text="Scroll" />
-            </scrollview>
-        </gridlayout>
+        <label text="5" autowidth="match.parent" autoheight="match.parent" />
+        <removeme autowidth="match.parent" autoheight="match.parent" />
     </gridlayout>
 </window>

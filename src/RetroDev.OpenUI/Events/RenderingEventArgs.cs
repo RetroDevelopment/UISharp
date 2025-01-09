@@ -1,4 +1,5 @@
-﻿using RetroDev.OpenUI.Graphics;
+﻿using RetroDev.OpenUI.Components.Simple;
+using RetroDev.OpenUI.Graphics;
 
 namespace RetroDev.OpenUI.Events;
 
@@ -10,4 +11,7 @@ public class RenderingEventArgs : EventArgs
     {
         Canvas = canvas;
     }
+
+    /// <inheritdoc />
+    public override string ToString() => string.Empty;
 }

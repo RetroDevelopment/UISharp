@@ -73,6 +73,11 @@ public abstract class UIComponent
     public event TypeSafeEventHandler<UIComponent, KeyEventArgs> KeyRelease = (_, _) => { };
 
     /// <summary>
+    /// Text is inserted in <see cref="this"/> window.
+    /// </summary>
+    public event TypeSafeEventHandler<UIComponent, TextInputEventArgs> TextInput = (_, _) => { };
+
+    /// <summary>
     /// A frame need to be rendered. Use this event to render at the bottom of the children.
     /// </summary>
     public event TypeSafeEventHandler<UIComponent, RenderingEventArgs> RenderFrame = (_, _) => { };
@@ -303,6 +308,11 @@ public abstract class UIComponent
         KeyRelease?.Invoke(this, e);
     }
 
+    protected void OnTextInput(TextInputEventArgs e)
+    {
+        TextInput?.Invoke(this, e);
+    }
+
     public void OnRepositionChildren()
     {
         if (Visibility.Value == ComponentVisibility.Collapsed) return;
@@ -345,6 +355,7 @@ public abstract class UIComponent
         Parent.MouseMove += _parent_MouseMove;
         Parent.KeyPress += _parent_KeyPress;
         Parent.KeyRelease += _parent_KeyRelease;
+        Parent.TextInput += _parent_TextInput;
     }
 
     private void DetachEventsFromParent()
@@ -355,6 +366,7 @@ public abstract class UIComponent
         Parent.MouseMove -= _parent_MouseMove;
         Parent.KeyPress -= _parent_KeyPress;
         Parent.KeyRelease -= _parent_KeyRelease;
+        Parent.TextInput -= _parent_TextInput;
     }
 
     private void _parent_MouseMove(UIComponent sender, MouseEventArgs mouseEventArgs)
@@ -416,6 +428,14 @@ public abstract class UIComponent
         if (Visibility.Value == ComponentVisibility.Visible && (Focus || !Focusable))
         {
             KeyRelease.Invoke(this, new(keyEventArgs.Button));
+        }
+    }
+
+    private void _parent_TextInput(UIComponent sender, TextInputEventArgs textInputEventArgs)
+    {
+        if (Visibility.Value == ComponentVisibility.Visible && (Focus || !Focusable))
+        {
+            TextInput.Invoke(this, new(textInputEventArgs.Text));
         }
     }
 

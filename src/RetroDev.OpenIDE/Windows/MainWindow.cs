@@ -234,8 +234,13 @@ internal class MainWindow : Window
         CreateComponentInstance();
     }
 
-    private string GetUIDefinitionFullPath(string fileName) =>
-        "C:\\Users\\FabioStrocco\\source\\repos\\RetroDev.OpenUI\\src\\RetroDev.OpenIDE\\Windows\\" + fileName;
+    private string GetUIDefinitionFullPath(string fileName)
+    {
+        // TODO: use full path or file loaders. This is a hard coded file name that works differently on Linux.
+        var windows = "..\\..\\..\\Windows\\" + fileName;
+        if (File.Exists(windows)) return windows;
+        else return "../../../../../Windows/" + fileName;
+    }
 
     private void CreateComponentInstance()
     {

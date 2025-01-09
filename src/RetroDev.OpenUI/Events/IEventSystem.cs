@@ -39,6 +39,13 @@ public interface IEventSystem
     event TypeSafeEventHandler<IEventSystem, WindowEventArgs<KeyEventArgs>> KeyRelease;
 
     /// <summary>
+    /// Text is inserted from keyboard. This event is useful for text insert in edit boxes or other text insert
+    /// UI components. The text input event must take into account key combinations like SHIFT + LETTER, and map it
+    /// to the appropriate string depending on keyboard layout.
+    /// </summary>
+    event TypeSafeEventHandler<IEventSystem, WindowEventArgs<TextInputEventArgs>> TextInput;
+
+    /// <summary>
     /// Before rendering.
     /// </summary>
     event TypeSafeEventHandler<IEventSystem, EventArgs> BeforeRender;

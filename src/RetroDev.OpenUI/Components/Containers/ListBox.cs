@@ -137,5 +137,14 @@ public class ListBox : Container, IContainer
         _verticalLayout.RowSizes.Value = string.Join(',', Children.Select(c => c.RelativeDrawingArea.Size.Height.Value.ToString() + "px"));
         _verticalLayout.Width.Value = Math.Max(Children.Max(c => c.RelativeDrawingArea.Size.Width.Value), RelativeDrawingArea.Size.Width);
         _verticalLayout.Height.Value = Children.Sum(c => c.RelativeDrawingArea.Size.Height.Value);
+
+        var verticalLayoutSize = _verticalLayout.RelativeDrawingArea.Size;
+        var scrollViewSize = _scrollView.RelativeDrawingArea.Size;
+
+        if (verticalLayoutSize.Width < scrollViewSize.Width || verticalLayoutSize.Height < scrollViewSize.Height)
+        {
+            _verticalLayout.X.Value = 0;
+            _verticalLayout.Y.Value = 0;
+        }
     }
 }

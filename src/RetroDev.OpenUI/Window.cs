@@ -31,7 +31,7 @@ public class Window : Container, IContainer
 
     public Window(Application parent, IWindowManager? windowManager = null) : base(parent)
     {
-        _windowManager = windowManager ?? new SDLWindowManager(parent.LifeCycle);
+        _windowManager = windowManager ?? new SDLWindowManager(parent);
         Application._eventSystem.Render += EventSystem_Render;
         parent.AddWindow(this);
         Visibility.ValueChange += (_, args) => _windowManager.Visible = args.CurrentValue == ComponentVisibility.Visible;
@@ -40,6 +40,7 @@ public class Window : Container, IContainer
         parent._eventSystem.MouseMove += EventSystem_MouseMove;
         parent._eventSystem.KeyPress += EventSystem_KeyPress;
         parent._eventSystem.KeyRelease += EventSystem_KeyRelease;
+        parent._eventSystem.TextInput += EventSystem_TextInput;
     }
 
     /// <summary>
@@ -127,4 +128,13 @@ public class Window : Container, IContainer
             OnKeyRelease(windowArgs.Args);
         }
     }
+
+    private void EventSystem_TextInput(object? sender, WindowEventArgs<TextInputEventArgs> windowArgs)
+    {
+        if (windowArgs.WindowId.Equals(_windowManager.WindowId))
+        {
+            OnTextInput(windowArgs.Args);
+        }
+    }
+
 }

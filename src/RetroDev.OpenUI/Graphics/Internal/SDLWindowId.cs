@@ -1,4 +1,6 @@
-﻿namespace RetroDev.OpenUI.Core.Internal;
+﻿using RetroDev.OpenUI.Components.Simple;
+
+namespace RetroDev.OpenUI.Core.Internal;
 
 internal class SDLWindowId(int id) : IWindowId
 {
@@ -16,4 +18,7 @@ internal class SDLWindowId(int id) : IWindowId
 
     // Override Equals for object equality
     public override bool Equals(object? obj) => Equals(obj as IWindowId);
+
+    /// <inheritdoc />
+    public override string ToString() => Id.ToString();
 }

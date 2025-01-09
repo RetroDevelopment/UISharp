@@ -18,17 +18,6 @@ public interface IRenderingEngine
     int CreateTexture(RgbaImage image);
 
     /// <summary>
-    /// Renders a triangle.
-    /// </summary>
-    /// <param name="triangle">The triangle shape attributes.</param>
-    /// <param name="area">The drawing rectangular area.</param>
-    /// <param name="clippingArea">
-    /// The area outside of which, pixel shapes won't be rendered.
-    /// If <see langword="null" /> no clipping area will be specified.
-    /// </param>
-    void Render(Triangle triangle, Area area, Area? clippingArea);
-
-    /// <summary>
     /// Renders a rectangle.
     /// </summary>
     /// <param name="rectangle">The triangle shape attributes.</param>

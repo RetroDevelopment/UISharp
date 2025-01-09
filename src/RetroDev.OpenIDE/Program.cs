@@ -3,11 +3,9 @@ using RetroDev.OpenUI;
 
 namespace RetroDev.OpenIDE;
 
-// Second MVP target: are uncertain things feasable?
+// Third MVP target
+// O. Revisit core logic for coordinates (very important). Consider if need clipArea, more efficient calculations, try to remove RepositionChildren
 // O. Understand why grid layout has 1 pixel margin between components!
-// O. Test on Linux?
-// O. Implement rounded rectangles, borders, etc. in OpenGL
-// O. Implement C++ bindings for getting the input key characters depending on layout
 // O. UIComponent split into ApplicationComponent (with only Application class) and derived UIComponent and MVVPComponent.
 // O. Implement better binders and UIPropertyList<>, maybe call it BindableProperty
 // O. Implement windows resizing and events
@@ -15,7 +13,7 @@ namespace RetroDev.OpenIDE;
 // O. Have AutoSize -> (AutoWidth{hint,stretch}, AutoHeight{hint,stretch}, HorizontalAlignment{left, center, right}, VerticalAlignment{top, center, bottom} -> maybe extend xml? <button autoSize.autoWidth="hint" /> or <button autosize="(hint,hint)(left,center)" />
 // O. Do we need ClipArea? Isn't it the same as AbsoluteSize?
 
-// Third MVP target: all the rest to make a finished MVP
+// Fourth MVP target: all the rest to make a finished MVP
 
 //DONE
 // X. Manage fous for components. 2 properties: IsFocusable and Focus.
@@ -68,11 +66,17 @@ namespace RetroDev.OpenIDE;
 // 4. Cross platofrm (Window, mac, linux)
 // 5. Testable (create UI integration tests)
 
+// Unlike traditional UI frameworks, this system is designed to strike a balance between high-performance OpenGL rendering and ease of use, targeting developers who need:
+// Cross-platform UI development.
+// Dynamic and scalable interfaces.
+// Lightweight and efficient tools for medium-sized applications.
+
 internal class Program
 {
     static void Main(string[] _)
     {
-        var application = new Application();
+        using var application = new Application();
+        // application.Logger.Verbosity = OpenUI.Logging.Verbosity.Debug;
         application.ShowWindow<MainWindow>();
         application.Run();
     }

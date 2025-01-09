@@ -10,4 +10,7 @@ public class KeyEventArgs(KeyButton button) : EventArgs
     /// The button pressed or release.
     /// </summary>
     public KeyButton Button { get; } = button;
+
+    /// <inheritdoc />
+    public override string ToString() => $"key={Button}";
 }

@@ -1,4 +1,5 @@
 ﻿using RetroDev.OpenUI.Exceptions;
+using RetroDev.OpenUI.Utils;
 using SDL2;
 
 namespace RetroDev.OpenUI.Core.Internal;
@@ -6,10 +7,13 @@ namespace RetroDev.OpenUI.Core.Internal;
 /// <summary>
 /// Contains UI environment information and performs generic UI environment operations such as initializing the UI.
 /// </summary>
-internal class SDLUIEnvironment : IUIEnvironment
+/// <param name="application">The application using this environment.</param>
+internal class SDLUIEnvironment(Application application) : IUIEnvironment
 {
     private static bool s_isInitialized = false;
     private static object s_lock = new();
+
+    private Application _application = application;
 
     /// <summary>
     /// Initializes the UI environment.
@@ -24,12 +28,7 @@ internal class SDLUIEnvironment : IUIEnvironment
                 throw new UIInitializationException("SDL environment can only be initialized once and in one thread.");
             }
 
-            var initResult = SDL.SDL_InitSubSystem(SDL.SDL_INIT_VIDEO);
-            if (initResult < 0)
-            {
-                throw new UIInitializationException($"Error initializing SDL: {SDL.SDL_GetError()}");
-            }
-
+            LoggingUtils.SDLCheck(() => SDL.SDL_InitSubSystem(SDL.SDL_INIT_VIDEO), _application.Logger);
             s_isInitialized = true;
         }
     }

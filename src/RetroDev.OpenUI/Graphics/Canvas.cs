@@ -40,17 +40,6 @@ public class Canvas
     }
 
     /// <summary>
-    /// Renders a triangle.
-    /// </summary>
-    /// <param name="triangle">The triangle shape attributes.</param>
-    /// <param name="area">The drawing rectangular area.</param>
-    public void Render(Triangle triangle, Area area)
-    {
-        _lifeCycle.ThrowIfNotOnRenderingPhase();
-        _renderingEngine.Render(triangle, area.ToAbsolute(ContainerAbsoluteDrawingArea), ClippingArea);
-    }
-
-    /// <summary>
     /// Renders a rectangle.
     /// </summary>
     /// <param name="rectangle">The rectangle shape attributes.</param>

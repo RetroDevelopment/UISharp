@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using OpenTK.Graphics.ES20;
-using OpenTK.Mathematics;
+﻿using OpenTK.Mathematics;
 using RetroDev.OpenUI.Core.Coordinates;
 
 namespace RetroDev.OpenUI.Graphics.Internal.OpenGL;
@@ -13,16 +11,37 @@ internal static class ExtensionMethods
     /// </summary>
     /// <param name="renderingArea">The location and size of the area where to render a <see cref="Model2D"/>.</param>
     /// <param name="viewportSize">The size of the full rendering area.</param>
+    /// <param name="rotation">The model rotation in radians.</param>
+    /// <param name="borderThickness">
+    /// The figure border thickness, used to reduce the scale for inner border.
+    /// If <see langword="null" />, the scale is set to 0.
+    /// </param>
     /// <returns>A transofmation matrix to pass as uniform to the vertex shader.</returns>
-    public static Matrix3 GetTransformMatrix(this Area renderingArea, Size viewportSize)
+    public static Matrix3 GetTransformMatrix(this Area renderingArea,
+                                             Size viewportSize,
+                                             float rotation,
+                                             PixelUnit? borderThickness)
     {
         var transform = Matrix3.Identity;
 
-        var scale = new Vector2(renderingArea.Size.Width / viewportSize.Width, renderingArea.Size.Height / viewportSize.Height);
-        var translate = renderingArea.Center.ToOpenGLPoint(viewportSize);
+        Vector2 scale;
 
-        transform.M11 = scale.X;
-        transform.M22 = scale.Y;
+        if (borderThickness != null)
+        {
+            scale = new Vector2(renderingArea.Size.Width - borderThickness,
+                                renderingArea.Size.Height - borderThickness);
+        }
+        else
+        {
+            scale = Vector2.Zero;
+        }
+
+        var translate = renderingArea.Center.FromScreenToCartesian(viewportSize);
+
+        transform.M11 = scale.X * (float)Math.Cos(rotation);
+        transform.M21 = -scale.Y * (float)Math.Sin(rotation);
+        transform.M12 = scale.X * (float)(Math.Sin(rotation));
+        transform.M22 = scale.Y * (float)(Math.Cos(rotation));
         transform.M31 = translate.X;
         transform.M32 = translate.Y;
 
@@ -30,22 +49,32 @@ internal static class ExtensionMethods
     }
 
     /// <summary>
-    /// Transforms <see langword="this"/> area into OpenGL coordinate system area.
+    /// Gets a projection matrix to convert from screen coordinates into OpenGL NDC.
+    /// </summary>
+    /// <param name="viewportSize">The size of the full rendering area.</param>
+    /// <returns>The projection matrix used to convert from screen coordinates into OpenGL NDC.</returns>
+    public static Matrix3 GetPorjectionMatrix(this Size viewportSize)
+    {
+        var projection = Matrix3.Identity;
+
+        projection.M11 = 2.0f / viewportSize.Width;
+        projection.M22 = 2.0f / viewportSize.Height;
+
+        return projection;
+    }
+
+    /// <summary>
+    /// Transforms <see langword="this"/> area into a cartesian coordinate area represented as <see cref="Vector4"/>.
     /// </summary>
     /// <param name="area">The area to transform.</param>
     /// <param name="viewportSize">The viewport size.</param>
-    /// <returns></returns>
-    public static Vector4 ToOpenGLArea(this Area area, Size viewportSize)
+    /// <returns>A vector with the following cartesian coordinates [topLeft.x, topLeft.y, bottomRight.x, bottomRight.y].</returns>
+    public static Vector4 ToVector4(this Area area, Size viewportSize)
     {
-        var openGLTopLeft = area.TopLeft.ToOpenGLPoint(viewportSize);
-        var openGLBottomRight = area.BottomRight.ToOpenGLPoint(viewportSize);
-
-        return new(openGLTopLeft.X, openGLTopLeft.Y, openGLBottomRight.X, openGLBottomRight.Y);
+        var cartesianTopLeft = area.TopLeft.FromScreenToCartesian(viewportSize);
+        var cartesianBottomRight = area.BottomRight.FromScreenToCartesian(viewportSize);
+        return new Vector4(cartesianTopLeft.X, cartesianTopLeft.Y, cartesianBottomRight.X, cartesianBottomRight.Y);
     }
-
-    public static Vector2 ToOpenGLPoint(this Point point, Size viewportSize) =>
-        new(-1.0f + (point.X / viewportSize.Width) * 2.0f,
-            1.0f - (point.Y / viewportSize.Height) * 2.0f);
 
     /// <summary>
     /// Converts <see langword="this"/> <see cref="Color"/> from rgba into opengl format.

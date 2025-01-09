@@ -188,7 +188,8 @@ public class GridLayout : Container, IContainer
         var cumulativeKnownSize = ComputeCumulativeKnownSize(maximumSize, sizes);
         if (cumulativeKnownSize > maximumSize) throw new InvalidOperationException($"Cumulative size exceeds the maximum layout size of {maximumSize}");
         var numberOfAutoSizeElements = sizes.Where(s => s is AutoSize).Count();
-        var autoGridSize = (maximumSize - cumulativeKnownSize) / numberOfAutoSizeElements;
+        // Use ceiling to calculate grid size because sometimes rounding errors might create 1 pixel gap between grid layout components.
+        var autoGridSize = (float)Math.Ceiling((maximumSize - cumulativeKnownSize) / numberOfAutoSizeElements);
 
         foreach (var size in sizes)
         {
