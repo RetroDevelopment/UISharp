@@ -391,6 +391,7 @@ public abstract class UIComponent
         var e = new MouseEventArgs(mouseEventArgs.AbsoluteLocation,
                                    mouseEventArgs.AbsoluteLocation - AbsoluteDrawingArea.TopLeft,
                                    mouseEventArgs.Button);
+
         if (mouseEventArgs.AbsoluteLocation.IsWithin(AbsoluteDrawingArea) && Visibility.Value == Components.ComponentVisibility.Visible && Enabled)
         {
             MouseRelease.Invoke(this, e);

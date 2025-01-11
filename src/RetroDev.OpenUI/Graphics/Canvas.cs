@@ -14,7 +14,7 @@ public class Canvas
     private readonly LifeCycle _lifeCycle;
 
     internal Area? ClippingArea { get; set; }
-    internal Area ContainerAbsoluteDrawingArea { get; set; }
+    internal Area ContainerAbsoluteDrawingArea { get; set; } = Area.Empty;
 
     /// <summary>
     /// Creates a new canvas.
@@ -25,7 +25,6 @@ public class Canvas
     {
         _renderingEngine = renderingEngine;
         _lifeCycle = lifeCycle;
-        ContainerAbsoluteDrawingArea = new(Point.Zero, Size.Zero);
     }
 
     /// <summary>
