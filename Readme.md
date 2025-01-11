@@ -15,6 +15,28 @@ The OpenUI library comes with a OpenIDE application, which is a UI designer to d
 This is still a small mvp, the UI will significantly improve later.
 ![OpenIDE](Demo.png)
 
+# Guidelines
+Branch name: <type>/<issue number>-<description>
+Commit name: <type> #<issue number>: <message>
+<type> is feature, bug, refactoring
+e.g.
+
+feature/100-add-button
+refactoring/47-rendering-engine-cleanup
+bug/50-fix-issue
+
+and commits
+
+"Feature #100: fixed issue"
+"Refactoring #47: it looks better!"
+"Bug #50: it now works!"
+
+pull request messages
+
+"Fixes #100" or "Closes #100" or "Resolves #100" so that pull request merging automatically closes issues.
+"References #100" to link issue to PR.
+DO NOT add these statements in the PR messages or commit messages because they cause confusion. Add them in the description of PRs.
+
 # Build and test
 Windows: it works. You can also build self contained
 > dotnet publish -c Release -r win-x64 --self-contained
