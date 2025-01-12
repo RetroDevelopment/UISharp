@@ -1,5 +1,6 @@
 ﻿using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Events;
+using RetroDev.OpenUI.Graphics;
 using RetroDev.OpenUI.Graphics.Shapes;
 using RetroDev.OpenUI.Properties;
 
@@ -34,7 +35,7 @@ public class Button : UIComponent
         _buttonTextLabel = new Label(parent);
         _buttonTextLabel.Text.ValueChange += (_, _) => SizeHintCache.MarkDirty();
         AddChild(_buttonTextLabel);
-        Text = new(this, string.Empty);
+        Text = new UIProperty<Button, string>(this, string.Empty);
         _buttonTextLabel.Text.AddBinder(new PropertyBinder<Button, string>(Text, BindingType.DestinationToSource));
 
         RenderFrame += Button_RenderFrame;
@@ -57,15 +58,15 @@ public class Button : UIComponent
 
         if (Focus.Value)
         {
-            canvas.Render(new Rectangle(new(0, 100, 0, 255)), new(Point.Zero, size));
+            canvas.Render(new Rectangle(new Color(0, 100, 0, 255)), new(Point.Zero, size));
         }
         else if (Enabled)
         {
-            canvas.Render(new Rectangle(new(0, 0, 100, 255)), new(Point.Zero, size));
+            canvas.Render(new Rectangle(new Color(0, 0, 100, 255)), new(Point.Zero, size));
         }
         else
         {
-            canvas.Render(new Rectangle(new(100, 100, 100, 255)), new(Point.Zero, size));
+            canvas.Render(new Rectangle(new Color(100, 100, 100, 255)), new(Point.Zero, size));
         }
     }
 }

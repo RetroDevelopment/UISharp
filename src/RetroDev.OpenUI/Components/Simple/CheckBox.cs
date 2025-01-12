@@ -27,7 +27,7 @@ public class CheckBox : UIComponent
     /// <param name="parent">The application that contain this checkbox.</param>
     public CheckBox(Application parent) : base(parent)
     {
-        Checked = new(this, false);
+        Checked = new UIProperty<CheckBox, bool>(this, false);
         RenderFrame += CheckBox_RenderFrame;
         MousePress += CheckBox_MousePress;
     }

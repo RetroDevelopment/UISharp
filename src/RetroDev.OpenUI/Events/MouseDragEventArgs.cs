@@ -8,7 +8,7 @@ namespace RetroDev.OpenUI.Events;
 /// <param name="clickPointAbsolute">Absolute location of the point where the mouse was clicked.</param>
 /// <param name="lastClickPointAbsolute">Absolute location of the point where the mouse is at now.</param>
 /// <param name="offset">Movement since last mouse location was captured.</param>
-public class MouseDragArgs(Point clickPointAbsolute, Point lastClickPointAbsolute, Point offset) : EventArgs
+public class MouseDragEventArgs(Point clickPointAbsolute, Point lastClickPointAbsolute, Point offset) : EventArgs
 {
     /// <summary>
     /// Absolute location of the point where the mouse was clicked.

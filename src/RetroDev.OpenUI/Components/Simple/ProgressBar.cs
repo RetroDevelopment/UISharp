@@ -1,5 +1,6 @@
 ﻿using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Events;
+using RetroDev.OpenUI.Exceptions;
 using RetroDev.OpenUI.Graphics;
 using RetroDev.OpenUI.Graphics.Shapes;
 using RetroDev.OpenUI.Properties;
@@ -33,6 +34,7 @@ public class ProgressBar : UIComponent
     /// <inheritdoc/>
     protected override Size ComputeSizeHint() => new(100, 20); // TODO: 20 is the common text size, 100 is some value to be big enough. Make sure that the size fits the screen.
 
+    /// <inheritdoc />
     protected override bool DefaultIsFocusable => false;
 
     /// <summary>
@@ -41,28 +43,30 @@ public class ProgressBar : UIComponent
     /// <param name="parent">The application that contain this progress bar.</param>
     public ProgressBar(Application parent) : base(parent)
     {
-        Value = new(this, 0);
-        MinimumValue = new(this, 0);
-        MaximumValue = new(this, 100);
+        Value = new UIProperty<ProgressBar, int>(this, 0);
+        MinimumValue = new UIProperty<ProgressBar, int>(this, 0);
+        MaximumValue = new UIProperty<ProgressBar, int>(this, 100);
         RenderFrame += Label_RenderFrame;
+    }
+
+    /// <inheritdoc />
+    protected override void ValidateImplementation()
+    {
+        if (Value.Value < MinimumValue.Value) throw new UIPropertyValidationException($"Value {Value.Value} must be greater or equal to MinimumValue {MinimumValue.Value}", this);
+        if (Value.Value > MaximumValue.Value) throw new UIPropertyValidationException($"Value {Value.Value} must be less than or equal to MaximumValue {MaximumValue.Value}", this);
+        if (MaximumValue.Value < MinimumValue.Value) throw new UIPropertyValidationException($"MaximumValue {MaximumValue.Value} must be greater or equal to {MinimumValue.Value}", this);
     }
 
     private void Label_RenderFrame(UIComponent sender, RenderingEventArgs e)
     {
         var canvas = e.Canvas;
 
-        ValidateState();
         var size = RelativeDrawingArea.Size;
         var value = Math.Clamp(Value, MinimumValue, MaximumValue);
         var percentage = (value - MinimumValue) / (float)(MaximumValue - MinimumValue);
         var width = size.Width * percentage;
 
-        canvas.Render(new Rectangle(new(255, 255, 255, 255)), new(Point.Zero, size));
+        canvas.Render(new Rectangle(new(255, 255, 255, 255)), new Area(Point.Zero, size));
         canvas.Render(new Rectangle(new(255, 0, 0, 255)), new Area(Point.Zero, new Size(width, size.Height)));
-    }
-
-    private void ValidateState()
-    {
-        if (MinimumValue > MaximumValue) throw new InvalidOperationException($"Progress bar minimum value ({MinimumValue.Value}) cannot be greater than maximum value ({MaximumValue.Value})");
     }
 }

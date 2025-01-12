@@ -1,4 +1,6 @@
-﻿using RetroDev.OpenUI.Properties;
+﻿using RetroDev.OpenUI.Components;
+using RetroDev.OpenUI.Core.Coordinates;
+using RetroDev.OpenUI.Properties;
 
 namespace RetroDev.OpenUI.Exceptions;
 
@@ -6,14 +8,19 @@ namespace RetroDev.OpenUI.Exceptions;
 /// An exception that occurs when the validation of a UI property fails.
 /// </summary>
 /// <param name="message">The error message.</param>
+/// <param name="target">The object where the property is located.</param>
 /// <param name="innerException">The exception generating <see langword="this" /> exception, if any.</param>
-public class UIPropertyValidationException(string message, Exception? innerException = null) : UIException(message, innerException)
+public class UIPropertyValidationException(string message, object? target = null, Exception? innerException = null) : UIException(CreateExceptionMessage(target, message), innerException)
 {
-    public static void EnsureGreaterOrEqualTo<TParent, TValue>(UIProperty<TParent, TValue> property, TValue minimumValue)
+    private static string CreateExceptionMessage(object? target, string message)
     {
-        if (property.Value < minimumValue)
+        if (target == null) return message;
+
+        if (target is UIComponent component)
         {
-            throw new UIPropertyValidationException($"{propertyName} must be greater or equal to {min}");
+            return $"{message}; (target={target.GetType().FullName}, id={component.ID.Value})";
         }
+
+        return $"{message} target={target.GetType().FullName}";
     }
 }

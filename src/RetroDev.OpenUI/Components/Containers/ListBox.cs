@@ -89,7 +89,7 @@ public class ListBox : Container, IContainer
         {
             var rectangle = new Rectangle(new Color(255, 0, 0, 100));
             var size = sender.RelativeDrawingArea.Size;
-            e.Canvas.Render(rectangle, new(Point.Zero, size));
+            e.Canvas.Render(rectangle, new Area(Point.Zero, size));
         }
     }
 

@@ -53,6 +53,10 @@ public class GridLayout : Container, IContainer
         ColumnSizes = new UIProperty<GridLayout, string>(this, string.Empty);
     }
 
+    /// <summary>
+    /// Adds a <see cref="UIComponent"/> to <see langword="this" /> layout.
+    /// </summary>
+    /// <param name="component">The component to add.</param>
     public void AddComponent(UIComponent component)
     {
         var panel = new Panel(Application);
@@ -60,6 +64,13 @@ public class GridLayout : Container, IContainer
         AddChild(panel);
     }
 
+    /// <summary>
+    /// Add a <see cref="UIComponent"/> to <see langword="this" /> layout in a specific position.
+    /// </summary>
+    /// <param name="component">The component to add.</param>
+    /// <param name="row">The row where to position the component (zero-based index).</param>
+    /// <param name="column">The column where to position the component (zero-based index).</param>
+    /// <exception cref="ArgumentException">If <paramref name="row"/> and <paramref name="column"/> is not in the allowed range.</exception>
     public void AddComponent(UIComponent component, int row, int column)
     {
         var position = row * Columns.Value + column;
@@ -71,6 +82,12 @@ public class GridLayout : Container, IContainer
         AddChild(panel, (int)position);
     }
 
+    /// <summary>
+    /// Removes the component in the given <paramref name="row"/> and <paramref name="column"/>.
+    /// </summary>
+    /// <param name="row">The row location of the component to remove (zero-based index).</param>
+    /// <param name="column">The column location of the component to remove (zero-based index).</param>
+    /// <exception cref="ArgumentException">If the given <paramref name="row"/> and <paramref name="column"/> do not exist.</exception>
     public void RemoveComponent(uint row, uint column)
     {
         if (row >= Rows) throw new ArgumentException($"Cannot remove component at row {row}, grid layout has only {Rows.Value} rows");
@@ -83,6 +100,9 @@ public class GridLayout : Container, IContainer
         RemoveChild(element);
     }
 
+    /// <summary>
+    /// Removes all the elements from <see langword="this" /> layout.
+    /// </summary>
     public void Clear()
     {
         var count = Children.Count();
@@ -98,6 +118,7 @@ public class GridLayout : Container, IContainer
         ColumnSizes.Value = string.Empty;
     }
 
+    /// <inheritdoc />
     protected override void RepositionChildrenImplementation()
     {
         EnsureRowsColumnFitNumberOfChildren();

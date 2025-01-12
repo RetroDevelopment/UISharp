@@ -24,7 +24,7 @@ internal class Model2D
                 // P = A + multiplier * offset
                 // the vbo offset will be (substituting the formulas) offset = (1 + cos(alpha), -1 + sin(alpha)) for the top-left point A.
                 // Signs will change depending on the corner (top-right, bottom-right, etc.)
-                attributes.Add(new VertexAttribute(location, new(signX * 1.0f + (float)Math.Cos(angle), signY * 1.0f + (float)Math.Sin(angle))));
+                attributes.Add(new VertexAttribute(location, new Point(signX * 1.0f + (float)Math.Cos(angle), signY * 1.0f + (float)Math.Sin(angle))));
             }
 
             return attributes;

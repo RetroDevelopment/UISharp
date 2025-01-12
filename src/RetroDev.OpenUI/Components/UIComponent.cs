@@ -50,7 +50,7 @@ public abstract class UIComponent
     /// Mouse dragging. This means that a left click has happend whithin <see cref="this"/> compnent <see cref="AbsoluteDrawingArea"/>
     /// and the mouse is moving while still pressed.
     /// </summary>
-    public event TypeSafeEventHandler<UIComponent, MouseDragArgs> MouseDrag = (_, _) => { };
+    public event TypeSafeEventHandler<UIComponent, MouseDragEventArgs> MouseDrag = (_, _) => { };
 
     /// <summary>
     /// Mouse dragging start.
@@ -335,6 +335,7 @@ public abstract class UIComponent
     /// </remarks>
     public void Validate()
     {
+        UIComponentValidateImplementation();
         ValidateImplementation();
         _children.ForEach(child => child.Validate());
     }
@@ -381,6 +382,14 @@ public abstract class UIComponent
         }
     }
 
+    private void UIComponentValidateImplementation()
+    {
+        if (!Width.Value.IsAuto && Width.Value < 0.0f) throw new UIPropertyValidationException($"Width must be greater or equal to zero, found {Width.Value}", this);
+        if (!Height.Value.IsAuto && Height.Value < 0.0f) throw new UIPropertyValidationException($"Height must be greater or equal to zero, found {Height.Value}", this);
+        if (!Focusable.Value && Focus.Value) throw new UIPropertyValidationException("Cannot focus a component that is not focusable", this);
+        if (!Enabled.Value && Focus.Value) throw new UIPropertyValidationException("Cannot focus a component that is not enabled");
+    }
+
     private void UIComponent_MousePress(UIComponent sender, MouseEventArgs e)
     {
         if (e.Button == MouseButton.Left)
@@ -417,16 +426,16 @@ public abstract class UIComponent
     {
         if (mouseEventArgs.AbsoluteLocation.IsWithin(AbsoluteDrawingArea) && Visibility.Value == Components.ComponentVisibility.Visible && Enabled)
         {
-            MouseMove.Invoke(this, new(mouseEventArgs.AbsoluteLocation,
-                                       mouseEventArgs.AbsoluteLocation - AbsoluteDrawingArea.TopLeft,
-                                       mouseEventArgs.Button));
+            MouseMove.Invoke(this, new MouseEventArgs(mouseEventArgs.AbsoluteLocation,
+                                                      mouseEventArgs.AbsoluteLocation - AbsoluteDrawingArea.TopLeft,
+                                                      mouseEventArgs.Button));
         }
 
         if (_mouseDragPointAbsolute != null && _mouseLastDragPointAbsolute != null)
         {
             var offset = mouseEventArgs.AbsoluteLocation - _mouseLastDragPointAbsolute;
             _mouseLastDragPointAbsolute = mouseEventArgs.AbsoluteLocation;
-            MouseDrag.Invoke(this, new(_mouseDragPointAbsolute, _mouseLastDragPointAbsolute, offset));
+            MouseDrag.Invoke(this, new MouseDragEventArgs(_mouseDragPointAbsolute, _mouseLastDragPointAbsolute, offset));
         }
     }
 
@@ -454,9 +463,9 @@ public abstract class UIComponent
     {
         if (mouseEventArgs.AbsoluteLocation.IsWithin(AbsoluteDrawingArea) && Visibility.Value == Components.ComponentVisibility.Visible && Enabled)
         {
-            MousePress.Invoke(this, new(mouseEventArgs.AbsoluteLocation,
-                                        mouseEventArgs.AbsoluteLocation - AbsoluteDrawingArea.TopLeft,
-                                        mouseEventArgs.Button));
+            MousePress.Invoke(this, new MouseEventArgs(mouseEventArgs.AbsoluteLocation,
+                                                       mouseEventArgs.AbsoluteLocation - AbsoluteDrawingArea.TopLeft,
+                                                       mouseEventArgs.Button));
         }
     }
 
@@ -464,7 +473,7 @@ public abstract class UIComponent
     {
         if (Visibility.Value == Components.ComponentVisibility.Visible && (Focus || !Focusable))
         {
-            KeyPress.Invoke(this, new(keyEventArgs.Button));
+            KeyPress.Invoke(this, new KeyEventArgs(keyEventArgs.Button));
         }
     }
 
@@ -472,7 +481,7 @@ public abstract class UIComponent
     {
         if (Visibility.Value == ComponentVisibility.Visible && (Focus || !Focusable))
         {
-            KeyRelease.Invoke(this, new(keyEventArgs.Button));
+            KeyRelease.Invoke(this, new KeyEventArgs(keyEventArgs.Button));
         }
     }
 
@@ -480,14 +489,12 @@ public abstract class UIComponent
     {
         if (Visibility.Value == ComponentVisibility.Visible && (Focus || !Focusable))
         {
-            TextInput.Invoke(this, new(textInputEventArgs.Text));
+            TextInput.Invoke(this, new TextInputEventArgs(textInputEventArgs.Text));
         }
     }
 
     private void Focus_ValueChange(UIComponent sender, ValueChangeEventArgs<bool> e)
     {
-        if (e.CurrentValue && !Focusable) throw new InvalidOperationException("Cannot focus a non focusable component");
-        if (e.CurrentValue && !Enabled) throw new InvalidOperationException("Cannot focus a disabled component");
         RequestFocusFor(this);
     }
 

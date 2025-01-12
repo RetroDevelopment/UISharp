@@ -23,9 +23,13 @@ public class Label : UIComponent
     protected override Size ComputeSizeHint() =>
         Application.FontServices.ComputeTextSize(Text.Value);
 
+    /// <inheritdoc />
     protected override bool DefaultIsFocusable => false;
 
+    /// <inheritdoc />
     protected override IAutoSizeStrategy DefaultAutoWidth => AutoSizeStrategy.WrapComponentCenter;
+
+    /// <inheritdoc />
     protected override IAutoSizeStrategy DefaultAutoHeight => AutoSizeStrategy.WrapComponentCenter;
 
     /// <summary>
@@ -34,7 +38,7 @@ public class Label : UIComponent
     /// <param name="parent">The application that contain this label.</param>
     public Label(Application parent) : base(parent)
     {
-        Text = new(this, string.Empty);
+        Text = new UIProperty<Label, string>(this, string.Empty);
         Text.ValueChange += (_, _) => SizeHintCache.MarkDirty();
         RenderFrame += Label_RenderFrame;
     }
@@ -54,6 +58,6 @@ public class Label : UIComponent
         var size = RelativeDrawingArea.Size;
         var canvas = e.Canvas;
 
-        canvas.Render(new Text(new(0, 0, 0, 0), new(255, 255, 255, 255), Text.Value), new(Point.Zero, size));
+        canvas.Render(new Text(new Color(0, 0, 0, 0), new Color(255, 255, 255, 255), Text.Value), new(Point.Zero, size));
     }
 }
