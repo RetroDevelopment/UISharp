@@ -52,8 +52,6 @@ public class ListBox : Container, IContainer
         SelectedItem = new UIProperty<ListBox, UIComponent?>(this, null);
         SelectedItem.ValueChange += SelectedItem_ValueChange;
 
-        RepositionChildren += ListBox_RepositionChildren;
-
         AddChild(_scrollView);
     }
 
@@ -127,7 +125,7 @@ public class ListBox : Container, IContainer
         SelectedIndex.Value = (uint)selectedIndex;
     }
 
-    private void ListBox_RepositionChildren(UIComponent sender, EventArgs e)
+    protected override void RepositionChildrenImplementation()
     {
         if (!Children.Any()) return;
 

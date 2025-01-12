@@ -32,16 +32,12 @@ public class TreeBox : Container
     public TreeBox(Application application) : base(application)
     {
         _listBox = new ListBox(application);
-        _listBox.AutoWidth.Value = AutoSizeStrategy.MatchParent;
-        _listBox.AutoHeight.Value = AutoSizeStrategy.MatchParent;
         AddChild(_listBox);
 
         SelectedNode = new UIProperty<TreeBox, TreeNode?>(this, null);
         // TODO SelectedNode can be bound to _listBox.SelectedItem and converters!
         SelectedNode.ValueChange += SelectedNode_ValueChange;
         _listBox.SelectedIndex.ValueChange += SelectedIndex_ValueChange;
-
-        RepositionChildren += TreeBox_RepositionChildren;
     }
 
     public void AddTreeNode(TreeNode component)
@@ -168,7 +164,7 @@ public class TreeBox : Container
     }
 
 
-    private void TreeBox_RepositionChildren(UIComponent sender, EventArgs e)
+    protected override void RepositionChildrenImplementation()
     {
         foreach (var gridLayout in _listBox.Children.Cast<GridLayout>())
         {

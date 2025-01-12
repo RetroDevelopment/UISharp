@@ -8,6 +8,7 @@ using ValueType = float;
 public record class PixelUnit : IEquatable<PixelUnit>
 {
     public static readonly PixelUnit Auto = float.NaN;
+    public static readonly PixelUnit Zero = 0.0f;
 
     public ValueType Value { get; }
 

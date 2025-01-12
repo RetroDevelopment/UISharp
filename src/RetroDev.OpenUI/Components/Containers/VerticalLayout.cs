@@ -31,8 +31,6 @@ public class VerticalLayout : Container, IContainer
 
         _gridLayout = new GridLayout(application);
         _gridLayout.Columns.Value = 1;
-        _gridLayout.AutoWidth.Value = AutoSizeStrategy.MatchParent;
-        _gridLayout.AutoHeight.Value = AutoSizeStrategy.MatchParent;
         _gridLayout.RowSizes.AddBinder(new PropertyBinder<VerticalLayout, string>(RowSizes, BindingType.DestinationToSource));
 
         AddChild(_gridLayout);

@@ -2,6 +2,7 @@
 using RetroDev.OpenUI.Components.AutoSize;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Events;
+using RetroDev.OpenUI.Exceptions;
 using RetroDev.OpenUI.Properties;
 using RetroDev.OpenUI.Utils;
 
@@ -87,16 +88,13 @@ public abstract class UIComponent
     public event TypeSafeEventHandler<UIComponent, RenderingEventArgs> ChildrenRendered = (_, _) => { };
 
     /// <summary>
-    /// This event is invoked right before rendering and it can be used by all conatiners to recalculate the children positions before
-    /// rendering.
-    /// </summary>
-    public event TypeSafeEventHandler<UIComponent, EventArgs> RepositionChildren = (_, _) => { };
-
-    /// <summary>
     /// The application in which <see langword="this"/> <see cref="UIComponent"/> runs.
     /// </summary>
     public Application Application { get; }
 
+    /// <summary>
+    /// The parent <see cref="UIComponent"/> containing <see langword="this" /> <see cref="UIComponent"/>.
+    /// </summary>
     public UIComponent? Parent { get; private set; }
 
     /// <summary>
@@ -179,6 +177,19 @@ public abstract class UIComponent
     /// </summary>
     protected virtual ComponentVisibility DefaultVisibility => ComponentVisibility.Visible;
 
+    /// <summary>
+    /// The initial value of <see cref="AutoWidth"/>.
+    /// </summary>
+    protected virtual IAutoSizeStrategy DefaultAutoWidth => AutoSizeStrategy.MatchParent;
+
+    /// <summary>
+    /// The default value of <see cref="AutoHeight"/>.
+    /// </summary>
+    protected virtual IAutoSizeStrategy DefaultAutoHeight => AutoSizeStrategy.MatchParent;
+
+    /// <summary>
+    /// The initial value of <see cref="Focusable"/>.
+    /// </summary>
     protected virtual bool DefaultIsFocusable => true;
 
     /// <summary>
@@ -212,8 +223,8 @@ public abstract class UIComponent
         Height = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Auto);
         Height = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Auto);
         Visibility = new UIProperty<UIComponent, ComponentVisibility>(this, DefaultVisibility);
-        AutoWidth = new UIProperty<UIComponent, IAutoSizeStrategy>(this, AutoSizeStrategy.WrapComponentCenter);
-        AutoHeight = new UIProperty<UIComponent, IAutoSizeStrategy>(this, AutoSizeStrategy.WrapComponentCenter);
+        AutoWidth = new UIProperty<UIComponent, IAutoSizeStrategy>(this, DefaultAutoWidth);
+        AutoHeight = new UIProperty<UIComponent, IAutoSizeStrategy>(this, DefaultAutoHeight);
         Focusable = new UIProperty<UIComponent, bool>(this, DefaultIsFocusable);
         Focus = new UIProperty<UIComponent, bool>(this, false);
         Enabled = new UIProperty<UIComponent, bool>(this, true);
@@ -307,12 +318,53 @@ public abstract class UIComponent
         TextInput?.Invoke(this, e);
     }
 
-    public void OnRepositionChildren()
+    /// <summary>
+    /// Validates <see langword="this" /> <see cref="UIComponent"/> and throw <see cref="UIPropertyValidationException"/> if one or more
+    /// properties are in an invalid state.
+    /// Call base.Validate() at the bottom of your implementation if overriding this method.
+    /// </summary>
+    /// <remarks>
+    /// This method may be called at any time to perform validation, but it is automatically called within the <see cref="IEventSystem.BeforeRender"/> event,
+    /// because a <see cref="UIComponent"/> needs to be validated before rendering a frame, which requires accessing component properties.
+    /// Note that validation must should be performed when a property value change (unless strictly necessary) because it makes it more complicated to
+    /// update property values. For example if a <see cref="UIComponent"/> has properties A and B, and validation checks A &lt; B, if A = 10 and B = 20,
+    /// if updating A and B to 30 and 40 respectively, the code below would crash
+    /// A.Value = 30; // would throw exception because A.Value &gt; B.Value (30 &gt; 20).
+    /// B.Value = 40;
+    /// But if validation is not performed, the framework would still allow detecting errors before frame update.
+    /// </remarks>
+    public void Validate()
+    {
+        ValidateImplementation();
+        _children.ForEach(child => child.Validate());
+    }
+
+    /// <summary>
+    /// Re-computes the position and size of the children of <see langword="this" /> <see cref="UIComponent"/> if necessary.
+    /// </summary>
+    /// <remarks>
+    /// This method may be called at any time to update the internal children state, but it is automatically called within the <see cref="IEventSystem.BeforeRender"/> event,
+    /// for performance reason. The method is used mostly for layouts and, if called every time a property changes (<see cref="Width" />, <see cref="Height"/>, etc.)
+    /// it could degrade performance.
+    /// </remarks>
+    public void RepositionChildren()
     {
         if (Visibility.Value == ComponentVisibility.Collapsed) return;
-        RepositionChildren.Invoke(this, EventArgs.Empty);
-        _children.ForEach((child) => child.OnRepositionChildren());
+        RepositionChildrenImplementation();
+        _children.ForEach(child => child.RepositionChildren());
     }
+
+    /// <summary>
+    /// The validation logic called by <see cref="Validate"/> overridden by subclasses of <see cref="UIComponent"/>.
+    /// </summary>
+    protected virtual void ValidateImplementation()
+    {
+    }
+
+    /// <summary>
+    /// The children repositioning logic called by <see cref="RepositionChildren"/> overridden by subclasses of <see cref="UIComponent"/>.
+    /// </summary>
+    protected virtual void RepositionChildrenImplementation() { }
 
     protected void OnRenderFrame(RenderingEventArgs renderingArgs)
     {

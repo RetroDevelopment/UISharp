@@ -51,10 +51,6 @@ public class GridLayout : Container, IContainer
         Columns = new UIProperty<GridLayout, uint>(this, 0);
         RowSizes = new UIProperty<GridLayout, string>(this, string.Empty);
         ColumnSizes = new UIProperty<GridLayout, string>(this, string.Empty);
-        AutoWidth.Value = AutoSizeStrategy.MatchParent;
-        AutoHeight.Value = AutoSizeStrategy.MatchParent;
-
-        RepositionChildren += GridLayout_RepositionChildren;
     }
 
     public void AddComponent(UIComponent component)
@@ -102,7 +98,7 @@ public class GridLayout : Container, IContainer
         ColumnSizes.Value = string.Empty;
     }
 
-    private void GridLayout_RepositionChildren(UIComponent sender, EventArgs e)
+    protected override void RepositionChildrenImplementation()
     {
         EnsureRowsColumnFitNumberOfChildren();
 

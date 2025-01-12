@@ -16,6 +16,9 @@ public class EditBox : UIComponent
 
     public UIProperty<EditBox, string> Text { get; }
 
+    protected override IAutoSizeStrategy DefaultAutoWidth => AutoSizeStrategy.WrapComponentLeftTop;
+    protected override IAutoSizeStrategy DefaultAutoHeight => AutoSizeStrategy.WrapComponentCenter;
+
     protected override Size ComputeSizeHint() => new(20 * 10, 20); // 20 is font size and 10 the characters (estimate)
 
     public EditBox(Application parent) : base(parent)

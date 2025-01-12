@@ -1,4 +1,5 @@
-﻿using RetroDev.OpenUI.Core.Coordinates;
+﻿using RetroDev.OpenUI.Components.AutoSize;
+using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Events;
 using RetroDev.OpenUI.Graphics;
 using RetroDev.OpenUI.Graphics.Shapes;
@@ -23,6 +24,9 @@ public class Label : UIComponent
         Application.FontServices.ComputeTextSize(Text.Value);
 
     protected override bool DefaultIsFocusable => false;
+
+    protected override IAutoSizeStrategy DefaultAutoWidth => AutoSizeStrategy.WrapComponentCenter;
+    protected override IAutoSizeStrategy DefaultAutoHeight => AutoSizeStrategy.WrapComponentCenter;
 
     /// <summary>
     /// Creates a new label.

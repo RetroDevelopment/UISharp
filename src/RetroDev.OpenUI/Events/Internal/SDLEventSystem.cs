@@ -136,6 +136,7 @@ internal class SDLEventSystem(Application application) : IEventSystem
                     var keyUpWindowId = GetWidnowIdFromKeyboardEvent(keyUpEvent);
                     var keyUpKey = KeyMapping.ToKeyButton(keyUpEvent.keysym.sym);
                     var keyUpArgs = new WindowEventArgs<KeyEventArgs>(keyUpWindowId, new(keyUpKey));
+                    keyUpArgs.Log("keyUp", _application.Logger);
                     KeyRelease.Invoke(this, keyUpArgs);
                     _invalidated = true;
                     break;
@@ -145,6 +146,7 @@ internal class SDLEventSystem(Application application) : IEventSystem
                     var inputTextWindowId = GetWindowIdFromTextInputEvent(textInputEvent);
                     var textInputArgs = new WindowEventArgs<TextInputEventArgs>(inputTextWindowId, new(inputText));
                     TextInput.Invoke(this, textInputArgs);
+                    textInputArgs.Log("textInput", _application.Logger);
                     _invalidated = true;
                     break;
             }
