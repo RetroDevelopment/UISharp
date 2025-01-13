@@ -1,10 +1,12 @@
 ﻿using System.Xml;
 using System.Xml.Linq;
 using RetroDev.OpenUI.Exceptions;
+using RetroDev.OpenUI.UIDefinition.Ast;
+using Attribute = RetroDev.OpenUI.UIDefinition.Ast.Attribute;
 
 namespace RetroDev.OpenUI.UIDefinition;
 
-public class UIDefinitionParser
+public class Parser
 {
     public Component Parse(string xml)
     {
@@ -18,7 +20,7 @@ public class UIDefinitionParser
         {
             // If UIDefinition language is no longer an xml in the future, we will still throw ArgumentException with
             // a different xml exception.
-            throw new UIDefinitionValidationException($"Failed to parse ui definition xml: {e.Message}", e);
+            throw new UIDefinitionValidationException($"Failed to parse ui definition xml: {e.Message}", null, e);
         }
     }
 

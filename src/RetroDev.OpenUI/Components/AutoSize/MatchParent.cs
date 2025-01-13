@@ -4,7 +4,7 @@ namespace RetroDev.OpenUI.Components.AutoSize;
 
 // TODO: default width/height for orphans (e.g. windows) is now 800 x 600. This will need to be set to screen size? Or
 // some other default size? Orphans are not only windows but also compoennts not yet attached to a window.
-public class MatchParentSizeStrategy : IAutoSizeStrategy
+public class MatchParent : IAutoSizeStrategy
 {
     private static readonly PixelUnit DefaultWidth = 800.0f;
     private static readonly PixelUnit DefaultHeight = 600.0f;

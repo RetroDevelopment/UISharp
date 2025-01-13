@@ -7,7 +7,8 @@ using RetroDev.OpenUI.Components.Containers;
 using RetroDev.OpenUI.Components.Simple;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Properties;
-using RetroDev.OpenUI.UIDefinition;
+using RetroDev.OpenUI.UIDefinition.Ast;
+using Attribute = RetroDev.OpenUI.UIDefinition.Ast.Attribute;
 
 namespace RetroDev.OpenIDE.Windows;
 
@@ -29,31 +30,47 @@ internal class Container : UIComponent
 
 internal class MainWindow : Window
 {
-    private GridLayout? _mainLayout;
-    private GridLayout? _controlLayout;
-    private EditBox? _fileEditBox;
-    private ListBox? _components;
-    private TreeBox? _astTreeBox;
-    private Component? _rootNode;
     private Dictionary<TreeNode, Component> _treeNodeAstMap = [];
-    private Button? _loadButton;
-    private Button? _saveButton;
-    private Button? _refreshButton;
-    private Button? _addButton;
-    private Button? _removeButton;
+    private Component? _rootNode;
 
-    public MainWindow(Application parent) : base(parent)
+    private GridLayout _mainLayout;
+    private GridLayout _controlLayout;
+    private EditBox _fileEditBox;
+    private ListBox _components;
+    private TreeBox _astTreeBox;
+    private Button _loadButton;
+    private Button _saveButton;
+    private Button _refreshButton;
+    private Button _addButton;
+    private Button _removeButton;
+
+    public MainWindow(Application parent,
+                      GridLayout mainLayout,
+                      GridLayout controlLayout,
+                      ListBox components,
+                      EditBox file,
+                      TreeBox astTreeBox,
+                      Button load,
+                      Button save,
+                      Button refresh,
+                      Button add,
+                      Button remove) : base(parent)
     {
         Initialized += MainWindow_Initialized;
+        _mainLayout = mainLayout;
+        _controlLayout = controlLayout;
+        _components = components;
+        _fileEditBox = file;
+        _astTreeBox = astTreeBox;
+        _loadButton = load;
+        _saveButton = save;
+        _refreshButton = refresh;
+        _addButton = add;
+        _removeButton = remove;
     }
 
     private void MainWindow_Initialized(Window sender, EventArgs e)
     {
-        _mainLayout = GetComponent<GridLayout>("mainLayout");
-        _controlLayout = _mainLayout.GetComponent<GridLayout>("controlLayout");
-        _components = _controlLayout.GetComponent<ListBox>("components");
-        _fileEditBox = _controlLayout.GetComponent<GridLayout>("fileInput").GetComponent<EditBox>("file");
-        _astTreeBox = _controlLayout.GetComponent<TreeBox>("ast");
         InitializeComponentListBox();
         InitializeButtons();
         _astTreeBox.SelectedNode.ValueChange += SelectedNode_ValueChange;
@@ -76,16 +93,9 @@ internal class MainWindow : Window
 
     private void InitializeButtons()
     {
-        _loadButton = _controlLayout!.GetComponent<Button>("load");
         _loadButton.Action += LoadButton_Action;
-        _saveButton = _controlLayout!.GetComponent<Button>("save");
         _saveButton.Action += SaveButton_Action;
-        _refreshButton = _controlLayout!.GetComponent<Button>("refresh");
         _refreshButton.Action += RefreshButton_Action;
-
-        _addButton = _controlLayout.GetComponent<GridLayout>("addremove").GetComponent<Button>("add");
-        _removeButton = _controlLayout.GetComponent<GridLayout>("addremove").GetComponent<Button>("remove");
-
         _addButton.Action += AddButton_Action;
         _removeButton.Action += RemoveButton_Action;
     }
@@ -192,7 +202,7 @@ internal class MainWindow : Window
             }
             else
             {
-                attribute = new OpenUI.UIDefinition.Attribute(property.Name, string.Empty);
+                attribute = new Attribute(property.Name, string.Empty);
             }
 
             editBox.Text.ValueChange += (_, e) => OnAttributeChange(selectedAstNode, attribute, e.CurrentValue);
@@ -211,7 +221,7 @@ internal class MainWindow : Window
         UpdateAddRemoveButtonState();
     }
 
-    private void OnAttributeChange(Component node, OpenUI.UIDefinition.Attribute attribute, string value)
+    private void OnAttributeChange(Component node, OpenUI.UIDefinition.Ast.Attribute attribute, string value)
     {
         attribute.Value = value;
 

@@ -2,7 +2,7 @@
 
 namespace RetroDev.OpenUI.Components.AutoSize;
 
-public class WrapComponentLeftTopAlignStrategy : IAutoSizeStrategy
+public class WrapComponentLeftTopAlign : IAutoSizeStrategy
 {
     public (PixelUnit X, PixelUnit Width) ComputeHorizontalArea(UIComponent component)
     {

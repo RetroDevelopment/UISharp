@@ -4,27 +4,27 @@
         <gridLayout id="controlLayout" rows="7" columns="1" rowSizes="50px;30px;30px;30px;200px;50px;*">
             <gridLayout id="fileInput" rows="1" columns="2" columnSizes="50px;*">
                 <label text="File:" />
-                <editBox id="file" autoWidth="match.parent" text="test.xml" />
+                <editBox id="file" autoWidth="MatchParent" text="test.xml" />
             </gridLayout>
 
-            <button id="load" text="Load" autoWidth="match.parent" autoHeight="match.parent" />
-            <button id="save" text="Save" autoWidth="match.parent" autoHeight="match.parent" enabled="false" />
-            <button id="refresh" text="Refresh" autoWidth="match.parent" autoHeight="match.parent" enabled="false" />
+            <button id="load" text="Load" autoWidth="MatchParent" autoHeight="MatchParent" />
+            <button id="save" text="Save" autoWidth="MatchParent" autoHeight="MatchParent" enabled="false" />
+            <button id="refresh" text="Refresh" autoWidth="MatchParent" autoHeight="MatchParent" enabled="false" />
 
-            <listBox autoWidth="match.parent" autoHeight="match.parent" id="components" />
+            <listBox autoWidth="MatchParent" autoHeight="MatchParent" id="components" />
 
             <gridLayout id="addremove" rows="1" columns="2">
-                <button id="add" text="Add" autoWidth="match.parent" autoHeight="match.parent" enabled="false" />
-                <button id="remove" text="Remove" autoWidth="match.parent" autoHeight="match.parent" enabled="false" />
+                <button id="add" text="Add" autoWidth="MatchParent" autoHeight="MatchParent" enabled="false" />
+                <button id="remove" text="Remove" autoWidth="MatchParent" autoHeight="MatchParent" enabled="false" />
             </gridLayout>
 
-            <treeBox id="ast" autoWidth="match.parent" autoHeight="match.parent" />
+            <treeBox id="astTreeBox" autoWidth="MatchParent" autoHeight="MatchParent" />
         </gridLayout>
 
-        <scrollView id="preview" autoWidth="match.parent" autoHeight="match.parent" />
+        <scrollView id="preview" autoWidth="MatchParent" autoHeight="MatchParent" />
 
-        <scrollView id="propertiesScrollView" autoWidth="match.parent" autoHeight="match.parent">
-            <listBox id="propertyList" autoWidth="match.parent" autoHeight="match.parent" />
+        <scrollView id="propertiesScrollView" autoWidth="MatchParent" autoHeight="MatchParent">
+            <listBox id="propertyList" autoWidth="MatchParent" autoHeight="MatchParent" />
         </scrollView>
     </gridLayout>
 </mainWindow>
