@@ -1,60 +1,49 @@
 ﻿using System.Diagnostics;
-using RetroDev.OpenUI.Components;
 using RetroDev.OpenUI.Events;
 
 namespace RetroDev.OpenUI.Properties;
 
 /// <summary>
-/// Describes a property used in this UI framework. It allows for flexible binding.
+/// A property wrapper that allows for dynamic one or two way binding.
 /// </summary>
 /// <typeparam name="TParent">The class owning this property.</typeparam>
 /// <typeparam name="TValue">The property value type.</typeparam>
 /// <param name="parent">The object owning this property.</param>
 /// <param name="value">The property value.</param>
 [DebuggerDisplay("{Value}")]
-public class UIProperty<TParent, TValue>(TParent parent, TValue value)
+public class BindableProperty<TParent, TValue>(TParent parent, TValue value)
 {
-    private readonly TParent _parent = parent;
     private TValue _value = value;
     private List<IBinder<TValue>> _binders = [];
 
     /// <summary>
-    /// Triggers then the <see cref="Value"/> changes. Setting <see cref="Value"/> does not trigger
-    /// this event unless its value has actually changed.
+    /// Triggers then the <see cref="Value"/> changes. Setting <see cref="Value"/> to the same value
+    /// does not trigger this event, only modifying the value does.
     /// </summary>
     public event TypeSafeEventHandler<TParent, ValueChangeEventArgs<TValue>> ValueChange = (_, _) => { };
 
     /// <summary>
     /// The property value.
     /// </summary>
-    public TValue Value
+    public virtual TValue Value
     {
         set
         {
-            if (_parent is UIComponent uiParent)
-            {
-                EnsureCanSetUIComponentProperty(uiParent);
-                uiParent.Application._eventSystem.InvalidateRendering(); // TODO: do not push one event for each call but just one if the rendering has not been invalidated yet
-            }
-
-            if (_value != null && !_value.Equals(value) || _value == null && value != null) // TODO: maybe implement equatable?
+            if (!EqualityComparer<TValue>.Default.Equals(_value, value))
             {
                 var previousValue = _value;
                 _value = value;
-                ValueChange.Invoke(_parent, new ValueChangeEventArgs<TValue>(previousValue, value));
+                ValueChange.Invoke(Parent, new ValueChangeEventArgs<TValue>(previousValue, value));
                 NotifySourceToDestnationBinders();
             }
         }
-        get
-        {
-            if (_parent is UIComponent uiParent)
-            {
-                uiParent.Application.LifeCycle.ThrowIfNotOnUIThread();
-            }
-
-            return _value;
-        }
+        get => _value;
     }
+
+    /// <summary>
+    /// The object owning this property.
+    /// </summary>
+    public TParent Parent => parent;
 
     /// <summary>
     /// Adds a property binder to this property.
@@ -67,17 +56,20 @@ public class UIProperty<TParent, TValue>(TParent parent, TValue value)
         switch (binder.Binding)
         {
             case BindingType.SourceToDestination:
-                _binders.Add(binder);
                 break;
             case BindingType.DestinationToSource:
                 EnsureBinderHasNoDestinationToSource();
-                binder.DestinationChange += (_, e) => { Value = e.Value; };
+                binder.DestinationChange += Binder_DestinationChange;
                 break;
             case BindingType.TwoWays:
                 EnsureBinderHasNoDestinationToSource();
-                binder.DestinationChange += (_, e) => { Value = e.Value; };
+                binder.DestinationChange += Binder_DestinationChange;
                 break;
+            default:
+                throw new ArgumentException($"Unhandled binding type {binder.Binding}");
         }
+
+        _binders.Add(binder);
     }
 
     /// <summary>
@@ -85,15 +77,22 @@ public class UIProperty<TParent, TValue>(TParent parent, TValue value)
     /// </summary>
     public void RemoveBinders()
     {
+        _binders.Where(BindsSourceToDestination)
+                .ToList()
+                .ForEach(binder => binder.Unbind());
+
+        _binders.Where(BindsDestinationToSource)
+                .ToList()
+                .ForEach(binder => binder.DestinationChange -= Binder_DestinationChange);
+
         _binders.Clear();
     }
 
-    public static implicit operator TValue(UIProperty<TParent, TValue> property) => property._value;
-
-    private void EnsureCanSetUIComponentProperty(UIComponent uiParent)
-    {
-        uiParent.Application.LifeCycle.ThrowIfPropertyCannotBeSet();
-    }
+    /// <summary>
+    /// Implicit cast from <see cref="BindableProperty{TParent, TValue}"/> to <typeparamref name="TValue"/>.
+    /// </summary>
+    /// <param name="property">The <see cref="BindableProperty{TParent, TValue}"/> to cast.</param>
+    public static implicit operator TValue(BindableProperty<TParent, TValue> property) => property._value;
 
     private void NotifySourceToDestnationBinders()
     {
@@ -112,8 +111,13 @@ public class UIProperty<TParent, TValue>(TParent parent, TValue value)
     }
 
     private bool BindsSourceToDestination(IBinder<TValue> binder) =>
-    binder.Binding == BindingType.SourceToDestination || binder.Binding == BindingType.TwoWays;
+        binder.Binding == BindingType.SourceToDestination || binder.Binding == BindingType.TwoWays;
 
     private bool BindsDestinationToSource(IBinder<TValue> binder) =>
         binder.Binding == BindingType.DestinationToSource || binder.Binding == BindingType.TwoWays;
+
+    private void Binder_DestinationChange(object? sender, BinderValueChangeEventArgs<TValue> e)
+    {
+        Value = e.Value;
+    }
 }

@@ -4,10 +4,10 @@
 // e.g. DB binder where NotifySourceChanged() is storing to database
 
 /// <summary>
-/// Defines a generic binder that automatically updates the binding <see cref="UIProperty{TParent, TValue}"/> value
-/// and gets notified when that value changes.
-/// A <see cref="UIProperty{TParent, TValue}"/> is called <strong>source</strong> property and this binder is
-/// representing some sort of value called <strong>destination</strong> value, which could be another <see cref="UIProperty{TParent, TValue}"/>,
+/// Defines a generic binder that can update a <see cref="BindableProperty{TParent, TValue}"/> value and conversely
+/// be notifying when such value change.
+/// A <see cref="BindableProperty{TParent, TValue}"/> is called <strong>source</strong> property and this <see cref="IBinder{TValue}"/> is
+/// representing some sort of value called <strong>destination</strong> value, which could be another <see cref="BindableProperty{TParent, TValue}"/>,
 /// a file, a database table field, etc.
 /// The idea is to automatically keep in sync source with destination. If the binding is <see cref="BindingType.SourceToDestination"/>, changes
 /// to the source property must be reflected to the destination property (e.g. changes to a UI text will be reflected to the corrsponding database column, or to the
@@ -19,8 +19,9 @@
 public interface IBinder<TValue>
 {
     /// <summary>
-    /// Specifies how to bind (see <see cref="BindingType"/>).
+    /// Specifies how to bind.
     /// </summary>
+    /// <seealso cref="BindingType"/>
     BindingType Binding { get; }
 
     /// <summary>
@@ -31,7 +32,12 @@ public interface IBinder<TValue>
     /// <summary>
     /// Called when the source property value changes.
     /// </summary>
-    /// <param name="value"></param>
+    /// <param name="value">The updated value.</param>
     void NotifySourceChanged(TValue value);
+
+    /// <summary>
+    /// Stops notifying the source property of this binder changes.
+    /// </summary>
+    void Unbind();
 }
 

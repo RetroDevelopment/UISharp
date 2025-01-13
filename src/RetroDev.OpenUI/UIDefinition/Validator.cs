@@ -7,8 +7,6 @@ using Component = RetroDev.OpenUI.UIDefinition.Ast.Component;
 
 namespace RetroDev.OpenUI.UIDefinition;
 
-// TODO: add more to validation logic + return a list of errors instead of a single error, so that we know more (also add it as list of errors with error line and column).
-
 public class Validator
 {
     private TypeMapper _typeMapper;

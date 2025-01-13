@@ -177,7 +177,11 @@ internal class MainWindow : Window
         var listBox = scrollView.GetComponent<ListBox>("propertyList");
         listBox.Clear();
 
-        if (e.CurrentValue == null) return;
+        if (e.CurrentValue == null)
+        {
+            UpdateAddRemoveButtonState();
+            return;
+        }
 
         var selectedAstNode = _treeNodeAstMap[e.CurrentValue];
         var typeMapper = Application.UIDefinitionManager.TypeMapper;
@@ -211,9 +215,9 @@ internal class MainWindow : Window
             gridLayout.AddComponent(editBox);
             gridLayout.Height.Value = 30;
             listBox.AddComponent(gridLayout);
-
-            UpdateAddRemoveButtonState();
         }
+
+        UpdateAddRemoveButtonState();
     }
 
     private void SelectedItem_ValueChange(ListBox sender, ValueChangeEventArgs<UIComponent?> e)

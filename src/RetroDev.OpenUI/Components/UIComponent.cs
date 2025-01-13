@@ -238,6 +238,7 @@ public abstract class UIComponent
         RegisterDrawingAreaEvents();
 
         Focus.ValueChange += Focus_ValueChange;
+        Enabled.ValueChange += Enabled_ValueChange;
         MousePress += UIComponent_MousePress;
     }
 
@@ -495,7 +496,18 @@ public abstract class UIComponent
 
     private void Focus_ValueChange(UIComponent sender, ValueChangeEventArgs<bool> e)
     {
-        RequestFocusFor(this);
+        if (e.CurrentValue)
+        {
+            RequestFocusFor(this);
+        }
+    }
+
+    private void Enabled_ValueChange(UIComponent sender, ValueChangeEventArgs<bool> e)
+    {
+        if (!e.CurrentValue)
+        {
+            Focus.Value = false;
+        }
     }
 
     // Ensure that only one child component has focus.
@@ -505,7 +517,7 @@ public abstract class UIComponent
         // TODO: When implementing focus groups, just change the logic here to not delegate this to the parent.
         if (Parent != null)
         {
-            Parent.RequestFocusFor(component);
+            Root.RequestFocusFor(component);
             return;
         }
 
