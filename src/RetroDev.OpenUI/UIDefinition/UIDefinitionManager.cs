@@ -38,12 +38,16 @@ public class UIDefinitionManager
     /// Creats a new <see cref="UIDefinitionManager"/>.
     /// </summary>
     /// <param name="application">The application that owns <see langword="this" /> object.</param>
-    public UIDefinitionManager(Application application)
+    /// <param name="binder">
+    /// The binder to define the EAML language, which binds UIDefinition attributes with actual values.
+    /// If this parameter is not specified, a <see cref="EAMLBinder"/> isntance will be created, using the default EAML implementation.
+    /// </param>
+    public UIDefinitionManager(Application application, IEAMLBinder? binder = null)
     {
         Application = application;
         TypeMapper = new TypeMapper();
         Parser = new Parser();
-        InstanceCreator = new InstanceCreator(Application, TypeMapper);
+        InstanceCreator = new InstanceCreator(Application, TypeMapper, binder);
         CodeGenerator = new CodeGenerator();
     }
 
