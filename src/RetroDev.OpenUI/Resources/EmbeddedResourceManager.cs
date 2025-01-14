@@ -14,7 +14,11 @@ public class EmbeddedResourceManager : IResourceManager
     /// </summary>
     public ITextResources Windows => new EmbeddedWindowResources();
 
+    /// <summary>
+    /// Manages themes xml resources.
+    /// </summary>
+    public ITextResources Themes => new EmbeddedThemeResources();
+
     // public ITextResources Langauges => new LanguageResources();
-    // public ITextResources Themes => new ThemeResources();
     // internal ITextResources Shaders => new ShaderSrouces();
 }

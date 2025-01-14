@@ -17,6 +17,8 @@
   <ItemGroup>
     <EmbeddedResource Include="Shaders\default.frag" />
     <EmbeddedResource Include="Shaders\default.vert" />
+    <EmbeddedResource Include="Themes\openui-dark.xml" />
+    <EmbeddedResource Include="Themes\openui-light.xml" />
   </ItemGroup>
 
   <ItemGroup>

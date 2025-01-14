@@ -82,5 +82,5 @@ internal static class ExtensionMethods
     /// <param name="color">The rgba color to convert.</param>
     /// <returns>A OpenGL color, where each component is from 0 (darkest) to 1 (brightest).</returns>
     public static Vector4 ToOpenGLColor(this Color color) =>
-        new(color.Red / 255.0f, color.Green / 255.0f, color.Blue / 255.0f, color.Alpha / 255.0f);
+        new(color.RedComponent / 255.0f, color.GreenComponent / 255.0f, color.BlueComponent / 255.0f, color.AlphaComponent / 255.0f);
 }

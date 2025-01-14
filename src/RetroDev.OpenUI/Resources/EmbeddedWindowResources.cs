@@ -1,7 +1,7 @@
 ﻿namespace RetroDev.OpenUI.Resources;
 
 /// <summary>
-/// Allows to locate a text resource.
+/// Allows to locate a window resource.
 /// </summary>
 public class EmbeddedWindowResources : EmbeddedResourcesBase, ITextResources
 {

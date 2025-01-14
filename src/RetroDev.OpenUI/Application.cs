@@ -9,6 +9,7 @@ using RetroDev.OpenUI.Graphics;
 using RetroDev.OpenUI.Graphics.Internal;
 using RetroDev.OpenUI.Logging;
 using RetroDev.OpenUI.Resources;
+using RetroDev.OpenUI.Themes;
 using RetroDev.OpenUI.UIDefinition;
 
 namespace RetroDev.OpenUI;
@@ -33,10 +34,29 @@ public class Application : IDisposable
     /// </summary>
     public ILogger Logger { get; set; }
 
+    /// <summary>
+    /// A set of services to manage font.
+    /// </summary>
     public IFontServices FontServices => new FontServices();
+
+    /// <summary>
+    /// Manages all resources.
+    /// </summary>
     public IResourceManager ResourceManager { get; }
+
+    /// <summary>
+    /// The UIDefinition language manager, loading and generating xml UIDefinition files.
+    /// </summary>
     public UIDefinitionManager UIDefinitionManager => new UIDefinitionManager(this);
 
+    /// <summary>
+    /// The main theme used in the application.
+    /// </summary>
+    public Theme Theme { get; set; }
+
+    /// <summary>
+    /// The primary screen size.
+    /// </summary>
     public Size ScreenSize => new(800, 600); //TODO: real screen size
 
     internal LifeCycle LifeCycle { get; } = new();
@@ -57,6 +77,7 @@ public class Application : IDisposable
         _uiEnvironment = uIEnvironment ?? new SDLUIEnvironment(this);
         _eventSystem = eventSystem ?? new SDLEventSystem(this);
         ResourceManager = resourceManager ?? new EmbeddedResourceManager();
+        Theme = new Theme(new Dictionary<string, Color>()); // TODO: load from files
         Logger = logger ?? new ConsoleLogger();
         LifeCycle.RegisterUIThread();
         LifeCycle.CurrentState = LifeCycle.State.INIT;
