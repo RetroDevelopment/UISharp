@@ -154,7 +154,7 @@ public readonly record struct Color(byte RedComponent = 0, byte GreenComponent =
     /// <summary>
     /// Whether <see langword="this" /> color is <see cref="Transparent"/>.
     /// </summary>
-    public bool IsTransparent => this == Transparent;
+    public bool IsTransparent => AlphaComponent == 0;
 
     /// <summary>
     /// Creates a new color from the given <paramref name="colorHex"/> representation.

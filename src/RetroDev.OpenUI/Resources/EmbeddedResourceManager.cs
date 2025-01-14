@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-
-namespace RetroDev.OpenUI.Resources;
+﻿namespace RetroDev.OpenUI.Resources;
 
 /// <summary>
 /// Manages resources in the application.
@@ -20,5 +18,4 @@ public class EmbeddedResourceManager : IResourceManager
     public ITextResources Themes => new EmbeddedThemeResources();
 
     // public ITextResources Langauges => new LanguageResources();
-    // internal ITextResources Shaders => new ShaderSrouces();
 }

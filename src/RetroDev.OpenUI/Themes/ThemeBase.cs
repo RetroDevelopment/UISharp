@@ -7,10 +7,9 @@ namespace RetroDev.OpenUI.Themes;
 /// </summary>
 public abstract class ThemeBase
 {
-    /// <summary>
-    /// Defines a name - color mapping.
-    /// </summary>
-    public Dictionary<string, Color> Colors;
+    private Dictionary<string, Color> _colors;
+
+    public IReadOnlyDictionary<string, Color> Colors => _colors;
 
     /// <summary>
     /// Creates a new theme.
@@ -18,6 +17,6 @@ public abstract class ThemeBase
     /// <param name="colors">The name - color mapping.</param>
     protected ThemeBase(Dictionary<string, Color> colors)
     {
-        Colors = colors;
+        _colors = colors;
     }
 }

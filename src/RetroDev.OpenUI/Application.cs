@@ -19,8 +19,9 @@ namespace RetroDev.OpenUI;
 /// </summary>
 public class Application : IDisposable
 {
-    private bool _disposed = false;
     private readonly List<Window> _windows = [];
+    private readonly ThemeParser _themeParser = new ThemeParser();
+    private bool _disposed = false;
     private bool _shoudQuit = false;
 
     // ===========================
@@ -77,7 +78,7 @@ public class Application : IDisposable
         _uiEnvironment = uIEnvironment ?? new SDLUIEnvironment(this);
         _eventSystem = eventSystem ?? new SDLEventSystem(this);
         ResourceManager = resourceManager ?? new EmbeddedResourceManager();
-        Theme = new Theme(new Dictionary<string, Color>()); // TODO: load from files
+        Theme = _themeParser.Parse(ResourceManager.Themes["openui-dark"]);
         Logger = logger ?? new ConsoleLogger();
         LifeCycle.RegisterUIThread();
         LifeCycle.CurrentState = LifeCycle.State.INIT;
@@ -148,6 +149,15 @@ public class Application : IDisposable
         var window = (TWindow)component;
         window.Visibility.Value = ComponentVisibility.Visible;
         return window;
+    }
+
+    /// <summary>
+    /// Loads a new theme from a theme resource.
+    /// </summary>
+    /// <param name="themeName">The theme resource name.</param>
+    public void LoadThemeResource(string themeName)
+    {
+        Theme = _themeParser.Parse(ResourceManager.Themes[themeName]);
     }
 
     /// <summary>

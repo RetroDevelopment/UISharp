@@ -5,7 +5,7 @@
 /// </summary>
 public class EmbeddedThemeResources : EmbeddedResourcesBase, ITextResources
 {
-    public EmbeddedThemeResources() : base("Themes") { }
+    public EmbeddedThemeResources() : base("Assets.Themes") { }
 
     /// <summary>
     /// Gets the xml text of the resource with the given <paramref name="name"/>.

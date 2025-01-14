@@ -10,15 +10,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Shaders\default.frag" />
-    <None Remove="Shaders\default.vert" />
+    <None Remove="Assets\Shaders\default.frag" />
+    <None Remove="Assets\Shaders\default.vert" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Shaders\default.frag" />
-    <EmbeddedResource Include="Shaders\default.vert" />
-    <EmbeddedResource Include="Themes\openui-dark.xml" />
-    <EmbeddedResource Include="Themes\openui-light.xml" />
+    <EmbeddedResource Include="Assets\Shaders\default.frag" />
+    <EmbeddedResource Include="Assets\Shaders\default.vert" />
+    <EmbeddedResource Include="Assets\Themes\openui-dark.xml" />
+    <EmbeddedResource Include="Assets\Themes\openui-light.xml" />
   </ItemGroup>
 
   <ItemGroup>
