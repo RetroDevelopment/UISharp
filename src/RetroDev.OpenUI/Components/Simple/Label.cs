@@ -1,4 +1,4 @@
-﻿using RetroDev.OpenUI.Components.AutoSize;
+﻿using RetroDev.OpenUI.Components.AutoArea;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Events;
 using RetroDev.OpenUI.Graphics;
@@ -27,10 +27,16 @@ public class Label : UIComponent
     protected override bool DefaultIsFocusable => false;
 
     /// <inheritdoc />
-    protected override IAutoSizeStrategy DefaultAutoWidth => AutoSizeStrategy.WrapComponentCenter;
+    protected override IAutoSize DefaultAutoWidth => AutoSize.Wrap;
 
     /// <inheritdoc />
-    protected override IAutoSizeStrategy DefaultAutoHeight => AutoSizeStrategy.WrapComponentCenter;
+    protected override IAutoSize DefaultAutoHeight => AutoSize.Wrap;
+
+    /// <inheritdoc />
+    protected override IHorizontalAlignment DefaultHorizontalAlignment => Alignment.Center;
+
+    /// <inheritdoc />
+    protected override IVerticalAlignment DefaultVerticalAlignment => Alignment.Center;
 
     /// <summary>
     /// Creates a new label.

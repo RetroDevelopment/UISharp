@@ -2,7 +2,7 @@
 using RetroDev.OpenIDE.Components;
 using RetroDev.OpenUI;
 using RetroDev.OpenUI.Components;
-using RetroDev.OpenUI.Components.AutoSize;
+using RetroDev.OpenUI.Components.AutoArea;
 using RetroDev.OpenUI.Components.Containers;
 using RetroDev.OpenUI.Components.Simple;
 using RetroDev.OpenUI.Core.Coordinates;
@@ -21,8 +21,6 @@ internal class Container : UIComponent
     public Container(Application application, List<UIComponent> children) : base(application)
     {
         children.ForEach(c => AddChild(c));
-        AutoWidth.Value = AutoSizeStrategy.MatchParent;
-        AutoHeight.Value = AutoSizeStrategy.MatchParent;
     }
 
     protected override Size ComputeSizeHint() => new(100, 100);
@@ -85,8 +83,10 @@ internal class MainWindow : Window
         {
             var label = new Label(Application);
             label.Text.Value = componentType.Name;
-            label.AutoWidth.Value = AutoSizeStrategy.WrapComponentLeftTop;
-            label.AutoHeight.Value = AutoSizeStrategy.WrapComponentLeftTop;
+            label.AutoWidth.Value = AutoSize.Wrap;
+            label.AutoHeight.Value = AutoSize.Wrap;
+            label.HorizontalAlignment.Value = Alignment.Left;
+            label.VerticalAlignment.Value = Alignment.Top;
             _components!.AddComponent(label);
         }
     }
@@ -194,11 +194,13 @@ internal class MainWindow : Window
             gridLayout.Columns.Value = 2;
 
             var header = new Label(Application, property.Name);
-            header.AutoWidth.Value = AutoSizeStrategy.WrapComponentLeftTop;
+            header.AutoWidth.Value = AutoSize.Wrap;
+            header.HorizontalAlignment.Value = Alignment.Left;
 
             var editBox = new EditBox(Application);
             editBox.ID.Value = property.Name;
-            editBox.AutoWidth.Value = AutoSizeStrategy.MatchParent;
+            editBox.AutoWidth.Value = AutoSize.Stretch;
+
             var attribute = selectedAstNode.Attributes.Where(c => c.Name.Equals(property.Name, StringComparison.CurrentCultureIgnoreCase)).FirstOrDefault();
             if (attribute != null)
             {

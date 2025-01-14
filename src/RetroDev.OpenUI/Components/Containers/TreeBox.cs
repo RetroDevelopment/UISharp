@@ -1,4 +1,4 @@
-﻿using RetroDev.OpenUI.Components.AutoSize;
+﻿using RetroDev.OpenUI.Components.AutoArea;
 using RetroDev.OpenUI.Components.Simple;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Properties;
@@ -70,8 +70,10 @@ public class TreeBox : Container
         gridLayout.AddComponent(foldUnfoldButton);
         gridLayout.AddComponent(component.Content.Value);
 
-        gridLayout.AutoWidth.Value = AutoSizeStrategy.WrapComponentLeftTop;
-        gridLayout.AutoHeight.Value = AutoSizeStrategy.WrapComponentLeftTop;
+        gridLayout.AutoWidth.Value = AutoSize.Wrap;
+        gridLayout.AutoHeight.Value = AutoSize.Wrap;
+        gridLayout.HorizontalAlignment.Value = Alignment.Left;
+        gridLayout.VerticalAlignment.Value = Alignment.Top;
 
         UIComponent? afterComponent;
 

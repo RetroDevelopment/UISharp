@@ -1,4 +1,4 @@
-﻿using RetroDev.OpenUI.Components.AutoSize;
+﻿using RetroDev.OpenUI.Components.AutoArea;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Events;
 using RetroDev.OpenUI.Graphics;
@@ -21,10 +21,17 @@ public class EditBox : UIComponent
     public UIProperty<EditBox, string> Text { get; }
 
     /// <inheritdoc />
-    protected override IAutoSizeStrategy DefaultAutoWidth => AutoSizeStrategy.WrapComponentLeftTop;
+    protected override IAutoSize DefaultAutoWidth => AutoSize.Wrap;
 
     /// <inheritdoc />
-    protected override IAutoSizeStrategy DefaultAutoHeight => AutoSizeStrategy.WrapComponentCenter;
+    protected override IAutoSize DefaultAutoHeight => AutoSize.Wrap;
+
+    /// <inheritdoc />
+    protected override IHorizontalAlignment DefaultHorizontalAlignment => Alignment.Left;
+
+    /// <inheritdoc />
+    protected override IVerticalAlignment DefaultVerticalAlignment => Alignment.Center;
+
 
     /// <inheritdoc />
     protected override Size ComputeSizeHint() => new(20 * 10, 20); // 20 is font size and 10 the characters (estimate)
@@ -39,8 +46,10 @@ public class EditBox : UIComponent
         AddChild(_inputTextLabel);
         Text = new UIProperty<EditBox, string>(this, string.Empty);
         _inputTextLabel.Text.AddBinder(new PropertyBinder<EditBox, string>(Text, BindingType.DestinationToSource));
-        _inputTextLabel.AutoWidth.Value = AutoSizeStrategy.WrapComponentLeftTop;
-        _inputTextLabel.AutoHeight.Value = AutoSizeStrategy.WrapComponentCenter;
+        _inputTextLabel.AutoWidth.Value = AutoSize.Wrap;
+        _inputTextLabel.AutoHeight.Value = AutoSize.Wrap;
+        _inputTextLabel.HorizontalAlignment.Value = Alignment.Left;
+        _inputTextLabel.VerticalAlignment.Value = Alignment.Center;
 
         RenderFrame += EditBox_RenderFrame;
         MousePress += EditBox_MousePress;

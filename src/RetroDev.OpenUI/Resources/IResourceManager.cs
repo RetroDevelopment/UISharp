@@ -1,7 +1,7 @@
 ﻿namespace RetroDev.OpenUI.Resources;
 
 /// <summary>
-/// Manages resources in the application.s
+/// Manages resources in the application.
 /// </summary>
 public interface IResourceManager
 {

@@ -2,7 +2,6 @@
 using System.ComponentModel;
 using System.Reflection;
 using RetroDev.OpenUI.Components;
-using RetroDev.OpenUI.Components.AutoSize;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Exceptions;
 using RetroDev.OpenUI.UIDefinition.Ast;

@@ -1,5 +1,4 @@
-﻿using RetroDev.OpenUI.Components.AutoSize;
-using RetroDev.OpenUI.Core.Coordinates;
+﻿using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Properties;
 
 namespace RetroDev.OpenUI.Components.Containers;

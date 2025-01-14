@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <window id="w" width="800" height="600">
     <gridlayout columns="3" rows="2">
-        <button text="1" autowidth="MatchParent" autoheight="MatchParent" width="auto" height="auto" />
-        <button text="2" autowidth="MatchParent" autoheight="MatchParent" />
-        <button text="3" autowidth="MatchParent" autoheight="MatchParent" />
-        <button text="4" autowidth="MatchParent" autoheight="MatchParent" />
-        <label text="5" autowidth="MatchParent" autoheight="MatchParent" />
-        <removeme autowidth="MatchParent" autoheight="MatchParent" />
+        <button text="1" autowidth="stretch" autoheight="stretch" width="auto" height="auto" />
+        <button text="2" autowidth="stretch" autoheight="stretch" />
+        <button text="3" autowidth="stretch" autoheight="stretch" />
+        <button text="4" autowidth="stretch" autoheight="stretch" />
+        <label text="5" autowidth="stretch" autoheight="stretch" />
+        <removeme autowidth="stretch" autoheight="stretch" />
     </gridlayout>
 </window>

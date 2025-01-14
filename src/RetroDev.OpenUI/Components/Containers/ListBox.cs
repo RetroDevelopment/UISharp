@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics.Metrics;
-using RetroDev.OpenUI.Components.AutoSize;
+using RetroDev.OpenUI.Components.AutoArea;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Graphics;
 using RetroDev.OpenUI.Graphics.Shapes;
@@ -43,8 +43,10 @@ public class ListBox : Container, IContainer
         _scrollView = new ScrollView(application);
 
         _scrollView.SetComponent(_verticalLayout);
-        _verticalLayout.AutoWidth.Value = AutoSizeStrategy.WrapComponentLeftTop;
-        _verticalLayout.AutoHeight.Value = AutoSizeStrategy.WrapComponentLeftTop;
+        _verticalLayout.AutoWidth.Value = AutoSize.Wrap;
+        _verticalLayout.AutoHeight.Value = AutoSize.Wrap;
+        _verticalLayout.HorizontalAlignment.Value = Alignment.Left;
+        _verticalLayout.VerticalAlignment.Value = Alignment.Top;
 
         SelectedIndex = new UIProperty<ListBox, uint?>(this, null);
         SelectedIndex.ValueChange += SelectedIndex_ValueChange;

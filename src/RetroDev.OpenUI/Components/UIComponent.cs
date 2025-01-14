@@ -1,5 +1,5 @@
-﻿using System.Reflection.Metadata.Ecma335;
-using RetroDev.OpenUI.Components.AutoSize;
+﻿using System.Runtime.InteropServices;
+using RetroDev.OpenUI.Components.AutoArea;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Events;
 using RetroDev.OpenUI.Exceptions;
@@ -137,12 +137,22 @@ public abstract class UIComponent
     /// <summary>
     /// Specifies how to automatically specify this component width.
     /// </summary>
-    public UIProperty<UIComponent, IAutoSizeStrategy> AutoWidth { get; }
+    public UIProperty<UIComponent, IAutoSize> AutoWidth { get; }
 
     /// <summary>
     /// Specifies how to automatically specify this component height.
     /// </summary>
-    public UIProperty<UIComponent, IAutoSizeStrategy> AutoHeight { get; }
+    public UIProperty<UIComponent, IAutoSize> AutoHeight { get; }
+
+    /// <summary>
+    /// Specifies the horizontal alignment of this component relative to its parent.
+    /// </summary>
+    public UIProperty<UIComponent, IHorizontalAlignment> HorizontalAlignment { get; }
+
+    /// <summary>
+    /// Specifies the vertical alignment of this component relative to its parent.
+    /// </summary>
+    public UIProperty<UIComponent, IVerticalAlignment> VerticalAlignment { get; }
 
     /// <summary>
     /// Whether this component can get focus.
@@ -180,12 +190,22 @@ public abstract class UIComponent
     /// <summary>
     /// The initial value of <see cref="AutoWidth"/>.
     /// </summary>
-    protected virtual IAutoSizeStrategy DefaultAutoWidth => AutoSizeStrategy.MatchParent;
+    protected virtual IAutoSize DefaultAutoWidth => AutoSize.Stretch;
 
     /// <summary>
     /// The default value of <see cref="AutoHeight"/>.
     /// </summary>
-    protected virtual IAutoSizeStrategy DefaultAutoHeight => AutoSizeStrategy.MatchParent;
+    protected virtual IAutoSize DefaultAutoHeight => AutoSize.Stretch;
+
+    /// <summary>
+    /// The default value of <see cref="HorizontalAlignment"/>.
+    /// </summary>
+    protected virtual IHorizontalAlignment DefaultHorizontalAlignment => Alignment.Center;
+
+    /// <summary>
+    /// The default value of <see cref="VerticalAlignment"/>.
+    /// </summary>
+    protected virtual IVerticalAlignment DefaultVerticalAlignment => Alignment.Center;
 
     /// <summary>
     /// The initial value of <see cref="Focusable"/>.
@@ -198,6 +218,13 @@ public abstract class UIComponent
     /// and it has size 100x100 pixels.
     /// </summary>
     public Area RelativeDrawingArea => _relativeDrawingArea.Value;
+
+    /// <summary>
+    /// The size of the container in which <see langword="this" /> <see cref="UIComponent"/> is diplayed.
+    /// If <see langword="this" /> <see cref="UIComponent"/> is <see cref="Root"/> (e.g. a <see cref="Window"/>, the
+    /// container is assumed to be the main screen, so the main screen resolution will be returned.
+    /// </summary>
+    public Size ContainerSize => Parent?.RelativeDrawingArea?.Size ?? Application.ScreenSize;
 
     /// <summary>
     /// The 2D area (in pixels) where this component is rendered. The area is absolute to the window and it is clipped
@@ -223,8 +250,10 @@ public abstract class UIComponent
         Height = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Auto);
         Height = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Auto);
         Visibility = new UIProperty<UIComponent, ComponentVisibility>(this, DefaultVisibility);
-        AutoWidth = new UIProperty<UIComponent, IAutoSizeStrategy>(this, DefaultAutoWidth);
-        AutoHeight = new UIProperty<UIComponent, IAutoSizeStrategy>(this, DefaultAutoHeight);
+        AutoWidth = new UIProperty<UIComponent, IAutoSize>(this, DefaultAutoWidth);
+        AutoHeight = new UIProperty<UIComponent, IAutoSize>(this, DefaultAutoHeight);
+        HorizontalAlignment = new UIProperty<UIComponent, IHorizontalAlignment>(this, DefaultHorizontalAlignment);
+        VerticalAlignment = new UIProperty<UIComponent, IVerticalAlignment>(this, DefaultVerticalAlignment);
         Focusable = new UIProperty<UIComponent, bool>(this, DefaultIsFocusable);
         Focus = new UIProperty<UIComponent, bool>(this, false);
         Enabled = new UIProperty<UIComponent, bool>(this, true);
@@ -549,13 +578,21 @@ public abstract class UIComponent
 
     private Area ComputeRelativeDrawingArea()
     {
-        var (x, width) = AutoWidth.Value.ComputeHorizontalArea(this);
-        var (y, height) = AutoHeight.Value.ComputeVerticalArea(this);
+        if (Visibility.Value == ComponentVisibility.Collapsed) return Area.Empty;
 
-        var topLeft = new Point(x, y);
-        var size = Visibility.Value != ComponentVisibility.Collapsed ? new Size(width, height) : Size.Zero;
+        var autoWidth = AutoWidth.Value.ComputeWidth(this);
+        var autoHeight = AutoHeight.Value.ComputeHeight(this);
+        var actualWidth = Width.Value.IsAuto ? autoWidth : Width.Value;
+        var actualHeight = Height.Value.IsAuto ? autoHeight : Height.Value;
+        var actualSize = new Size(actualWidth, actualHeight);
 
-        return new Area(topLeft, size);
+        var autoX = HorizontalAlignment.Value.ComputeX(this, actualSize);
+        var autoY = VerticalAlignment.Value.ComputeY(this, actualSize);
+        var actualX = X.Value.IsAuto ? autoX : X.Value;
+        var actualY = Y.Value.IsAuto ? autoY : Y.Value;
+        var actualTopLeft = new Point(actualX, actualY);
+
+        return new Area(actualTopLeft, actualSize);
     }
 
     private Area ComputeAbsoluteDrawingArea() => RelativeDrawingArea.ToAbsolute(Parent?.AbsoluteDrawingArea)
