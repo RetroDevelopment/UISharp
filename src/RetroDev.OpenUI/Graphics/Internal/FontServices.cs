@@ -14,7 +14,7 @@ internal class FontServices : IFontServices
     {
         if (string.IsNullOrEmpty(text)) return Size.Zero;
         // TODO: optimize so that we don't need to calculate the size every time
-        var textureImage = new SixLaborsFontRenderingEngine().ConvertTextToRgbaImage(text, 20, new(0, 0, 0, 0));
+        var textureImage = new SixLaborsFontRenderingEngine().ConvertTextToRgbaImage(text, 20, new Color(0, 0, 0, 0));
         return new(textureImage.Width, textureImage.Height);
     }
 }

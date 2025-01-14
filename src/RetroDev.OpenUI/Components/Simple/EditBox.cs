@@ -1,6 +1,7 @@
-﻿using RetroDev.OpenUI.Components.AutoSize;
+﻿using RetroDev.OpenUI.Components.AutoArea;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Events;
+using RetroDev.OpenUI.Graphics;
 using RetroDev.OpenUI.Graphics.Shapes;
 using RetroDev.OpenUI.Properties;
 using SDL2;
@@ -14,18 +15,41 @@ public class EditBox : UIComponent
 {
     private readonly Label _inputTextLabel;
 
+    /// <summary>
+    /// The edit text.
+    /// </summary>
     public UIProperty<EditBox, string> Text { get; }
 
+    /// <inheritdoc />
+    protected override IAutoSize DefaultAutoWidth => AutoSize.Wrap;
+
+    /// <inheritdoc />
+    protected override IAutoSize DefaultAutoHeight => AutoSize.Wrap;
+
+    /// <inheritdoc />
+    protected override IHorizontalAlignment DefaultHorizontalAlignment => Alignment.Left;
+
+    /// <inheritdoc />
+    protected override IVerticalAlignment DefaultVerticalAlignment => Alignment.Center;
+
+
+    /// <inheritdoc />
     protected override Size ComputeSizeHint() => new(20 * 10, 20); // 20 is font size and 10 the characters (estimate)
 
+    /// <summary>
+    /// Creates a new edit box to insert text.
+    /// </summary>
+    /// <param name="parent">The application that contains this button.</param>
     public EditBox(Application parent) : base(parent)
     {
         _inputTextLabel = new Label(parent);
         AddChild(_inputTextLabel);
-        Text = new(this, string.Empty);
+        Text = new UIProperty<EditBox, string>(this, string.Empty);
         _inputTextLabel.Text.AddBinder(new PropertyBinder<EditBox, string>(Text, BindingType.DestinationToSource));
-        _inputTextLabel.AutoWidth.Value = AutoSizeStrategy.WrapComponentLeftTop;
-        _inputTextLabel.AutoHeight.Value = AutoSizeStrategy.WrapComponentCenter;
+        _inputTextLabel.AutoWidth.Value = AutoSize.Wrap;
+        _inputTextLabel.AutoHeight.Value = AutoSize.Wrap;
+        _inputTextLabel.HorizontalAlignment.Value = Alignment.Left;
+        _inputTextLabel.VerticalAlignment.Value = Alignment.Center;
 
         RenderFrame += EditBox_RenderFrame;
         MousePress += EditBox_MousePress;
@@ -33,7 +57,6 @@ public class EditBox : UIComponent
         TextInput += EditBox_TextInput;
     }
 
-    // TODO: getting the exact key is more difficult and it will require platform specific libraries. So I will maybe need to create a C++ VS project.
     private void EditBox_KeyPress(UIComponent sender, KeyEventArgs e)
     {
         var key = e.Button;
@@ -63,15 +86,15 @@ public class EditBox : UIComponent
 
         if (Focus.Value)
         {
-            canvas.Render(new Rectangle(new(0, 100, 0, 255)), new(Point.Zero, size));
+            canvas.Render(new Rectangle(new Color(0, 100, 0, 255)), new Area(Point.Zero, size));
         }
         else if (Enabled)
         {
-            canvas.Render(new Rectangle(new(0, 0, 100, 255)), new(Point.Zero, size));
+            canvas.Render(new Rectangle(new Color(0, 0, 100, 255)), new Area(Point.Zero, size));
         }
         else
         {
-            canvas.Render(new Rectangle(new(100, 100, 100, 255)), new(Point.Zero, size));
+            canvas.Render(new Rectangle(new Color(100, 100, 100, 255)), new Area(Point.Zero, size));
         }
 
     }

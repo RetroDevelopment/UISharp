@@ -96,8 +96,8 @@ internal class OpenGLRenderingEngine : IRenderingEngine
         LoggingUtils.SDLCheck(() => SDL.SDL_GL_MakeCurrent(window, _glContext), _application.Logger);
         GL.LoadBindings(new SDL2OpenGLBindings()); // Load OpenGL.NET bindings
         LoggingUtils.SDLCheck(() => SDL.SDL_GL_SetSwapInterval(1), application.Logger, warning: true); // Enable VSync
-        _shader = new ShaderProgram([new(ShaderType.VertexShader, shaderResources["default.vert"], _application.Logger),
-                                     new(ShaderType.FragmentShader, shaderResources["default.frag"], _application.Logger)],
+        _shader = new ShaderProgram([new Shader(ShaderType.VertexShader, shaderResources["default.vert"], _application.Logger),
+                                     new Shader(ShaderType.FragmentShader, shaderResources["default.frag"], _application.Logger)],
                                      _application.Logger);
 
         // SDLCheck(() => SDL.SDL_GL_SetSwapInterval(0)); // This will run the CPU and GPU at 100%
@@ -121,7 +121,7 @@ internal class OpenGLRenderingEngine : IRenderingEngine
     {
         _application.LifeCycle.ThrowIfNotOnUIThread(); // TODO: texture creation not on UI rendering
         // TODO: now a new texture is created for each text. we will need to probably use a special model with vertices
-        // for each caracter and map it to texture atlas with uv mapping. Text will be the most performance critical
+        // for each character and map it to texture atlas with uv mapping. Text will be the most performance critical
         // issue since there will be a lot of text and that changes often. Plus implement texture garbage collection for text.
         // At the moment a new texture is created and the old one is kept in memory.
         // But for now, let's keep it simple.

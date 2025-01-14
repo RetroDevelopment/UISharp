@@ -31,11 +31,11 @@ internal class RemoveMe : UIComponent
                                 CornerRadiusX: radiusX,
                                 CornerRadiusY: radiusY,
                                 Rotation: rotation);
-        e.Canvas.Render(rec, new(new Point(30.0f, 30.0f), new Size(80.0f, 90.0f)));
+        e.Canvas.Render(rec, new Area(new Point(30.0f, 30.0f), new Size(80.0f, 90.0f)));
     }
 
     protected override Size ComputeSizeHint()
     {
-        return new(100, 100);
+        return new Size(100, 100);
     }
 }

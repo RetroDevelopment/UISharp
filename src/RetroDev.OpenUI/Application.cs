@@ -1,5 +1,6 @@
 ﻿using RetroDev.OpenUI.Components;
 using RetroDev.OpenUI.Core;
+using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Core.Internal;
 using RetroDev.OpenUI.Events;
 using RetroDev.OpenUI.Events.Internal;
@@ -35,6 +36,8 @@ public class Application : IDisposable
     public IFontServices FontServices => new FontServices();
     public IResourceManager ResourceManager { get; }
     public UIDefinitionManager UIDefinitionManager => new UIDefinitionManager(this);
+
+    public Size ScreenSize => new(800, 600); //TODO: real screen size
 
     internal LifeCycle LifeCycle { get; } = new();
 
@@ -165,7 +168,8 @@ public class Application : IDisposable
 
     private void EventSystem_BeforeRender(IEventSystem sender, EventArgs e)
     {
-        _windows.ForEach(w => w.OnRepositionChildren());
+        _windows.ForEach(w => w.Validate());
+        _windows.ForEach(_w => _w.RepositionChildren());
         LifeCycle.CurrentState = LifeCycle.State.RENDERING;
     }
 

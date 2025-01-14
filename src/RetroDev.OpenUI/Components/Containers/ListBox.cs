@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics.Metrics;
-using RetroDev.OpenUI.Components.AutoSize;
+using RetroDev.OpenUI.Components.AutoArea;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Graphics;
 using RetroDev.OpenUI.Graphics.Shapes;
@@ -43,16 +43,16 @@ public class ListBox : Container, IContainer
         _scrollView = new ScrollView(application);
 
         _scrollView.SetComponent(_verticalLayout);
-        _verticalLayout.AutoWidth.Value = AutoSizeStrategy.WrapComponentLeftTop;
-        _verticalLayout.AutoHeight.Value = AutoSizeStrategy.WrapComponentLeftTop;
+        _verticalLayout.AutoWidth.Value = AutoSize.Wrap;
+        _verticalLayout.AutoHeight.Value = AutoSize.Wrap;
+        _verticalLayout.HorizontalAlignment.Value = Alignment.Left;
+        _verticalLayout.VerticalAlignment.Value = Alignment.Top;
 
         SelectedIndex = new UIProperty<ListBox, uint?>(this, null);
         SelectedIndex.ValueChange += SelectedIndex_ValueChange;
 
         SelectedItem = new UIProperty<ListBox, UIComponent?>(this, null);
         SelectedItem.ValueChange += SelectedItem_ValueChange;
-
-        RepositionChildren += ListBox_RepositionChildren;
 
         AddChild(_scrollView);
     }
@@ -91,7 +91,7 @@ public class ListBox : Container, IContainer
         {
             var rectangle = new Rectangle(new Color(255, 0, 0, 100));
             var size = sender.RelativeDrawingArea.Size;
-            e.Canvas.Render(rectangle, new(Point.Zero, size));
+            e.Canvas.Render(rectangle, new Area(Point.Zero, size));
         }
     }
 
@@ -127,7 +127,7 @@ public class ListBox : Container, IContainer
         SelectedIndex.Value = (uint)selectedIndex;
     }
 
-    private void ListBox_RepositionChildren(UIComponent sender, EventArgs e)
+    protected override void RepositionChildrenImplementation()
     {
         if (!Children.Any()) return;
 

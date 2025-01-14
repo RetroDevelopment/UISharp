@@ -1,4 +1,4 @@
-﻿using RetroDev.OpenUI.Components.AutoSize;
+﻿using RetroDev.OpenUI.Components.AutoArea;
 using RetroDev.OpenUI.Components.Simple;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Properties;
@@ -32,16 +32,12 @@ public class TreeBox : Container
     public TreeBox(Application application) : base(application)
     {
         _listBox = new ListBox(application);
-        _listBox.AutoWidth.Value = AutoSizeStrategy.MatchParent;
-        _listBox.AutoHeight.Value = AutoSizeStrategy.MatchParent;
         AddChild(_listBox);
 
         SelectedNode = new UIProperty<TreeBox, TreeNode?>(this, null);
         // TODO SelectedNode can be bound to _listBox.SelectedItem and converters!
         SelectedNode.ValueChange += SelectedNode_ValueChange;
         _listBox.SelectedIndex.ValueChange += SelectedIndex_ValueChange;
-
-        RepositionChildren += TreeBox_RepositionChildren;
     }
 
     public void AddTreeNode(TreeNode component)
@@ -74,8 +70,10 @@ public class TreeBox : Container
         gridLayout.AddComponent(foldUnfoldButton);
         gridLayout.AddComponent(component.Content.Value);
 
-        gridLayout.AutoWidth.Value = AutoSizeStrategy.WrapComponentLeftTop;
-        gridLayout.AutoHeight.Value = AutoSizeStrategy.WrapComponentLeftTop;
+        gridLayout.AutoWidth.Value = AutoSize.Wrap;
+        gridLayout.AutoHeight.Value = AutoSize.Wrap;
+        gridLayout.HorizontalAlignment.Value = Alignment.Left;
+        gridLayout.VerticalAlignment.Value = Alignment.Top;
 
         UIComponent? afterComponent;
 
@@ -168,7 +166,7 @@ public class TreeBox : Container
     }
 
 
-    private void TreeBox_RepositionChildren(UIComponent sender, EventArgs e)
+    protected override void RepositionChildrenImplementation()
     {
         foreach (var gridLayout in _listBox.Children.Cast<GridLayout>())
         {

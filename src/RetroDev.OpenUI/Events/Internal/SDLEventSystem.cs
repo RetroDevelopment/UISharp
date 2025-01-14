@@ -105,7 +105,10 @@ internal class SDLEventSystem(Application application) : IEventSystem
                     var buttonUpEvent = currentEvent.button;
                     var mouseButtonUpWindowId = GetWidnowIdFromButtonEvent(buttonUpEvent);
                     var mouseButtonUpButton = GetMouseButton(buttonUpEvent);
-                    var mouseButtonUpArgs = new WindowEventArgs<MouseEventArgs>(mouseButtonUpWindowId, new(new(buttonUpEvent.x, buttonUpEvent.y), new(buttonUpEvent.x, buttonUpEvent.y), mouseButtonUpButton));
+                    var mouseButtonUpArgs = new WindowEventArgs<MouseEventArgs>(mouseButtonUpWindowId,
+                                                                                new MouseEventArgs(new Point(buttonUpEvent.x, buttonUpEvent.y),
+                                                                                                   new Point(buttonUpEvent.x, buttonUpEvent.y),
+                                                                                mouseButtonUpButton));
                     mouseButtonUpArgs.Log("mouseDown", _application.Logger);
                     MouseRelease.Invoke(this, mouseButtonUpArgs);
                     _invalidated = true;
@@ -115,7 +118,9 @@ internal class SDLEventSystem(Application application) : IEventSystem
                     var motionEvent = currentEvent.motion;
                     var mouseButtonMoveWindowId = GetWidnowIdFromMotionEvent(motionEvent);
                     var mouseButtonMoveButton = MouseButton.None;
-                    var mouseMotionMoveArgs = new WindowEventArgs<MouseEventArgs>(mouseButtonMoveWindowId, new(new(motionEvent.x, motionEvent.y), new(motionEvent.x, motionEvent.y), mouseButtonMoveButton));
+                    var mouseMotionMoveArgs = new WindowEventArgs<MouseEventArgs>(mouseButtonMoveWindowId,
+                                                                                  new MouseEventArgs(new Point(motionEvent.x, motionEvent.y),
+                                                                                                     new Point(motionEvent.x, motionEvent.y), mouseButtonMoveButton));
                     mouseMotionMoveArgs.Log("mouseMove", _application.Logger);
                     MouseMove.Invoke(this, mouseMotionMoveArgs);
                     _invalidated = true;
@@ -125,7 +130,7 @@ internal class SDLEventSystem(Application application) : IEventSystem
                     var keyDownEvent = currentEvent.key;
                     var keyDownWindowId = GetWidnowIdFromKeyboardEvent(keyDownEvent);
                     var keyDownKey = KeyMapping.ToKeyButton(keyDownEvent.keysym.sym);
-                    var keyDownArgs = new WindowEventArgs<KeyEventArgs>(keyDownWindowId, new(keyDownKey));
+                    var keyDownArgs = new WindowEventArgs<KeyEventArgs>(keyDownWindowId, new KeyEventArgs(keyDownKey));
                     keyDownArgs.Log("keyDown", _application.Logger);
                     KeyPress.Invoke(this, keyDownArgs);
                     _invalidated = true;
@@ -135,7 +140,8 @@ internal class SDLEventSystem(Application application) : IEventSystem
                     var keyUpEvent = currentEvent.key;
                     var keyUpWindowId = GetWidnowIdFromKeyboardEvent(keyUpEvent);
                     var keyUpKey = KeyMapping.ToKeyButton(keyUpEvent.keysym.sym);
-                    var keyUpArgs = new WindowEventArgs<KeyEventArgs>(keyUpWindowId, new(keyUpKey));
+                    var keyUpArgs = new WindowEventArgs<KeyEventArgs>(keyUpWindowId, new KeyEventArgs(keyUpKey));
+                    keyUpArgs.Log("keyUp", _application.Logger);
                     KeyRelease.Invoke(this, keyUpArgs);
                     _invalidated = true;
                     break;
@@ -143,8 +149,9 @@ internal class SDLEventSystem(Application application) : IEventSystem
                     var textInputEvent = currentEvent.text;
                     var inputText = GetString(textInputEvent);
                     var inputTextWindowId = GetWindowIdFromTextInputEvent(textInputEvent);
-                    var textInputArgs = new WindowEventArgs<TextInputEventArgs>(inputTextWindowId, new(inputText));
+                    var textInputArgs = new WindowEventArgs<TextInputEventArgs>(inputTextWindowId, new TextInputEventArgs(inputText));
                     TextInput.Invoke(this, textInputArgs);
+                    textInputArgs.Log("textInput", _application.Logger);
                     _invalidated = true;
                     break;
             }

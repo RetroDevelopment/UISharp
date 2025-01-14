@@ -1,9 +1,12 @@
-﻿namespace RetroDev.OpenUI.UIDefinition;
+﻿using RetroDev.OpenUI.UIDefinition.Ast;
+using Attribute = RetroDev.OpenUI.UIDefinition.Ast.Attribute;
+
+namespace RetroDev.OpenUI.UIDefinition;
 
 /// <summary>
 /// Generates code from the UI definition AST.
 /// </summary>
-public class UIDefinitionCodeGenerator
+public class CodeGenerator
 {
     /// <summary>
     /// Wheter xml spacing should be done using tabs or spaces.

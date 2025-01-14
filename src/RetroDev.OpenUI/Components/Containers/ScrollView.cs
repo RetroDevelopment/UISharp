@@ -90,7 +90,7 @@ public class ScrollView : Container, ISingleContainer
         _moveVerticalBar = false;
     }
 
-    private void ScrollView_MouseDrag(UIComponent sender, Events.MouseDragArgs e)
+    private void ScrollView_MouseDrag(UIComponent sender, Events.MouseDragEventArgs e)
     {
         var horizontalScrollBarArea = GetHorizontalScrollBarArea();
         var verticalScrollBarArea = GetVerticalScrollBarArea();
@@ -130,7 +130,7 @@ public class ScrollView : Container, ISingleContainer
             var maximumHorizontalBarX = maximumHorizontalScrollBarAreaWidth - horizontalScollBarSize.Width;
             var horizontalScrollBarLocation = new Point(maximumHorizontalBarX * childHorizontalScrollFactor,
                                                         scrollViewSize.Height - ScrollBarSize);
-            return new(horizontalScrollBarLocation, horizontalScollBarSize);
+            return new Area(horizontalScrollBarLocation, horizontalScollBarSize);
         }
 
         return null;
@@ -154,7 +154,7 @@ public class ScrollView : Container, ISingleContainer
             var maximumVerticalBarY = maximumVerticalScollBarAreaHeight - verticalScollBarSize.Height;
             var verticalScrollBarLocation = new Point(scrollViewSize.Width - ScrollBarSize,
                                                 maximumVerticalBarY * childVerticalScrollFactor);
-            return new(verticalScrollBarLocation, verticalScollBarSize);
+            return new Area(verticalScrollBarLocation, verticalScollBarSize);
         }
 
         return null;

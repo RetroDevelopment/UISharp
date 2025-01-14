@@ -1,4 +1,5 @@
-﻿using RetroDev.OpenUI.Core.Coordinates;
+﻿using RetroDev.OpenUI.Components.AutoArea;
+using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Events;
 using RetroDev.OpenUI.Graphics;
 using RetroDev.OpenUI.Graphics.Shapes;
@@ -22,7 +23,20 @@ public class Label : UIComponent
     protected override Size ComputeSizeHint() =>
         Application.FontServices.ComputeTextSize(Text.Value);
 
+    /// <inheritdoc />
     protected override bool DefaultIsFocusable => false;
+
+    /// <inheritdoc />
+    protected override IAutoSize DefaultAutoWidth => AutoSize.Wrap;
+
+    /// <inheritdoc />
+    protected override IAutoSize DefaultAutoHeight => AutoSize.Wrap;
+
+    /// <inheritdoc />
+    protected override IHorizontalAlignment DefaultHorizontalAlignment => Alignment.Center;
+
+    /// <inheritdoc />
+    protected override IVerticalAlignment DefaultVerticalAlignment => Alignment.Center;
 
     /// <summary>
     /// Creates a new label.
@@ -30,7 +44,7 @@ public class Label : UIComponent
     /// <param name="parent">The application that contain this label.</param>
     public Label(Application parent) : base(parent)
     {
-        Text = new(this, string.Empty);
+        Text = new UIProperty<Label, string>(this, string.Empty);
         Text.ValueChange += (_, _) => SizeHintCache.MarkDirty();
         RenderFrame += Label_RenderFrame;
     }
@@ -50,6 +64,6 @@ public class Label : UIComponent
         var size = RelativeDrawingArea.Size;
         var canvas = e.Canvas;
 
-        canvas.Render(new Text(new(0, 0, 0, 0), new(255, 255, 255, 255), Text.Value), new(Point.Zero, size));
+        canvas.Render(new Text(new Color(0, 0, 0, 0), new Color(255, 255, 255, 255), Text.Value), new(Point.Zero, size));
     }
 }

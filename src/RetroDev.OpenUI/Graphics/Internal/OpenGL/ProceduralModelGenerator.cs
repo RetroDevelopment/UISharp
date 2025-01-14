@@ -50,7 +50,7 @@ internal class ProceduralModelGenerator
 
         for (var angle = 0.0; angle < 2.0 * Math.PI; angle += angleStepRadians)
         {
-            points.Add(new(new((float)Math.Cos(angle) / 2.0f, (float)Math.Sin(angle) / 2.0f)));
+            points.Add(new VertexAttribute(new Point((float)Math.Cos(angle) / 2.0f, (float)Math.Sin(angle) / 2.0f)));
         }
 
         return new Model2D(points);

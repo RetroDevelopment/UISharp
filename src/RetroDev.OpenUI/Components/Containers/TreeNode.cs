@@ -15,8 +15,8 @@ public class TreeNode
     private int indentation = 0;
 
     // TODO: pass LifeCycle to property so that you can treat is a UI
-    public UIProperty<TreeNode, UIComponent> Content { get; set; }
-    public UIProperty<TreeNode, bool> Collapsed { get; set; }
+    public BindableProperty<TreeNode, UIComponent> Content { get; set; }
+    public BindableProperty<TreeNode, bool> Collapsed { get; set; }
     public TreeNode? Parent { get; private set; }
 
     public bool ShouldDisplay
@@ -41,8 +41,8 @@ public class TreeNode
 
     public TreeNode(UIComponent component)
     {
-        Content = new UIProperty<TreeNode, UIComponent>(this, component);
-        Collapsed = new UIProperty<TreeNode, bool>(this, false);
+        Content = new BindableProperty<TreeNode, UIComponent>(this, component);
+        Collapsed = new BindableProperty<TreeNode, bool>(this, false);
     }
 
     public void AddChild(TreeNode child)

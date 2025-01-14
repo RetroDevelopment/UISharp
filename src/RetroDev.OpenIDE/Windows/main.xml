@@ -4,27 +4,27 @@
         <gridLayout id="controlLayout" rows="7" columns="1" rowSizes="50px;30px;30px;30px;200px;50px;*">
             <gridLayout id="fileInput" rows="1" columns="2" columnSizes="50px;*">
                 <label text="File:" />
-                <editBox id="file" autoWidth="match.parent" text="test.xml" />
+                <editBox id="file" autoWidth="stretch" text="test.xml" />
             </gridLayout>
 
-            <button id="load" text="Load" autoWidth="match.parent" autoHeight="match.parent" />
-            <button id="save" text="Save" autoWidth="match.parent" autoHeight="match.parent" enabled="false" />
-            <button id="refresh" text="Refresh" autoWidth="match.parent" autoHeight="match.parent" enabled="false" />
+            <button id="load" text="Load" autoWidth="stretch" autoHeight="stretch" />
+            <button id="save" text="Save" autoWidth="stretch" autoHeight="stretch" enabled="false" />
+            <button id="refresh" text="Refresh" autoWidth="stretch" autoHeight="stretch" enabled="false" />
 
-            <listBox autoWidth="match.parent" autoHeight="match.parent" id="components" />
+            <listBox autoWidth="stretch" autoHeight="stretch" id="components" />
 
             <gridLayout id="addremove" rows="1" columns="2">
-                <button id="add" text="Add" autoWidth="match.parent" autoHeight="match.parent" enabled="false" />
-                <button id="remove" text="Remove" autoWidth="match.parent" autoHeight="match.parent" enabled="false" />
+                <button id="add" text="Add" autoWidth="stretch" autoHeight="stretch" enabled="false" />
+                <button id="remove" text="Remove" autoWidth="stretch" autoHeight="stretch" enabled="false" />
             </gridLayout>
 
-            <treeBox id="ast" autoWidth="match.parent" autoHeight="match.parent" />
+            <treeBox id="astTreeBox" autoWidth="stretch" autoHeight="stretch" />
         </gridLayout>
 
-        <scrollView id="preview" autoWidth="match.parent" autoHeight="match.parent" />
+        <scrollView id="preview" autoWidth="stretch" autoHeight="stretch" />
 
-        <scrollView id="propertiesScrollView" autoWidth="match.parent" autoHeight="match.parent">
-            <listBox id="propertyList" autoWidth="match.parent" autoHeight="match.parent" />
+        <scrollView id="propertiesScrollView" autoWidth="stretch" autoHeight="stretch">
+            <listBox id="propertyList" autoWidth="stretch" autoHeight="stretch" />
         </scrollView>
     </gridLayout>
 </mainWindow>

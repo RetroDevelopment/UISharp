@@ -1,7 +1,8 @@
-﻿using System.Reflection.Metadata.Ecma335;
-using RetroDev.OpenUI.Components.AutoSize;
+﻿using System.Runtime.InteropServices;
+using RetroDev.OpenUI.Components.AutoArea;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Events;
+using RetroDev.OpenUI.Exceptions;
 using RetroDev.OpenUI.Properties;
 using RetroDev.OpenUI.Utils;
 
@@ -29,7 +30,6 @@ public abstract class UIComponent
     private Point? _mouseLastDragPointAbsolute = null;
     private CachedValue<Area> _relativeDrawingArea;
     private CachedValue<Area> _absoluteDrawingArea;
-    private CachedValue<Area> _clipArea;
 
     /// <summary>
     /// Mouse button press inside <see cref="this"/> window.
@@ -50,7 +50,7 @@ public abstract class UIComponent
     /// Mouse dragging. This means that a left click has happend whithin <see cref="this"/> compnent <see cref="AbsoluteDrawingArea"/>
     /// and the mouse is moving while still pressed.
     /// </summary>
-    public event TypeSafeEventHandler<UIComponent, MouseDragArgs> MouseDrag = (_, _) => { };
+    public event TypeSafeEventHandler<UIComponent, MouseDragEventArgs> MouseDrag = (_, _) => { };
 
     /// <summary>
     /// Mouse dragging start.
@@ -88,16 +88,13 @@ public abstract class UIComponent
     public event TypeSafeEventHandler<UIComponent, RenderingEventArgs> ChildrenRendered = (_, _) => { };
 
     /// <summary>
-    /// This event is invoked right before rendering and it can be used by all conatiners to recalculate the children positions before
-    /// rendering.
-    /// </summary>
-    public event TypeSafeEventHandler<UIComponent, EventArgs> RepositionChildren = (_, _) => { };
-
-    /// <summary>
     /// The application in which <see langword="this"/> <see cref="UIComponent"/> runs.
     /// </summary>
     public Application Application { get; }
 
+    /// <summary>
+    /// The parent <see cref="UIComponent"/> containing <see langword="this" /> <see cref="UIComponent"/>.
+    /// </summary>
     public UIComponent? Parent { get; private set; }
 
     /// <summary>
@@ -140,12 +137,22 @@ public abstract class UIComponent
     /// <summary>
     /// Specifies how to automatically specify this component width.
     /// </summary>
-    public UIProperty<UIComponent, IAutoSizeStrategy> AutoWidth { get; }
+    public UIProperty<UIComponent, IAutoSize> AutoWidth { get; }
 
     /// <summary>
     /// Specifies how to automatically specify this component height.
     /// </summary>
-    public UIProperty<UIComponent, IAutoSizeStrategy> AutoHeight { get; }
+    public UIProperty<UIComponent, IAutoSize> AutoHeight { get; }
+
+    /// <summary>
+    /// Specifies the horizontal alignment of this component relative to its parent.
+    /// </summary>
+    public UIProperty<UIComponent, IHorizontalAlignment> HorizontalAlignment { get; }
+
+    /// <summary>
+    /// Specifies the vertical alignment of this component relative to its parent.
+    /// </summary>
+    public UIProperty<UIComponent, IVerticalAlignment> VerticalAlignment { get; }
 
     /// <summary>
     /// Whether this component can get focus.
@@ -180,6 +187,29 @@ public abstract class UIComponent
     /// </summary>
     protected virtual ComponentVisibility DefaultVisibility => ComponentVisibility.Visible;
 
+    /// <summary>
+    /// The initial value of <see cref="AutoWidth"/>.
+    /// </summary>
+    protected virtual IAutoSize DefaultAutoWidth => AutoSize.Stretch;
+
+    /// <summary>
+    /// The default value of <see cref="AutoHeight"/>.
+    /// </summary>
+    protected virtual IAutoSize DefaultAutoHeight => AutoSize.Stretch;
+
+    /// <summary>
+    /// The default value of <see cref="HorizontalAlignment"/>.
+    /// </summary>
+    protected virtual IHorizontalAlignment DefaultHorizontalAlignment => Alignment.Center;
+
+    /// <summary>
+    /// The default value of <see cref="VerticalAlignment"/>.
+    /// </summary>
+    protected virtual IVerticalAlignment DefaultVerticalAlignment => Alignment.Center;
+
+    /// <summary>
+    /// The initial value of <see cref="Focusable"/>.
+    /// </summary>
     protected virtual bool DefaultIsFocusable => true;
 
     /// <summary>
@@ -188,6 +218,13 @@ public abstract class UIComponent
     /// and it has size 100x100 pixels.
     /// </summary>
     public Area RelativeDrawingArea => _relativeDrawingArea.Value;
+
+    /// <summary>
+    /// The size of the container in which <see langword="this" /> <see cref="UIComponent"/> is diplayed.
+    /// If <see langword="this" /> <see cref="UIComponent"/> is <see cref="Root"/> (e.g. a <see cref="Window"/>, the
+    /// container is assumed to be the main screen, so the main screen resolution will be returned.
+    /// </summary>
+    public Size ContainerSize => Parent?.RelativeDrawingArea?.Size ?? Application.ScreenSize;
 
     /// <summary>
     /// The 2D area (in pixels) where this component is rendered. The area is absolute to the window and it is clipped
@@ -201,11 +238,6 @@ public abstract class UIComponent
     /// </remarks>
     public Area AbsoluteDrawingArea => _absoluteDrawingArea.Value;
 
-    /// <summary>
-    /// The area in which where the UI drawing occurs. Every pixel outside of this area will be clipped.
-    /// </summary>
-    public Area ClipArea => _clipArea.Value;
-
     protected UIComponent(Application application)
     {
         Application = application;
@@ -218,21 +250,24 @@ public abstract class UIComponent
         Height = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Auto);
         Height = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Auto);
         Visibility = new UIProperty<UIComponent, ComponentVisibility>(this, DefaultVisibility);
-        AutoWidth = new UIProperty<UIComponent, IAutoSizeStrategy>(this, AutoSizeStrategy.WrapComponentCenter);
-        AutoHeight = new UIProperty<UIComponent, IAutoSizeStrategy>(this, AutoSizeStrategy.WrapComponentCenter);
+        AutoWidth = new UIProperty<UIComponent, IAutoSize>(this, DefaultAutoWidth);
+        AutoHeight = new UIProperty<UIComponent, IAutoSize>(this, DefaultAutoHeight);
+        HorizontalAlignment = new UIProperty<UIComponent, IHorizontalAlignment>(this, DefaultHorizontalAlignment);
+        VerticalAlignment = new UIProperty<UIComponent, IVerticalAlignment>(this, DefaultVerticalAlignment);
         Focusable = new UIProperty<UIComponent, bool>(this, DefaultIsFocusable);
         Focus = new UIProperty<UIComponent, bool>(this, false);
         Enabled = new UIProperty<UIComponent, bool>(this, true);
 
         _relativeDrawingArea = new CachedValue<Area>(ComputeRelativeDrawingArea);
         _absoluteDrawingArea = new CachedValue<Area>(ComputeAbsoluteDrawingArea);
-        _clipArea = new CachedValue<Area>(ComputeClipArea);
+
         SizeHintCache = new CachedValue<Size>(ComputeSizeHint);
         SizeHintCache.OnMarkDirty += (_, _) => MarkCachesAsDirty();
 
         RegisterDrawingAreaEvents();
 
         Focus.ValueChange += Focus_ValueChange;
+        Enabled.ValueChange += Enabled_ValueChange;
         MousePress += UIComponent_MousePress;
     }
 
@@ -313,12 +348,54 @@ public abstract class UIComponent
         TextInput?.Invoke(this, e);
     }
 
-    public void OnRepositionChildren()
+    /// <summary>
+    /// Validates <see langword="this" /> <see cref="UIComponent"/> and throw <see cref="UIPropertyValidationException"/> if one or more
+    /// properties are in an invalid state.
+    /// Call base.Validate() at the bottom of your implementation if overriding this method.
+    /// </summary>
+    /// <remarks>
+    /// This method may be called at any time to perform validation, but it is automatically called within the <see cref="IEventSystem.BeforeRender"/> event,
+    /// because a <see cref="UIComponent"/> needs to be validated before rendering a frame, which requires accessing component properties.
+    /// Note that validation must should be performed when a property value change (unless strictly necessary) because it makes it more complicated to
+    /// update property values. For example if a <see cref="UIComponent"/> has properties A and B, and validation checks A &lt; B, if A = 10 and B = 20,
+    /// if updating A and B to 30 and 40 respectively, the code below would crash
+    /// A.Value = 30; // would throw exception because A.Value &gt; B.Value (30 &gt; 20).
+    /// B.Value = 40;
+    /// But if validation is not performed, the framework would still allow detecting errors before frame update.
+    /// </remarks>
+    public void Validate()
+    {
+        UIComponentValidateImplementation();
+        ValidateImplementation();
+        _children.ForEach(child => child.Validate());
+    }
+
+    /// <summary>
+    /// Re-computes the position and size of the children of <see langword="this" /> <see cref="UIComponent"/> if necessary.
+    /// </summary>
+    /// <remarks>
+    /// This method may be called at any time to update the internal children state, but it is automatically called within the <see cref="IEventSystem.BeforeRender"/> event,
+    /// for performance reason. The method is used mostly for layouts and, if called every time a property changes (<see cref="Width" />, <see cref="Height"/>, etc.)
+    /// it could degrade performance.
+    /// </remarks>
+    public void RepositionChildren()
     {
         if (Visibility.Value == ComponentVisibility.Collapsed) return;
-        RepositionChildren.Invoke(this, EventArgs.Empty);
-        _children.ForEach((child) => child.OnRepositionChildren());
+        RepositionChildrenImplementation();
+        _children.ForEach(child => child.RepositionChildren());
     }
+
+    /// <summary>
+    /// The validation logic called by <see cref="Validate"/> overridden by subclasses of <see cref="UIComponent"/>.
+    /// </summary>
+    protected virtual void ValidateImplementation()
+    {
+    }
+
+    /// <summary>
+    /// The children repositioning logic called by <see cref="RepositionChildren"/> overridden by subclasses of <see cref="UIComponent"/>.
+    /// </summary>
+    protected virtual void RepositionChildrenImplementation() { }
 
     protected void OnRenderFrame(RenderingEventArgs renderingArgs)
     {
@@ -326,15 +403,21 @@ public abstract class UIComponent
 
         if (Visibility.Value == Components.ComponentVisibility.Visible)
         {
-            renderingArgs.Canvas.ClippingArea = ClipArea;
             renderingArgs.Canvas.ContainerAbsoluteDrawingArea = AbsoluteDrawingArea;
             RenderFrame.Invoke(this, renderingArgs);
             _children.ForEach((child) => child.OnRenderFrame(renderingArgs));
 
-            renderingArgs.Canvas.ClippingArea = ClipArea;
             renderingArgs.Canvas.ContainerAbsoluteDrawingArea = AbsoluteDrawingArea;
             ChildrenRendered?.Invoke(this, renderingArgs);
         }
+    }
+
+    private void UIComponentValidateImplementation()
+    {
+        if (!Width.Value.IsAuto && Width.Value < 0.0f) throw new UIPropertyValidationException($"Width must be greater or equal to zero, found {Width.Value}", this);
+        if (!Height.Value.IsAuto && Height.Value < 0.0f) throw new UIPropertyValidationException($"Height must be greater or equal to zero, found {Height.Value}", this);
+        if (!Focusable.Value && Focus.Value) throw new UIPropertyValidationException("Cannot focus a component that is not focusable", this);
+        if (!Enabled.Value && Focus.Value) throw new UIPropertyValidationException("Cannot focus a component that is not enabled");
     }
 
     private void UIComponent_MousePress(UIComponent sender, MouseEventArgs e)
@@ -373,16 +456,16 @@ public abstract class UIComponent
     {
         if (mouseEventArgs.AbsoluteLocation.IsWithin(AbsoluteDrawingArea) && Visibility.Value == Components.ComponentVisibility.Visible && Enabled)
         {
-            MouseMove.Invoke(this, new(mouseEventArgs.AbsoluteLocation,
-                                       mouseEventArgs.AbsoluteLocation - AbsoluteDrawingArea.TopLeft,
-                                       mouseEventArgs.Button));
+            MouseMove.Invoke(this, new MouseEventArgs(mouseEventArgs.AbsoluteLocation,
+                                                      mouseEventArgs.AbsoluteLocation - AbsoluteDrawingArea.TopLeft,
+                                                      mouseEventArgs.Button));
         }
 
         if (_mouseDragPointAbsolute != null && _mouseLastDragPointAbsolute != null)
         {
             var offset = mouseEventArgs.AbsoluteLocation - _mouseLastDragPointAbsolute;
             _mouseLastDragPointAbsolute = mouseEventArgs.AbsoluteLocation;
-            MouseDrag.Invoke(this, new(_mouseDragPointAbsolute, _mouseLastDragPointAbsolute, offset));
+            MouseDrag.Invoke(this, new MouseDragEventArgs(_mouseDragPointAbsolute, _mouseLastDragPointAbsolute, offset));
         }
     }
 
@@ -391,6 +474,7 @@ public abstract class UIComponent
         var e = new MouseEventArgs(mouseEventArgs.AbsoluteLocation,
                                    mouseEventArgs.AbsoluteLocation - AbsoluteDrawingArea.TopLeft,
                                    mouseEventArgs.Button);
+
         if (mouseEventArgs.AbsoluteLocation.IsWithin(AbsoluteDrawingArea) && Visibility.Value == Components.ComponentVisibility.Visible && Enabled)
         {
             MouseRelease.Invoke(this, e);
@@ -409,9 +493,9 @@ public abstract class UIComponent
     {
         if (mouseEventArgs.AbsoluteLocation.IsWithin(AbsoluteDrawingArea) && Visibility.Value == Components.ComponentVisibility.Visible && Enabled)
         {
-            MousePress.Invoke(this, new(mouseEventArgs.AbsoluteLocation,
-                                        mouseEventArgs.AbsoluteLocation - AbsoluteDrawingArea.TopLeft,
-                                        mouseEventArgs.Button));
+            MousePress.Invoke(this, new MouseEventArgs(mouseEventArgs.AbsoluteLocation,
+                                                       mouseEventArgs.AbsoluteLocation - AbsoluteDrawingArea.TopLeft,
+                                                       mouseEventArgs.Button));
         }
     }
 
@@ -419,7 +503,7 @@ public abstract class UIComponent
     {
         if (Visibility.Value == Components.ComponentVisibility.Visible && (Focus || !Focusable))
         {
-            KeyPress.Invoke(this, new(keyEventArgs.Button));
+            KeyPress.Invoke(this, new KeyEventArgs(keyEventArgs.Button));
         }
     }
 
@@ -427,7 +511,7 @@ public abstract class UIComponent
     {
         if (Visibility.Value == ComponentVisibility.Visible && (Focus || !Focusable))
         {
-            KeyRelease.Invoke(this, new(keyEventArgs.Button));
+            KeyRelease.Invoke(this, new KeyEventArgs(keyEventArgs.Button));
         }
     }
 
@@ -435,15 +519,24 @@ public abstract class UIComponent
     {
         if (Visibility.Value == ComponentVisibility.Visible && (Focus || !Focusable))
         {
-            TextInput.Invoke(this, new(textInputEventArgs.Text));
+            TextInput.Invoke(this, new TextInputEventArgs(textInputEventArgs.Text));
         }
     }
 
     private void Focus_ValueChange(UIComponent sender, ValueChangeEventArgs<bool> e)
     {
-        if (e.CurrentValue && !Focusable) throw new InvalidOperationException("Cannot focus a non focusable component");
-        if (e.CurrentValue && !Enabled) throw new InvalidOperationException("Cannot focus a disabled component");
-        RequestFocusFor(this);
+        if (e.CurrentValue)
+        {
+            RequestFocusFor(this);
+        }
+    }
+
+    private void Enabled_ValueChange(UIComponent sender, ValueChangeEventArgs<bool> e)
+    {
+        if (!e.CurrentValue)
+        {
+            Focus.Value = false;
+        }
     }
 
     // Ensure that only one child component has focus.
@@ -453,7 +546,7 @@ public abstract class UIComponent
         // TODO: When implementing focus groups, just change the logic here to not delegate this to the parent.
         if (Parent != null)
         {
-            Parent.RequestFocusFor(component);
+            Root.RequestFocusFor(component);
             return;
         }
 
@@ -480,22 +573,28 @@ public abstract class UIComponent
     {
         _relativeDrawingArea.MarkDirty();
         _absoluteDrawingArea.MarkDirty();
-        _clipArea.MarkDirty();
         _children.ForEach(c => c.MarkCachesAsDirty());
     }
 
     private Area ComputeRelativeDrawingArea()
     {
-        var (x, width) = AutoWidth.Value.ComputeHorizontalArea(this);
-        var (y, height) = AutoHeight.Value.ComputeVerticalArea(this);
+        if (Visibility.Value == ComponentVisibility.Collapsed) return Area.Empty;
 
-        var topLeft = new Point(x, y);
-        var size = Visibility.Value != ComponentVisibility.Collapsed ? new Size(width, height) : Size.Zero;
+        var autoWidth = AutoWidth.Value.ComputeWidth(this);
+        var autoHeight = AutoHeight.Value.ComputeHeight(this);
+        var actualWidth = Width.Value.IsAuto ? autoWidth : Width.Value;
+        var actualHeight = Height.Value.IsAuto ? autoHeight : Height.Value;
+        var actualSize = new Size(actualWidth, actualHeight);
 
-        return new Area(topLeft, size);
+        var autoX = HorizontalAlignment.Value.ComputeX(this, actualSize);
+        var autoY = VerticalAlignment.Value.ComputeY(this, actualSize);
+        var actualX = X.Value.IsAuto ? autoX : X.Value;
+        var actualY = Y.Value.IsAuto ? autoY : Y.Value;
+        var actualTopLeft = new Point(actualX, actualY);
+
+        return new Area(actualTopLeft, actualSize);
     }
 
-    private Area ComputeAbsoluteDrawingArea() => RelativeDrawingArea.ToAbsolute(Parent?.AbsoluteDrawingArea);
-
-    private Area ComputeClipArea() => AbsoluteDrawingArea.Clip(Parent?.ClipArea);
+    private Area ComputeAbsoluteDrawingArea() => RelativeDrawingArea.ToAbsolute(Parent?.AbsoluteDrawingArea)
+                                                                    .Clip(Parent?.AbsoluteDrawingArea);
 }

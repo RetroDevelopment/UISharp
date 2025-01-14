@@ -136,5 +136,4 @@ public class Window : Container, IContainer
             OnTextInput(windowArgs.Args);
         }
     }
-
 }

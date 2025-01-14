@@ -1,53 +1,65 @@
-﻿using System.Reflection;
-using RetroDev.OpenUI.Components;
+﻿using RetroDev.OpenUI.Components;
 
 namespace RetroDev.OpenUI.UIDefinition;
 
-// No thread safe?
+/// <summary>
+/// This is the main class to parse and compile UIDefinition language, which is an xml-based language to define UI in
+/// OpenUI.
+/// </summary>
 public class UIDefinitionManager
 {
-    private readonly Dictionary<string, Component> _definitions = [];
-
+    /// <summary>
+    /// The application that owns <see langword="this" /> object.
+    /// </summary>
     public Application Application { get; }
+
+    /// <summary>
+    /// The object that find the relevant UI types defined in the OpenUI as well as the types defined in the project using OpenUI.
+    /// </summary>
     public TypeMapper TypeMapper { get; }
-    public UIDefinitionParser Parser { get; }
-    public UIDefinitionInstanceCreator InstanceCreator { get; }
 
-    public UIDefinitionCodeGenerator CodeGenerator { get; }
 
-    public UIDefinitionManager(Application application)
+    /// <summary>
+    /// The UIDefinition language parser.
+    /// </summary>
+    public Parser Parser { get; }
+
+    /// <summary>
+    /// The object that creates UI objects (windows, button, etc.) from the UIDefinition langague AST tree.
+    /// </summary>
+    public InstanceCreator InstanceCreator { get; }
+
+    /// <summary>
+    /// The object that generates UIDefinitionLanguage xml tetxt from the UIDefinition language AST tree.
+    /// </summary>
+    public CodeGenerator CodeGenerator { get; }
+
+    /// <summary>
+    /// Creats a new <see cref="UIDefinitionManager"/>.
+    /// </summary>
+    /// <param name="application">The application that owns <see langword="this" /> object.</param>
+    /// <param name="binder">
+    /// The binder to define the EAML language, which binds UIDefinition attributes with actual values.
+    /// If this parameter is not specified, a <see cref="EAMLBinder"/> isntance will be created, using the default EAML implementation.
+    /// </param>
+    public UIDefinitionManager(Application application, IEAMLBinder? binder = null)
     {
         Application = application;
         TypeMapper = new TypeMapper();
-        Parser = new UIDefinitionParser();
-        InstanceCreator = new UIDefinitionInstanceCreator(Application, TypeMapper);
-        CodeGenerator = new UIDefinitionCodeGenerator();
+        Parser = new Parser();
+        InstanceCreator = new InstanceCreator(Application, TypeMapper, binder);
+        CodeGenerator = new CodeGenerator();
     }
 
-    public void AddDefinition(string id, string xml)
-    {
-        if (_definitions.ContainsKey(id)) throw new ArgumentException($"UI Definition with id {id} already exists");
-
-        var parser = new UIDefinitionParser();
-        var validator = new UIDefinitionValidator(TypeMapper);
-        var componentDefinition = parser.Parse(xml);
-        validator.Validate(componentDefinition);
-        _definitions.Add(id, componentDefinition);
-    }
-
-    public Component GetDefinition(string id)
-    {
-        if (!_definitions.ContainsKey(id)) throw new ArgumentException($"UI Definition with id {id} does not exist");
-        return _definitions[id];
-    }
-
-    public UIComponent CreateUIComponent(Component component) =>
-        InstanceCreator.CreateUIComponent(component);
-
+    /// <summary>
+    /// Creates the <see cref="UIComponent"/> instance as defined in the given UIDefinition <paramref name="xml"/> text.
+    /// </summary>
+    /// <param name="xml">The UIDefinition xml containing the instance to create.</param>
+    /// <returns>The comonent instance as defined in the given <paramref name="xml"/>.</returns>
     public UIComponent CreateUIComponent(string xml)
     {
-        var parser = new UIDefinitionParser();
-        var validator = new UIDefinitionValidator(TypeMapper);
+        var parser = new Parser();
+        var validator = new Validator(TypeMapper);
         var componentDefinition = parser.Parse(xml);
         validator.Validate(componentDefinition);
         return InstanceCreator.CreateUIComponent(componentDefinition);
