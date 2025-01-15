@@ -181,7 +181,7 @@ public readonly record struct Color(byte RedComponent = 0, byte GreenComponent =
             return;
         }
 
-        var regex = new Regex(@"^#(?<red>[0-9A-Fa-f]{2})(?<green>[0-9A-Fa-f]{2})(?<blue>[0-9A-Fa-f]{2})(?<alpha>[0-9A-Fa-f]{2})$");
+        var regex = new Regex(@"^#(?<red>[0-9A-Fa-f]{2})(?<green>[0-9A-Fa-f]{2})(?<blue>[0-9A-Fa-f]{2})(?<alpha>[0-9A-Fa-f]{2})?$");
         var match = regex.Match(expression);
 
         if (match.Success)
@@ -189,13 +189,12 @@ public readonly record struct Color(byte RedComponent = 0, byte GreenComponent =
             RedComponent = Convert.ToByte(match.Groups["red"].Value, 16);
             GreenComponent = Convert.ToByte(match.Groups["green"].Value, 16);
             BlueComponent = Convert.ToByte(match.Groups["blue"].Value, 16);
-            AlphaComponent = Convert.ToByte(match.Groups["alpha"].Value, 16);
+            AlphaComponent = match.Groups["alpha"].Success ? Convert.ToByte(match.Groups["alpha"].Value, 16) : (byte)255;
         }
         else
         {
             throw new ArgumentException($"Invalid color hex string {expression}. The string must be in the #RRGGBBAA format.");
         }
-
     }
 
     private static Color? FindConstant(string name)

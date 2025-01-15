@@ -84,14 +84,16 @@ public class ScrollView : Container, ISingleContainer
             _moveVerticalBar = true;
         }
     }
-    private void ScrollView_MouseDragEnd(UIComponent sender, Events.MouseEventArgs e)
+    private void ScrollView_MouseDragEnd(UIComponent sender, MouseEventArgs e)
     {
         _moveHorizontalBar = false;
         _moveVerticalBar = false;
     }
 
-    private void ScrollView_MouseDrag(UIComponent sender, Events.MouseDragEventArgs e)
+    private void ScrollView_MouseDrag(UIComponent sender, MouseDragEventArgs e)
     {
+        if (_child == null) return;
+
         var horizontalScrollBarArea = GetHorizontalScrollBarArea();
         var verticalScrollBarArea = GetVerticalScrollBarArea();
         var maximumHorizontalScrollBarAreaWidth = GetMaximumHorizontalScrollBarAreaWidth();
@@ -160,8 +162,8 @@ public class ScrollView : Container, ISingleContainer
         return null;
     }
 
-    private PixelUnit GetMaximumChildHorizontalScroll() => _child.RelativeDrawingArea.Size.Width - RelativeDrawingArea.Size.Width;
-    private PixelUnit GetMaximumChildVerticalScroll() => _child.RelativeDrawingArea.Size.Height - RelativeDrawingArea.Size.Height;
+    private PixelUnit GetMaximumChildHorizontalScroll() => _child!.RelativeDrawingArea.Size.Width - RelativeDrawingArea.Size.Width;
+    private PixelUnit GetMaximumChildVerticalScroll() => _child!.RelativeDrawingArea.Size.Height - RelativeDrawingArea.Size.Height;
     private PixelUnit GetMaximumHorizontalScrollBarAreaWidth() => RelativeDrawingArea.Size.Width;
     private PixelUnit GetMaximumVerticalScrollBarAreaHeight() => RelativeDrawingArea.Size.Height;
 }

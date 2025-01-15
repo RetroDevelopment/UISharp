@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<window id="calculatorWindow" width="800" height="600">
+    <verticallayout>
+        <editbox horizontalalignment="center" />
+        <gridlayout rows="4" columns="4">
+            <Button text="7" />
+            <Button text="8" />
+            <Button text="9" />
+            <Button text=":" />
+            <Button text="4" />
+            <Button  />
+            <Button  />
+        </gridlayout>
+    </verticallayout>
+</window>

@@ -32,7 +32,6 @@ public class EditBox : UIComponent
     /// <inheritdoc />
     protected override IVerticalAlignment DefaultVerticalAlignment => Alignment.Center;
 
-
     /// <inheritdoc />
     protected override Size ComputeSizeHint() => new(20 * 10, 20); // 20 is font size and 10 the characters (estimate)
 
@@ -83,18 +82,21 @@ public class EditBox : UIComponent
     {
         var size = RelativeDrawingArea.Size;
         var canvas = e.Canvas;
+        float minimumDimension = Math.Min(size.Width, size.Height);
+        PixelUnit cornerRadius = (minimumDimension / 2.0f) * 0.5f;
 
         if (Focus.Value)
         {
-            canvas.Render(new Rectangle(new Color(0, 100, 0, 255)), new Area(Point.Zero, size));
+            canvas.Render(new Rectangle(new Color(0, 0, 100, 255), CornerRadiusX: cornerRadius, CornerRadiusY: cornerRadius), new Area(Point.Zero, size));
+            canvas.Render(new Rectangle(BorderColor: new Color(0, 100, 0, 255), BorderThickness: 5.0f, CornerRadiusX: cornerRadius, CornerRadiusY: cornerRadius), new Area(Point.Zero, size));
         }
         else if (Enabled)
         {
-            canvas.Render(new Rectangle(new Color(0, 0, 100, 255)), new Area(Point.Zero, size));
+            canvas.Render(new Rectangle(new Color(0, 0, 100, 255), CornerRadiusX: cornerRadius, CornerRadiusY: cornerRadius), new Area(Point.Zero, size));
         }
         else
         {
-            canvas.Render(new Rectangle(new Color(100, 100, 100, 255)), new Area(Point.Zero, size));
+            canvas.Render(new Rectangle(new Color(100, 100, 100, 255), CornerRadiusX: cornerRadius, CornerRadiusY: cornerRadius), new Area(Point.Zero, size));
         }
 
     }

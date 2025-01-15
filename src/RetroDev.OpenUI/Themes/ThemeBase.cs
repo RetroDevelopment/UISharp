@@ -1,4 +1,5 @@
-﻿using RetroDev.OpenUI.Graphics;
+﻿using System.Xml.Linq;
+using RetroDev.OpenUI.Graphics;
 using RetroDev.OpenUI.Properties;
 
 namespace RetroDev.OpenUI.Themes;
@@ -10,6 +11,9 @@ public abstract class ThemeBase
 {
     private Dictionary<string, Color> _colors = [];
 
+    /// <summary>
+    /// The name - color mapping.
+    /// </summary>
     public IReadOnlyDictionary<string, Color> Colors => _colors;
 
     /// <summary>
@@ -19,6 +23,10 @@ public abstract class ThemeBase
     {
     }
 
+    /// <summary>
+    /// Clears the current color mapping (<see cref="Colors"/>) and sets the specified <paramref name="colors"/> mapping.
+    /// </summary>
+    /// <param name="colors">The mapping to set.</param>
     public void SetColorDictionary(Dictionary<string, Color> colors)
     {
         _colors.Clear();
@@ -28,6 +36,11 @@ public abstract class ThemeBase
         }
     }
 
+    /// <summary>
+    /// Adds or updates the color mapping identified by the given <paramref name="name"/>.
+    /// </summary>
+    /// <param name="name">The mapping name identifier.</param>
+    /// <param name="color">The color value.</param>
     public void SetColor(string name, Color color)
     {
         if (_colors.ContainsKey(name))
@@ -39,6 +52,11 @@ public abstract class ThemeBase
             _colors.Add(name, color);
         }
 
+        UpdateColorPropertyIfAny(name, color);
+    }
+
+    private void UpdateColorPropertyIfAny(string name, Color color)
+    {
         var colorProperty = GetType().GetProperties().FirstOrDefault(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
         if (colorProperty != null)
         {

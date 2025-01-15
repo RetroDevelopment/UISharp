@@ -87,7 +87,7 @@ internal class MainWindow : Window
             label.AutoHeight.Value = AutoSize.Wrap;
             label.HorizontalAlignment.Value = Alignment.Left;
             label.VerticalAlignment.Value = Alignment.Top;
-            _components!.AddComponent(label);
+            _components.AddComponent(label);
         }
     }
 
@@ -102,15 +102,15 @@ internal class MainWindow : Window
 
     private void LoadButton_Action(Button sender, EventArgs e)
     {
-        LoadXml(_fileEditBox!.Text.Value);
-        _saveButton!.Enabled.Value = true;
-        _refreshButton!.Enabled.Value = true;
+        LoadXml(_fileEditBox.Text.Value);
+        _saveButton.Enabled.Value = true;
+        _refreshButton.Enabled.Value = true;
     }
 
     private void SaveButton_Action(Button sender, EventArgs e)
     {
         var xml = Application.UIDefinitionManager.CodeGenerator.Generate(_rootNode!);
-        File.WriteAllText(GetUIDefinitionFullPath(_fileEditBox!.Text), xml);
+        File.WriteAllText(GetUIDefinitionFullPath(_fileEditBox.Text), xml);
     }
 
     private void RefreshButton_Action(Button sender, EventArgs e)
@@ -123,12 +123,12 @@ internal class MainWindow : Window
 
     private void AddButton_Action(Button sender, EventArgs e)
     {
-        if (_astTreeBox!.SelectedNode == null || _components!.SelectedItem == null) throw new InvalidOperationException();
-
+        if (_astTreeBox.SelectedNode == null || _components.SelectedItem == null) throw new InvalidOperationException();
+        var selectedItem = _components?.SelectedItem?.Value ?? throw new Exception("Cannot add item if no selected item");
         var selectedNode = _astTreeBox.SelectedNode;
         var componentToAdd = _components.SelectedItem;
 
-        var componentName = ((Label)_components!.SelectedItem).Text;
+        var componentName = ((Label)selectedItem).Text;
         var childNode = CreateNode(componentName);
         var astChildNode = new Component(componentName, [], []);
         var parent = selectedNode.Value;
@@ -149,7 +149,7 @@ internal class MainWindow : Window
 
     private void RemoveButton_Action(Button sender, EventArgs e)
     {
-        if (_astTreeBox!.SelectedNode == null || _components!.SelectedItem == null) throw new InvalidOperationException();
+        if (_astTreeBox.SelectedNode == null || _components.SelectedItem == null) throw new InvalidOperationException();
         var selectedNode = _astTreeBox.SelectedNode.Value;
         var parent = selectedNode!.Parent;
         var astSelectedNode = _treeNodeAstMap[selectedNode];
@@ -173,7 +173,7 @@ internal class MainWindow : Window
 
     private void SelectedNode_ValueChange(TreeBox sender, ValueChangeEventArgs<TreeNode?> e)
     {
-        var scrollView = _mainLayout!.GetComponent<ScrollView>("propertiesScrollView");
+        var scrollView = _mainLayout.GetComponent<ScrollView>("propertiesScrollView");
         var listBox = scrollView.GetComponent<ListBox>("propertyList");
         listBox.Clear();
 
@@ -260,9 +260,9 @@ internal class MainWindow : Window
 
     private void CreateComponentInstance()
     {
-        var components = _rootNode.Components.Select(Application.UIDefinitionManager.InstanceCreator.CreateUIComponent).ToList();
+        var components = _rootNode!.Components.Select(Application.UIDefinitionManager.InstanceCreator.CreateUIComponent).ToList();
         var container = new UIPreview(Application, components);
-        _mainLayout!.GetComponent<ScrollView>("preview").SetComponent(container);
+        _mainLayout.GetComponent<ScrollView>("preview").SetComponent(container);
     }
 
     private TreeNode CreateNode(string text)
@@ -283,7 +283,7 @@ internal class MainWindow : Window
         }
         else
         {
-            _astTreeBox!.AddTreeNode(node);
+            _astTreeBox.AddTreeNode(node);
         }
 
         astNode.Components.ForEach(child => { AddNode(node, child); });
@@ -291,13 +291,14 @@ internal class MainWindow : Window
 
     private void UpdateAddRemoveButtonState()
     {
-        _removeButton!.Enabled.Value = _astTreeBox!.SelectedNode.Value != null;
+        _removeButton.Enabled.Value = _astTreeBox.SelectedNode.Value != null;
 
-        if (_astTreeBox.SelectedNode.Value != null && _components!.SelectedItem.Value != null)
+        if (_astTreeBox.SelectedNode.Value != null && _components.SelectedItem.Value != null)
         {
             var name = ((Label)(_astTreeBox.SelectedNode.Value.Content)).Text;
             var type = Application.UIDefinitionManager.TypeMapper.GetUIComponent(name);
-            _addButton!.Enabled.Value = (type!.GetInterfaces().Contains(typeof(IGenericContainer)));
+            if (type == null) throw new Exception($"Cannot find type for component {name} to add.");
+            _addButton.Enabled.Value = (type.GetInterfaces().Contains(typeof(IGenericContainer)));
         }
     }
 
@@ -311,7 +312,7 @@ internal class MainWindow : Window
 
     private void ClearTreeBox()
     {
-        _astTreeBox!.Clear();
+        _astTreeBox.Clear();
         _treeNodeAstMap.Clear();
     }
 }

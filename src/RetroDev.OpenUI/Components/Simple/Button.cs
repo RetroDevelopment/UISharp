@@ -55,18 +55,20 @@ public class Button : UIComponent
     {
         var size = RelativeDrawingArea.Size;
         var canvas = e.Canvas;
+        float minimumDimension = Math.Min(size.Width, size.Height);
+        PixelUnit cornerRadius = (minimumDimension / 2.0f) * 0.5f;
 
         if (Focus.Value)
         {
-            canvas.Render(new Rectangle(new Color(0, 100, 0, 255)), new(Point.Zero, size));
+            canvas.Render(new Rectangle(new Color(0, 100, 0, 255), CornerRadiusX: cornerRadius, CornerRadiusY: cornerRadius), new(Point.Zero, size));
         }
         else if (Enabled)
         {
-            canvas.Render(new Rectangle(new Color(0, 0, 100, 255)), new(Point.Zero, size));
+            canvas.Render(new Rectangle(new Color(0, 0, 100, 255), CornerRadiusX: cornerRadius, CornerRadiusY: cornerRadius), new(Point.Zero, size));
         }
         else
         {
-            canvas.Render(new Rectangle(new Color(100, 100, 100, 255)), new(Point.Zero, size));
+            canvas.Render(new Rectangle(new Color(100, 100, 100, 255), CornerRadiusX: cornerRadius, CornerRadiusY: cornerRadius), new(Point.Zero, size));
         }
     }
 }

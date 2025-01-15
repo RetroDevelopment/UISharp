@@ -10,13 +10,15 @@ namespace RetroDev.OpenUI.Properties;
 /// <typeparam name="TValue">The property value type.</typeparam>
 /// <param name="parent">The object owning this property.</param>
 /// <param name="value">The property value.</param>
+/// <param name="allowedBindings">The list of allowed <see cref="BindingType"/>. If <see langword="null" /> all binding types will be allowed.</param>
 /// <param name="application">The application owning this property.</param>
 [DebuggerDisplay("{Value}")]
-public class BindableProperty<TParent, TValue>(TParent parent, TValue value, Application? application = null)
+public class BindableProperty<TParent, TValue>(TParent parent, TValue value, Application? application = null, List<BindingType>? allowedBindings = null)
 {
+    private readonly Application? _application = application;
+    private readonly BindingType[] _allowedBindings = allowedBindings?.ToArray() ?? Enum.GetValues<BindingType>();
     private TValue _value = value;
     private List<IBinder<TValue>> _binders = [];
-    private Application? _application = application;
 
     /// <summary>
     /// Triggers then the <see cref="Value"/> changes. Setting <see cref="Value"/> to the same value
@@ -61,6 +63,8 @@ public class BindableProperty<TParent, TValue>(TParent parent, TValue value, App
     /// or <see cref="BindingType.TwoWays"/> and a binder with one of these two types has already been added.</exception>
     public void AddBinder(IBinder<TValue> binder)
     {
+        if (_allowedBindings != null && !_allowedBindings.Contains(binder.Binding)) throw new InvalidOperationException($"Binding {binder.Binding} not allowed");
+
         switch (binder.Binding)
         {
             case BindingType.SourceToDestination:

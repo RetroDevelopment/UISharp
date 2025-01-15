@@ -1,4 +1,5 @@
-﻿using RetroDev.OpenUI.Core.Coordinates;
+﻿using RetroDev.OpenUI.Components.AutoArea;
+using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Events;
 using RetroDev.OpenUI.Graphics;
 using RetroDev.OpenUI.Graphics.Shapes;
@@ -19,7 +20,20 @@ public class CheckBox : UIComponent
     public UIProperty<CheckBox, bool> Checked { get; }
 
     /// <inheritdoc/>
-    protected override Size ComputeSizeHint() => new(20, 20); // TODO: Maybe same size as default label text size (which is 20).
+    protected override Size ComputeSizeHint() => new(80, 30); // TODO: Maybe same size as default label text size (which is 20).
+
+    /// <inheritdoc />
+    protected override IAutoSize DefaultAutoWidth => AutoSize.Wrap;
+
+    /// <inheritdoc />
+    protected override IAutoSize DefaultAutoHeight => AutoSize.Wrap;
+
+    /// <inheritdoc />
+    protected override IHorizontalAlignment DefaultHorizontalAlignment => Alignment.Center;
+
+    /// <inheritdoc />
+    protected override IVerticalAlignment DefaultVerticalAlignment => Alignment.Center;
+
 
     /// <summary>
     /// Creates a new checkbox.
@@ -36,23 +50,31 @@ public class CheckBox : UIComponent
     {
         var size = RelativeDrawingArea.Size;
         var canvas = e.Canvas;
+        float minimumDimension = Math.Min(size.Width, size.Height);
+        PixelUnit cornerRadius = minimumDimension / 2.0f;
+        var circleRadius = size.Height;
 
-        if (Focus.Value)
+        if (Enabled)
         {
-            canvas.Render(new Rectangle(new(0, 100, 0, 255)), new(Point.Zero, size));
-        }
-        else if (Enabled)
-        {
-            canvas.Render(new Rectangle(new(0, 0, 100, 255)), new(Point.Zero, size));
+            canvas.Render(new Rectangle(new(0, 0, 100, 255), CornerRadiusX: cornerRadius, CornerRadiusY: cornerRadius), new(Point.Zero, size));
         }
         else
         {
-            canvas.Render(new Rectangle(new(100, 100, 100, 255)), new(Point.Zero, size));
+            canvas.Render(new Rectangle(new(100, 100, 100, 255), CornerRadiusX: cornerRadius, CornerRadiusY: cornerRadius), new(Point.Zero, size));
         }
 
         if (Checked)
         {
-            canvas.Render(new Circle(new(100, 0, 0, 255)), new(Point.Zero, size));
+            canvas.Render(new Circle(new(100, 0, 0, 255)), new(new Point(size.Width - circleRadius, 0.0f), new Size(size.Height, size.Height)));
+        }
+        else
+        {
+            canvas.Render(new Circle(new(100, 0, 0, 255)), new(Point.Zero, new Size(size.Height, size.Height)));
+        }
+
+        if (Focus.Value)
+        {
+            canvas.Render(new Rectangle(BorderColor: new Color(255, 255, 255, 255), BorderThickness: 5.0f, CornerRadiusX: cornerRadius, CornerRadiusY: cornerRadius), new(Point.Zero, size));
         }
     }
 

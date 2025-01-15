@@ -26,6 +26,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Windows\calculator.xml">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
     <None Update="Windows\test.xml">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
