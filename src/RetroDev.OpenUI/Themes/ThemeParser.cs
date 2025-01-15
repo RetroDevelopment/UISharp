@@ -11,15 +11,19 @@ namespace RetroDev.OpenUI.Themes;
 /// </summary>
 public class ThemeParser
 {
+    private readonly Theme _theme;
+
+    public ThemeParser(Theme theme)
+    {
+        _theme = theme;
+    }
+
     /// <summary>
     /// Parses the given <paramref name="xml"/> theme.
     /// </summary>
-    /// <param name="xml">
-    /// The theme xml.
-    /// </param>
-    /// <returns>The parsed <see cref="Theme"/>.</returns>
+    /// <param name="xml">The theme xml.</param>
     /// <exception cref="ThemeParseException">If parsing fails.</exception>
-    public Theme Parse(string xml)
+    public void Parse(string xml)
     {
         try
         {
@@ -28,7 +32,7 @@ public class ThemeParser
             var rootName = document.Root.Name.LocalName;
             if (!rootName.Equals("theme", StringComparison.OrdinalIgnoreCase)) throw new ThemeParseException($"Root theme tag xml must be theme, found {rootName} instead.");
             var dictionary = document.Root.Elements().Select(Parse).ToDictionary();
-            return new Theme(dictionary);
+            _theme.SetColorDictionary(dictionary);
         }
         catch (XmlException e)
         {
@@ -54,6 +58,6 @@ public class ThemeParser
 
         if (key == null) throw new ThemeParseException($"Cannot find key attribute in color tag {element}");
         if (hexColor == null) throw new ThemeParseException($"Cannot find value attribute in color tag {element}");
-        return new KeyValuePair<string, Color>(key, Color.FromHex(hexColor));
+        return new KeyValuePair<string, Color>(key, new Color(hexColor));
     }
 }

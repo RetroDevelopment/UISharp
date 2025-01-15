@@ -11,7 +11,7 @@ namespace RetroDev.OpenUI.Properties;
 /// <param name="parent">The object owning this property.</param>
 /// <param name="value">The property value.</param>
 [DebuggerDisplay("{Value}")]
-public class UIProperty<TParent, TValue>(TParent parent, TValue value) : BindableProperty<TParent, TValue>(parent, value) where TParent : UIComponent
+public class UIProperty<TParent, TValue>(TParent parent, TValue value) : BindableProperty<TParent, TValue>(parent, value, parent.Application) where TParent : UIComponent
 {
     /// <summary>
     /// The property value.
@@ -20,15 +20,10 @@ public class UIProperty<TParent, TValue>(TParent parent, TValue value) : Bindabl
     {
         set
         {
-            EnsureCanSetUIComponentProperty(Parent);
-            Parent.Application._eventSystem.InvalidateRendering(); // TODO: do not push one event for each call but just one if the rendering has not been invalidated yet
             base.Value = value;
+            Parent.Application._eventSystem.InvalidateRendering(); // TODO: do not push one event for each call but just one if the rendering has not been invalidated yet
         }
-        get
-        {
-            Parent.Application.LifeCycle.ThrowIfNotOnUIThread();
-            return base.Value;
-        }
+        get => base.Value;
     }
 
     /// <summary>

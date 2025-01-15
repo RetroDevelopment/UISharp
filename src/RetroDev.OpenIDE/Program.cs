@@ -1,5 +1,7 @@
-﻿using RetroDev.OpenIDE.Windows;
+﻿using OpenTK.Graphics.ES11;
+using RetroDev.OpenIDE.Windows;
 using RetroDev.OpenUI;
+using RetroDev.OpenUI.Graphics;
 using RetroDev.OpenUI.Themes;
 
 namespace RetroDev.OpenIDE;

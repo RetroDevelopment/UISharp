@@ -1,4 +1,5 @@
 ﻿using RetroDev.OpenUI.Graphics;
+using RetroDev.OpenUI.Properties;
 
 namespace RetroDev.OpenUI.Themes;
 
@@ -8,14 +9,14 @@ namespace RetroDev.OpenUI.Themes;
 /// </summary>
 public class Theme : ThemeBase
 {
+    public BindableProperty<Theme, Color> PrimaryColor { get; }
+
     /// <summary>
     /// Creates a new theme.
     /// </summary>
     /// <param name="colors">The name - color mapping.</param>
-    public Theme(Dictionary<string, Color> colors) : base(colors) { }
-
-    public Color PrimaryColor => GetColorOrDefault("primaryColor", Color.Red);
-
-    protected Color GetColorOrDefault(string name, Color defaultColor) =>
-         Colors.ContainsKey(name) ? Colors[name] : defaultColor;
+    public Theme(Application application) : base()
+    {
+        PrimaryColor = new BindableProperty<Theme, Color>(this, Color.Transparent, application);
+    }
 }

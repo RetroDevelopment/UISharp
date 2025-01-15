@@ -20,7 +20,7 @@ namespace RetroDev.OpenUI;
 public class Application : IDisposable
 {
     private readonly List<Window> _windows = [];
-    private readonly ThemeParser _themeParser = new ThemeParser();
+    private readonly ThemeParser _themeParser;
     private bool _disposed = false;
     private bool _shoudQuit = false;
 
@@ -53,7 +53,7 @@ public class Application : IDisposable
     /// <summary>
     /// The main theme used in the application.
     /// </summary>
-    public Theme Theme { get; set; }
+    public Theme Theme { get; }
 
     /// <summary>
     /// The primary screen size.
@@ -78,10 +78,13 @@ public class Application : IDisposable
         _uiEnvironment = uIEnvironment ?? new SDLUIEnvironment(this);
         _eventSystem = eventSystem ?? new SDLEventSystem(this);
         ResourceManager = resourceManager ?? new EmbeddedResourceManager();
-        Theme = _themeParser.Parse(ResourceManager.Themes["openui-dark"]);
+        Theme = new Theme(this);
+        _themeParser = new ThemeParser(Theme);
         Logger = logger ?? new ConsoleLogger();
         LifeCycle.RegisterUIThread();
         LifeCycle.CurrentState = LifeCycle.State.INIT;
+
+        LoadThemeResource("openui-dark");
         _uiEnvironment.Initialize();
     }
 
@@ -157,7 +160,7 @@ public class Application : IDisposable
     /// <param name="themeName">The theme resource name.</param>
     public void LoadThemeResource(string themeName)
     {
-        Theme = _themeParser.Parse(ResourceManager.Themes[themeName]);
+        _themeParser.Parse(ResourceManager.Themes[themeName]);
     }
 
     /// <summary>

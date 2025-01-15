@@ -10,11 +10,13 @@ namespace RetroDev.OpenUI.Properties;
 /// <typeparam name="TValue">The property value type.</typeparam>
 /// <param name="parent">The object owning this property.</param>
 /// <param name="value">The property value.</param>
+/// <param name="application">The application owning this property.</param>
 [DebuggerDisplay("{Value}")]
-public class BindableProperty<TParent, TValue>(TParent parent, TValue value)
+public class BindableProperty<TParent, TValue>(TParent parent, TValue value, Application? application = null)
 {
     private TValue _value = value;
     private List<IBinder<TValue>> _binders = [];
+    private Application? _application = application;
 
     /// <summary>
     /// Triggers then the <see cref="Value"/> changes. Setting <see cref="Value"/> to the same value
@@ -29,6 +31,8 @@ public class BindableProperty<TParent, TValue>(TParent parent, TValue value)
     {
         set
         {
+            _application?.LifeCycle?.ThrowIfPropertyCannotBeSet();
+
             if (!EqualityComparer<TValue>.Default.Equals(_value, value))
             {
                 var previousValue = _value;
@@ -37,7 +41,11 @@ public class BindableProperty<TParent, TValue>(TParent parent, TValue value)
                 NotifySourceToDestnationBinders();
             }
         }
-        get => _value;
+        get
+        {
+            _application?.LifeCycle?.ThrowIfNotOnUIThread();
+            return _value;
+        }
     }
 
     /// <summary>
