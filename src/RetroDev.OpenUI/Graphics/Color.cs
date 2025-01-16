@@ -197,6 +197,10 @@ public readonly record struct Color(byte RedComponent = 0, byte GreenComponent =
         }
     }
 
+    /// <inheritdoc />
+    public override string ToString() =>
+        $"({RedComponent}, {GreenComponent}, {BlueComponent}, {AlphaComponent})";
+
     private static Color? FindConstant(string name)
     {
         var propertyInfo = typeof(Color).GetFields(BindingFlags.Static | BindingFlags.Public)

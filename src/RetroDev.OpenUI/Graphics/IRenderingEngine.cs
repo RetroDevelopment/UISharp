@@ -1,6 +1,7 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Exceptions;
+using RetroDev.OpenUI.Graphics;
 using RetroDev.OpenUI.Graphics.Shapes;
 
 namespace RetroDev.OpenUI.Core;
@@ -53,7 +54,10 @@ public interface IRenderingEngine
     /// <summary>
     /// This method is invoked when starting the rendering of a frame.
     /// </summary>
-    void InitializeFrame();
+    /// <param name="backgroundColor">
+    /// The frame background color.
+    /// </param>
+    void InitializeFrame(Color backgroundColor);
 
     /// <summary>
     /// This method is called when the frame rendering is complete.

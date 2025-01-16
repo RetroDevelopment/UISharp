@@ -32,7 +32,7 @@ public class Theme : ThemeBase
     /// <summary>
     /// Light version of <see cref="PrimaryColor"/> mostly used for disable components.
     /// </summary>
-    public BindableProperty<Theme, Color> PrimaryColorLight { get; }
+    public BindableProperty<Theme, Color> PrimaryColorDisabled { get; }
 
     /// <summary>
     /// Secondary background color.
@@ -42,7 +42,7 @@ public class Theme : ThemeBase
     /// <summary>
     /// Light version of <see cref="SecondaryColor"/>.
     /// </summary>
-    public BindableProperty<Theme, Color> SecondaryColorLight { get; }
+    public BindableProperty<Theme, Color> SecondaryColorDisabled { get; }
 
     /// <summary>
     /// The main color for text.
@@ -52,7 +52,7 @@ public class Theme : ThemeBase
     /// <summary>
     /// Light version of <see cref="TextColor"/>, usually for disabled text.
     /// </summary>
-    public BindableProperty<Theme, Color> TextColorLight { get; }
+    public BindableProperty<Theme, Color> TextColorDisabled { get; }
 
     /// <summary>
     /// Color for border surrounding UI elements.
@@ -70,11 +70,11 @@ public class Theme : ThemeBase
         MainBackground = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBinding);
         PrimaryBackground = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBinding);
         PrimaryColor = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBinding);
-        PrimaryColorLight = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBinding);
+        PrimaryColorDisabled = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBinding);
         SecondaryColor = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBinding);
-        SecondaryColorLight = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBinding);
+        SecondaryColorDisabled = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBinding);
         TextColor = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBinding);
-        TextColorLight = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBinding);
+        TextColorDisabled = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBinding);
         BorderColor = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBinding);
     }
 }

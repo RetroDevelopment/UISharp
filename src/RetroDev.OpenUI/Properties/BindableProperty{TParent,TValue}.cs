@@ -79,14 +79,17 @@ public class BindableProperty<TParent, TValue>(TParent parent, TValue value, App
         switch (binder.Binding)
         {
             case BindingType.SourceToDestination:
+                binder.NotifySourceChanged(Value);
                 break;
             case BindingType.DestinationToSource:
                 EnsureBinderHasNoDestinationToSource();
                 binder.DestinationChange += Binder_DestinationChange;
+                if (binder.CurrentValue != null) Value = binder.CurrentValue;
                 break;
             case BindingType.TwoWays:
                 EnsureBinderHasNoDestinationToSource();
                 binder.DestinationChange += Binder_DestinationChange;
+                if (binder.CurrentValue != null) Value = binder.CurrentValue;
                 break;
             default:
                 throw new ArgumentException($"Unhandled binding type {binder.Binding}");
@@ -110,23 +113,6 @@ public class BindableProperty<TParent, TValue>(TParent parent, TValue value, App
 
         _binders.Clear();
     }
-
-    /// <summary>
-    /// Checks whether the binder is binding source to destination (the binder).
-    /// </summary>
-    /// <param name="binder">The binder for which to check the binding.</param>
-    /// <returns><see langword="true" /> if <paramref name="binder"/> <see cref="BindingType"/> is <see cref="BindingType.SourceToDestination"/> or <see cref="BindingType.TwoWays"/>.</returns>
-
-    public bool BindsSourceToDestination(IBinder<TValue> binder) =>
-        binder.Binding == BindingType.SourceToDestination || binder.Binding == BindingType.TwoWays;
-
-    /// <summary>
-    /// Checks whether the binder is binding destination (the binder) to source.
-    /// </summary>
-    /// <param name="binder">The binder for which to check the binding.</param>
-    /// <returns><see langword="true" /> if <paramref name="binder"/> <see cref="BindingType"/> is <see cref="BindingType.DestinationToSource"/> or <see cref="BindingType.TwoWays"/>.</returns>
-    public bool BindsDestinationToSource(IBinder<TValue> binder) =>
-        binder.Binding == BindingType.DestinationToSource || binder.Binding == BindingType.TwoWays;
 
 
     /// <summary>
@@ -158,13 +144,20 @@ public class BindableProperty<TParent, TValue>(TParent parent, TValue value, App
             case BindingType.TwoWays:
                 break;
             case BindingType.SourceToDestination:
-                if (!BindsSourceToDestination(binder)) throw new InvalidOperationException($"Binding type not allowed {binder.Binding}: allowed binding is {AllowedBinding}");
+                if (binder.Binding != BindingType.SourceToDestination) throw new InvalidOperationException($"Binding type not allowed {binder.Binding}: allowed binding is {AllowedBinding}");
                 break;
             case BindingType.DestinationToSource:
-                if (!BindsDestinationToSource(binder)) throw new InvalidOperationException($"Binding type not allowed {binder.Binding}: allowed binding is {AllowedBinding}");
+                if (binder.Binding != BindingType.DestinationToSource) throw new InvalidOperationException($"Binding type not allowed {binder.Binding}: allowed binding is {AllowedBinding}");
                 break;
         }
     }
+
+
+    private bool BindsSourceToDestination(IBinder<TValue> binder) =>
+        binder.Binding == BindingType.SourceToDestination || binder.Binding == BindingType.TwoWays;
+
+    private bool BindsDestinationToSource(IBinder<TValue> binder) =>
+        binder.Binding == BindingType.DestinationToSource || binder.Binding == BindingType.TwoWays;
 
     private void Binder_DestinationChange(object? sender, BinderValueChangeEventArgs<TValue> e)
     {

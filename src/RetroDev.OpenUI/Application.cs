@@ -161,6 +161,7 @@ public class Application : IDisposable
     public void LoadThemeResource(string themeName)
     {
         _themeParser.Parse(ResourceManager.Themes[themeName]);
+        Logger.LogInfo($"Theme: {themeName}");
     }
 
     /// <summary>

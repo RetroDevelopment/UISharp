@@ -13,6 +13,9 @@ public class PropertyBinder<TParent, TValue> : IBinder<TValue>
     public BindingType Binding { get; }
 
     /// <inheritdoc />
+    public TValue? CurrentValue { get; private set; }
+
+    /// <inheritdoc />
     public event EventHandler<BinderValueChangeEventArgs<TValue>> DestinationChange = (_, _) => { };
 
     /// <summary>
@@ -22,10 +25,16 @@ public class PropertyBinder<TParent, TValue> : IBinder<TValue>
     /// <param name="binding">The binding type.</param>
     public PropertyBinder(BindableProperty<TParent, TValue> destinationProperty, BindingType binding)
     {
-        EnsureBindingIsAllowed(destinationProperty);
+        EnsureBindingIsAllowed(destinationProperty, binding);
         _destinationProperty = destinationProperty;
         Binding = binding;
         _destinationProperty.ValueChange += _destinationProperty_ValueChange;
+        CurrentValue = destinationProperty.Value;
+
+        if (binding == BindingType.DestinationToSource || binding == BindingType.TwoWays)
+        {
+            OnDestinationChange(destinationProperty.Parent, destinationProperty.Value);
+        }
     }
 
     /// <inheritdoc />
@@ -38,21 +47,29 @@ public class PropertyBinder<TParent, TValue> : IBinder<TValue>
     public void Unbind() =>
         _destinationProperty.ValueChange -= _destinationProperty_ValueChange;
 
-    private void EnsureBindingIsAllowed(BindableProperty<TParent, TValue> destinationProperty)
+    private void EnsureBindingIsAllowed(BindableProperty<TParent, TValue> destinationProperty, BindingType binding)
     {
         switch (destinationProperty.AllowedBinding)
         {
             case BindingType.TwoWays:
                 break;
             case BindingType.SourceToDestination:
-                if (!destinationProperty.BindsDestinationToSource(this)) throw new InvalidOperationException($"Binding type not allowed {Binding}");
+                if (binding != BindingType.DestinationToSource) throw new InvalidOperationException($"Binding type not allowed {binding}");
                 break;
             case BindingType.DestinationToSource:
-                if (!destinationProperty.BindsSourceToDestination(this)) throw new InvalidOperationException($"Binding type not allowed {Binding}");
+                if (binding != BindingType.SourceToDestination) throw new InvalidOperationException($"Binding type not allowed {binding}");
                 break;
         }
     }
 
-    private void _destinationProperty_ValueChange(TParent sender, ValueChangeEventArgs<TValue> e) =>
-        DestinationChange.Invoke(sender, new BinderValueChangeEventArgs<TValue>(e.CurrentValue));
+    private void OnDestinationChange(TParent sender, TValue value)
+    {
+        CurrentValue = value;
+        DestinationChange.Invoke(sender, new BinderValueChangeEventArgs<TValue>(value));
+    }
+
+    private void _destinationProperty_ValueChange(TParent sender, ValueChangeEventArgs<TValue> e)
+    {
+        OnDestinationChange(sender, e.CurrentValue);
+    }
 }

@@ -191,12 +191,13 @@ internal class OpenGLRenderingEngine : IRenderingEngine
     {
         _application.LifeCycle.ThrowIfNotOnRenderingPhase();
         if (string.IsNullOrEmpty(text.Value)) return;
+        var textKey = $"{text.Value}{text.ForegroundColor}";
 
-        if (!_textCache.TryGetValue(text.Value, out var textureId))
+        if (!_textCache.TryGetValue(textKey, out var textureId))
         {
             var textureImage = new SixLaborsFontRenderingEngine().ConvertTextToRgbaImage(text.Value, 20, text.ForegroundColor);
             textureId = CreateTexture(textureImage);
-            _textCache[text.Value] = textureId;
+            _textCache[textKey] = textureId;
         }
 
         text.TextureID = textureId;
@@ -214,11 +215,15 @@ internal class OpenGLRenderingEngine : IRenderingEngine
     /// <summary>
     /// This method is invoked when starting the rendering of a frame.
     /// </summary>
-    public void InitializeFrame()
+    /// <param name="backgroundColor">
+    /// The frame background color.
+    /// </param>
+    public void InitializeFrame(Color backroundColor)
     {
         _application.LifeCycle.ThrowIfNotOnRenderingPhase();
         LoggingUtils.SDLCheck(() => SDL.SDL_GL_MakeCurrent(_window, _glContext), _application.Logger);
-        GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f); // Dark gray background
+        var openGlBackgroundColor = backroundColor.ToOpenGLColor();
+        GL.ClearColor(openGlBackgroundColor.X, openGlBackgroundColor.Y, openGlBackgroundColor.Z, openGlBackgroundColor.W);
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
     }
 

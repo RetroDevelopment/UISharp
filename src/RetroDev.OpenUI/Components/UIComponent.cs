@@ -2,21 +2,15 @@
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Events;
 using RetroDev.OpenUI.Exceptions;
+using RetroDev.OpenUI.Graphics;
 using RetroDev.OpenUI.Properties;
+using RetroDev.OpenUI.Themes;
 using RetroDev.OpenUI.Utils;
 
 namespace RetroDev.OpenUI.Components;
 
-// TODO: Use property binding (UIProperty) to bind ThemeManager properties.
-// ThemeManager(Dictionary<string, Color>) {} allows specifying a theme dynamically (e.g. load from xml). Then it has some proeprties like PrimaryColor, Background, etc.
-// You can create the ThemeManager in Application and pass it to each component and bind the colors. Then you can switch theme (e.g. manager.SetTheme(DarkThemeDictionary)) and colors are automatically updated.
-
 // TODO: Same way as before, add a TextResourceManager class to manage text (e.g. with language) and create it in Application.
 // They can also have dictionary/xml. Then bind these properties in your project and you will get automatic language change.
-
-// TODO: Same way, add a AssetManager class to load assets (images, xml files, text resources, etc.). Maybe AssetManager can also load themes and text resources.
-
-// TODO: Add LookAndFeel() {} which will do the actual rendering (create it Application). Switching look and feel allows to immediately change the shapes drawn for components.
 
 /// <summary>
 /// The abstract calss for all UI components (windows, buttons, etc.).
@@ -170,6 +164,14 @@ public abstract class UIComponent
     public UIProperty<UIComponent, bool> Enabled { get; }
 
     /// <summary>
+    /// The component background color.
+    /// </summary>
+    /// <remarks>
+    /// It is the derived class responsibility to decide how to handle the background color.
+    /// </remarks>
+    public UIProperty<UIComponent, Color> BackgroundColor { get; }
+
+    /// <summary>
     /// The ideal component size which allows to correctly display the whole component.
     /// </summary>  
     public Size SizeHint => SizeHintCache.Value;
@@ -262,6 +264,7 @@ public abstract class UIComponent
         Focusable = new UIProperty<UIComponent, bool>(this, DefaultIsFocusable);
         Focus = new UIProperty<UIComponent, bool>(this, false);
         Enabled = new UIProperty<UIComponent, bool>(this, true);
+        BackgroundColor = new UIProperty<UIComponent, Color>(this, Color.Transparent);
 
         _relativeDrawingArea = new CachedValue<Area>(ComputeRelativeDrawingArea);
         _absoluteDrawingArea = new CachedValue<Area>(ComputeAbsoluteDrawingArea);

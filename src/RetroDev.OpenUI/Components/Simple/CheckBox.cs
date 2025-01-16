@@ -4,6 +4,7 @@ using RetroDev.OpenUI.Events;
 using RetroDev.OpenUI.Graphics;
 using RetroDev.OpenUI.Graphics.Shapes;
 using RetroDev.OpenUI.Properties;
+using RetroDev.OpenUI.Themes;
 
 namespace RetroDev.OpenUI.Components.Simple;
 
@@ -18,6 +19,26 @@ public class CheckBox : UIComponent
     /// Whether the checkbox is checked.
     /// </summary>
     public UIProperty<CheckBox, bool> Checked { get; }
+
+    /// <summary>
+    /// The color of the check box circle.
+    /// </summary>
+    public UIProperty<CheckBox, Color> CircleColor { get; }
+
+    /// <summary>
+    /// The background color of the checkbox when it <see cref="CheckBox"/> is <see langword="false" />.
+    /// </summary>
+    public UIProperty<CheckBox, Color> UncheckedBackgroundColor { get; }
+
+    /// <summary>
+    /// The background color when the checkbox is disabled.
+    /// </summary>
+    public UIProperty<CheckBox, Color> DisabledBackgroundColor { get; }
+
+    /// <summary>
+    /// The color of the border displayed when the button is focused.
+    /// </summary>
+    public UIProperty<CheckBox, Color> BorderColor { get; }
 
     /// <inheritdoc/>
     protected override Size ComputeSizeHint() => new(80, 30); // TODO: Maybe same size as default label text size (which is 20).
@@ -42,6 +63,17 @@ public class CheckBox : UIComponent
     public CheckBox(Application parent) : base(parent)
     {
         Checked = new UIProperty<CheckBox, bool>(this, false);
+        CircleColor = new UIProperty<CheckBox, Color>(this, Theme.DefaultColor);
+        UncheckedBackgroundColor = new UIProperty<CheckBox, Color>(this, Theme.DefaultColor);
+        DisabledBackgroundColor = new UIProperty<CheckBox, Color>(this, Theme.DefaultColor);
+        BorderColor = new UIProperty<CheckBox, Color>(this, Theme.DefaultColor);
+
+        BackgroundColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.SecondaryColorDisabled, BindingType.DestinationToSource));
+        CircleColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.TextColor, BindingType.DestinationToSource));
+        UncheckedBackgroundColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.SecondaryColorDisabled, BindingType.DestinationToSource));
+        DisabledBackgroundColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.PrimaryColorDisabled, BindingType.DestinationToSource));
+        BorderColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.BorderColor, BindingType.DestinationToSource));
+
         RenderFrame += CheckBox_RenderFrame;
         MousePress += CheckBox_MousePress;
     }
@@ -53,28 +85,19 @@ public class CheckBox : UIComponent
         float minimumDimension = Math.Min(size.Width, size.Height);
         PixelUnit cornerRadius = minimumDimension / 2.0f;
         var circleRadius = size.Height;
+        var backgroundColor = Enabled ? (Checked ? BackgroundColor.Value : UncheckedBackgroundColor.Value) : DisabledBackgroundColor.Value;
+        var backgroundRectangle = new Rectangle(backgroundColor, CornerRadiusX: cornerRadius, CornerRadiusY: cornerRadius);
+        var circleDrawArea = Checked ? new Area(new Point(size.Width - circleRadius, 0.0f), new Size(size.Height, size.Height)) :
+                                       new Area(Point.Zero, new Size(size.Height, size.Height));
+        var circle = new Circle(CircleColor);
+        var focusRectangle = new Rectangle(BorderColor: BorderColor, BorderThickness: 5.0f, CornerRadiusX: cornerRadius, CornerRadiusY: cornerRadius);
 
-        if (Enabled)
-        {
-            canvas.Render(new Rectangle(new(0, 0, 100, 255), CornerRadiusX: cornerRadius, CornerRadiusY: cornerRadius), new(Point.Zero, size));
-        }
-        else
-        {
-            canvas.Render(new Rectangle(new(100, 100, 100, 255), CornerRadiusX: cornerRadius, CornerRadiusY: cornerRadius), new(Point.Zero, size));
-        }
-
-        if (Checked)
-        {
-            canvas.Render(new Circle(new(100, 0, 0, 255)), new(new Point(size.Width - circleRadius, 0.0f), new Size(size.Height, size.Height)));
-        }
-        else
-        {
-            canvas.Render(new Circle(new(100, 0, 0, 255)), new(Point.Zero, new Size(size.Height, size.Height)));
-        }
+        canvas.Render(backgroundRectangle, RelativeDrawingArea.Fill());
+        canvas.Render(circle, circleDrawArea);
 
         if (Focus.Value)
         {
-            canvas.Render(new Rectangle(BorderColor: new Color(255, 255, 255, 255), BorderThickness: 5.0f, CornerRadiusX: cornerRadius, CornerRadiusY: cornerRadius), new(Point.Zero, size));
+            canvas.Render(focusRectangle, RelativeDrawingArea.Fill());
         }
     }
 

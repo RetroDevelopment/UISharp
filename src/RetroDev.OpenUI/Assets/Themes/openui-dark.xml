@@ -5,15 +5,15 @@
     <!-- Slightly lighter background for containers -->
     <color key="primaryColor" value="#333333" />
     <!-- Dark gray for edit text background and checkboxes -->
-    <color key="primaryColorLight" value="#555555" />
+    <color key="primaryColorDisabled" value="#555555" />
     <!-- Lighter gray for disabled elements -->
     <color key="secondaryColor" value="#1976D2" />
     <!-- Blue for buttons -->
-    <color key="secondaryColorLight" value="#64B5F6" />
+    <color key="secondaryColorDisabled" value="#64B5F6" />
     <!-- Lighter blue for buttons (hover state, etc.) -->
     <color key="textColor" value="#FFFFFF" />
     <!-- White text for sufficient contrast -->
-    <color key="textColorLight" value="#CCCCCC" />
+    <color key="textColorDisabled" value="#CCCCCC" />
     <!-- Lighter text color (e.g., for secondary text) -->
     <color key="borderColor" value="#4CAF50" />
     <!-- Contrasting color for borders (example green) -->

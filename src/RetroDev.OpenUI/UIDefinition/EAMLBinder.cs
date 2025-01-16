@@ -2,6 +2,7 @@
 using System.Text.RegularExpressions;
 using RetroDev.OpenUI.Components;
 using RetroDev.OpenUI.Exceptions;
+using RetroDev.OpenUI.Graphics;
 using RetroDev.OpenUI.Properties;
 
 // TODO: bindings

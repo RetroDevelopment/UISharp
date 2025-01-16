@@ -25,6 +25,12 @@ public interface IBinder<TValue>
     BindingType Binding { get; }
 
     /// <summary>
+    /// The current binding value, which is the last time a <see cref="DestinationChange"/> was emitted or
+    /// <see langword="null" /> if no such event has been emitted.
+    /// </summary>
+    TValue? CurrentValue { get; }
+
+    /// <summary>
     /// Triggered when it is time to notify the source binder that the destination value has changed.
     /// </summary>
     event EventHandler<BinderValueChangeEventArgs<TValue>> DestinationChange;

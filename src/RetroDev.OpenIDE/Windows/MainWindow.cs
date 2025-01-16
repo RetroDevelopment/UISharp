@@ -31,20 +31,19 @@ internal class MainWindow : Window
     private Dictionary<TreeNode, Component> _treeNodeAstMap = [];
     private Component? _rootNode;
 
-    private GridLayout _mainLayout;
-    private GridLayout _controlLayout;
-    private EditBox _fileEditBox;
-    private ListBox _components;
-    private TreeBox _astTreeBox;
-    private Button _loadButton;
-    private Button _saveButton;
-    private Button _refreshButton;
-    private Button _addButton;
-    private Button _removeButton;
+    private readonly GridLayout _mainLayout;
+    private readonly EditBox _fileEditBox;
+    private readonly ListBox _components;
+    private readonly TreeBox _astTreeBox;
+    private readonly Button _loadButton;
+    private readonly Button _saveButton;
+    private readonly Button _refreshButton;
+    private readonly Button _addButton;
+    private readonly Button _removeButton;
+    private readonly CheckBox _darkMode;
 
     public MainWindow(Application parent,
                       GridLayout mainLayout,
-                      GridLayout controlLayout,
                       ListBox components,
                       EditBox file,
                       TreeBox astTreeBox,
@@ -52,11 +51,11 @@ internal class MainWindow : Window
                       Button save,
                       Button refresh,
                       Button add,
-                      Button remove) : base(parent)
+                      Button remove,
+                      CheckBox darkMode) : base(parent)
     {
         Initialized += MainWindow_Initialized;
         _mainLayout = mainLayout;
-        _controlLayout = controlLayout;
         _components = components;
         _fileEditBox = file;
         _astTreeBox = astTreeBox;
@@ -65,6 +64,7 @@ internal class MainWindow : Window
         _refreshButton = refresh;
         _addButton = add;
         _removeButton = remove;
+        _darkMode = darkMode;
     }
 
     private void MainWindow_Initialized(Window sender, EventArgs e)
@@ -98,6 +98,7 @@ internal class MainWindow : Window
         _refreshButton.Action += RefreshButton_Action;
         _addButton.Action += AddButton_Action;
         _removeButton.Action += RemoveButton_Action;
+        _darkMode.Checked.ValueChange += Checked_ValueChange;
     }
 
     private void LoadButton_Action(Button sender, EventArgs e)
@@ -169,6 +170,18 @@ internal class MainWindow : Window
 
         _treeNodeAstMap.Remove(selectedNode);
         CreateComponentInstance();
+    }
+
+    private void Checked_ValueChange(CheckBox sender, ValueChangeEventArgs<bool> e)
+    {
+        if (e.CurrentValue)
+        {
+            Application.LoadThemeResource("openui-dark");
+        }
+        else
+        {
+            Application.LoadThemeResource("openui-light");
+        }
     }
 
     private void SelectedNode_ValueChange(TreeBox sender, ValueChangeEventArgs<TreeNode?> e)
