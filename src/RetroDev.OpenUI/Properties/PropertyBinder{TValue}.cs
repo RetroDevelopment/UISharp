@@ -22,6 +22,7 @@ public class PropertyBinder<TParent, TValue> : IBinder<TValue>
     /// <param name="binding">The binding type.</param>
     public PropertyBinder(BindableProperty<TParent, TValue> destinationProperty, BindingType binding)
     {
+        EnsureBindingIsAllowed(destinationProperty);
         _destinationProperty = destinationProperty;
         Binding = binding;
         _destinationProperty.ValueChange += _destinationProperty_ValueChange;
@@ -36,6 +37,21 @@ public class PropertyBinder<TParent, TValue> : IBinder<TValue>
     /// <inheritdoc />
     public void Unbind() =>
         _destinationProperty.ValueChange -= _destinationProperty_ValueChange;
+
+    private void EnsureBindingIsAllowed(BindableProperty<TParent, TValue> destinationProperty)
+    {
+        switch (destinationProperty.AllowedBinding)
+        {
+            case BindingType.TwoWays:
+                break;
+            case BindingType.SourceToDestination:
+                if (!destinationProperty.BindsDestinationToSource(this)) throw new InvalidOperationException($"Binding type not allowed {Binding}");
+                break;
+            case BindingType.DestinationToSource:
+                if (!destinationProperty.BindsSourceToDestination(this)) throw new InvalidOperationException($"Binding type not allowed {Binding}");
+                break;
+        }
+    }
 
     private void _destinationProperty_ValueChange(TParent sender, ValueChangeEventArgs<TValue> e) =>
         DestinationChange.Invoke(sender, new BinderValueChangeEventArgs<TValue>(e.CurrentValue));

@@ -65,16 +65,16 @@ public class Theme : ThemeBase
     /// <param name="colors">The name - color mapping.</param>
     public Theme(Application application) : base()
     {
-        List<BindingType> allowedBindings = [BindingType.SourceToDestination];
+        BindingType allowedBinding = BindingType.SourceToDestination;
 
-        MainBackground = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBindings);
-        PrimaryBackground = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBindings);
-        PrimaryColor = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBindings);
-        PrimaryColorLight = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBindings);
-        SecondaryColor = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBindings);
-        SecondaryColorLight = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBindings);
-        TextColor = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBindings);
-        TextColorLight = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBindings);
-        BorderColor = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBindings);
+        MainBackground = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBinding);
+        PrimaryBackground = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBinding);
+        PrimaryColor = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBinding);
+        PrimaryColorLight = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBinding);
+        SecondaryColor = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBinding);
+        SecondaryColorLight = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBinding);
+        TextColor = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBinding);
+        TextColorLight = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBinding);
+        BorderColor = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBinding);
     }
 }

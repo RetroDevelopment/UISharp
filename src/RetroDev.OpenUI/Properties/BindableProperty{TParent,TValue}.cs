@@ -10,13 +10,17 @@ namespace RetroDev.OpenUI.Properties;
 /// <typeparam name="TValue">The property value type.</typeparam>
 /// <param name="parent">The object owning this property.</param>
 /// <param name="value">The property value.</param>
-/// <param name="allowedBindings">The list of allowed <see cref="BindingType"/>. If <see langword="null" /> all binding types will be allowed.</param>
+/// <param name="allowedBinding">
+/// The allowed <see cref="BindingType"/> (<see cref="BindingType.TwoWays"/> by default).
+/// </param>
 /// <param name="application">The application owning this property.</param>
+/// <remarks>
+/// If <paramref name="allowedBinding"/> is <see cref="BindingType.TwoWays"/> it means that bidirectional binding is allowed, including (<see cref="BindingType.SourceToDestination"/> and <see cref="BindingType.DestinationToSource"/>).
+/// </remarks>
 [DebuggerDisplay("{Value}")]
-public class BindableProperty<TParent, TValue>(TParent parent, TValue value, Application? application = null, List<BindingType>? allowedBindings = null)
+public class BindableProperty<TParent, TValue>(TParent parent, TValue value, Application? application = null, BindingType allowedBinding = BindingType.TwoWays)
 {
     private readonly Application? _application = application;
-    private readonly BindingType[] _allowedBindings = allowedBindings?.ToArray() ?? Enum.GetValues<BindingType>();
     private TValue _value = value;
     private List<IBinder<TValue>> _binders = [];
 
@@ -56,6 +60,13 @@ public class BindableProperty<TParent, TValue>(TParent parent, TValue value, App
     public TParent Parent => parent;
 
     /// <summary>
+    /// The allowed <see cref="BindingType"/>.
+    /// If <paramref name="allowedBinding"/> is <see cref="BindingType.TwoWays"/> it means that bidirectional binding is allowed,
+    /// including (<see cref="BindingType.SourceToDestination"/> and <see cref="BindingType.DestinationToSource"/>).
+    /// </summary>
+    public BindingType AllowedBinding { get; } = allowedBinding;
+
+    /// <summary>
     /// Adds a property binder to this property.
     /// </summary>
     /// <param name="binder">The binder to bind this propery value with.</param>
@@ -63,7 +74,7 @@ public class BindableProperty<TParent, TValue>(TParent parent, TValue value, App
     /// or <see cref="BindingType.TwoWays"/> and a binder with one of these two types has already been added.</exception>
     public void AddBinder(IBinder<TValue> binder)
     {
-        if (_allowedBindings != null && !_allowedBindings.Contains(binder.Binding)) throw new InvalidOperationException($"Binding {binder.Binding} not allowed");
+        EnsureBindingIsAllowed(binder);
 
         switch (binder.Binding)
         {
@@ -101,6 +112,24 @@ public class BindableProperty<TParent, TValue>(TParent parent, TValue value, App
     }
 
     /// <summary>
+    /// Checks whether the binder is binding source to destination (the binder).
+    /// </summary>
+    /// <param name="binder">The binder for which to check the binding.</param>
+    /// <returns><see langword="true" /> if <paramref name="binder"/> <see cref="BindingType"/> is <see cref="BindingType.SourceToDestination"/> or <see cref="BindingType.TwoWays"/>.</returns>
+
+    public bool BindsSourceToDestination(IBinder<TValue> binder) =>
+        binder.Binding == BindingType.SourceToDestination || binder.Binding == BindingType.TwoWays;
+
+    /// <summary>
+    /// Checks whether the binder is binding destination (the binder) to source.
+    /// </summary>
+    /// <param name="binder">The binder for which to check the binding.</param>
+    /// <returns><see langword="true" /> if <paramref name="binder"/> <see cref="BindingType"/> is <see cref="BindingType.DestinationToSource"/> or <see cref="BindingType.TwoWays"/>.</returns>
+    public bool BindsDestinationToSource(IBinder<TValue> binder) =>
+        binder.Binding == BindingType.DestinationToSource || binder.Binding == BindingType.TwoWays;
+
+
+    /// <summary>
     /// Implicit cast from <see cref="BindableProperty{TParent, TValue}"/> to <typeparamref name="TValue"/>.
     /// </summary>
     /// <param name="property">The <see cref="BindableProperty{TParent, TValue}"/> to cast.</param>
@@ -122,11 +151,20 @@ public class BindableProperty<TParent, TValue>(TParent parent, TValue value, App
         }
     }
 
-    private bool BindsSourceToDestination(IBinder<TValue> binder) =>
-        binder.Binding == BindingType.SourceToDestination || binder.Binding == BindingType.TwoWays;
-
-    private bool BindsDestinationToSource(IBinder<TValue> binder) =>
-        binder.Binding == BindingType.DestinationToSource || binder.Binding == BindingType.TwoWays;
+    private void EnsureBindingIsAllowed(IBinder<TValue> binder)
+    {
+        switch (AllowedBinding)
+        {
+            case BindingType.TwoWays:
+                break;
+            case BindingType.SourceToDestination:
+                if (!BindsSourceToDestination(binder)) throw new InvalidOperationException($"Binding type not allowed {binder.Binding}: allowed binding is {AllowedBinding}");
+                break;
+            case BindingType.DestinationToSource:
+                if (!BindsDestinationToSource(binder)) throw new InvalidOperationException($"Binding type not allowed {binder.Binding}: allowed binding is {AllowedBinding}");
+                break;
+        }
+    }
 
     private void Binder_DestinationChange(object? sender, BinderValueChangeEventArgs<TValue> e)
     {

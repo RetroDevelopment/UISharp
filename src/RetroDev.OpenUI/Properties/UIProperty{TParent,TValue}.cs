@@ -10,9 +10,14 @@ namespace RetroDev.OpenUI.Properties;
 /// <typeparam name="TValue">The property value type.</typeparam>
 /// <param name="parent">The object owning this property.</param>
 /// <param name="value">The property value.</param>
-/// <param name="allowedBindings">The list of allowed <see cref="BindingType"/>. If <see langword="null" /> all binding types will be allowed.</param>
+/// <param name="allowedBinding">
+/// The allowed <see cref="BindingType"/> (<see cref="BindingType.TwoWays"/> by default).
+/// </param>
+/// <remarks>
+/// If <paramref name="allowedBinding"/> is <see cref="BindingType.TwoWays"/> it means that bidirectional binding is allowed, including (<see cref="BindingType.SourceToDestination"/> and <see cref="BindingType.DestinationToSource"/>).
+/// </remarks>
 [DebuggerDisplay("{Value}")]
-public class UIProperty<TParent, TValue>(TParent parent, TValue value, List<BindingType>? allowedBindings = null) : BindableProperty<TParent, TValue>(parent, value, parent.Application, allowedBindings) where TParent : UIComponent
+public class UIProperty<TParent, TValue>(TParent parent, TValue value, BindingType allowedBindings = BindingType.TwoWays) : BindableProperty<TParent, TValue>(parent, value, parent.Application, allowedBindings) where TParent : UIComponent
 {
     /// <summary>
     /// The property value.
