@@ -206,7 +206,7 @@ internal class OpenGLRenderingEngine : IRenderingEngine
                               area.GetTransformMatrix(ViewportSize, 0.0f, null)]);
         _shader.SetProjection(ViewportSize.GetPorjectionMatrix());
         _shader.SetFillColor(text.BackgroundColor.ToOpenGLColor());
-        _shader.SetClipArea(clippingArea?.ToVector4(ViewportSize));
+        _shader.SetClipArea((clippingArea ?? new Area(Point.Zero, ViewportSize)).ToVector4(ViewportSize));
         _shader.SetOffsetMultiplier(OpenTK.Mathematics.Vector2.Zero);
         _modelGenerator.Rectangle.Render(text.TextureID.Value);
     }
@@ -280,7 +280,7 @@ internal class OpenGLRenderingEngine : IRenderingEngine
                               area.GetTransformMatrix(ViewportSize, rotation, borderThickness)]);
         _shader.SetProjection(ViewportSize.GetPorjectionMatrix());
         _shader.SetFillColor(color.ToOpenGLColor());
-        _shader.SetClipArea(clippingArea?.ToVector4(ViewportSize));
+        _shader.SetClipArea((clippingArea ?? new Area(Point.Zero, ViewportSize)).ToVector4(ViewportSize));
         _shader.SetOffsetMultiplier(NormalizeRadius(xRadius, yRadius, area.Size));
         openglShape.Render(textureId ?? _defaultTexture);
     }

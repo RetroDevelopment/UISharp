@@ -13,6 +13,7 @@ public class Canvas
     private readonly IRenderingEngine _renderingEngine;
     private readonly LifeCycle _lifeCycle;
 
+    internal Area? ClippingArea { get; set; }
     internal Area ContainerAbsoluteDrawingArea { get; set; } = Area.Empty;
 
     /// <summary>
@@ -45,7 +46,7 @@ public class Canvas
     public void Render(Rectangle rectangle, Area area)
     {
         _lifeCycle.ThrowIfNotOnRenderingPhase();
-        _renderingEngine.Render(rectangle, area.ToAbsolute(ContainerAbsoluteDrawingArea), ContainerAbsoluteDrawingArea);
+        _renderingEngine.Render(rectangle, area.ToAbsolute(ContainerAbsoluteDrawingArea), ClippingArea);
     }
 
     /// <summary>
@@ -56,7 +57,7 @@ public class Canvas
     public void Render(Circle circle, Area area)
     {
         _lifeCycle.ThrowIfNotOnRenderingPhase();
-        _renderingEngine.Render(circle, area.ToAbsolute(ContainerAbsoluteDrawingArea), ContainerAbsoluteDrawingArea);
+        _renderingEngine.Render(circle, area.ToAbsolute(ContainerAbsoluteDrawingArea), ClippingArea);
     }
 
     /// <summary>
@@ -67,6 +68,6 @@ public class Canvas
     public void Render(Text text, Area area)
     {
         _lifeCycle.ThrowIfNotOnRenderingPhase();
-        _renderingEngine.Render(text, area.ToAbsolute(ContainerAbsoluteDrawingArea), ContainerAbsoluteDrawingArea);
+        _renderingEngine.Render(text, area.ToAbsolute(ContainerAbsoluteDrawingArea), ClippingArea);
     }
 }

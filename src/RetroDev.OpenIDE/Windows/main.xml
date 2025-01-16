@@ -4,7 +4,7 @@
         <gridLayout id="controlLayout" rows="8" columns="1" rowSizes="40px;40px;30px;30px;30px;200px;50px;*">
             <gridLayout id="fileInput" rows="1" columns="2" columnSizes="50px;*">
                 <label text="File:" />
-                <editBox id="file" autoWidth="stretch" text="test.xml" />
+                <editBox id="file" autoWidth="stretch" text="calculator.xml" />
             </gridLayout>
             <gridLayout id="theme" rows="1" columns="2" columnSizes="120px;*">
                 <label text="Dark mode:" />

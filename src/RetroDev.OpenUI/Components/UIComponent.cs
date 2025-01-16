@@ -1,5 +1,4 @@
-﻿using System.Runtime.InteropServices;
-using RetroDev.OpenUI.Components.AutoArea;
+﻿using RetroDev.OpenUI.Components.AutoArea;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Events;
 using RetroDev.OpenUI.Exceptions;
@@ -30,6 +29,7 @@ public abstract class UIComponent
     private Point? _mouseLastDragPointAbsolute = null;
     private CachedValue<Area> _relativeDrawingArea;
     private CachedValue<Area> _absoluteDrawingArea;
+    private CachedValue<Area> _clipArea;
 
     /// <summary>
     /// Mouse button press inside <see cref="this"/> window.
@@ -238,6 +238,11 @@ public abstract class UIComponent
     /// </remarks>
     public Area AbsoluteDrawingArea => _absoluteDrawingArea.Value;
 
+    /// <summary>
+    /// The area in which where the UI drawing occurs. Every pixel outside of this area will be clipped.
+    /// </summary>
+    public Area ClipArea => _clipArea.Value;
+
     protected UIComponent(Application application)
     {
         Application = application;
@@ -260,6 +265,7 @@ public abstract class UIComponent
 
         _relativeDrawingArea = new CachedValue<Area>(ComputeRelativeDrawingArea);
         _absoluteDrawingArea = new CachedValue<Area>(ComputeAbsoluteDrawingArea);
+        _clipArea = new CachedValue<Area>(ComputeClipArea);
 
         SizeHintCache = new CachedValue<Size>(ComputeSizeHint);
         SizeHintCache.OnMarkDirty += (_, _) => MarkCachesAsDirty();
@@ -404,10 +410,12 @@ public abstract class UIComponent
         if (Visibility.Value == Components.ComponentVisibility.Visible)
         {
             renderingArgs.Canvas.ContainerAbsoluteDrawingArea = AbsoluteDrawingArea;
+            renderingArgs.Canvas.ClippingArea = ClipArea;
             RenderFrame.Invoke(this, renderingArgs);
             _children.ForEach((child) => child.OnRenderFrame(renderingArgs));
 
             renderingArgs.Canvas.ContainerAbsoluteDrawingArea = AbsoluteDrawingArea;
+            renderingArgs.Canvas.ClippingArea = ClipArea;
             ChildrenRendered?.Invoke(this, renderingArgs);
         }
     }
@@ -573,6 +581,7 @@ public abstract class UIComponent
     {
         _relativeDrawingArea.MarkDirty();
         _absoluteDrawingArea.MarkDirty();
+        _clipArea.MarkDirty();
         _children.ForEach(c => c.MarkCachesAsDirty());
     }
 
@@ -595,6 +604,6 @@ public abstract class UIComponent
         return new Area(actualTopLeft, actualSize);
     }
 
-    private Area ComputeAbsoluteDrawingArea() => RelativeDrawingArea.ToAbsolute(Parent?.AbsoluteDrawingArea)
-                                                                    .Clip(Parent?.AbsoluteDrawingArea);
+    private Area ComputeAbsoluteDrawingArea() => RelativeDrawingArea.ToAbsolute(Parent?.AbsoluteDrawingArea);
+    private Area ComputeClipArea() => AbsoluteDrawingArea.Clip(Parent?.ClipArea);
 }

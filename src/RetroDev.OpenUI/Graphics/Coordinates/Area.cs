@@ -48,8 +48,9 @@ public record Area(Point TopLeft, Size Size)
     {
         if (container == null) return this;
 
+        var oneOffset = new Point(1); // Due to some approximation errors (especially in GridLayout) increase the clip area by 1. The has shown to improve the UI availding some hard cuts of images without introducing visible unclipped areas.
         var clippedTopLeft = TopLeft.Clamp(container.TopLeft, container.BottomRight);
-        var clippedBottomRight = BottomRight.Clamp(container.TopLeft, container.BottomRight);
+        var clippedBottomRight = BottomRight.Clamp(container.TopLeft + oneOffset, container.BottomRight + oneOffset);
 
         return new Area(clippedTopLeft, clippedBottomRight);
     }
