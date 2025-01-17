@@ -1,4 +1,5 @@
 ﻿using RetroDev.OpenUI.Components.AutoArea;
+using RetroDev.OpenUI.Components.Containers;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Events;
 using RetroDev.OpenUI.Exceptions;
@@ -520,7 +521,7 @@ public abstract class UIComponent
 
     private void _parent_KeyRelease(UIComponent sender, KeyEventArgs keyEventArgs)
     {
-        if (Visibility.Value == ComponentVisibility.Visible && (Focus || !Focusable))
+        if (Visibility.Value == ComponentVisibility.Visible && (Focus || this is Container))
         {
             KeyRelease.Invoke(this, new KeyEventArgs(keyEventArgs.Button));
         }
@@ -528,7 +529,7 @@ public abstract class UIComponent
 
     private void _parent_TextInput(UIComponent sender, TextInputEventArgs textInputEventArgs)
     {
-        if (Visibility.Value == ComponentVisibility.Visible && (Focus || !Focusable))
+        if (Visibility.Value == ComponentVisibility.Visible && (Focus || this is Container))
         {
             TextInput.Invoke(this, new TextInputEventArgs(textInputEventArgs.Text));
         }

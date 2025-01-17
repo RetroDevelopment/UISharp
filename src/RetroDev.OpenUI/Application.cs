@@ -69,16 +69,21 @@ public class Application : IDisposable
     /// <param name="eventSystem">The event system used in this application.</param>
     /// <param name="resourceManager">The object that loads resources from the project.</param>
     /// <param name="logger">The logging implementation.</param>
+    /// <param name="createTheme">
+    /// The function that creates a <see cref="Theme"/>. The theme will be automatically created, so pass this function if you want to inject <see cref="Theme"/>
+    /// with an instance of a class derived from <see cref="Themes.Theme"/>.
+    /// </param>
     /// <remarks>The application, as well as all the UI related operations, must run in the same thread as this constructor is invoked.</remarks>
     public Application(IUIEnvironment? uIEnvironment = null,
                        IEventSystem? eventSystem = null,
                        IResourceManager? resourceManager = null,
-                       ILogger? logger = null)
+                       ILogger? logger = null,
+                       Func<Application, Theme>? createTheme = null)
     {
         _uiEnvironment = uIEnvironment ?? new SDLUIEnvironment(this);
         _eventSystem = eventSystem ?? new SDLEventSystem(this);
         ResourceManager = resourceManager ?? new EmbeddedResourceManager();
-        Theme = new Theme(this);
+        Theme = createTheme != null ? createTheme(this) : new Theme(this);
         _themeParser = new ThemeParser(Theme);
         Logger = logger ?? new ConsoleLogger();
         LifeCycle.RegisterUIThread();

@@ -163,9 +163,8 @@ public readonly record struct Color(byte RedComponent = 0, byte GreenComponent =
     /// Creates a new color from the given <paramref name="expression"/> representation.
     /// </summary>
     /// <param name="expression">
-    /// The color hexadecimal represnetation in the form #RRGGBBAA (case insensitive).
-    /// For example #1A2B3C4D and #1a2b3c4d are valid color strings.
-    /// It can also be a color constant from the constants in the <see cref="Color"/> class (e.g. <see cref="Color.Red"/>).
+    /// The color hexadecimal represnetation in the form #RRGGBBAA (case insensitive), or a color constant defined in the <see cref="Color"/> class (e.g. <see cref="Color.Red")/>.
+    /// An example of hexadecimal number representation are #1A2B3C4D and #1a2b3c4d.
     /// </param>
     /// <returns>The <see cref="Color"/> representing the given hexadecimal string <paramref name="colorHex"/>.</returns>
     /// <exception cref="ArgumentException">If the color hexadecimal string is not in the correct format.</exception>
@@ -179,6 +178,10 @@ public readonly record struct Color(byte RedComponent = 0, byte GreenComponent =
             BlueComponent = colorConstant.Value.BlueComponent;
             AlphaComponent = colorConstant.Value.AlphaComponent;
             return;
+        }
+        else if (!expression.StartsWith("#"))
+        {
+            throw new ArgumentException($"Cannot find color constant {expression}");
         }
 
         var regex = new Regex(@"^#(?<red>[0-9A-Fa-f]{2})(?<green>[0-9A-Fa-f]{2})(?<blue>[0-9A-Fa-f]{2})(?<alpha>[0-9A-Fa-f]{2})?$");

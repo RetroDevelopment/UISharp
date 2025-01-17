@@ -36,9 +36,9 @@ public class CheckBox : UIComponent
     public UIProperty<CheckBox, Color> DisabledBackgroundColor { get; }
 
     /// <summary>
-    /// The color of the border displayed when the button is focused.
+    /// The color indicating that the checkbox is focused.
     /// </summary>
-    public UIProperty<CheckBox, Color> BorderColor { get; }
+    public UIProperty<CheckBox, Color> FocusColor { get; }
 
     /// <inheritdoc/>
     protected override Size ComputeSizeHint() => new(80, 30); // TODO: Maybe same size as default label text size (which is 20).
@@ -66,13 +66,13 @@ public class CheckBox : UIComponent
         CircleColor = new UIProperty<CheckBox, Color>(this, Theme.DefaultColor);
         UncheckedBackgroundColor = new UIProperty<CheckBox, Color>(this, Theme.DefaultColor);
         DisabledBackgroundColor = new UIProperty<CheckBox, Color>(this, Theme.DefaultColor);
-        BorderColor = new UIProperty<CheckBox, Color>(this, Theme.DefaultColor);
+        FocusColor = new UIProperty<CheckBox, Color>(this, Theme.DefaultColor);
 
         BackgroundColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.SecondaryColorDisabled, BindingType.DestinationToSource));
         CircleColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.TextColor, BindingType.DestinationToSource));
         UncheckedBackgroundColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.SecondaryColorDisabled, BindingType.DestinationToSource));
         DisabledBackgroundColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.PrimaryColorDisabled, BindingType.DestinationToSource));
-        BorderColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.BorderColor, BindingType.DestinationToSource));
+        FocusColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.BorderColor, BindingType.DestinationToSource));
 
         RenderFrame += CheckBox_RenderFrame;
         MousePress += CheckBox_MousePress;
@@ -90,7 +90,7 @@ public class CheckBox : UIComponent
         var circleDrawArea = Checked ? new Area(new Point(size.Width - circleRadius, 0.0f), new Size(size.Height, size.Height)) :
                                        new Area(Point.Zero, new Size(size.Height, size.Height));
         var circle = new Circle(CircleColor);
-        var focusRectangle = new Rectangle(BorderColor: BorderColor, BorderThickness: 5.0f, CornerRadiusX: cornerRadius, CornerRadiusY: cornerRadius);
+        var focusRectangle = new Rectangle(BorderColor: FocusColor, BorderThickness: 5.0f, CornerRadiusX: cornerRadius, CornerRadiusY: cornerRadius);
 
         canvas.Render(backgroundRectangle, RelativeDrawingArea.Fill());
         canvas.Render(circle, circleDrawArea);

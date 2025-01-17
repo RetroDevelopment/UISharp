@@ -5,6 +5,7 @@ public abstract class Container(Application application) : UIComponent(applicati
 {
     public abstract IEnumerable<UIComponent> Children { get; }
 
+    /// <inheritdoc />
     protected override bool DefaultIsFocusable => false;
 
     /// <summary>

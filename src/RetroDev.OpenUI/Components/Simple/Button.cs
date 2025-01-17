@@ -40,9 +40,9 @@ public class Button : UIComponent
     public UIProperty<Button, Color> DisabledBackgroundColor { get; }
 
     /// <summary>
-    /// The color of the border displayed when the button is focused.
+    /// The color indicating that the button is focused.
     /// </summary>
-    public UIProperty<Button, Color> BorderColor { get; }
+    public UIProperty<Button, Color> FocusColor { get; }
 
     /// <inheritdoc/>
     protected override Size ComputeSizeHint() => _buttonTextLabel.SizeHint;
@@ -59,15 +59,15 @@ public class Button : UIComponent
         Text = new UIProperty<Button, string>(this, string.Empty);
         TextColor = new UIProperty<Button, Color>(this, Theme.DefaultColor);
         DisabledTextColor = new UIProperty<Button, Color>(this, Theme.DefaultColor);
-        BorderColor = new UIProperty<Button, Color>(this, Theme.DefaultColor);
+        FocusColor = new UIProperty<Button, Color>(this, Theme.DefaultColor);
         DisabledBackgroundColor = new UIProperty<Button, Color>(this, Theme.DefaultColor);
 
         _buttonTextLabel.Text.AddBinder(new PropertyBinder<Button, string>(Text, BindingType.DestinationToSource));
         TextColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.TextColor, BindingType.DestinationToSource));
         DisabledTextColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.TextColorDisabled, BindingType.DestinationToSource));
-        BackgroundColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.PrimaryColor, BindingType.DestinationToSource));
+        BackgroundColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.SecondaryColor, BindingType.DestinationToSource));
         DisabledBackgroundColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.PrimaryColorDisabled, BindingType.DestinationToSource));
-        BorderColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.BorderColor, BindingType.DestinationToSource));
+        FocusColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.BorderColor, BindingType.DestinationToSource));
 
         UpdateTextColorBinding();
         Enabled.ValueChange += Enabled_ValueChange;
@@ -98,7 +98,7 @@ public class Button : UIComponent
 
         if (Focus.Value)
         {
-            var borderRectangle = new Rectangle(BorderColor: BorderColor, BorderThickness: 5.0f, CornerRadiusX: cornerRadius, CornerRadiusY: cornerRadius);
+            var borderRectangle = new Rectangle(BorderColor: FocusColor, BorderThickness: 5.0f, CornerRadiusX: cornerRadius, CornerRadiusY: cornerRadius);
             canvas.Render(borderRectangle, RelativeDrawingArea.Fill());
         }
     }

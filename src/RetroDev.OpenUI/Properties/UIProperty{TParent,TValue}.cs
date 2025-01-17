@@ -37,9 +37,4 @@ public class UIProperty<TParent, TValue>(TParent parent, TValue value, BindingTy
     /// </summary>
     /// <param name="property">The <see cref="UIProperty{TParent, TValue}"/> to cast.</param>
     public static implicit operator TValue(UIProperty<TParent, TValue> property) => property.Value;
-
-    private void EnsureCanSetUIComponentProperty(UIComponent uiParent)
-    {
-        uiParent.Application.LifeCycle.ThrowIfPropertyCannotBeSet();
-    }
 }

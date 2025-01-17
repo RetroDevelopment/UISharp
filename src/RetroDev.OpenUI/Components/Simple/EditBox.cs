@@ -32,9 +32,9 @@ public class EditBox : UIComponent
     public UIProperty<EditBox, Color> DisabledTextColor { get; }
 
     /// <summary>
-    /// The color of the border displayed when the edit box is focused.
+    /// The color of the edit box is focused.
     /// </summary>
-    public UIProperty<EditBox, Color> BorderColor { get; }
+    public UIProperty<EditBox, Color> FocusColor { get; }
 
     /// <summary>
     /// The background color when the component is disabled.
@@ -67,7 +67,7 @@ public class EditBox : UIComponent
         Text = new UIProperty<EditBox, string>(this, string.Empty);
         TextColor = new UIProperty<EditBox, Color>(this, Theme.DefaultColor);
         DisabledTextColor = new UIProperty<EditBox, Color>(this, Theme.DefaultColor);
-        BorderColor = new UIProperty<EditBox, Color>(this, Theme.DefaultColor);
+        FocusColor = new UIProperty<EditBox, Color>(this, Theme.DefaultColor);
         DisabledBackgroundColor = new UIProperty<EditBox, Color>(this, Theme.DefaultColor);
 
         _inputTextLabel.Text.AddBinder(new PropertyBinder<EditBox, string>(Text, BindingType.DestinationToSource));
@@ -78,9 +78,9 @@ public class EditBox : UIComponent
 
         TextColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.TextColor, BindingType.DestinationToSource));
         DisabledTextColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.TextColorDisabled, BindingType.DestinationToSource));
-        BackgroundColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.SecondaryColor, BindingType.DestinationToSource));
-        DisabledBackgroundColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.SecondaryColorDisabled, BindingType.DestinationToSource));
-        BorderColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.BorderColor, BindingType.DestinationToSource));
+        BackgroundColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.PrimaryBackground, BindingType.DestinationToSource));
+        DisabledBackgroundColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.PrimaryColorDisabled, BindingType.DestinationToSource));
+        FocusColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.BorderColor, BindingType.DestinationToSource));
 
         UpdateTextColorBinding();
         Enabled.ValueChange += Enabled_ValueChange;
@@ -125,7 +125,7 @@ public class EditBox : UIComponent
 
         if (Focus.Value)
         {
-            var borderRectangle = new Rectangle(BorderColor: BorderColor, BorderThickness: 5.0f, CornerRadiusX: cornerRadius, CornerRadiusY: cornerRadius);
+            var borderRectangle = new Rectangle(BorderColor: FocusColor, BorderThickness: 5.0f, CornerRadiusX: cornerRadius, CornerRadiusY: cornerRadius);
             canvas.Render(borderRectangle, RelativeDrawingArea.Fill());
         }
     }
