@@ -1,23 +1,17 @@
-﻿using System.Runtime.InteropServices;
-using RetroDev.OpenUI.Components.AutoArea;
+﻿using RetroDev.OpenUI.Components.AutoArea;
+using RetroDev.OpenUI.Components.Containers;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Events;
 using RetroDev.OpenUI.Exceptions;
+using RetroDev.OpenUI.Graphics;
 using RetroDev.OpenUI.Properties;
+using RetroDev.OpenUI.Themes;
 using RetroDev.OpenUI.Utils;
 
 namespace RetroDev.OpenUI.Components;
 
-// TODO: Use property binding (UIProperty) to bind ThemeManager properties.
-// ThemeManager(Dictionary<string, Color>) {} allows specifying a theme dynamically (e.g. load from xml). Then it has some proeprties like PrimaryColor, Background, etc.
-// You can create the ThemeManager in Application and pass it to each component and bind the colors. Then you can switch theme (e.g. manager.SetTheme(DarkThemeDictionary)) and colors are automatically updated.
-
 // TODO: Same way as before, add a TextResourceManager class to manage text (e.g. with language) and create it in Application.
 // They can also have dictionary/xml. Then bind these properties in your project and you will get automatic language change.
-
-// TODO: Same way, add a AssetManager class to load assets (images, xml files, text resources, etc.). Maybe AssetManager can also load themes and text resources.
-
-// TODO: Add LookAndFeel() {} which will do the actual rendering (create it Application). Switching look and feel allows to immediately change the shapes drawn for components.
 
 /// <summary>
 /// The abstract calss for all UI components (windows, buttons, etc.).
@@ -30,6 +24,7 @@ public abstract class UIComponent
     private Point? _mouseLastDragPointAbsolute = null;
     private CachedValue<Area> _relativeDrawingArea;
     private CachedValue<Area> _absoluteDrawingArea;
+    private CachedValue<Area> _clipArea;
 
     /// <summary>
     /// Mouse button press inside <see cref="this"/> window.
@@ -170,6 +165,14 @@ public abstract class UIComponent
     public UIProperty<UIComponent, bool> Enabled { get; }
 
     /// <summary>
+    /// The component background color.
+    /// </summary>
+    /// <remarks>
+    /// It is the derived class responsibility to decide how to handle the background color.
+    /// </remarks>
+    public UIProperty<UIComponent, Color> BackgroundColor { get; }
+
+    /// <summary>
     /// The ideal component size which allows to correctly display the whole component.
     /// </summary>  
     public Size SizeHint => SizeHintCache.Value;
@@ -238,6 +241,11 @@ public abstract class UIComponent
     /// </remarks>
     public Area AbsoluteDrawingArea => _absoluteDrawingArea.Value;
 
+    /// <summary>
+    /// The area in which where the UI drawing occurs. Every pixel outside of this area will be clipped.
+    /// </summary>
+    public Area ClipArea => _clipArea.Value;
+
     protected UIComponent(Application application)
     {
         Application = application;
@@ -257,9 +265,11 @@ public abstract class UIComponent
         Focusable = new UIProperty<UIComponent, bool>(this, DefaultIsFocusable);
         Focus = new UIProperty<UIComponent, bool>(this, false);
         Enabled = new UIProperty<UIComponent, bool>(this, true);
+        BackgroundColor = new UIProperty<UIComponent, Color>(this, Color.Transparent);
 
         _relativeDrawingArea = new CachedValue<Area>(ComputeRelativeDrawingArea);
         _absoluteDrawingArea = new CachedValue<Area>(ComputeAbsoluteDrawingArea);
+        _clipArea = new CachedValue<Area>(ComputeClipArea);
 
         SizeHintCache = new CachedValue<Size>(ComputeSizeHint);
         SizeHintCache.OnMarkDirty += (_, _) => MarkCachesAsDirty();
@@ -404,10 +414,12 @@ public abstract class UIComponent
         if (Visibility.Value == Components.ComponentVisibility.Visible)
         {
             renderingArgs.Canvas.ContainerAbsoluteDrawingArea = AbsoluteDrawingArea;
+            renderingArgs.Canvas.ClippingArea = ClipArea;
             RenderFrame.Invoke(this, renderingArgs);
             _children.ForEach((child) => child.OnRenderFrame(renderingArgs));
 
             renderingArgs.Canvas.ContainerAbsoluteDrawingArea = AbsoluteDrawingArea;
+            renderingArgs.Canvas.ClippingArea = ClipArea;
             ChildrenRendered?.Invoke(this, renderingArgs);
         }
     }
@@ -509,7 +521,7 @@ public abstract class UIComponent
 
     private void _parent_KeyRelease(UIComponent sender, KeyEventArgs keyEventArgs)
     {
-        if (Visibility.Value == ComponentVisibility.Visible && (Focus || !Focusable))
+        if (Visibility.Value == ComponentVisibility.Visible && (Focus || this is Container))
         {
             KeyRelease.Invoke(this, new KeyEventArgs(keyEventArgs.Button));
         }
@@ -517,7 +529,7 @@ public abstract class UIComponent
 
     private void _parent_TextInput(UIComponent sender, TextInputEventArgs textInputEventArgs)
     {
-        if (Visibility.Value == ComponentVisibility.Visible && (Focus || !Focusable))
+        if (Visibility.Value == ComponentVisibility.Visible && (Focus || this is Container))
         {
             TextInput.Invoke(this, new TextInputEventArgs(textInputEventArgs.Text));
         }
@@ -573,6 +585,7 @@ public abstract class UIComponent
     {
         _relativeDrawingArea.MarkDirty();
         _absoluteDrawingArea.MarkDirty();
+        _clipArea.MarkDirty();
         _children.ForEach(c => c.MarkCachesAsDirty());
     }
 
@@ -595,6 +608,6 @@ public abstract class UIComponent
         return new Area(actualTopLeft, actualSize);
     }
 
-    private Area ComputeAbsoluteDrawingArea() => RelativeDrawingArea.ToAbsolute(Parent?.AbsoluteDrawingArea)
-                                                                    .Clip(Parent?.AbsoluteDrawingArea);
+    private Area ComputeAbsoluteDrawingArea() => RelativeDrawingArea.ToAbsolute(Parent?.AbsoluteDrawingArea);
+    private Area ComputeClipArea() => AbsoluteDrawingArea.Clip(Parent?.ClipArea);
 }

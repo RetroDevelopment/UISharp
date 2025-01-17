@@ -13,6 +13,12 @@ public record Point(PixelUnit X, PixelUnit Y)
     public static readonly Point Zero = new(0, 0);
 
     /// <summary>
+    /// Creates a new <see cref="Point"/> with both <see cref="X"/> and <see cref="Y"/> are set to <paramref name="value"/>.
+    /// </summary>
+    /// <param name="value">The point <see cref="X"/> and <see cref="Y"/> values.</param>
+    public Point(PixelUnit value) : this(value, value) { }
+
+    /// <summary>
     /// Whether <see langword="this"/> point is within the given <paramref name="area"/>.
     /// </summary>
     /// <param name="area">The area to check against.</param>

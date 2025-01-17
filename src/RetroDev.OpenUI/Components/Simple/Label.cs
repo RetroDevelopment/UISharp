@@ -4,10 +4,9 @@ using RetroDev.OpenUI.Events;
 using RetroDev.OpenUI.Graphics;
 using RetroDev.OpenUI.Graphics.Shapes;
 using RetroDev.OpenUI.Properties;
+using RetroDev.OpenUI.Themes;
 
 namespace RetroDev.OpenUI.Components.Simple;
-
-// TODO: add colors and font size
 
 /// <summary>
 /// A label displaying text.
@@ -18,6 +17,11 @@ public class Label : UIComponent
     /// The display text.
     /// </summary>
     public UIProperty<Label, string> Text { get; }
+
+    /// <summary>
+    /// The text color.
+    /// </summary>
+    public UIProperty<Label, Color> TextColor { get; }
 
     /// <inheritdoc/>
     protected override Size ComputeSizeHint() =>
@@ -45,7 +49,11 @@ public class Label : UIComponent
     public Label(Application parent) : base(parent)
     {
         Text = new UIProperty<Label, string>(this, string.Empty);
+        TextColor = new UIProperty<Label, Color>(this, Theme.DefaultColor);
+
         Text.ValueChange += (_, _) => SizeHintCache.MarkDirty();
+        TextColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.TextColor, BindingType.DestinationToSource));
+
         RenderFrame += Label_RenderFrame;
     }
 
@@ -61,9 +69,8 @@ public class Label : UIComponent
 
     private void Label_RenderFrame(UIComponent sender, RenderingEventArgs e)
     {
-        var size = RelativeDrawingArea.Size;
         var canvas = e.Canvas;
-
-        canvas.Render(new Text(new Color(0, 0, 0, 0), new Color(255, 255, 255, 255), Text.Value), new(Point.Zero, size));
+        var text = new Text(BackgroundColor, TextColor, Text);
+        canvas.Render(text, RelativeDrawingArea.Fill());
     }
 }

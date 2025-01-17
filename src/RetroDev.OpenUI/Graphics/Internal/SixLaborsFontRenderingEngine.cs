@@ -41,7 +41,7 @@ internal class SixLaborsFontRenderingEngine : IFontRenderingEngine
 
         // Create the image with transparent background
         using var image = new Image<Rgba32>(width, height);
-        var rgbaTextColor = new Rgba32(textColor.Red, textColor.Green, textColor.Blue, textColor.Alpha);
+        var rgbaTextColor = new Rgba32(textColor.RedComponent, textColor.GreenComponent, textColor.BlueComponent, textColor.AlphaComponent);
 
         // Adjust the drawing origin to align the text at the top-left
         float offsetX = -textBounds.Left;

@@ -9,4 +9,9 @@ public interface IResourceManager
     /// Manages windows xml UI definition resources.
     /// </summary>
     ITextResources Windows { get; }
+
+    /// <summary>
+    /// Manages theme xml resouces.
+    /// </summary>
+    ITextResources Themes { get; }
 }

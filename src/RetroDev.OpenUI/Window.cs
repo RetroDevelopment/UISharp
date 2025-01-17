@@ -5,6 +5,8 @@ using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Core.Internal;
 using RetroDev.OpenUI.Events;
 using RetroDev.OpenUI.Graphics;
+using RetroDev.OpenUI.Properties;
+using RetroDev.OpenUI.Themes;
 
 namespace RetroDev.OpenUI;
 
@@ -34,6 +36,9 @@ public class Window : Container, IContainer
         _windowManager = windowManager ?? new SDLWindowManager(parent);
         Application._eventSystem.Render += EventSystem_Render;
         parent.AddWindow(this);
+
+        BackgroundColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.MainBackground, BindingType.DestinationToSource));
+
         Visibility.ValueChange += (_, args) => _windowManager.Visible = args.CurrentValue == ComponentVisibility.Visible;
         parent._eventSystem.MousePress += EventSystem_MousePress;
         parent._eventSystem.MouseRelease += EventSystem_MouseRelease;
@@ -75,7 +80,7 @@ public class Window : Container, IContainer
     private void EventSystem_Render(IEventSystem sender, EventArgs e)
     {
         var renderingEngine = _windowManager.RenderingEngine;
-        renderingEngine.InitializeFrame();
+        renderingEngine.InitializeFrame(BackgroundColor);
         var canvas = new Canvas(renderingEngine, Application.LifeCycle);
         var renderingEventArgs = new RenderingEventArgs(canvas);
         OnRenderFrame(renderingEventArgs);

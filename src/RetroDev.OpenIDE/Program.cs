@@ -1,38 +1,12 @@
-﻿using RetroDev.OpenIDE.Windows;
+﻿using OpenTK.Graphics.ES11;
+using RetroDev.OpenIDE.Windows;
 using RetroDev.OpenUI;
+using RetroDev.OpenUI.Graphics;
+using RetroDev.OpenUI.Themes;
 
 namespace RetroDev.OpenIDE;
 
-// Third MVP target
-// O. Revisit core logic for coordinates (very important). Consider if need clipArea, more efficient calculations, try to remove RepositionChildren
-// O. Understand why grid layout has 1 pixel margin between components!
-// O. UIComponent split into ApplicationComponent (with only Application class) and derived UIComponent and MVVPComponent.
-// O. Implement better binders and UIPropertyList<>, maybe call it BindableProperty
-// O. Implement windows resizing and events
-// O. More windows events and features (window size, title etc.)
-// O. Have AutoSize -> (AutoWidth{hint,stretch}, AutoHeight{hint,stretch}, HorizontalAlignment{left, center, right}, VerticalAlignment{top, center, bottom} -> maybe extend xml? <button autoSize.autoWidth="hint" /> or <button autosize="(hint,hint)(left,center)" />
-// O. Do we need ClipArea? Isn't it the same as AbsoluteSize?
-
-// Fourth MVP target: all the rest to make a finished MVP
-
-//DONE
-// X. Manage fous for components. 2 properties: IsFocusable and Focus.
-// X. Implement UIComponent.RequestFocus(UIComponent); which will manage focus change from current component to new one.
-// X. Implement EditBox component with a focus when clicking and insert + delete. Keep it simple
-// X. Implement CheckBox (keep it simple, Checked true or false and simple image) and ProgressBar
-// X. Implement ScrollView! that will be used for many components
-// X. XML to define UI
-// X. Implement asset reader
-// X. Better exceptions (for xml parsing for example and assetNOtFound exception)
-// X. Implement ListBox
-// X. Implement TreeView
-// Obis (basic MVP). => Implement minimal OpenIDE app that reads a xml and displays it (+ file system watcher to sync UI in real time)
-
 //TODO
-// O. Implement rounded rectangles, borders, etc. in OpenGL
-// O. Implement C++ bindings for getting the input key characters depending on layout
-// O. Implement windows resizing and events
-// O. More windows events and features (window size, title etc.)
 // O. Implement logic for checking loops (e.g. SizeHint does not call RelativeDrawingArea, AddChild() do not create loops, etc.)
 
 // O. Implement ContextMenu

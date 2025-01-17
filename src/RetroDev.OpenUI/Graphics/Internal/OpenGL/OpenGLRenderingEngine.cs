@@ -191,12 +191,13 @@ internal class OpenGLRenderingEngine : IRenderingEngine
     {
         _application.LifeCycle.ThrowIfNotOnRenderingPhase();
         if (string.IsNullOrEmpty(text.Value)) return;
+        var textKey = $"{text.Value}{text.ForegroundColor}";
 
-        if (!_textCache.TryGetValue(text.Value, out var textureId))
+        if (!_textCache.TryGetValue(textKey, out var textureId))
         {
             var textureImage = new SixLaborsFontRenderingEngine().ConvertTextToRgbaImage(text.Value, 20, text.ForegroundColor);
             textureId = CreateTexture(textureImage);
-            _textCache[text.Value] = textureId;
+            _textCache[textKey] = textureId;
         }
 
         text.TextureID = textureId;
@@ -206,7 +207,7 @@ internal class OpenGLRenderingEngine : IRenderingEngine
                               area.GetTransformMatrix(ViewportSize, 0.0f, null)]);
         _shader.SetProjection(ViewportSize.GetPorjectionMatrix());
         _shader.SetFillColor(text.BackgroundColor.ToOpenGLColor());
-        _shader.SetClipArea(clippingArea?.ToVector4(ViewportSize));
+        _shader.SetClipArea((clippingArea ?? new Area(Point.Zero, ViewportSize)).ToVector4(ViewportSize));
         _shader.SetOffsetMultiplier(OpenTK.Mathematics.Vector2.Zero);
         _modelGenerator.Rectangle.Render(text.TextureID.Value);
     }
@@ -214,11 +215,15 @@ internal class OpenGLRenderingEngine : IRenderingEngine
     /// <summary>
     /// This method is invoked when starting the rendering of a frame.
     /// </summary>
-    public void InitializeFrame()
+    /// <param name="backgroundColor">
+    /// The frame background color.
+    /// </param>
+    public void InitializeFrame(Color backroundColor)
     {
         _application.LifeCycle.ThrowIfNotOnRenderingPhase();
         LoggingUtils.SDLCheck(() => SDL.SDL_GL_MakeCurrent(_window, _glContext), _application.Logger);
-        GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f); // Dark gray background
+        var openGlBackgroundColor = backroundColor.ToOpenGLColor();
+        GL.ClearColor(openGlBackgroundColor.X, openGlBackgroundColor.Y, openGlBackgroundColor.Z, openGlBackgroundColor.W);
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
     }
 
@@ -280,7 +285,7 @@ internal class OpenGLRenderingEngine : IRenderingEngine
                               area.GetTransformMatrix(ViewportSize, rotation, borderThickness)]);
         _shader.SetProjection(ViewportSize.GetPorjectionMatrix());
         _shader.SetFillColor(color.ToOpenGLColor());
-        _shader.SetClipArea(clippingArea?.ToVector4(ViewportSize));
+        _shader.SetClipArea((clippingArea ?? new Area(Point.Zero, ViewportSize)).ToVector4(ViewportSize));
         _shader.SetOffsetMultiplier(NormalizeRadius(xRadius, yRadius, area.Size));
         openglShape.Render(textureId ?? _defaultTexture);
     }

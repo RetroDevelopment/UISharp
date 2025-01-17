@@ -41,8 +41,8 @@ internal class ShaderProgram
     public void SetFillColor(Vector4 color) =>
         SetVec4("color", color);
 
-    public void SetClipArea(Vector4? clipArea) =>
-        SetVec4("clipArea", clipArea ?? new Vector4(-1.0f, 1.0f, 1.0f, -1.0f));
+    public void SetClipArea(Vector4 clipArea) =>
+        SetVec4("clipArea", clipArea);
 
     public void SetOffsetMultiplier(Vector2 multiplier) =>
         SetVec2("offsetMultiplier", multiplier);

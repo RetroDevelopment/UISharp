@@ -10,9 +10,17 @@ namespace RetroDev.OpenUI.Properties;
 /// <typeparam name="TValue">The property value type.</typeparam>
 /// <param name="parent">The object owning this property.</param>
 /// <param name="value">The property value.</param>
+/// <param name="allowedBinding">
+/// The allowed <see cref="BindingType"/> (<see cref="BindingType.TwoWays"/> by default).
+/// </param>
+/// <param name="application">The application owning this property.</param>
+/// <remarks>
+/// If <paramref name="allowedBinding"/> is <see cref="BindingType.TwoWays"/> it means that bidirectional binding is allowed, including (<see cref="BindingType.SourceToDestination"/> and <see cref="BindingType.DestinationToSource"/>).
+/// </remarks>
 [DebuggerDisplay("{Value}")]
-public class BindableProperty<TParent, TValue>(TParent parent, TValue value)
+public class BindableProperty<TParent, TValue>(TParent parent, TValue value, Application? application = null, BindingType allowedBinding = BindingType.TwoWays)
 {
+    private readonly Application? _application = application;
     private TValue _value = value;
     private List<IBinder<TValue>> _binders = [];
 
@@ -29,6 +37,8 @@ public class BindableProperty<TParent, TValue>(TParent parent, TValue value)
     {
         set
         {
+            _application?.LifeCycle?.ThrowIfPropertyCannotBeSet();
+
             if (!EqualityComparer<TValue>.Default.Equals(_value, value))
             {
                 var previousValue = _value;
@@ -37,13 +47,24 @@ public class BindableProperty<TParent, TValue>(TParent parent, TValue value)
                 NotifySourceToDestnationBinders();
             }
         }
-        get => _value;
+        get
+        {
+            _application?.LifeCycle?.ThrowIfNotOnUIThread();
+            return _value;
+        }
     }
 
     /// <summary>
     /// The object owning this property.
     /// </summary>
     public TParent Parent => parent;
+
+    /// <summary>
+    /// The allowed <see cref="BindingType"/>.
+    /// If <paramref name="allowedBinding"/> is <see cref="BindingType.TwoWays"/> it means that bidirectional binding is allowed,
+    /// including (<see cref="BindingType.SourceToDestination"/> and <see cref="BindingType.DestinationToSource"/>).
+    /// </summary>
+    public BindingType AllowedBinding { get; } = allowedBinding;
 
     /// <summary>
     /// Adds a property binder to this property.
@@ -53,17 +74,22 @@ public class BindableProperty<TParent, TValue>(TParent parent, TValue value)
     /// or <see cref="BindingType.TwoWays"/> and a binder with one of these two types has already been added.</exception>
     public void AddBinder(IBinder<TValue> binder)
     {
+        EnsureBindingIsAllowed(binder);
+
         switch (binder.Binding)
         {
             case BindingType.SourceToDestination:
+                binder.NotifySourceChanged(Value);
                 break;
             case BindingType.DestinationToSource:
                 EnsureBinderHasNoDestinationToSource();
                 binder.DestinationChange += Binder_DestinationChange;
+                if (binder.CurrentValue != null) Value = binder.CurrentValue;
                 break;
             case BindingType.TwoWays:
                 EnsureBinderHasNoDestinationToSource();
                 binder.DestinationChange += Binder_DestinationChange;
+                if (binder.CurrentValue != null) Value = binder.CurrentValue;
                 break;
             default:
                 throw new ArgumentException($"Unhandled binding type {binder.Binding}");
@@ -88,6 +114,7 @@ public class BindableProperty<TParent, TValue>(TParent parent, TValue value)
         _binders.Clear();
     }
 
+
     /// <summary>
     /// Implicit cast from <see cref="BindableProperty{TParent, TValue}"/> to <typeparamref name="TValue"/>.
     /// </summary>
@@ -109,6 +136,22 @@ public class BindableProperty<TParent, TValue>(TParent parent, TValue value)
             throw new InvalidOperationException("Only one destination to source or two ways binding allowed per property");
         }
     }
+
+    private void EnsureBindingIsAllowed(IBinder<TValue> binder)
+    {
+        switch (AllowedBinding)
+        {
+            case BindingType.TwoWays:
+                break;
+            case BindingType.SourceToDestination:
+                if (binder.Binding != BindingType.SourceToDestination) throw new InvalidOperationException($"Binding type not allowed {binder.Binding}: allowed binding is {AllowedBinding}");
+                break;
+            case BindingType.DestinationToSource:
+                if (binder.Binding != BindingType.DestinationToSource) throw new InvalidOperationException($"Binding type not allowed {binder.Binding}: allowed binding is {AllowedBinding}");
+                break;
+        }
+    }
+
 
     private bool BindsSourceToDestination(IBinder<TValue> binder) =>
         binder.Binding == BindingType.SourceToDestination || binder.Binding == BindingType.TwoWays;

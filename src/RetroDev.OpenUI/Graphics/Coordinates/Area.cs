@@ -48,8 +48,9 @@ public record Area(Point TopLeft, Size Size)
     {
         if (container == null) return this;
 
+        var oneOffset = new Point(1); // Due to some approximation errors (especially in GridLayout) increase the clip area by 1. The has shown to improve the UI availding some hard cuts of images without introducing visible unclipped areas.
         var clippedTopLeft = TopLeft.Clamp(container.TopLeft, container.BottomRight);
-        var clippedBottomRight = BottomRight.Clamp(container.TopLeft, container.BottomRight);
+        var clippedBottomRight = BottomRight.Clamp(container.TopLeft + oneOffset, container.BottomRight + oneOffset);
 
         return new Area(clippedTopLeft, clippedBottomRight);
     }
@@ -67,4 +68,16 @@ public record Area(Point TopLeft, Size Size)
 
         return new(containerCenterX - Size.Width / 2, containerCenterY - Size.Height / 2);
     }
+
+    /// <summary>
+    /// Creates a <see cref="Area"/> relative to <see langword="this" /> area that covers it completely.
+    /// </summary>
+    /// <remarks>
+    /// This method is very useful when creating a drawing area relative to a container drawing area that fills it completely.
+    /// For example, given a relative drawing area <c>a</c> with location (100, 100) with size 300 x 300, <c>a.Fill()</c> will return
+    /// the area with location (0, 0) and size 300 x 300, which is the area relative to <c>a</c> that fully fills <c>a</c>.
+    /// </remarks>
+    /// <returns>The area with <see cref="Point.Zero"/> coordinate and the same <see cref="Size"/> as <see langword="this" /> area.</returns>
+    public Area Fill() =>
+        new Area(Point.Zero, Size);
 }

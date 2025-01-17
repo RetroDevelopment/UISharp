@@ -10,8 +10,14 @@ namespace RetroDev.OpenUI.Properties;
 /// <typeparam name="TValue">The property value type.</typeparam>
 /// <param name="parent">The object owning this property.</param>
 /// <param name="value">The property value.</param>
+/// <param name="allowedBinding">
+/// The allowed <see cref="BindingType"/> (<see cref="BindingType.TwoWays"/> by default).
+/// </param>
+/// <remarks>
+/// If <paramref name="allowedBinding"/> is <see cref="BindingType.TwoWays"/> it means that bidirectional binding is allowed, including (<see cref="BindingType.SourceToDestination"/> and <see cref="BindingType.DestinationToSource"/>).
+/// </remarks>
 [DebuggerDisplay("{Value}")]
-public class UIProperty<TParent, TValue>(TParent parent, TValue value) : BindableProperty<TParent, TValue>(parent, value) where TParent : UIComponent
+public class UIProperty<TParent, TValue>(TParent parent, TValue value, BindingType allowedBindings = BindingType.TwoWays) : BindableProperty<TParent, TValue>(parent, value, parent.Application, allowedBindings) where TParent : UIComponent
 {
     /// <summary>
     /// The property value.
@@ -20,15 +26,10 @@ public class UIProperty<TParent, TValue>(TParent parent, TValue value) : Bindabl
     {
         set
         {
-            EnsureCanSetUIComponentProperty(Parent);
-            Parent.Application._eventSystem.InvalidateRendering(); // TODO: do not push one event for each call but just one if the rendering has not been invalidated yet
             base.Value = value;
+            Parent.Application._eventSystem.InvalidateRendering(); // TODO: do not push one event for each call but just one if the rendering has not been invalidated yet
         }
-        get
-        {
-            Parent.Application.LifeCycle.ThrowIfNotOnUIThread();
-            return base.Value;
-        }
+        get => base.Value;
     }
 
     /// <summary>
@@ -36,9 +37,4 @@ public class UIProperty<TParent, TValue>(TParent parent, TValue value) : Bindabl
     /// </summary>
     /// <param name="property">The <see cref="UIProperty{TParent, TValue}"/> to cast.</param>
     public static implicit operator TValue(UIProperty<TParent, TValue> property) => property.Value;
-
-    private void EnsureCanSetUIComponentProperty(UIComponent uiParent)
-    {
-        uiParent.Application.LifeCycle.ThrowIfPropertyCannotBeSet();
-    }
 }

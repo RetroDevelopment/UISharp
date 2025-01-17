@@ -2,6 +2,7 @@
 using System.Text.RegularExpressions;
 using RetroDev.OpenUI.Components;
 using RetroDev.OpenUI.Exceptions;
+using RetroDev.OpenUI.Graphics;
 using RetroDev.OpenUI.Properties;
 
 // TODO: bindings
@@ -43,6 +44,7 @@ public class EAMLBinder(TypeMapper typeMapper) : IEAMLBinder
     {
         var propertyValueType = propertyInfo.PropertyType;
         var propertyValue = propertyInfo.GetValue(componentInstance) ?? throw new UIDefinitionValidationException("Property value cannot be null", attribute);
+        RemoveBindingsBeforeAssignment(propertyValueType, propertyValue, attribute);
         var propertyValueInfo = propertyValue.GetType().GetProperty("Value") ?? throw new UIDefinitionValidationException("Property value Value inner property not found", attribute);
         var propertyType = propertyValueInfo.PropertyType;
         var actualValue = ConvertAttributeValueToPropertyValue(attribute, propertyType);
@@ -125,7 +127,7 @@ public class EAMLBinder(TypeMapper typeMapper) : IEAMLBinder
     /// <returns><see langword="true" /> if it is possible to convert the attribute into a primitive type, otherwise <see langword="false" /></see></returns>
     protected virtual bool TryConvertAttributeUsingConstructor(out object? value, Ast.Attribute attribute, Type propertyType)
     {
-        if (!propertyType.IsClass || propertyType.IsAbstract)
+        if (propertyType.GetConstructors().Length == 0 || propertyType.IsAbstract)
         {
             value = null;
             return false;
@@ -225,5 +227,12 @@ public class EAMLBinder(TypeMapper typeMapper) : IEAMLBinder
 
         value = fieldInfo.GetValue(null);
         return true;
+    }
+
+    private void RemoveBindingsBeforeAssignment(Type propertyValueType, object propertyValue, Ast.Attribute attribute)
+    {
+        var removeBindersName = nameof(BindableProperty<object, object>.RemoveBinders);
+        var removeBindingsMethod = propertyValueType.GetMethod(removeBindersName) ?? throw new UIDefinitionValidationException($"Missing method {removeBindersName} in property type {propertyValueType.FullName}", attribute);
+        removeBindingsMethod.Invoke(propertyValue, []);
     }
 }

@@ -2,7 +2,7 @@
 
 internal class EmbeddedShaderResources : EmbeddedResourcesBase, ITextResources
 {
-    internal EmbeddedShaderResources() : base("Shaders") { }
+    internal EmbeddedShaderResources() : base("Assets.Shaders") { }
 
     public string this[string name] => LoadEmbeddedStringResource(name);
 }
