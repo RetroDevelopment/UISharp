@@ -74,6 +74,8 @@ internal class OpenGLRenderingEngine : IRenderingEngine
 
     private readonly ProceduralModelGenerator _modelGenerator;
 
+    private int _drawCalls;
+
     /// <summary>
     /// The víewport size in pixels.
     /// </summary>
@@ -85,6 +87,9 @@ internal class OpenGLRenderingEngine : IRenderingEngine
         _application.LifeCycle.ThrowIfNotOnUIThread();
         _window = window;
 
+        _application.Logger.LogInfo("Using OpenGL rendering");
+        _application.Logger.LogDebug("OpenGL Loading shaders");
+
         var shaderResources = new EmbeddedShaderResources();
 
         _glContext = SDL.SDL_GL_CreateContext(window);
@@ -95,10 +100,13 @@ internal class OpenGLRenderingEngine : IRenderingEngine
 
         LoggingUtils.SDLCheck(() => SDL.SDL_GL_MakeCurrent(window, _glContext), _application.Logger);
         GL.LoadBindings(new SDL2OpenGLBindings()); // Load OpenGL.NET bindings
+
         LoggingUtils.SDLCheck(() => SDL.SDL_GL_SetSwapInterval(1), application.Logger, warning: true); // Enable VSync
         _shader = new ShaderProgram([new Shader(ShaderType.VertexShader, shaderResources["default.vert"], _application.Logger),
                                      new Shader(ShaderType.FragmentShader, shaderResources["default.frag"], _application.Logger)],
                                      _application.Logger);
+
+        _application.Logger.LogDebug("OpenGL Shaders loaded");
 
         // SDLCheck(() => SDL.SDL_GL_SetSwapInterval(0)); // This will run the CPU and GPU at 100%
         // GL.Enable(EnableCap.Multisample); // TODO: should enable anti aliasing
@@ -221,6 +229,7 @@ internal class OpenGLRenderingEngine : IRenderingEngine
     public void InitializeFrame(Color backroundColor)
     {
         _application.LifeCycle.ThrowIfNotOnRenderingPhase();
+        _drawCalls = 0;
         LoggingUtils.SDLCheck(() => SDL.SDL_GL_MakeCurrent(_window, _glContext), _application.Logger);
         var openGlBackgroundColor = backroundColor.ToOpenGLColor();
         GL.ClearColor(openGlBackgroundColor.X, openGlBackgroundColor.Y, openGlBackgroundColor.Z, openGlBackgroundColor.W);
@@ -234,6 +243,7 @@ internal class OpenGLRenderingEngine : IRenderingEngine
     {
         _application.LifeCycle.ThrowIfNotOnRenderingPhase();
         SDL.SDL_GL_SwapWindow(_window);
+        _application.Logger.LogVerbose($"OpenGL performed {_drawCalls} draw calls in the latest frame");
     }
 
     /// <summary>
@@ -287,6 +297,7 @@ internal class OpenGLRenderingEngine : IRenderingEngine
         _shader.SetFillColor(color.ToOpenGLColor());
         _shader.SetClipArea((clippingArea ?? new Area(Point.Zero, ViewportSize)).ToVector4(ViewportSize));
         _shader.SetOffsetMultiplier(NormalizeRadius(xRadius, yRadius, area.Size));
+        _drawCalls++;
         openglShape.Render(textureId ?? _defaultTexture);
     }
 

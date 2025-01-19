@@ -18,8 +18,6 @@ public class Window : Container, IContainer
 {
     private readonly IWindowManager _windowManager;
 
-    protected override ComponentVisibility DefaultVisibility => ComponentVisibility.Collapsed;
-
     /// <summary>
     /// Raised when <see langword="this" /> <see cref="Window"/> has been initialized.
     /// This happens when all the initial <see cref="UIComponent"/> have been added to the window.
@@ -27,9 +25,10 @@ public class Window : Container, IContainer
     public event TypeSafeEventHandler<Window, EventArgs> Initialized = (_, _) => { };
 
     /// <inheritdoc/>
-    protected override Size ComputeSizeHint() => Size.Zero; // Maybe 800x600? Or half screen resolution=
-
     public override IEnumerable<UIComponent> Children => GetChildren();
+
+    /// <inheritdoc/>
+    protected override ComponentVisibility DefaultVisibility => ComponentVisibility.Collapsed;
 
     public Window(Application parent, IWindowManager? windowManager = null) : base(parent)
     {
@@ -37,7 +36,7 @@ public class Window : Container, IContainer
         Application._eventSystem.Render += EventSystem_Render;
         parent.AddWindow(this);
 
-        BackgroundColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.MainBackground, BindingType.DestinationToSource));
+        BackgroundColor.Bind(Application.Theme.MainBackground, BindingType.DestinationToSource);
 
         Visibility.ValueChange += (_, args) => _windowManager.Visible = args.CurrentValue == ComponentVisibility.Visible;
         parent._eventSystem.MousePress += EventSystem_MousePress;
@@ -77,6 +76,9 @@ public class Window : Container, IContainer
         Initialized.Invoke(this, EventArgs.Empty);
     }
 
+    /// <inheritdoc/>
+    protected override Size ComputeSizeHint() => Size.Zero; // Maybe 800x600? Or half screen resolution=    /// <inheritdoc/>
+
     private void EventSystem_Render(IEventSystem sender, EventArgs e)
     {
         var renderingEngine = _windowManager.RenderingEngine;
@@ -85,6 +87,7 @@ public class Window : Container, IContainer
         var renderingEventArgs = new RenderingEventArgs(canvas);
         OnRenderFrame(renderingEventArgs);
         renderingEngine.FinalizeFrame();
+        canvas.LogStatistics(Application.Logger);
     }
 
     public void Shutdown()

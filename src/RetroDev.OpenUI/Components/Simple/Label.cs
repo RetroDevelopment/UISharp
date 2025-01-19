@@ -45,14 +45,14 @@ public class Label : UIComponent
     /// <summary>
     /// Creates a new label.
     /// </summary>
-    /// <param name="parent">The application that contain this label.</param>
-    public Label(Application parent) : base(parent)
+    /// <param name="application">The application that contain this label.</param>
+    public Label(Application application) : base(application)
     {
         Text = new UIProperty<Label, string>(this, string.Empty);
         TextColor = new UIProperty<Label, Color>(this, Theme.DefaultColor);
 
         Text.ValueChange += (_, _) => SizeHintCache.MarkDirty();
-        TextColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.TextColor, BindingType.DestinationToSource));
+        TextColor.Bind(Application.Theme.TextColor, BindingType.DestinationToSource);
 
         RenderFrame += Label_RenderFrame;
     }

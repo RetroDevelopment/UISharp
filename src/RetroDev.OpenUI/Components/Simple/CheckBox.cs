@@ -68,11 +68,11 @@ public class CheckBox : UIComponent
         DisabledBackgroundColor = new UIProperty<CheckBox, Color>(this, Theme.DefaultColor);
         FocusColor = new UIProperty<CheckBox, Color>(this, Theme.DefaultColor);
 
-        BackgroundColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.SecondaryColorDisabled, BindingType.DestinationToSource));
-        CircleColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.TextColor, BindingType.DestinationToSource));
-        UncheckedBackgroundColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.SecondaryColorDisabled, BindingType.DestinationToSource));
-        DisabledBackgroundColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.PrimaryColorDisabled, BindingType.DestinationToSource));
-        FocusColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.BorderColor, BindingType.DestinationToSource));
+        BackgroundColor.Bind(Application.Theme.SecondaryColorDisabled, BindingType.DestinationToSource);
+        CircleColor.Bind(Application.Theme.TextColor, BindingType.DestinationToSource);
+        UncheckedBackgroundColor.Bind(Application.Theme.SecondaryColorDisabled, BindingType.DestinationToSource);
+        DisabledBackgroundColor.Bind(Application.Theme.PrimaryColorDisabled, BindingType.DestinationToSource);
+        FocusColor.Bind(Application.Theme.BorderColor, BindingType.DestinationToSource);
 
         RenderFrame += CheckBox_RenderFrame;
         MousePress += CheckBox_MousePress;

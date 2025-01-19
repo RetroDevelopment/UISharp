@@ -578,6 +578,8 @@ public abstract class UIComponent
         Height.ValueChange += (_, _) => MarkCachesAsDirty();
         AutoWidth.ValueChange += (_, _) => MarkCachesAsDirty();
         AutoHeight.ValueChange += (_, _) => MarkCachesAsDirty();
+        HorizontalAlignment.ValueChange += (_, _) => MarkCachesAsDirty();
+        VerticalAlignment.ValueChange += (_, _) => MarkCachesAsDirty();
         Visibility.ValueChange += (_, _) => MarkCachesAsDirty();
     }
 

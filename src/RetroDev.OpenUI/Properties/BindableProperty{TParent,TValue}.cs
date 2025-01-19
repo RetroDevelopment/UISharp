@@ -99,6 +99,20 @@ public class BindableProperty<TParent, TValue>(TParent parent, TValue value, App
     }
 
     /// <summary>
+    /// Binds <see langword="this" /> property to the given property and removes every existing binding.
+    /// </summary>
+    /// <typeparam name="TDestinationComponent">The <see cref="UIComponent"/> owrning the given <paramref name="property"/> to bind.</typeparam>
+    /// <param name="property">The destination property to bind.</param>
+    /// <param name="bindingType"The <see cref="BindingType"/> (<see langword="this"/> property is the source property and).
+    /// the given <paramref name="property" /> is the destination property.
+    /// </param>
+    public void Bind<TDestinationComponent>(BindableProperty<TDestinationComponent, TValue> property, BindingType bindingType)
+    {
+        RemoveBinders();
+        AddBinder(new PropertyBinder<TDestinationComponent, TValue>(property, bindingType));
+    }
+
+    /// <summary>
     /// Removes all the <see cref="IBinder{TValue}"/> bound to <see langword="this"/> property.
     /// </summary>
     public void RemoveBinders()

@@ -9,15 +9,18 @@ public class Panel : Container, ISingleContainer
 {
     private UIComponent? _child;
 
+    /// <inheritdoc />
     protected override Size ComputeSizeHint() => new(100, 100);
+
+    /// <inheritdoc />
 
     public override IEnumerable<UIComponent> Children => GetChildren();
 
     /// <summary>
     /// Creates a new panel.
     /// </summary>
-    /// <param name="parent">The application owning this component.</param>
-    public Panel(Application parent) : base(parent)
+    /// <param name="application">The application owning this component.</param>
+    public Panel(Application application) : base(application)
     {
     }
 

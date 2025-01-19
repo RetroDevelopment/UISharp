@@ -43,8 +43,8 @@ public class GridLayout : Container, IContainer
     /// <summary>
     /// Creates a new grid layout.
     /// </summary>
-    /// <param name="parent">The application owning this component.</param>
-    public GridLayout(Application parent) : base(parent)
+    /// <param name="application">The application owning this component.</param>
+    public GridLayout(Application application) : base(application)
     {
         Rows = new UIProperty<GridLayout, uint>(this, 0);
         Columns = new UIProperty<GridLayout, uint>(this, 0);

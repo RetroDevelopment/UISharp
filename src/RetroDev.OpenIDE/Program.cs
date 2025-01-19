@@ -50,7 +50,7 @@ internal class Program
     static void Main(string[] _)
     {
         using var application = new Application();
-        // application.Logger.Verbosity = OpenUI.Logging.Verbosity.Debug;
+        application.Logger.Verbosity = OpenUI.Logging.Verbosity.Verbose;
         application.ShowWindow<MainWindow>();
         application.Run();
     }

@@ -35,6 +35,11 @@ public class Theme : ThemeBase
     public BindableProperty<Theme, Color> PrimaryColorDisabled { get; }
 
     /// <summary>
+    /// Light version of <see cref="PrimaryColor"/> with contrasts primary color.
+    /// </summary>
+    public BindableProperty<Theme, Color> PrimaryColorContrast { get; }
+
+    /// <summary>
     /// Secondary background color.
     /// </summary>
     public BindableProperty<Theme, Color> SecondaryColor { get; }
@@ -71,6 +76,7 @@ public class Theme : ThemeBase
         PrimaryBackground = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBinding);
         PrimaryColor = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBinding);
         PrimaryColorDisabled = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBinding);
+        PrimaryColorContrast = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBinding);
         SecondaryColor = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBinding);
         SecondaryColorDisabled = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBinding);
         TextColor = new BindableProperty<Theme, Color>(this, DefaultColor, application, allowedBinding);

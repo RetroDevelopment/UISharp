@@ -54,8 +54,8 @@ public class ProgressBar : UIComponent
         MaximumValue = new UIProperty<ProgressBar, int>(this, 100);
         ForegroundColor = new UIProperty<ProgressBar, Color>(this, Theme.DefaultColor);
 
-        BackgroundColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.PrimaryColor, BindingType.DestinationToSource));
-        ForegroundColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.SecondaryColor, BindingType.DestinationToSource));
+        BackgroundColor.Bind(Application.Theme.PrimaryColor, BindingType.DestinationToSource);
+        ForegroundColor.Bind(Application.Theme.SecondaryColor, BindingType.DestinationToSource);
 
         RenderFrame += ProgressBar_RenderFrame;
     }

@@ -62,12 +62,12 @@ public class Button : UIComponent
         FocusColor = new UIProperty<Button, Color>(this, Theme.DefaultColor);
         DisabledBackgroundColor = new UIProperty<Button, Color>(this, Theme.DefaultColor);
 
-        _buttonTextLabel.Text.AddBinder(new PropertyBinder<Button, string>(Text, BindingType.DestinationToSource));
-        TextColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.TextColor, BindingType.DestinationToSource));
-        DisabledTextColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.TextColorDisabled, BindingType.DestinationToSource));
-        BackgroundColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.SecondaryColor, BindingType.DestinationToSource));
-        DisabledBackgroundColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.PrimaryColorDisabled, BindingType.DestinationToSource));
-        FocusColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.BorderColor, BindingType.DestinationToSource));
+        _buttonTextLabel.Text.Bind(Text, BindingType.DestinationToSource);
+        TextColor.Bind(Application.Theme.TextColor, BindingType.DestinationToSource);
+        DisabledTextColor.Bind(Application.Theme.TextColorDisabled, BindingType.DestinationToSource);
+        BackgroundColor.Bind(Application.Theme.SecondaryColor, BindingType.DestinationToSource);
+        DisabledBackgroundColor.Bind(Application.Theme.PrimaryColorDisabled, BindingType.DestinationToSource);
+        FocusColor.Bind(Application.Theme.BorderColor, BindingType.DestinationToSource);
 
         UpdateTextColorBinding();
         Enabled.ValueChange += Enabled_ValueChange;
@@ -113,11 +113,11 @@ public class Button : UIComponent
         _buttonTextLabel.TextColor.RemoveBinders();
         if (Enabled)
         {
-            _buttonTextLabel.TextColor.AddBinder(new PropertyBinder<Button, Color>(TextColor, BindingType.DestinationToSource));
+            _buttonTextLabel.TextColor.Bind(TextColor, BindingType.DestinationToSource);
         }
         else
         {
-            _buttonTextLabel.TextColor.AddBinder(new PropertyBinder<Button, Color>(DisabledTextColor, BindingType.DestinationToSource));
+            _buttonTextLabel.TextColor.Bind(DisabledTextColor, BindingType.DestinationToSource);
         }
     }
 }

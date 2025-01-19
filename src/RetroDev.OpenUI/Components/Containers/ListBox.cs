@@ -35,8 +35,13 @@ public class ListBox : Container, IContainer
     /// </summary>
     public UIProperty<ListBox, UIComponent?> SelectedItem { get; }
 
+    /// <inheritdoc />
     public override IEnumerable<UIComponent> Children => _verticalLayout.Children;
 
+    /// <summary>
+    /// Creates a new grid layout.
+    /// </summary>
+    /// <param name="application">The application owning this component.</param>
     public ListBox(Application application) : base(application)
     {
         _verticalLayout = new VerticalLayout(application);
@@ -89,7 +94,7 @@ public class ListBox : Container, IContainer
     {
         if (((Panel)sender).Children.ElementAt(0) == SelectedItem.Value)
         {
-            var rectangle = new Rectangle(new Color(255, 0, 0, 100));
+            var rectangle = new Rectangle(Application.Theme.SecondaryColor.Value.WithAlpha(100));
             var size = sender.RelativeDrawingArea.Size;
             e.Canvas.Render(rectangle, new Area(Point.Zero, size));
         }

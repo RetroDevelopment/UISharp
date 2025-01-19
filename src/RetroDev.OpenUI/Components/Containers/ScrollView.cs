@@ -2,6 +2,8 @@
 using RetroDev.OpenUI.Events;
 using RetroDev.OpenUI.Graphics;
 using RetroDev.OpenUI.Graphics.Shapes;
+using RetroDev.OpenUI.Properties;
+using RetroDev.OpenUI.Themes;
 
 namespace RetroDev.OpenUI.Components.Containers;
 
@@ -18,7 +20,13 @@ public class ScrollView : Container, ISingleContainer
     /// <inheritdoc />
     protected override Size ComputeSizeHint() => new(100, 100); // Just a visually appealing size
 
+    /// <inheritdoc />
     public override IEnumerable<UIComponent> Children => GetChildren();
+
+    /// <summary>
+    /// The color of the horizontal and vertical scroll bars.
+    /// </summary>
+    public UIProperty<ScrollView, Color> ScrollBarColor { get; }
 
     // TODO: scroll interval in pixels (hor and vert)
     // TODO: scroll arrows
@@ -30,6 +38,9 @@ public class ScrollView : Container, ISingleContainer
     /// <param name="parent">The application that contain this scroll view.</param>
     public ScrollView(Application parent) : base(parent)
     {
+        ScrollBarColor = new UIProperty<ScrollView, Color>(this, Theme.DefaultColor);
+        ScrollBarColor.Bind(Application.Theme.PrimaryColorContrast, BindingType.DestinationToSource);
+
         ChildrenRendered += ScrollView_ChildrenRendered;
         MouseDrag += ScrollView_MouseDrag;
         MouseDragBegin += ScrollView_MouseDragBegin;
@@ -56,16 +67,19 @@ public class ScrollView : Container, ISingleContainer
         var canvas = e.Canvas;
         var horizontalScrollBarArea = GetHorizontalScrollBarArea();
         var verticalScrollBarArea = GetVerticalScrollBarArea();
-        var red = new Color(255, 0, 0, 100);
+        var radius = ScrollBarSize / 2.0f;
+        var scrollBarShape = new Rectangle(BackgroundColor: ScrollBarColor.Value.WithAlpha(100),
+                                           CornerRadiusX: radius,
+                                           CornerRadiusY: radius);
 
         if (horizontalScrollBarArea != null)
         {
-            canvas.Render(new Rectangle(red), horizontalScrollBarArea);
+            canvas.Render(scrollBarShape, horizontalScrollBarArea);
         }
 
         if (verticalScrollBarArea != null)
         {
-            canvas.Render(new Rectangle(red), verticalScrollBarArea);
+            canvas.Render(scrollBarShape, verticalScrollBarArea);
         }
     }
 

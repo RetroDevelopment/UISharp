@@ -29,6 +29,10 @@ public class TreeBox : Container
 
     public UIProperty<TreeBox, TreeNode?> SelectedNode { get; }
 
+    /// <summary>
+    /// Creates a new tree box.
+    /// </summary>
+    /// <param name="parent">The application that contain this scroll view.</param>
     public TreeBox(Application application) : base(application)
     {
         _listBox = new ListBox(application);
