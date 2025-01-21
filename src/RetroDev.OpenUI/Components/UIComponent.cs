@@ -521,7 +521,7 @@ public abstract class UIComponent
         }
     }
 
-    private void Focus_ValueChange(UIComponent sender, ValueChangeEventArgs<bool> e)
+    private void Focus_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
     {
         if (e.CurrentValue)
         {
@@ -529,7 +529,7 @@ public abstract class UIComponent
         }
     }
 
-    private void Enabled_ValueChange(UIComponent sender, ValueChangeEventArgs<bool> e)
+    private void Enabled_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
     {
         if (!e.CurrentValue)
         {

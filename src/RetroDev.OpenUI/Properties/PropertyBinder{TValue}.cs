@@ -1,11 +1,11 @@
 ﻿namespace RetroDev.OpenUI.Properties;
 
-internal class PropertyBinder<TValue, TSourceParent, TDestinationParent> : IBinder
+internal class PropertyBinder<TValue> : IBinder
 {
-    private readonly BindableProperty<TSourceParent, TValue> _sourceProperty;
-    private readonly BindableProperty<TDestinationParent, TValue> _destinationProperty;
+    private readonly BindableProperty<TValue> _sourceProperty;
+    private readonly BindableProperty<TValue> _destinationProperty;
 
-    public PropertyBinder(BindableProperty<TSourceParent, TValue> sourceProperty, BindableProperty<TDestinationParent, TValue> destinationProperty, BindingType type)
+    public PropertyBinder(BindableProperty<TValue> sourceProperty, BindableProperty<TValue> destinationProperty, BindingType type)
     {
         CheckValidBinding(sourceProperty, destinationProperty, type);
 
@@ -39,17 +39,17 @@ internal class PropertyBinder<TValue, TSourceParent, TDestinationParent> : IBind
         _destinationProperty.ValueChange -= DestinationProperty_ValueChange;
     }
 
-    private void SourceProperty_ValueChange(TSourceParent sender, ValueChangeEventArgs<TValue> e)
+    private void SourceProperty_ValueChange(BindableProperty<TValue> sender, ValueChangeEventArgs<TValue> e)
     {
         _destinationProperty.Value = e.CurrentValue;
     }
 
-    private void DestinationProperty_ValueChange(TDestinationParent sender, ValueChangeEventArgs<TValue> e)
+    private void DestinationProperty_ValueChange(BindableProperty<TValue> sender, ValueChangeEventArgs<TValue> e)
     {
         _sourceProperty.Value = e.CurrentValue;
     }
 
-    private void CheckValidBinding(BindableProperty<TSourceParent, TValue> sourceProperty, BindableProperty<TDestinationParent, TValue> destinationProperty, BindingType type)
+    private void CheckValidBinding(BindableProperty<TValue> sourceProperty, BindableProperty<TValue> destinationProperty, BindingType type)
     {
         switch (type)
         {

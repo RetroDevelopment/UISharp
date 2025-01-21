@@ -33,7 +33,7 @@ public class Window : Container, IContainer
         Application._eventSystem.Render += EventSystem_Render;
         parent.AddWindow(this);
 
-        BackgroundColor.Bind(Application.Theme.MainBackground, BindingType.DestinationToSource);
+        BackgroundColor.BindDestinationToSource(Application.Theme.MainBackground);
 
         Visibility.ValueChange += (_, args) => _windowManager.Visible = args.CurrentValue == ComponentVisibility.Visible;
         parent._eventSystem.MousePress += EventSystem_MousePress;

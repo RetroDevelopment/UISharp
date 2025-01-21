@@ -17,8 +17,10 @@ namespace RetroDev.OpenUI.Properties;
 /// If <paramref name="allowedBinding"/> is <see cref="BindingType.TwoWays"/> it means that bidirectional binding is allowed, including (<see cref="BindingType.SourceToDestination"/> and <see cref="BindingType.DestinationToSource"/>).
 /// </remarks>
 [DebuggerDisplay("{Value}")]
-public class UIProperty<TParent, TValue>(TParent parent, TValue value, BindingType allowedBindings = BindingType.TwoWays) : BindableProperty<TParent, TValue>(parent, value, parent.Application, allowedBindings) where TParent : UIComponent
+public class UIProperty<TParent, TValue>(TParent parent, TValue value, BindingType allowedBinding = BindingType.TwoWays) : BindableProperty<TValue>(value, parent.Application, allowedBinding) where TParent : UIComponent
 {
+    public TParent Parent { get; } = parent;
+
     /// <summary>
     /// The property value.
     /// </summary>
@@ -33,8 +35,17 @@ public class UIProperty<TParent, TValue>(TParent parent, TValue value, BindingTy
     }
 
     /// <summary>
-    /// Implicit cast from <see cref="UIProperty{TParent, TValue}"/> to <typeparamref name="TValue"/>.
+    /// Creates a new property.
     /// </summary>
-    /// <param name="property">The <see cref="UIProperty{TParent, TValue}"/> to cast.</param>
-    public static implicit operator TValue(UIProperty<TParent, TValue> property) => property.Value;
+    /// <param name="parent">The object owning this property.</param>
+    /// <param name="destinationProperty">The destination property to bind.</param>
+    /// <param name="bindingType">
+    /// The <see cref="BindingType"/> (<see langword="this"/> property is the source property and).
+    /// the given <paramref name="destinationProperty" /> is the destination property.
+    /// </param>
+    /// <param name="allowedBinding">The allowed <see cref="BindingType"/> (<see cref="BindingType.TwoWays"/> by default).</param>
+    public UIProperty(TParent parent, BindableProperty<TValue> destinationProperty, BindingType bindingType = BindingType.TwoWays, BindingType allowedBinding = BindingType.TwoWays) : this(parent, destinationProperty.Value, allowedBinding)
+    {
+        Bind(destinationProperty, bindingType);
+    }
 }

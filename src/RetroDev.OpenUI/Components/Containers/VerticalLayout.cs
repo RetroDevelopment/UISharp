@@ -30,7 +30,7 @@ public class VerticalLayout : Container, IContainer
 
         _gridLayout = new GridLayout(application);
         _gridLayout.Columns.Value = 1;
-        _gridLayout.RowSizes.Bind(RowSizes, BindingType.DestinationToSource);
+        _gridLayout.RowSizes.BindDestinationToSource(RowSizes);
 
         AddChild(_gridLayout);
     }

@@ -38,7 +38,7 @@ public class TreeBox : Container
         _listBox = new ListBox(application);
         AddChild(_listBox);
 
-        SelectedNode = new UIProperty<TreeBox, TreeNode?>(this, null);
+        SelectedNode = new UIProperty<TreeBox, TreeNode?>(this, (TreeNode?)null);
         // TODO SelectedNode can be bound to _listBox.SelectedItem and converters!
         SelectedNode.ValueChange += SelectedNode_ValueChange;
         _listBox.SelectedIndex.ValueChange += SelectedIndex_ValueChange;
@@ -142,7 +142,7 @@ public class TreeBox : Container
     public void Clear() =>
         _nodes.Where(n => n.Parent == null).ToList().ForEach(RemoveTreeNode);
 
-    private void SelectedNode_ValueChange(TreeBox sender, ValueChangeEventArgs<TreeNode?> e)
+    private void SelectedNode_ValueChange(BindableProperty<TreeNode?> sender, ValueChangeEventArgs<TreeNode?> e)
     {
         if (e.CurrentValue == null)
         {
@@ -156,7 +156,7 @@ public class TreeBox : Container
         }
     }
 
-    private void SelectedIndex_ValueChange(ListBox sender, ValueChangeEventArgs<uint?> e)
+    private void SelectedIndex_ValueChange(BindableProperty<uint?> sender, ValueChangeEventArgs<uint?> e)
     {
         if (e.CurrentValue == null)
         {

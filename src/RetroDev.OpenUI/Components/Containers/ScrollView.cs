@@ -38,8 +38,7 @@ public class ScrollView : Container, ISingleContainer
     /// <param name="parent">The application that contain this scroll view.</param>
     public ScrollView(Application parent) : base(parent)
     {
-        ScrollBarColor = new UIProperty<ScrollView, Color>(this, Theme.DefaultColor);
-        ScrollBarColor.Bind(Application.Theme.PrimaryColorContrast, BindingType.DestinationToSource);
+        ScrollBarColor = new UIProperty<ScrollView, Color>(this, Application.Theme.PrimaryColorContrast, bindingType: BindingType.DestinationToSource);
 
         ChildrenRendered += ScrollView_ChildrenRendered;
         MouseDrag += ScrollView_MouseDrag;

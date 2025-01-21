@@ -172,7 +172,7 @@ internal class MainWindow : Window
         CreateComponentInstance();
     }
 
-    private void Checked_ValueChange(CheckBox sender, ValueChangeEventArgs<bool> e)
+    private void Checked_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
     {
         if (e.CurrentValue)
         {
@@ -184,7 +184,7 @@ internal class MainWindow : Window
         }
     }
 
-    private void SelectedNode_ValueChange(TreeBox sender, ValueChangeEventArgs<TreeNode?> e)
+    private void SelectedNode_ValueChange(BindableProperty<TreeNode?> sender, ValueChangeEventArgs<TreeNode?> e)
     {
         var scrollView = _mainLayout.GetComponent<ScrollView>("propertiesScrollView");
         var listBox = scrollView.GetComponent<ListBox>("propertyList");
@@ -235,7 +235,7 @@ internal class MainWindow : Window
         UpdateAddRemoveButtonState();
     }
 
-    private void SelectedItem_ValueChange(ListBox sender, ValueChangeEventArgs<UIComponent?> e)
+    private void SelectedItem_ValueChange(BindableProperty<UIComponent?> sender, ValueChangeEventArgs<UIComponent?> e)
     {
         UpdateAddRemoveButtonState();
     }

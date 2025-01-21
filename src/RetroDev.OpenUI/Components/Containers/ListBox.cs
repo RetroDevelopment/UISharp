@@ -53,10 +53,10 @@ public class ListBox : Container, IContainer
         _verticalLayout.HorizontalAlignment.Value = Alignment.Left;
         _verticalLayout.VerticalAlignment.Value = Alignment.Top;
 
-        SelectedIndex = new UIProperty<ListBox, uint?>(this, null);
+        SelectedIndex = new UIProperty<ListBox, uint?>(this, (uint?)null);
         SelectedIndex.ValueChange += SelectedIndex_ValueChange;
 
-        SelectedItem = new UIProperty<ListBox, UIComponent?>(this, null);
+        SelectedItem = new UIProperty<ListBox, UIComponent?>(this, (UIComponent?)null);
         SelectedItem.ValueChange += SelectedItem_ValueChange;
 
         AddChild(_scrollView);
@@ -108,7 +108,7 @@ public class ListBox : Container, IContainer
         SelectedIndex.Value = (uint)index;
     }
 
-    private void SelectedIndex_ValueChange(ListBox sender, ValueChangeEventArgs<uint?> e)
+    private void SelectedIndex_ValueChange(BindableProperty<uint?> sender, ValueChangeEventArgs<uint?> e)
     {
         var numberOfItems = _verticalLayout.Children.Count();
         if (e.CurrentValue != null && e.CurrentValue.Value > numberOfItems)
@@ -119,7 +119,7 @@ public class ListBox : Container, IContainer
         SelectedItem.Value = e.CurrentValue != null ? Children.ElementAt((int)e.CurrentValue) : null;
     }
 
-    private void SelectedItem_ValueChange(ListBox sender, ValueChangeEventArgs<UIComponent?> e)
+    private void SelectedItem_ValueChange(BindableProperty<UIComponent?> sender, ValueChangeEventArgs<UIComponent?> e)
     {
         if (e.CurrentValue == null)
         {

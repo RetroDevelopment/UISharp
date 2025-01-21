@@ -43,7 +43,6 @@ public class CheckBox : UIComponent
     /// <inheritdoc/>
     protected override Size ComputeSizeHint() => new(80, 30); // TODO: Maybe same size as default label text size (which is 20).
 
-
     /// <summary>
     /// Creates a new checkbox.
     /// </summary>
@@ -51,16 +50,12 @@ public class CheckBox : UIComponent
     public CheckBox(Application parent) : base(parent, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
     {
         Checked = new UIProperty<CheckBox, bool>(this, false);
-        CircleColor = new UIProperty<CheckBox, Color>(this, Theme.DefaultColor);
-        UncheckedBackgroundColor = new UIProperty<CheckBox, Color>(this, Theme.DefaultColor);
-        DisabledBackgroundColor = new UIProperty<CheckBox, Color>(this, Theme.DefaultColor);
-        FocusColor = new UIProperty<CheckBox, Color>(this, Theme.DefaultColor);
+        CircleColor = new UIProperty<CheckBox, Color>(this, Application.Theme.TextColor, BindingType.DestinationToSource);
+        UncheckedBackgroundColor = new UIProperty<CheckBox, Color>(this, Application.Theme.SecondaryColorDisabled, BindingType.DestinationToSource);
+        DisabledBackgroundColor = new UIProperty<CheckBox, Color>(this, Application.Theme.PrimaryColorDisabled, BindingType.DestinationToSource);
+        FocusColor = new UIProperty<CheckBox, Color>(this, Application.Theme.BorderColor, BindingType.DestinationToSource);
 
-        BackgroundColor.Bind(Application.Theme.SecondaryColorDisabled, BindingType.DestinationToSource);
-        CircleColor.Bind(Application.Theme.TextColor, BindingType.DestinationToSource);
-        UncheckedBackgroundColor.Bind(Application.Theme.SecondaryColorDisabled, BindingType.DestinationToSource);
-        DisabledBackgroundColor.Bind(Application.Theme.PrimaryColorDisabled, BindingType.DestinationToSource);
-        FocusColor.Bind(Application.Theme.BorderColor, BindingType.DestinationToSource);
+        BackgroundColor.BindDestinationToSource(Application.Theme.SecondaryColorDisabled);
 
         RenderFrame += CheckBox_RenderFrame;
         MousePress += CheckBox_MousePress;

@@ -34,10 +34,9 @@ public class Label : UIComponent
     public Label(Application application) : base(application, isFocusable: false, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
     {
         Text = new UIProperty<Label, string>(this, string.Empty);
-        TextColor = new UIProperty<Label, Color>(this, Theme.DefaultColor);
+        TextColor = new UIProperty<Label, Color>(this, Application.Theme.TextColor, BindingType.DestinationToSource);
 
         Text.ValueChange += (_, _) => SizeHintCache.MarkDirty();
-        TextColor.Bind(Application.Theme.TextColor, BindingType.DestinationToSource);
 
         RenderFrame += Label_RenderFrame;
     }

@@ -53,27 +53,23 @@ public class Button : UIComponent
     /// <param name="parent">The application that contains this button.</param>
     public Button(Application parent) : base(parent)
     {
+        Text = new UIProperty<Button, string>(this, string.Empty);
+        TextColor = new UIProperty<Button, Color>(this, Application.Theme.TextColor, BindingType.DestinationToSource);
+        DisabledTextColor = new UIProperty<Button, Color>(this, Application.Theme.TextColorDisabled, BindingType.DestinationToSource);
+        FocusColor = new UIProperty<Button, Color>(this, Application.Theme.BorderColor, BindingType.DestinationToSource);
+        DisabledBackgroundColor = new UIProperty<Button, Color>(this, Application.Theme.PrimaryColorDisabled, BindingType.DestinationToSource);
+
         _buttonTextLabel = new Label(parent);
         _buttonTextLabel.Text.ValueChange += (_, _) => SizeHintCache.MarkDirty();
-        AddChild(_buttonTextLabel);
-        Text = new UIProperty<Button, string>(this, string.Empty);
-        TextColor = new UIProperty<Button, Color>(this, Theme.DefaultColor);
-        DisabledTextColor = new UIProperty<Button, Color>(this, Theme.DefaultColor);
-        FocusColor = new UIProperty<Button, Color>(this, Theme.DefaultColor);
-        DisabledBackgroundColor = new UIProperty<Button, Color>(this, Theme.DefaultColor);
-
-        _buttonTextLabel.Text.Bind(Text, BindingType.DestinationToSource);
-        TextColor.Bind(Application.Theme.TextColor, BindingType.DestinationToSource);
-        DisabledTextColor.Bind(Application.Theme.TextColorDisabled, BindingType.DestinationToSource);
-        BackgroundColor.Bind(Application.Theme.SecondaryColor, BindingType.DestinationToSource);
-        DisabledBackgroundColor.Bind(Application.Theme.PrimaryColorDisabled, BindingType.DestinationToSource);
-        FocusColor.Bind(Application.Theme.BorderColor, BindingType.DestinationToSource);
+        _buttonTextLabel.Text.BindDestinationToSource(Text);
+        BackgroundColor.BindDestinationToSource(Application.Theme.SecondaryColor);
 
         UpdateTextColorBinding();
         Enabled.ValueChange += Enabled_ValueChange;
 
         RenderFrame += Button_RenderFrame;
         MousePress += Button_MousePress; // TODO: managing button action is more complicated than intercepting key press events.
+        AddChild(_buttonTextLabel);
     }
 
     private void Button_MousePress(UIComponent sender, MouseEventArgs e)
@@ -103,7 +99,7 @@ public class Button : UIComponent
         }
     }
 
-    private void Enabled_ValueChange(UIComponent sender, ValueChangeEventArgs<bool> e)
+    private void Enabled_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
     {
         UpdateTextColorBinding();
     }
@@ -112,11 +108,11 @@ public class Button : UIComponent
     {
         if (Enabled)
         {
-            _buttonTextLabel.TextColor.Bind(TextColor, BindingType.DestinationToSource);
+            _buttonTextLabel.TextColor.BindDestinationToSource(TextColor);
         }
         else
         {
-            _buttonTextLabel.TextColor.Bind(DisabledTextColor, BindingType.DestinationToSource);
+            _buttonTextLabel.TextColor.BindDestinationToSource(DisabledTextColor);
         }
     }
 }

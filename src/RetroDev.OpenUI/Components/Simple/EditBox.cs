@@ -53,22 +53,18 @@ public class EditBox : UIComponent
         _inputTextLabel = new Label(parent);
         AddChild(_inputTextLabel);
         Text = new UIProperty<EditBox, string>(this, string.Empty);
-        TextColor = new UIProperty<EditBox, Color>(this, Theme.DefaultColor);
-        DisabledTextColor = new UIProperty<EditBox, Color>(this, Theme.DefaultColor);
-        FocusColor = new UIProperty<EditBox, Color>(this, Theme.DefaultColor);
-        DisabledBackgroundColor = new UIProperty<EditBox, Color>(this, Theme.DefaultColor);
+        TextColor = new UIProperty<EditBox, Color>(this, Application.Theme.TextColor, BindingType.DestinationToSource);
+        DisabledTextColor = new UIProperty<EditBox, Color>(this, Application.Theme.TextColorDisabled, BindingType.DestinationToSource);
+        FocusColor = new UIProperty<EditBox, Color>(this, Application.Theme.PrimaryColorDisabled, BindingType.DestinationToSource);
+        DisabledBackgroundColor = new UIProperty<EditBox, Color>(this, Application.Theme.BorderColor, BindingType.DestinationToSource);
 
-        _inputTextLabel.Text.Bind(Text, BindingType.DestinationToSource);
+        _inputTextLabel.Text.BindDestinationToSource(Text);
         _inputTextLabel.AutoWidth.Value = AutoSize.Wrap;
         _inputTextLabel.AutoHeight.Value = AutoSize.Wrap;
         _inputTextLabel.HorizontalAlignment.Value = Alignment.Left;
         _inputTextLabel.VerticalAlignment.Value = Alignment.Center;
 
-        TextColor.Bind(Application.Theme.TextColor, BindingType.DestinationToSource);
-        DisabledTextColor.Bind(Application.Theme.TextColorDisabled, BindingType.DestinationToSource);
-        BackgroundColor.Bind(Application.Theme.PrimaryBackground, BindingType.DestinationToSource);
-        DisabledBackgroundColor.Bind(Application.Theme.PrimaryColorDisabled, BindingType.DestinationToSource);
-        FocusColor.Bind(Application.Theme.BorderColor, BindingType.DestinationToSource);
+        BackgroundColor.BindDestinationToSource(Application.Theme.PrimaryBackground);
 
         UpdateTextColorBinding();
         Enabled.ValueChange += Enabled_ValueChange;
@@ -122,15 +118,15 @@ public class EditBox : UIComponent
     {
         if (Enabled)
         {
-            _inputTextLabel.TextColor.Bind(TextColor, BindingType.DestinationToSource);
+            _inputTextLabel.TextColor.BindDestinationToSource(TextColor);
         }
         else
         {
-            _inputTextLabel.TextColor.Bind(DisabledTextColor, BindingType.DestinationToSource);
+            _inputTextLabel.TextColor.BindDestinationToSource(DisabledTextColor);
         }
     }
 
-    private void Enabled_ValueChange(UIComponent sender, ValueChangeEventArgs<bool> e)
+    private void Enabled_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
     {
         UpdateTextColorBinding();
     }
