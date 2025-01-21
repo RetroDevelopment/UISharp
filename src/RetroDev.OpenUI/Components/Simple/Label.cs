@@ -27,26 +27,11 @@ public class Label : UIComponent
     protected override Size ComputeSizeHint() =>
         Application.FontServices.ComputeTextSize(Text.Value);
 
-    /// <inheritdoc />
-    protected override bool DefaultIsFocusable => false;
-
-    /// <inheritdoc />
-    protected override IAutoSize DefaultAutoWidth => AutoSize.Wrap;
-
-    /// <inheritdoc />
-    protected override IAutoSize DefaultAutoHeight => AutoSize.Wrap;
-
-    /// <inheritdoc />
-    protected override IHorizontalAlignment DefaultHorizontalAlignment => Alignment.Center;
-
-    /// <inheritdoc />
-    protected override IVerticalAlignment DefaultVerticalAlignment => Alignment.Center;
-
     /// <summary>
     /// Creates a new label.
     /// </summary>
     /// <param name="application">The application that contain this label.</param>
-    public Label(Application application) : base(application)
+    public Label(Application application) : base(application, isFocusable: false, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
     {
         Text = new UIProperty<Label, string>(this, string.Empty);
         TextColor = new UIProperty<Label, Color>(this, Theme.DefaultColor);

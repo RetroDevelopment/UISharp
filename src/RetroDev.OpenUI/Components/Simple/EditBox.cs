@@ -42,25 +42,13 @@ public class EditBox : UIComponent
     public UIProperty<EditBox, Color> DisabledBackgroundColor { get; }
 
     /// <inheritdoc />
-    protected override IAutoSize DefaultAutoWidth => AutoSize.Wrap;
-
-    /// <inheritdoc />
-    protected override IAutoSize DefaultAutoHeight => AutoSize.Wrap;
-
-    /// <inheritdoc />
-    protected override IHorizontalAlignment DefaultHorizontalAlignment => Alignment.Left;
-
-    /// <inheritdoc />
-    protected override IVerticalAlignment DefaultVerticalAlignment => Alignment.Center;
-
-    /// <inheritdoc />
     protected override Size ComputeSizeHint() => new(20 * 10, 20); // 20 is font size and 10 the characters (estimate)
 
     /// <summary>
     /// Creates a new edit box to insert text.
     /// </summary>
     /// <param name="parent">The application that contains this button.</param>
-    public EditBox(Application parent) : base(parent)
+    public EditBox(Application parent) : base(parent, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap, horizontalAlignment: Alignment.Left, verticalAlignment: Alignment.Center)
     {
         _inputTextLabel = new Label(parent);
         AddChild(_inputTextLabel);

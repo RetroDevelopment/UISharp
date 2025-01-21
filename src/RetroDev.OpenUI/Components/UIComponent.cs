@@ -186,36 +186,6 @@ public abstract class UIComponent
     protected CachedValue<Size> SizeHintCache { get; }
 
     /// <summary>
-    /// The initial value of the <see cref="Visibility"/> property.
-    /// </summary>
-    protected virtual ComponentVisibility DefaultVisibility => ComponentVisibility.Visible;
-
-    /// <summary>
-    /// The initial value of <see cref="AutoWidth"/>.
-    /// </summary>
-    protected virtual IAutoSize DefaultAutoWidth => AutoSize.Stretch;
-
-    /// <summary>
-    /// The default value of <see cref="AutoHeight"/>.
-    /// </summary>
-    protected virtual IAutoSize DefaultAutoHeight => AutoSize.Stretch;
-
-    /// <summary>
-    /// The default value of <see cref="HorizontalAlignment"/>.
-    /// </summary>
-    protected virtual IHorizontalAlignment DefaultHorizontalAlignment => Alignment.Center;
-
-    /// <summary>
-    /// The default value of <see cref="VerticalAlignment"/>.
-    /// </summary>
-    protected virtual IVerticalAlignment DefaultVerticalAlignment => Alignment.Center;
-
-    /// <summary>
-    /// The initial value of <see cref="Focusable"/>.
-    /// </summary>
-    protected virtual bool DefaultIsFocusable => true;
-
-    /// <summary>
     /// The 2D area (in pixels) where this component is rendered. The area is relative to the parent area,
     /// so [(0, 0), (100, 100)] would indicate that the component is rendered at the top-left of the paraent component,
     /// and it has size 100x100 pixels.
@@ -246,7 +216,23 @@ public abstract class UIComponent
     /// </summary>
     public Area ClipArea => _clipArea.Value;
 
-    protected UIComponent(Application application)
+    /// <summary>
+    /// Creates a new component.
+    /// </summary>
+    /// <param name="application">The application owning this component.</param>
+    /// <param name="visibility">Whether the component is rendered or not.</param>
+    /// <param name="isFocusable">Whether the component can get focus.</param>
+    /// <param name="autoWidth">How to automatically determine this component width.</param>
+    /// <param name="autoHeight">How to automatically determine this component height.</param>
+    /// <param name="horizontalAlignment">The component horizontal alignment (relative to its <see cref="Parent"/>).</param>
+    /// <param name="verticalAlignment">The component vertical alignment (relative to its <see cref="Parent"/>).</param>
+    protected UIComponent(Application application,
+                          ComponentVisibility visibility = ComponentVisibility.Visible,
+                          bool isFocusable = true,
+                          IAutoSize? autoWidth = null,
+                          IAutoSize? autoHeight = null,
+                          IHorizontalAlignment? horizontalAlignment = null,
+                          IVerticalAlignment? verticalAlignment = null)
     {
         Application = application;
         Application.LifeCycle.ThrowIfPropertyCannotBeSet();
@@ -257,12 +243,12 @@ public abstract class UIComponent
         Width = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Auto);
         Height = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Auto);
         Height = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Auto);
-        Visibility = new UIProperty<UIComponent, ComponentVisibility>(this, DefaultVisibility);
-        AutoWidth = new UIProperty<UIComponent, IAutoSize>(this, DefaultAutoWidth);
-        AutoHeight = new UIProperty<UIComponent, IAutoSize>(this, DefaultAutoHeight);
-        HorizontalAlignment = new UIProperty<UIComponent, IHorizontalAlignment>(this, DefaultHorizontalAlignment);
-        VerticalAlignment = new UIProperty<UIComponent, IVerticalAlignment>(this, DefaultVerticalAlignment);
-        Focusable = new UIProperty<UIComponent, bool>(this, DefaultIsFocusable);
+        Visibility = new UIProperty<UIComponent, ComponentVisibility>(this, visibility);
+        AutoWidth = new UIProperty<UIComponent, IAutoSize>(this, autoWidth ?? AutoSize.Stretch);
+        AutoHeight = new UIProperty<UIComponent, IAutoSize>(this, autoHeight ?? AutoSize.Stretch);
+        HorizontalAlignment = new UIProperty<UIComponent, IHorizontalAlignment>(this, horizontalAlignment ?? Alignment.Center);
+        VerticalAlignment = new UIProperty<UIComponent, IVerticalAlignment>(this, verticalAlignment ?? Alignment.Center);
+        Focusable = new UIProperty<UIComponent, bool>(this, isFocusable);
         Focus = new UIProperty<UIComponent, bool>(this, false);
         Enabled = new UIProperty<UIComponent, bool>(this, true);
         BackgroundColor = new UIProperty<UIComponent, Color>(this, Color.Transparent);

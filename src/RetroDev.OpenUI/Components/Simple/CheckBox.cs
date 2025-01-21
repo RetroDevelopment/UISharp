@@ -43,24 +43,12 @@ public class CheckBox : UIComponent
     /// <inheritdoc/>
     protected override Size ComputeSizeHint() => new(80, 30); // TODO: Maybe same size as default label text size (which is 20).
 
-    /// <inheritdoc />
-    protected override IAutoSize DefaultAutoWidth => AutoSize.Wrap;
-
-    /// <inheritdoc />
-    protected override IAutoSize DefaultAutoHeight => AutoSize.Wrap;
-
-    /// <inheritdoc />
-    protected override IHorizontalAlignment DefaultHorizontalAlignment => Alignment.Center;
-
-    /// <inheritdoc />
-    protected override IVerticalAlignment DefaultVerticalAlignment => Alignment.Center;
-
 
     /// <summary>
     /// Creates a new checkbox.
     /// </summary>
     /// <param name="parent">The application that contain this checkbox.</param>
-    public CheckBox(Application parent) : base(parent)
+    public CheckBox(Application parent) : base(parent, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
     {
         Checked = new UIProperty<CheckBox, bool>(this, false);
         CircleColor = new UIProperty<CheckBox, Color>(this, Theme.DefaultColor);

@@ -27,10 +27,7 @@ public class Window : Container, IContainer
     /// <inheritdoc/>
     public override IEnumerable<UIComponent> Children => GetChildren();
 
-    /// <inheritdoc/>
-    protected override ComponentVisibility DefaultVisibility => ComponentVisibility.Collapsed;
-
-    public Window(Application parent, IWindowManager? windowManager = null) : base(parent)
+    public Window(Application parent, IWindowManager? windowManager = null) : base(parent, visibility: ComponentVisibility.Collapsed)
     {
         _windowManager = windowManager ?? new SDLWindowManager(parent);
         Application._eventSystem.Render += EventSystem_Render;

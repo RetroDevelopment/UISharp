@@ -40,14 +40,11 @@ public class ProgressBar : UIComponent
     /// <inheritdoc/>
     protected override Size ComputeSizeHint() => new(100, 20); // TODO: 20 is the common text size, 100 is some value to be big enough. Make sure that the size fits the screen.
 
-    /// <inheritdoc />
-    protected override bool DefaultIsFocusable => false;
-
     /// <summary>
     /// Creates a new label.
     /// </summary>
     /// <param name="parent">The application that contain this progress bar.</param>
-    public ProgressBar(Application parent) : base(parent)
+    public ProgressBar(Application parent) : base(parent, isFocusable: false)
     {
         Value = new UIProperty<ProgressBar, int>(this, 0);
         MinimumValue = new UIProperty<ProgressBar, int>(this, 0);
