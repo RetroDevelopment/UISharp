@@ -1,5 +1,7 @@
-﻿using RetroDev.OpenUI.Components.AutoArea;
+﻿using System.Reflection;
+using RetroDev.OpenUI.Components.AutoArea;
 using RetroDev.OpenUI.Components.Containers;
+using RetroDev.OpenUI.Components.RetainedRendering;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Events;
 using RetroDev.OpenUI.Exceptions;
@@ -393,7 +395,7 @@ public abstract class UIComponent
     /// </summary>
     protected virtual void RepositionChildrenImplementation() { }
 
-    protected void OnRenderFrame(RenderingEventArgs renderingArgs)
+    internal void OnRenderFrame(RenderingEventArgs renderingArgs)
     {
         Application.LifeCycle.ThrowIfNotOnRenderingPhase();
 
@@ -402,12 +404,21 @@ public abstract class UIComponent
             renderingArgs.Canvas.ContainerAbsoluteDrawingArea = AbsoluteDrawingArea;
             renderingArgs.Canvas.ClippingArea = ClipArea;
             RenderFrame.Invoke(this, renderingArgs);
-            _children.ForEach((child) => child.OnRenderFrame(renderingArgs));
-
-            renderingArgs.Canvas.ContainerAbsoluteDrawingArea = AbsoluteDrawingArea;
-            renderingArgs.Canvas.ClippingArea = ClipArea;
-            ChildrenRendered?.Invoke(this, renderingArgs);
         }
+    }
+
+    internal List<UIComponent> GetComponentTreeNodesDepthFirstVisit()
+    {
+        var result = new List<UIComponent>();
+        result.Add(this);
+
+        foreach (var component in _children)
+        {
+            result.Add(component);
+            result.AddRange(component.GetComponentTreeNodesDepthFirstVisit());
+        }
+
+        return result;
     }
 
     private void UIComponentValidateImplementation()

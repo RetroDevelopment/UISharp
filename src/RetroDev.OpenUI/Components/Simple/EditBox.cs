@@ -55,7 +55,7 @@ public class EditBox : UIComponent
         Text = new UIProperty<EditBox, string>(this, string.Empty);
         TextColor = new UIProperty<EditBox, Color>(this, Application.Theme.TextColor, BindingType.DestinationToSource);
         DisabledTextColor = new UIProperty<EditBox, Color>(this, Application.Theme.TextColorDisabled, BindingType.DestinationToSource);
-        FocusColor = new UIProperty<EditBox, Color>(this, Application.Theme.PrimaryColorDisabled, BindingType.DestinationToSource);
+        FocusColor = new UIProperty<EditBox, Color>(this, Application.Theme.BorderColor, BindingType.DestinationToSource);
         DisabledBackgroundColor = new UIProperty<EditBox, Color>(this, Application.Theme.BorderColor, BindingType.DestinationToSource);
 
         _inputTextLabel.Text.BindDestinationToSource(Text);

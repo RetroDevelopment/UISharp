@@ -1,5 +1,6 @@
 ﻿using RetroDev.OpenUI.Components;
 using RetroDev.OpenUI.Components.Containers;
+using RetroDev.OpenUI.Components.RetainedRendering;
 using RetroDev.OpenUI.Core;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Core.Internal;
@@ -17,6 +18,7 @@ namespace RetroDev.OpenUI;
 public class Window : Container, IContainer
 {
     private readonly IWindowManager _windowManager;
+    private readonly RetaineModeCanvas _windowCanvas = new();
 
     /// <summary>
     /// Raised when <see langword="this" /> <see cref="Window"/> has been initialized.
@@ -81,8 +83,7 @@ public class Window : Container, IContainer
         var renderingEngine = _windowManager.RenderingEngine;
         renderingEngine.InitializeFrame(BackgroundColor);
         var canvas = new Canvas(renderingEngine, Application.LifeCycle);
-        var renderingEventArgs = new RenderingEventArgs(canvas);
-        OnRenderFrame(renderingEventArgs);
+        _windowCanvas.Render(this, canvas, renderingEngine);
         renderingEngine.FinalizeFrame();
         canvas.LogStatistics(Application.Logger);
     }
