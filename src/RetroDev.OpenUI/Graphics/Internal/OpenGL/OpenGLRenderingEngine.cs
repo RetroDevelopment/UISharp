@@ -74,8 +74,6 @@ internal class OpenGLRenderingEngine : IRenderingEngine
 
     private readonly ProceduralModelGenerator _modelGenerator;
 
-    private int _drawCalls;
-
     /// <summary>
     /// The víewport size in pixels.
     /// </summary>
@@ -229,11 +227,11 @@ internal class OpenGLRenderingEngine : IRenderingEngine
     public void InitializeFrame(Color backroundColor)
     {
         _application.LifeCycle.ThrowIfNotOnRenderingPhase();
-        _drawCalls = 0;
         LoggingUtils.SDLCheck(() => SDL.SDL_GL_MakeCurrent(_window, _glContext), _application.Logger);
         var openGlBackgroundColor = backroundColor.ToOpenGLColor();
         GL.ClearColor(openGlBackgroundColor.X, openGlBackgroundColor.Y, openGlBackgroundColor.Z, openGlBackgroundColor.W);
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+        _modelGenerator.ResetDrawCallsCount();
     }
 
     /// <summary>
@@ -243,7 +241,7 @@ internal class OpenGLRenderingEngine : IRenderingEngine
     {
         _application.LifeCycle.ThrowIfNotOnRenderingPhase();
         SDL.SDL_GL_SwapWindow(_window);
-        _application.Logger.LogVerbose($"OpenGL performed {_drawCalls} draw calls in the latest frame");
+        _application.Logger.LogVerbose($"OpenGL performed {_modelGenerator.DrawCalls} draw calls in the latest frame");
     }
 
     /// <summary>
@@ -297,7 +295,6 @@ internal class OpenGLRenderingEngine : IRenderingEngine
         _shader.SetFillColor(color.ToOpenGLColor());
         _shader.SetClipArea((clippingArea ?? new Area(Point.Zero, ViewportSize)).ToVector4(ViewportSize));
         _shader.SetOffsetMultiplier(NormalizeRadius(xRadius, yRadius, area.Size));
-        _drawCalls++;
         openglShape.Render(textureId ?? _defaultTexture);
     }
 

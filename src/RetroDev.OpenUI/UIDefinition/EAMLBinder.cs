@@ -231,7 +231,7 @@ public class EAMLBinder(TypeMapper typeMapper) : IEAMLBinder
 
     private void RemoveBindingsBeforeAssignment(Type propertyValueType, object propertyValue, Ast.Attribute attribute)
     {
-        var removeBindersName = nameof(BindableProperty<object, object>.RemoveBinders);
+        var removeBindersName = nameof(BindableProperty<object, object>.RemoveBinding);
         var removeBindingsMethod = propertyValueType.GetMethod(removeBindersName) ?? throw new UIDefinitionValidationException($"Missing method {removeBindersName} in property type {propertyValueType.FullName}", attribute);
         removeBindingsMethod.Invoke(propertyValue, []);
     }

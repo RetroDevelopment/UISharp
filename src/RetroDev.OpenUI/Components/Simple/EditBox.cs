@@ -132,7 +132,6 @@ public class EditBox : UIComponent
 
     private void UpdateTextColorBinding()
     {
-        _inputTextLabel.TextColor.RemoveBinders();
         if (Enabled)
         {
             _inputTextLabel.TextColor.Bind(TextColor, BindingType.DestinationToSource);

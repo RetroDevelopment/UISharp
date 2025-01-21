@@ -110,7 +110,6 @@ public class Button : UIComponent
 
     private void UpdateTextColorBinding()
     {
-        _buttonTextLabel.TextColor.RemoveBinders();
         if (Enabled)
         {
             _buttonTextLabel.TextColor.Bind(TextColor, BindingType.DestinationToSource);

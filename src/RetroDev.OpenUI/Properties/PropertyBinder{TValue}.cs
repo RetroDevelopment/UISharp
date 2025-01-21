@@ -1,75 +1,72 @@
 ﻿namespace RetroDev.OpenUI.Properties;
 
-/// <summary>
-/// A <see cref="IBinder{TValue}"/> that bind a source <see cref="BindableProperty{TParent, TValue}"/> with another, destination, <see cref="BindableProperty{TParent, TValue}"/>.
-/// </summary>
-/// <typeparam name="TParent">The class defining the destination property.</typeparam>
-/// <typeparam name="TValue">The property value type.</typeparam>
-public class PropertyBinder<TParent, TValue> : IBinder<TValue>
+internal class PropertyBinder<TValue, TSourceParent, TDestinationParent> : IBinder
 {
-    private readonly BindableProperty<TParent, TValue> _destinationProperty;
+    private readonly BindableProperty<TSourceParent, TValue> _sourceProperty;
+    private readonly BindableProperty<TDestinationParent, TValue> _destinationProperty;
 
-    /// <inheritdoc />
-    public BindingType Binding { get; }
-
-    /// <inheritdoc />
-    public TValue? CurrentValue { get; private set; }
-
-    /// <inheritdoc />
-    public event EventHandler<BinderValueChangeEventArgs<TValue>> DestinationChange = (_, _) => { };
-
-    /// <summary>
-    /// Creates a new binder.
-    /// </summary>
-    /// <param name="destinationProperty">The destination property.</param>
-    /// <param name="binding">The binding type.</param>
-    public PropertyBinder(BindableProperty<TParent, TValue> destinationProperty, BindingType binding)
+    public PropertyBinder(BindableProperty<TSourceParent, TValue> sourceProperty, BindableProperty<TDestinationParent, TValue> destinationProperty, BindingType type)
     {
-        EnsureBindingIsAllowed(destinationProperty, binding);
+        CheckValidBinding(sourceProperty, destinationProperty, type);
+
+        _sourceProperty = sourceProperty;
         _destinationProperty = destinationProperty;
-        Binding = binding;
-        _destinationProperty.ValueChange += _destinationProperty_ValueChange;
-        CurrentValue = destinationProperty.Value;
 
-        if (binding == BindingType.DestinationToSource || binding == BindingType.TwoWays)
+        switch (type)
         {
-            OnDestinationChange(destinationProperty.Parent, destinationProperty.Value);
-        }
-    }
-
-    /// <inheritdoc />
-    public void NotifySourceChanged(TValue value)
-    {
-        _destinationProperty.Value = value;
-    }
-
-    /// <inheritdoc />
-    public void Unbind() =>
-        _destinationProperty.ValueChange -= _destinationProperty_ValueChange;
-
-    private void EnsureBindingIsAllowed(BindableProperty<TParent, TValue> destinationProperty, BindingType binding)
-    {
-        switch (destinationProperty.AllowedBinding)
-        {
-            case BindingType.TwoWays:
-                break;
             case BindingType.SourceToDestination:
-                if (binding != BindingType.DestinationToSource) throw new InvalidOperationException($"Binding type not allowed {binding}");
+                _sourceProperty.ValueChange += SourceProperty_ValueChange;
+                _destinationProperty.Value = _sourceProperty.Value;
                 break;
             case BindingType.DestinationToSource:
-                if (binding != BindingType.SourceToDestination) throw new InvalidOperationException($"Binding type not allowed {binding}");
+                _destinationProperty.ValueChange += DestinationProperty_ValueChange;
+                _sourceProperty.Value = _destinationProperty.Value;
                 break;
+            case BindingType.TwoWays:
+                _sourceProperty.ValueChange += SourceProperty_ValueChange;
+                _destinationProperty.Value = _sourceProperty.Value;
+                _destinationProperty.ValueChange += DestinationProperty_ValueChange;
+                _sourceProperty.Value = _destinationProperty.Value;
+                break;
+            default:
+                throw new ArgumentException($"Unhandled binding type {type}");
         }
     }
 
-    private void OnDestinationChange(TParent sender, TValue value)
+    public void Unbind()
     {
-        CurrentValue = value;
-        DestinationChange.Invoke(sender, new BinderValueChangeEventArgs<TValue>(value));
+        _sourceProperty.ValueChange -= SourceProperty_ValueChange;
+        _destinationProperty.ValueChange -= DestinationProperty_ValueChange;
     }
 
-    private void _destinationProperty_ValueChange(TParent sender, ValueChangeEventArgs<TValue> e)
+    private void SourceProperty_ValueChange(TSourceParent sender, ValueChangeEventArgs<TValue> e)
     {
-        OnDestinationChange(sender, e.CurrentValue);
+        _destinationProperty.Value = e.CurrentValue;
+    }
+
+    private void DestinationProperty_ValueChange(TDestinationParent sender, ValueChangeEventArgs<TValue> e)
+    {
+        _sourceProperty.Value = e.CurrentValue;
+    }
+
+    private void CheckValidBinding(BindableProperty<TSourceParent, TValue> sourceProperty, BindableProperty<TDestinationParent, TValue> destinationProperty, BindingType type)
+    {
+        switch (type)
+        {
+            case BindingType.SourceToDestination:
+                if (sourceProperty.AllowedBinding != BindingType.SourceToDestination && sourceProperty.AllowedBinding != BindingType.TwoWays) throw new InvalidOperationException($"Invliad binding {sourceProperty} -> {destinationProperty}: source property does not allow for that binding.");
+                if (destinationProperty.AllowedBinding != BindingType.DestinationToSource && destinationProperty.AllowedBinding != BindingType.TwoWays) throw new InvalidOperationException($"Invliad binding {sourceProperty} -> {destinationProperty}: destination property does not allow for that binding.");
+                break;
+            case BindingType.DestinationToSource:
+                if (sourceProperty.AllowedBinding != BindingType.DestinationToSource && sourceProperty.AllowedBinding != BindingType.TwoWays) throw new InvalidOperationException($"Invliad binding {sourceProperty} <- {destinationProperty}: source property does not allow for that binding.");
+                if (destinationProperty.AllowedBinding != BindingType.SourceToDestination && destinationProperty.AllowedBinding != BindingType.TwoWays) throw new InvalidOperationException($"Invliad binding {sourceProperty} <- {destinationProperty}: destination property does not allow for that binding.");
+                break;
+            case BindingType.TwoWays:
+                if (sourceProperty.AllowedBinding != BindingType.TwoWays) throw new InvalidOperationException($"Invliad binding {sourceProperty} <-> {destinationProperty}: source property does not allow for two way binding.");
+                if (destinationProperty.AllowedBinding != BindingType.TwoWays) throw new InvalidOperationException($"Invliad binding {sourceProperty} <-> {destinationProperty}: destination property does not allow for two way binding.");
+                break;
+            default:
+                throw new ArgumentException($"Unhandled binding type {type}");
+        }
     }
 }
