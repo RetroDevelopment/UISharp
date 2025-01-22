@@ -11,6 +11,9 @@ namespace RetroDev.OpenUI.Core.Coordinates;
 [DebuggerDisplay("{TopLeft} ; {Size}")]
 public record Area(Point TopLeft, Size Size)
 {
+    private readonly Point _center = new(TopLeft.X + Size.Width / 2, TopLeft.Y + Size.Height / 2);
+    private readonly Point _bottomRight = new(TopLeft.X + Size.Width, TopLeft.Y + Size.Height);
+
     /// <summary>
     /// The empty area which requires 0 pizels.
     /// </summary>
@@ -19,13 +22,13 @@ public record Area(Point TopLeft, Size Size)
     /// <summary>
     /// The area central point coordinate in pixels.
     /// </summary>
-    public Point Center => new(TopLeft.X + Size.Width / 2, TopLeft.Y + Size.Height / 2);
+    public Point Center => _center;
 
 
     /// <summary>
     /// The area bottom-right point coordinate in pixels.
     /// </summary>
-    public Point BottomRight => new(TopLeft.X + Size.Width, TopLeft.Y + Size.Height);
+    public Point BottomRight => _bottomRight;
 
     public Area(Point topLeft, Point bottomRight) : this(topLeft, new Size(bottomRight.X - topLeft.X, bottomRight.Y - topLeft.Y)) { }
 
@@ -48,9 +51,8 @@ public record Area(Point TopLeft, Size Size)
     {
         if (container == null) return this;
 
-        var oneOffset = new Point(1); // Due to some approximation errors (especially in GridLayout) increase the clip area by 1. The has shown to improve the UI availding some hard cuts of images without introducing visible unclipped areas.
         var clippedTopLeft = TopLeft.Clamp(container.TopLeft, container.BottomRight);
-        var clippedBottomRight = BottomRight.Clamp(container.TopLeft + oneOffset, container.BottomRight + oneOffset);
+        var clippedBottomRight = BottomRight.Clamp(container.TopLeft, container.BottomRight);
 
         return new Area(clippedTopLeft, clippedBottomRight);
     }

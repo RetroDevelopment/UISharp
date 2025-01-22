@@ -35,7 +35,7 @@ public class InstanceCreator(Application application, TypeMapper typeMapper, IEA
         var componentType = _typeMapper.GetUIComponent(component.Name) ?? throw new UIDefinitionValidationException($"Component {component.Name} does not map to a known type.", component);
         var constructor = _typeMapper.GetConstructor(componentType);
         var childComponentInstances = component.Components.Select(CreateUIComponent).ToList();
-        var arguments = PrepareConstructorArguments(constructor.GetParameters(), childComponentInstances.SelectMany(c => c.GetComponentTreeNodesDepthFirstVisit()), component);
+        var arguments = PrepareConstructorArguments(constructor.GetParameters(), childComponentInstances.SelectMany(c => c.GetComponentTreeNodesDepthFirstSearch()), component);
         var componentInstance = (UIComponent)constructor.Invoke(arguments) ?? throw new UIDefinitionValidationException($"Failed to invoke constructor for {component.Name}", component);
         InitializeUIComponent(component, componentInstance, childComponentInstances);
         if (componentInstance is Window window) window.OnInitialized();

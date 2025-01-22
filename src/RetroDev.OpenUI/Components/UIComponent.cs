@@ -407,19 +407,8 @@ public abstract class UIComponent
         }
     }
 
-    internal List<UIComponent> GetComponentTreeNodesDepthFirstVisit()
-    {
-        var result = new List<UIComponent>();
-        result.Add(this);
-
-        foreach (var component in _children)
-        {
-            result.Add(component);
-            result.AddRange(component.GetComponentTreeNodesDepthFirstVisit());
-        }
-
-        return result;
-    }
+    internal IEnumerable<UIComponent> GetComponentTreeNodesDepthFirstSearch() =>
+        _children.Union(_children.SelectMany(c => c.GetComponentTreeNodesDepthFirstSearch()));
 
     private void UIComponentValidateImplementation()
     {

@@ -98,7 +98,6 @@ internal class SDLEventSystem(Application application) : IEventSystem
                     var mouseButtonDownArgs = new WindowEventArgs<MouseEventArgs>(mouseButtonDownWindowId, new(new(buttonDownEvent.x, buttonDownEvent.y), new(buttonDownEvent.x, buttonDownEvent.y), mouseButtonDownButton));
                     mouseButtonDownArgs.Log("mouseDown", _application.Logger);
                     MousePress.Invoke(this, mouseButtonDownArgs);
-                    _invalidated = true;
                     break;
 
                 case SDL_EventType.SDL_MOUSEBUTTONUP:
@@ -111,7 +110,6 @@ internal class SDLEventSystem(Application application) : IEventSystem
                                                                                 mouseButtonUpButton));
                     mouseButtonUpArgs.Log("mouseDown", _application.Logger);
                     MouseRelease.Invoke(this, mouseButtonUpArgs);
-                    _invalidated = true;
                     break;
 
                 case SDL_EventType.SDL_MOUSEMOTION:
@@ -123,7 +121,6 @@ internal class SDLEventSystem(Application application) : IEventSystem
                                                                                                      new Point(motionEvent.x, motionEvent.y), mouseButtonMoveButton));
                     mouseMotionMoveArgs.Log("mouseMove", _application.Logger);
                     MouseMove.Invoke(this, mouseMotionMoveArgs);
-                    _invalidated = true;
                     break;
 
                 case SDL_EventType.SDL_KEYDOWN:
@@ -133,7 +130,6 @@ internal class SDLEventSystem(Application application) : IEventSystem
                     var keyDownArgs = new WindowEventArgs<KeyEventArgs>(keyDownWindowId, new KeyEventArgs(keyDownKey));
                     keyDownArgs.Log("keyDown", _application.Logger);
                     KeyPress.Invoke(this, keyDownArgs);
-                    _invalidated = true;
                     break;
 
                 case SDL_EventType.SDL_KEYUP:
@@ -143,7 +139,6 @@ internal class SDLEventSystem(Application application) : IEventSystem
                     var keyUpArgs = new WindowEventArgs<KeyEventArgs>(keyUpWindowId, new KeyEventArgs(keyUpKey));
                     keyUpArgs.Log("keyUp", _application.Logger);
                     KeyRelease.Invoke(this, keyUpArgs);
-                    _invalidated = true;
                     break;
                 case SDL_EventType.SDL_TEXTINPUT:
                     var textInputEvent = currentEvent.text;
@@ -152,7 +147,6 @@ internal class SDLEventSystem(Application application) : IEventSystem
                     var textInputArgs = new WindowEventArgs<TextInputEventArgs>(inputTextWindowId, new TextInputEventArgs(inputText));
                     TextInput.Invoke(this, textInputArgs);
                     textInputArgs.Log("textInput", _application.Logger);
-                    _invalidated = true;
                     break;
             }
             // Exit the loop if more than 10 milliseconds have passed to render frame (otherwise the loop can last too long skipping frames)

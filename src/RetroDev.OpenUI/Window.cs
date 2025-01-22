@@ -29,7 +29,7 @@ public class Window : Container, IContainer
     /// <inheritdoc/>
     public override IEnumerable<UIComponent> Children => GetChildren();
 
-    public Window(Application parent, IWindowManager? windowManager = null) : base(parent, visibility: ComponentVisibility.Collapsed)
+    public Window(Application parent, IWindowManager? windowManager = null) : base(parent, visibility: ComponentVisibility.Collapsed, isFocusable: true)
     {
         _windowManager = windowManager ?? new SDLWindowManager(parent);
         Application._eventSystem.Render += EventSystem_Render;
