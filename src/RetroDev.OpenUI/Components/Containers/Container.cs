@@ -1,5 +1,4 @@
-﻿
-using RetroDev.OpenUI.Components.AutoArea;
+﻿using RetroDev.OpenUI.Components.Core.AutoArea;
 
 namespace RetroDev.OpenUI.Components.Containers;
 

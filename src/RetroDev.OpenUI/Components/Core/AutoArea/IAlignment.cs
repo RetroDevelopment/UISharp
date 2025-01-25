@@ -1,4 +1,4 @@
-﻿namespace RetroDev.OpenUI.Components.AutoArea;
+﻿namespace RetroDev.OpenUI.Components.Core.AutoArea;
 
 /// <summary>
 /// Horizontal and vertical alignment.

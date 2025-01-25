@@ -1,17 +1,17 @@
 ﻿using RetroDev.OpenUI.Core.Coordinates;
 
-namespace RetroDev.OpenUI.Components.AutoArea;
+namespace RetroDev.OpenUI.Components.Core.AutoArea;
 
 /// <summary>
-/// Left horizontal alignment.
+/// Generic interface to define how to align a component horizontally.
 /// </summary>
-public class Left : IHorizontalAlignment
+public interface IHorizontalAlignment
 {
     /// <summary>
-    /// Computes the given <paramref name="component"/> leftmost x-coordinate respect to its container.
+    /// Computes the given <paramref name="component"/> x-coordinate.
     /// </summary>
     /// <param name="component">The component for which to calculate the x-coordinate.</param>
     /// <param name="componentSize">The component assumed size.</param>
     /// <returns>The component x-coordinate.</returns>
-    public PixelUnit ComputeX(UIComponent component, Size componentSize) => PixelUnit.Zero;
+    public PixelUnit ComputeX(UIComponent component, Size componentSize);
 }

@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics.Metrics;
-using RetroDev.OpenUI.Components.AutoArea;
+using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Graphics;
 using RetroDev.OpenUI.Graphics.Shapes;

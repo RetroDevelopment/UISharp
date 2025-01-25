@@ -1,6 +1,6 @@
 ﻿using RetroDev.OpenUI.Core.Coordinates;
 
-namespace RetroDev.OpenUI.Components.AutoArea;
+namespace RetroDev.OpenUI.Components.Core.AutoArea;
 
 /// <summary>
 /// Center (horizontal or vertical) alignment.

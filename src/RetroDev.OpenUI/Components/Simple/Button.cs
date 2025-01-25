@@ -1,9 +1,8 @@
-﻿using RetroDev.OpenUI.Core.Coordinates;
+﻿using RetroDev.OpenUI.Components.Shapes;
+using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Events;
 using RetroDev.OpenUI.Graphics;
-using RetroDev.OpenUI.Graphics.Shapes;
 using RetroDev.OpenUI.Properties;
-using RetroDev.OpenUI.Themes;
 
 namespace RetroDev.OpenUI.Components.Simple;
 
@@ -12,7 +11,8 @@ namespace RetroDev.OpenUI.Components.Simple;
 /// </summary>
 public class Button : UIComponent
 {
-    private Label _buttonTextLabel;
+    private readonly Rectangle _backgroundRectangle;
+    private readonly Label _buttonTextLabel;
 
     /// <summary>
     /// Raised when clicking on the button.
@@ -50,26 +50,33 @@ public class Button : UIComponent
     /// <summary>
     /// Creates a new button.
     /// </summary>
-    /// <param name="parent">The application that contains this button.</param>
-    public Button(Application parent) : base(parent)
+    /// <param name="application">The application that contains this button.</param>
+    public Button(Application application) : base(application)
     {
         Text = new UIProperty<Button, string>(this, string.Empty);
         TextColor = new UIProperty<Button, Color>(this, Application.Theme.TextColor, BindingType.DestinationToSource);
         DisabledTextColor = new UIProperty<Button, Color>(this, Application.Theme.TextColorDisabled, BindingType.DestinationToSource);
         FocusColor = new UIProperty<Button, Color>(this, Application.Theme.BorderColor, BindingType.DestinationToSource);
         DisabledBackgroundColor = new UIProperty<Button, Color>(this, Application.Theme.PrimaryColorDisabled, BindingType.DestinationToSource);
-
-        _buttonTextLabel = new Label(parent);
-        _buttonTextLabel.Text.ValueChange += (_, _) => SizeHintCache.MarkDirty();
-        _buttonTextLabel.Text.BindDestinationToSource(Text);
         BackgroundColor.BindDestinationToSource(Application.Theme.SecondaryColor);
 
-        UpdateTextColorBinding();
-        Enabled.ValueChange += Enabled_ValueChange;
+        _backgroundRectangle = new Rectangle(application);
+        _backgroundRectangle.BackgroundColor.BindDestinationToSource(BackgroundColor);
+        _backgroundRectangle.BorderColor.BindDestinationToSource(Application.Theme.BorderColor);
+        _backgroundRectangle.AutoCornerRadiusRatio.Value = 0.5f;
+        UpdateBackgroundRectangleColorBinding();
+        UpdateBackgroundRectangleBorder();
+        AddChild(_backgroundRectangle);
 
-        RenderFrame += Button_RenderFrame;
-        MousePress += Button_MousePress; // TODO: managing button action is more complicated than intercepting key press events.
+        _buttonTextLabel = new Label(application);
+        _buttonTextLabel.Text.ValueChange += (_, _) => SizeHintCache.MarkDirty();
+        _buttonTextLabel.Text.BindDestinationToSource(Text);
+        UpdateTextColorBinding();
         AddChild(_buttonTextLabel);
+
+        MousePress += Button_MousePress; // TODO: managing button action is more complicated than intercepting key press events.
+        Enabled.ValueChange += Enabled_ValueChange;
+        Focus.ValueChange += Focus_ValueChange;
     }
 
     private void Button_MousePress(UIComponent sender, MouseEventArgs e)
@@ -81,38 +88,50 @@ public class Button : UIComponent
         }
     }
 
-    private void Button_RenderFrame(UIComponent sender, RenderingEventArgs e)
-    {
-        var size = RelativeDrawingArea.Size;
-        var canvas = e.Canvas;
-        float minimumDimension = Math.Min(size.Width, size.Height);
-        PixelUnit cornerRadius = (minimumDimension / 2.0f) * 0.5f;
-
-        Color rectangleBackgroundColor = Enabled ? BackgroundColor : DisabledBackgroundColor;
-        var backgroundRectangle = new Rectangle(BackgroundColor: rectangleBackgroundColor, CornerRadiusX: cornerRadius, CornerRadiusY: cornerRadius);
-        canvas.Render(backgroundRectangle, RelativeDrawingArea.Fill());
-
-        if (Focus.Value)
-        {
-            var borderRectangle = new Rectangle(BorderColor: FocusColor, BorderThickness: 5.0f, CornerRadiusX: cornerRadius, CornerRadiusY: cornerRadius);
-            canvas.Render(borderRectangle, RelativeDrawingArea.Fill());
-        }
-    }
-
     private void Enabled_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
     {
+        UpdateBackgroundRectangleColorBinding();
         UpdateTextColorBinding();
+    }
+
+    private void Focus_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
+    {
+        UpdateBackgroundRectangleBorder();
+    }
+
+    private void UpdateBackgroundRectangleColorBinding()
+    {
+        if (Enabled.Value)
+        {
+            _backgroundRectangle.BackgroundColor.BindDestinationToSource(BackgroundColor);
+        }
+        else
+        {
+            _backgroundRectangle.BackgroundColor.BindDestinationToSource(DisabledBackgroundColor);
+        }
     }
 
     private void UpdateTextColorBinding()
     {
-        if (Enabled)
+        if (Enabled.Value)
         {
             _buttonTextLabel.TextColor.BindDestinationToSource(TextColor);
         }
         else
         {
             _buttonTextLabel.TextColor.BindDestinationToSource(DisabledTextColor);
+        }
+    }
+
+    private void UpdateBackgroundRectangleBorder()
+    {
+        if (Focus.Value)
+        {
+            _backgroundRectangle.BorderThickness.Value = 5.0f;
+        }
+        else
+        {
+            _backgroundRectangle.BorderThickness.Value = 0.0f;
         }
     }
 }

@@ -20,6 +20,14 @@ public class Circle : UIComponent
     public UIProperty<Circle, PixelUnit> BorderThickness { get; }
 
     /// <summary>
+    /// The circle radius. By default it is <see cref="PixelUnit.Auto"/>, which it will set <see cref="UIComponent.Width"/>
+    /// and <see cref="UIComponent.Height"/> to <see cref="PixelUnit.Auto"/>. By default, that will make the circle to stretch
+    /// to the container. If <see cref="Radius"/> is not <see cref="PixelUnit.Auto"/>, <see cref="UIComponent.Width"/> and
+    /// <see cref="UIComponent.Height"/> will be set accordingly to render a circle with the given radius.
+    /// </summary>
+    public UIProperty<Circle, PixelUnit> Radius { get; }
+
+    /// <summary>
     /// The circle rotation in radians.
     /// </summary>
     public UIProperty<Circle, float> Rotation { get; }
@@ -32,9 +40,27 @@ public class Circle : UIComponent
     {
         BorderColor = new UIProperty<Circle, Color>(this, Color.Transparent);
         BorderThickness = new UIProperty<Circle, PixelUnit>(this, PixelUnit.Zero);
+        Radius = new UIProperty<Circle, PixelUnit>(this, PixelUnit.Auto);
         Rotation = new UIProperty<Circle, float>(this, 0.0f);
 
+        Radius.ValueChange += Radius_ValueChange;
+
         RenderFrame += Rectangle_RenderFrame;
+    }
+
+    private void Radius_ValueChange(BindableProperty<PixelUnit> sender, ValueChangeEventArgs<PixelUnit> e)
+    {
+        if (e.CurrentValue.IsAuto)
+        {
+            Width.Value = PixelUnit.Auto;
+            Height.Value = PixelUnit.Auto;
+        }
+        else
+        {
+            var diameter = e.CurrentValue.Value * 2.0f;
+            Width.Value = diameter;
+            Height.Value = diameter;
+        }
     }
 
     /// <inheritdoc />

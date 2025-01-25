@@ -1,4 +1,4 @@
-﻿using RetroDev.OpenUI.Components.AutoArea;
+﻿using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Components.Simple;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Properties;

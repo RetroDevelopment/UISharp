@@ -1,13 +1,11 @@
-﻿using System.Reflection;
-using RetroDev.OpenUI.Components.AutoArea;
-using RetroDev.OpenUI.Components.Containers;
-using RetroDev.OpenUI.Components.RetainedRendering;
+﻿using RetroDev.OpenUI.Components.Containers;
+using RetroDev.OpenUI.Components.Core;
+using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Events;
 using RetroDev.OpenUI.Exceptions;
 using RetroDev.OpenUI.Graphics;
 using RetroDev.OpenUI.Properties;
-using RetroDev.OpenUI.Themes;
 using RetroDev.OpenUI.Utils;
 
 namespace RetroDev.OpenUI.Components;
@@ -98,6 +96,11 @@ public abstract class UIComponent
     /// Gets the root component, usually a <see cref="Window"/>.
     /// </summary>
     public UIComponent Root => Parent?.Root ?? this;
+
+    /// <summary>
+    /// The invalidator managing invalidation logic for <see langword="this" /> <see cref="UIComponent"/>.
+    /// </summary>
+    public Invalidator Invalidator { get; }
 
     /// <summary>
     /// The component unique identifier.
@@ -262,11 +265,12 @@ public abstract class UIComponent
         SizeHintCache = new CachedValue<Size>(ComputeSizeHint);
         SizeHintCache.OnMarkDirty += (_, _) => MarkCachesAsDirty();
 
-        RegisterDrawingAreaEvents();
-
         Focus.ValueChange += Focus_ValueChange;
         Enabled.ValueChange += Enabled_ValueChange;
         MousePress += UIComponent_MousePress;
+
+        Invalidator = new Invalidator(this);
+        Invalidator.RenderingAreaChange += (_, _) => MarkCachesAsDirty();
     }
 
     /// <summary>
@@ -291,6 +295,7 @@ public abstract class UIComponent
         component.Parent?.RemoveChild(component);
         component.Parent = this;
         component.AttachEventsFromParent();
+        component.MarkCachesAsDirty();
         if (index == null) _children.Add(component);
         else if (index + 1 < _children.Count) _children.Insert((int)index + 1, component);
         else _children.Add(component);
@@ -554,19 +559,6 @@ public abstract class UIComponent
         }
 
         _focusedComponent = component;
-    }
-
-    private void RegisterDrawingAreaEvents()
-    {
-        X.ValueChange += (_, _) => MarkCachesAsDirty();
-        Y.ValueChange += (_, _) => MarkCachesAsDirty();
-        Width.ValueChange += (_, _) => MarkCachesAsDirty();
-        Height.ValueChange += (_, _) => MarkCachesAsDirty();
-        AutoWidth.ValueChange += (_, _) => MarkCachesAsDirty();
-        AutoHeight.ValueChange += (_, _) => MarkCachesAsDirty();
-        HorizontalAlignment.ValueChange += (_, _) => MarkCachesAsDirty();
-        VerticalAlignment.ValueChange += (_, _) => MarkCachesAsDirty();
-        Visibility.ValueChange += (_, _) => MarkCachesAsDirty();
     }
 
     private void MarkCachesAsDirty()

@@ -35,6 +35,15 @@ public class Rectangle : UIComponent
     public UIProperty<Rectangle, float> Rotation { get; }
 
     /// <summary>
+    /// The rectangle corner radius ratio, if <c>1.0f</c> the maximum corner radius will be applied,
+    /// if <c>0.0f</c> no corner will be displayed. Note that this only applies to corner radius properties
+    /// (<see cref="CornerRadiusX"/> and <see cref="CornerRadiusY"/>) whose value is <see cref="PixelUnit.Auto"/>.
+    /// The maximum corner radius is half of the rectangle width or height, whichever is the smallest, and it represents
+    /// the maximum corner radius applicable to both <see cref="CornerRadiusX"/> and <see cref="CornerRadiusY"/>.
+    /// </summary>
+    public UIProperty<Rectangle, float> AutoCornerRadiusRatio { get; }
+
+    /// <summary>
     /// Creates a new rectangle.
     /// </summary>
     /// <param name="application">The parent application.</param>
@@ -42,9 +51,10 @@ public class Rectangle : UIComponent
     {
         BorderColor = new UIProperty<Rectangle, Color>(this, Color.Transparent);
         BorderThickness = new UIProperty<Rectangle, PixelUnit>(this, PixelUnit.Zero);
-        CornerRadiusX = new UIProperty<Rectangle, PixelUnit>(this, PixelUnit.Zero);
-        CornerRadiusY = new UIProperty<Rectangle, PixelUnit>(this, PixelUnit.Zero);
+        CornerRadiusX = new UIProperty<Rectangle, PixelUnit>(this, PixelUnit.Auto);
+        CornerRadiusY = new UIProperty<Rectangle, PixelUnit>(this, PixelUnit.Auto);
         Rotation = new UIProperty<Rectangle, float>(this, 0.0f);
+        AutoCornerRadiusRatio = new UIProperty<Rectangle, float>(this, PixelUnit.Zero);
 
         RenderFrame += Rectangle_RenderFrame;
     }
@@ -54,11 +64,17 @@ public class Rectangle : UIComponent
 
     private void Rectangle_RenderFrame(UIComponent sender, Events.RenderingEventArgs e)
     {
+        PixelUnit autoCornerMaximumRadius = Math.Min(RelativeDrawingArea.Size.Width, RelativeDrawingArea.Size.Height) / 2.0f;
+        PixelUnit autoCornerRadius = autoCornerMaximumRadius * AutoCornerRadiusRatio.Value;
+
+        var cornerRadiusX = CornerRadiusX.Value.IsAuto ? autoCornerRadius : CornerRadiusX.Value;
+        var cornerRadiusY = CornerRadiusY.Value.IsAuto ? autoCornerRadius : CornerRadiusY.Value;
+
         var rectangleShape = new Graphics.Shapes.Rectangle(BackgroundColor.Value,
                                                            BorderColor.Value,
                                                            BorderThickness.Value,
-                                                           CornerRadiusX.Value,
-                                                           CornerRadiusY.Value,
+                                                           cornerRadiusX,
+                                                           cornerRadiusY,
                                                            Rotation.Value);
         var canvas = e.Canvas;
 

@@ -4,10 +4,10 @@ using RetroDev.OpenUI.Events;
 using RetroDev.OpenUI.Events.Internal;
 using RetroDev.OpenUI.Graphics;
 
-namespace RetroDev.OpenUI.Components.RetainedRendering;
+namespace RetroDev.OpenUI.Components.Core;
 
 /// <summary>
-/// Iterates over a <see cref="UIComponent"/> hierarchy to call <see cref="UIComponent.OnRenderFrame(RetroDev.OpenUI.Events.RenderingEventArgs)"/>
+/// Iterates over a <see cref="UIComponent"/> hierarchy to call <see cref="UIComponent.OnRenderFrame(RenderingEventArgs)"/>
 /// for each component to redraw, but it only draws elements that need to be redrawn.
 /// </summary>
 internal class RetaineModeCanvas

@@ -85,7 +85,43 @@ public class BindableProperty<TValue>(TValue value, Application? application = n
     public void Bind(BindableProperty<TValue> destinationProperty, BindingType bindingType)
     {
         _binder?.Unbind();
-        _binder = new PropertyBinder<TValue>(this, destinationProperty, bindingType);
+        _binder = new PropertyBinder<TValue, TValue>(this, destinationProperty, bindingType, x => x, x => x);
+    }
+
+    /// <summary>
+    /// Binds <see langword="this" /> property to the given <paramref name="destinationProperty"/> and removes every existing binding.
+    /// </summary>
+    /// <typeparam name="TDestinationValueType">The <paramref name="destinationProperty"/> value type.</typeparam>
+    /// <param name="destinationProperty">The destination property to bind.</param>
+    /// <param name="bindingType">
+    /// The <see cref="BindingType"/> (<see langword="this"/> property is the source property and).
+    /// the given <paramref name="destinationProperty" /> is the destination property.
+    /// </param>
+    /// <param name="converter">A converter to convert source and destination property so that they match.</param>
+    public void Bind<TDestinationValueType>(BindableProperty<TDestinationValueType> destinationProperty, BindingType bindingType, IBindingValueConverter<TValue, TDestinationValueType> converter)
+    {
+        _binder?.Unbind();
+        _binder = new PropertyBinder<TValue, TDestinationValueType>(this, destinationProperty, bindingType, converter);
+    }
+
+    /// <summary>
+    /// Binds <see langword="this" /> property to the given <paramref name="destinationProperty"/> and removes every existing binding.
+    /// </summary>
+    /// <typeparam name="TDestinationValueType">The <paramref name="destinationProperty"/> value type.</typeparam>
+    /// <param name="destinationProperty">The destination property to bind.</param>
+    /// <param name="bindingType">
+    /// The <see cref="BindingType"/> (<see langword="this"/> property is the source property and).
+    /// the given <paramref name="destinationProperty" /> is the destination property.
+    /// </param>
+    /// <param name="sourceToDestinationConverter">The function converting from source property value to destination property value.</param>
+    /// <param name="destinationToSourceConverter">The function converting from destination property value to source property value.</param>
+    public void Bind<TDestinationValueType>(BindableProperty<TDestinationValueType> destinationProperty,
+                                            BindingType bindingType,
+                                            Func<TValue, TDestinationValueType> sourceToDestinationConverter,
+                                            Func<TDestinationValueType, TValue> destinationToSourceConverter)
+    {
+        _binder?.Unbind();
+        _binder = new PropertyBinder<TValue, TDestinationValueType>(this, destinationProperty, bindingType, sourceToDestinationConverter, destinationToSourceConverter);
     }
 
     /// <summary>
@@ -101,6 +137,18 @@ public class BindableProperty<TValue>(TValue value, Application? application = n
     }
 
     /// <summary>
+    /// Binds <see langword="this" /> property to the given <paramref name="destinationProperty"/> using <see cref="BindingType.SourceToDestination"/> binding and removes every existing binding.
+    /// </summary>
+    /// <typeparam name="TDestinationValueType">The <paramref name="destinationProperty"/> value type.</typeparam>
+    /// <param name="destinationProperty">The destination property to bind.</param>
+    /// <param name="sourceToDestinationConverter">The function converting from source property value to destination property value.</param>
+    public void BindSourceToDestination<TDestinationValueType>(BindableProperty<TDestinationValueType> destinationProperty,
+                                                               Func<TValue, TDestinationValueType> sourceToDestinationConverter)
+    {
+        Bind(destinationProperty, BindingType.SourceToDestination, sourceToDestinationConverter, _ => throw new InvalidOperationException());
+    }
+
+    /// <summary>
     /// Binds <see langword="this" /> property to the given <paramref name="destinationProperty"/> using <see cref="BindingType.DestinationToSource"/> binding and removes every existing binding.
     /// </summary>
     /// <param name="destinationProperty">The destination property to bind.</param>
@@ -113,6 +161,19 @@ public class BindableProperty<TValue>(TValue value, Application? application = n
     }
 
     /// <summary>
+    /// Binds <see langword="this" /> property to the given <paramref name="destinationProperty"/> using <see cref="BindingType.DestinationToSource"/> binding and removes every existing binding.
+    /// </summary>
+    /// <typeparam name="TDestinationValueType">The <paramref name="destinationProperty"/> value type.</typeparam>
+    /// <param name="destinationProperty">The destination property to bind.</param>
+    /// <param name="destinationToSourceConverter">The function converting from destination property value to source property value.</param>
+    public void BindDestinationToSource<TDestinationValueType>(BindableProperty<TDestinationValueType> destinationProperty,
+                                                                    Func<TDestinationValueType, TValue> destinationToSourceConverter)
+    {
+        Bind(destinationProperty, BindingType.DestinationToSource, _ => throw new InvalidOperationException(), destinationToSourceConverter);
+    }
+
+
+    /// <summary>
     /// Binds <see langword="this" /> property to the given <paramref name="destinationProperty"/> using <see cref="BindingType.TwoWays"/> binding and removes every existing binding.
     /// </summary>
     /// <param name="destinationProperty">The destination property to bind.</param>
@@ -123,6 +184,23 @@ public class BindableProperty<TValue>(TValue value, Application? application = n
     {
         Bind(destinationProperty, BindingType.TwoWays);
     }
+
+    /// <summary>
+    /// Binds <see langword="this" /> property to the given <paramref name="destinationProperty"/> using <see cref="BindingType.TwoWays"/> binding and removes every existing binding.
+    /// </summary>
+    /// <typeparam name="TDestinationValueType">The <paramref name="destinationProperty"/> value type.</typeparam>
+    /// <param name="destinationProperty">The destination property to bind.</param>
+    /// <param name="bindingType">
+    /// <param name="sourceToDestinationConverter">The function converting from source property value to destination property value.</param>
+    /// <param name="destinationToSourceConverter">The function converting from destination property value to source property value.</param>
+    public void BindTwoWays<TDestinationValueType>(BindableProperty<TDestinationValueType> destinationProperty,
+                                                   BindingType bindingType,
+                                                   Func<TValue, TDestinationValueType> sourceToDestinationConverter,
+                                                   Func<TDestinationValueType, TValue> destinationToSourceConverter)
+    {
+        Bind(destinationProperty, BindingType.TwoWays, sourceToDestinationConverter, destinationToSourceConverter);
+    }
+
 
     /// <summary>
     /// Removes a binding if any.

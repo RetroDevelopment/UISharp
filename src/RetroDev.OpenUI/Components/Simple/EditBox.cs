@@ -1,11 +1,9 @@
-﻿using RetroDev.OpenUI.Components.AutoArea;
+﻿using RetroDev.OpenUI.Components.Core.AutoArea;
+using RetroDev.OpenUI.Components.Shapes;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Events;
 using RetroDev.OpenUI.Graphics;
-using RetroDev.OpenUI.Graphics.Shapes;
 using RetroDev.OpenUI.Properties;
-using RetroDev.OpenUI.Themes;
-using SDL2;
 
 namespace RetroDev.OpenUI.Components.Simple;
 
@@ -14,6 +12,7 @@ namespace RetroDev.OpenUI.Components.Simple;
 /// </summary>
 public class EditBox : UIComponent
 {
+    private readonly Rectangle _backgroundRectangle;
     private readonly Label _inputTextLabel;
 
     /// <summary>
@@ -47,31 +46,38 @@ public class EditBox : UIComponent
     /// <summary>
     /// Creates a new edit box to insert text.
     /// </summary>
-    /// <param name="parent">The application that contains this button.</param>
-    public EditBox(Application parent) : base(parent, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap, horizontalAlignment: Alignment.Left, verticalAlignment: Alignment.Center)
+    /// <param name="application">The application that contains this button.</param>
+    public EditBox(Application application) : base(application, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap, horizontalAlignment: Alignment.Left, verticalAlignment: Alignment.Center)
     {
-        _inputTextLabel = new Label(parent);
-        AddChild(_inputTextLabel);
         Text = new UIProperty<EditBox, string>(this, string.Empty);
         TextColor = new UIProperty<EditBox, Color>(this, Application.Theme.TextColor, BindingType.DestinationToSource);
         DisabledTextColor = new UIProperty<EditBox, Color>(this, Application.Theme.TextColorDisabled, BindingType.DestinationToSource);
         FocusColor = new UIProperty<EditBox, Color>(this, Application.Theme.BorderColor, BindingType.DestinationToSource);
         DisabledBackgroundColor = new UIProperty<EditBox, Color>(this, Application.Theme.BorderColor, BindingType.DestinationToSource);
+        BackgroundColor.BindDestinationToSource(Application.Theme.PrimaryBackground);
 
+        _backgroundRectangle = new Rectangle(application);
+        _backgroundRectangle.BackgroundColor.BindDestinationToSource(BackgroundColor);
+        _backgroundRectangle.BorderColor.BindDestinationToSource(Application.Theme.BorderColor);
+        _backgroundRectangle.AutoCornerRadiusRatio.Value = 0.5f;
+        UpdateBackgroundRectangleColorBinding();
+        UpdateBackgroundRectangleBorder();
+        AddChild(_backgroundRectangle);
+
+        _inputTextLabel = new Label(application);
         _inputTextLabel.Text.BindDestinationToSource(Text);
         _inputTextLabel.AutoWidth.Value = AutoSize.Wrap;
         _inputTextLabel.AutoHeight.Value = AutoSize.Wrap;
         _inputTextLabel.HorizontalAlignment.Value = Alignment.Left;
         _inputTextLabel.VerticalAlignment.Value = Alignment.Center;
-
-        BackgroundColor.BindDestinationToSource(Application.Theme.PrimaryBackground);
-
         UpdateTextColorBinding();
-        Enabled.ValueChange += Enabled_ValueChange;
-        RenderFrame += EditBox_RenderFrame;
+        AddChild(_inputTextLabel);
+
         MousePress += EditBox_MousePress;
         KeyPress += EditBox_KeyPress;
         TextInput += EditBox_TextInput;
+        Enabled.ValueChange += Enabled_ValueChange;
+        Focus.ValueChange += Focus_ValueChange;
     }
 
     private void EditBox_KeyPress(UIComponent sender, KeyEventArgs e)
@@ -96,27 +102,32 @@ public class EditBox : UIComponent
         }
     }
 
-    private void EditBox_RenderFrame(UIComponent sender, RenderingEventArgs e)
+    private void Enabled_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
     {
-        var size = RelativeDrawingArea.Size;
-        var canvas = e.Canvas;
-        float minimumDimension = Math.Min(size.Width, size.Height);
-        PixelUnit cornerRadius = (minimumDimension / 2.0f) * 0.5f;
+        UpdateBackgroundRectangleColorBinding();
+        UpdateTextColorBinding();
+    }
 
-        Color rectangleBackgroundColor = Enabled ? BackgroundColor : DisabledBackgroundColor;
-        var backgroundRectangle = new Rectangle(BackgroundColor: rectangleBackgroundColor, CornerRadiusX: cornerRadius, CornerRadiusY: cornerRadius);
-        canvas.Render(backgroundRectangle, RelativeDrawingArea.Fill());
+    private void Focus_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
+    {
+        UpdateBackgroundRectangleBorder();
+    }
 
-        if (Focus.Value)
+    private void UpdateBackgroundRectangleColorBinding()
+    {
+        if (Enabled.Value)
         {
-            var borderRectangle = new Rectangle(BorderColor: FocusColor, BorderThickness: 5.0f, CornerRadiusX: cornerRadius, CornerRadiusY: cornerRadius);
-            canvas.Render(borderRectangle, RelativeDrawingArea.Fill());
+            _backgroundRectangle.BackgroundColor.BindDestinationToSource(BackgroundColor);
+        }
+        else
+        {
+            _backgroundRectangle.BackgroundColor.BindDestinationToSource(DisabledBackgroundColor);
         }
     }
 
     private void UpdateTextColorBinding()
     {
-        if (Enabled)
+        if (Enabled.Value)
         {
             _inputTextLabel.TextColor.BindDestinationToSource(TextColor);
         }
@@ -126,8 +137,16 @@ public class EditBox : UIComponent
         }
     }
 
-    private void Enabled_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
+    private void UpdateBackgroundRectangleBorder()
     {
-        UpdateTextColorBinding();
+        if (Focus.Value)
+        {
+            _backgroundRectangle.BorderThickness.Value = 5.0f;
+        }
+        else
+        {
+            _backgroundRectangle.BorderThickness.Value = 0.0f;
+        }
     }
+
 }

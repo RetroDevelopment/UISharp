@@ -2,7 +2,7 @@
 using RetroDev.OpenIDE.Windows;
 using RetroDev.OpenUI;
 using RetroDev.OpenUI.Components;
-using RetroDev.OpenUI.Components.AutoArea;
+using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Components.Shapes;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Graphics;
@@ -108,7 +108,7 @@ class Ctr : UIComponent
 
 internal class Program
 {
-    static void Main(string[] _)
+    static void MainNEw(string[] _)
     {
         using var application = new Application();
         application.Logger.Verbosity = OpenUI.Logging.Verbosity.Verbose;
@@ -147,7 +147,7 @@ internal class Program
         application.Run();
     }
 
-    static void MainOld(string[] _)
+    static void Main(string[] _)
     {
         using var application = new Application();
         application.Logger.Verbosity = OpenUI.Logging.Verbosity.Verbose;

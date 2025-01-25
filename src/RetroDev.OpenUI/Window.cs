@@ -1,13 +1,11 @@
 ﻿using RetroDev.OpenUI.Components;
 using RetroDev.OpenUI.Components.Containers;
-using RetroDev.OpenUI.Components.RetainedRendering;
+using RetroDev.OpenUI.Components.Core;
 using RetroDev.OpenUI.Core;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Core.Internal;
 using RetroDev.OpenUI.Events;
 using RetroDev.OpenUI.Graphics;
-using RetroDev.OpenUI.Properties;
-using RetroDev.OpenUI.Themes;
 
 namespace RetroDev.OpenUI;
 
@@ -29,21 +27,31 @@ public class Window : Container, IContainer
     /// <inheritdoc/>
     public override IEnumerable<UIComponent> Children => GetChildren();
 
-    public Window(Application parent, IWindowManager? windowManager = null) : base(parent, visibility: ComponentVisibility.Collapsed, isFocusable: true)
+    /// <summary>
+    /// Creates a new window.
+    /// </summary>
+    /// <param name="application">The application owning this window.</param>
+    /// <param name="windowManager">
+    /// The optional <see cref="IWindowManager"/> that contains the implementation to actually render and manage windows.
+    /// It can be injected to provide a custom implementation of window lifecycle (for example to use a specific window management framework) 
+    /// or for unit testing.
+    /// If not provided, the default OpenUI window manager will be used (it is not public).
+    /// </param>
+    public Window(Application application, IWindowManager? windowManager = null) : base(application, visibility: ComponentVisibility.Collapsed, isFocusable: true)
     {
-        _windowManager = windowManager ?? new SDLWindowManager(parent);
+        _windowManager = windowManager ?? new SDLWindowManager(application);
         Application._eventSystem.Render += EventSystem_Render;
-        parent.AddWindow(this);
+        application.AddWindow(this);
 
         BackgroundColor.BindDestinationToSource(Application.Theme.MainBackground);
 
         Visibility.ValueChange += (_, args) => _windowManager.Visible = args.CurrentValue == ComponentVisibility.Visible;
-        parent._eventSystem.MousePress += EventSystem_MousePress;
-        parent._eventSystem.MouseRelease += EventSystem_MouseRelease;
-        parent._eventSystem.MouseMove += EventSystem_MouseMove;
-        parent._eventSystem.KeyPress += EventSystem_KeyPress;
-        parent._eventSystem.KeyRelease += EventSystem_KeyRelease;
-        parent._eventSystem.TextInput += EventSystem_TextInput;
+        application._eventSystem.MousePress += EventSystem_MousePress;
+        application._eventSystem.MouseRelease += EventSystem_MouseRelease;
+        application._eventSystem.MouseMove += EventSystem_MouseMove;
+        application._eventSystem.KeyPress += EventSystem_KeyPress;
+        application._eventSystem.KeyRelease += EventSystem_KeyRelease;
+        application._eventSystem.TextInput += EventSystem_TextInput;
     }
 
     /// <summary>

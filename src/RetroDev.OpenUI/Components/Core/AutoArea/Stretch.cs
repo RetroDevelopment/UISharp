@@ -1,6 +1,6 @@
 ﻿using RetroDev.OpenUI.Core.Coordinates;
 
-namespace RetroDev.OpenUI.Components.AutoArea;
+namespace RetroDev.OpenUI.Components.Core.AutoArea;
 
 /// <summary>
 /// Auto size strategy that computes components size so that they match their paraent's size.

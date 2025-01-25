@@ -1,20 +1,22 @@
-﻿using RetroDev.OpenUI.Core.Coordinates;
+﻿using RetroDev.OpenUI.Components.Core.AutoArea;
+using RetroDev.OpenUI.Components.Shapes;
+using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Events;
 using RetroDev.OpenUI.Exceptions;
 using RetroDev.OpenUI.Graphics;
-using RetroDev.OpenUI.Graphics.Shapes;
 using RetroDev.OpenUI.Properties;
 using RetroDev.OpenUI.Themes;
 
 namespace RetroDev.OpenUI.Components.Simple;
-
-// TODO: add colors and font size
 
 /// <summary>
 /// A bar displaying progress.
 /// </summary>
 public class ProgressBar : UIComponent
 {
+    private readonly Rectangle _backgroundRectangle;
+    private readonly Rectangle _progressRectangle;
+
     /// <summary>
     /// The current progress value.
     /// The progress bar will be filled on the percentage that <see cref="Value"/> is with respect to <see cref="MinimumValue"/> and <see cref="MaximumValue"/>.
@@ -43,17 +45,23 @@ public class ProgressBar : UIComponent
     /// <summary>
     /// Creates a new label.
     /// </summary>
-    /// <param name="parent">The application that contain this progress bar.</param>
-    public ProgressBar(Application parent) : base(parent, isFocusable: false)
+    /// <param name="application">The application that contain this progress bar.</param>
+    public ProgressBar(Application application) : base(application, isFocusable: false)
     {
         Value = new UIProperty<ProgressBar, int>(this, 0);
         MinimumValue = new UIProperty<ProgressBar, int>(this, 0);
         MaximumValue = new UIProperty<ProgressBar, int>(this, 100);
         ForegroundColor = new UIProperty<ProgressBar, Color>(this, Application.Theme.SecondaryColor, BindingType.DestinationToSource);
-
         BackgroundColor.BindDestinationToSource(Application.Theme.PrimaryColor);
 
-        RenderFrame += ProgressBar_RenderFrame;
+        _backgroundRectangle = new Rectangle(application);
+        _backgroundRectangle.BackgroundColor.BindDestinationToSource(application.Theme.PrimaryColor);
+        AddChild(_backgroundRectangle);
+
+        _progressRectangle = new Rectangle(application);
+        _progressRectangle.BackgroundColor.BindDestinationToSource(application.Theme.SecondaryColorDisabled);
+        _progressRectangle.HorizontalAlignment.Value = Alignment.Left;
+        AddChild(_progressRectangle);
     }
 
     /// <inheritdoc />
@@ -64,17 +72,11 @@ public class ProgressBar : UIComponent
         if (MaximumValue.Value < MinimumValue.Value) throw new UIPropertyValidationException($"MaximumValue {MaximumValue.Value} must be greater or equal to {MinimumValue.Value}", this);
     }
 
-    private void ProgressBar_RenderFrame(UIComponent sender, RenderingEventArgs e)
+    protected override void RepositionChildrenImplementation()
     {
-        var canvas = e.Canvas;
         var size = RelativeDrawingArea.Size;
         var value = Math.Clamp(Value, MinimumValue, MaximumValue);
         var percentage = (value - MinimumValue) / (float)(MaximumValue - MinimumValue);
-        var width = size.Width * percentage;
-        var backgroundRectangle = new Rectangle(BackgroundColor);
-        var progressRectangle = new Rectangle(ForegroundColor);
-
-        canvas.Render(backgroundRectangle, RelativeDrawingArea.Fill());
-        canvas.Render(progressRectangle, new Area(Point.Zero, new Size(width, size.Height)));
+        _progressRectangle.Width.Value = size.Width * percentage;
     }
 }

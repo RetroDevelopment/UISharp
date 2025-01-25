@@ -1,17 +1,17 @@
 ﻿using RetroDev.OpenUI.Core.Coordinates;
 
-namespace RetroDev.OpenUI.Components.AutoArea;
+namespace RetroDev.OpenUI.Components.Core.AutoArea;
 
 /// <summary>
-/// Top vertical alignment.
+/// Generic interface to define how to align a component vertically.
 /// </summary>
-public class Top : IVerticalAlignment
+public interface IVerticalAlignment
 {
     /// <summary>
-    /// Computes the given <paramref name="component"/> topmost y-coordinate respect to its container.
+    /// Computes the given <paramref name="component"/> y-coordinate.
     /// </summary>
     /// <param name="component">The component for which to calculate the y-coordinate.</param>
     /// <param name="componentSize">The component assumed size.</param>
     /// <returns>The component y-coordinate.</returns>
-    public PixelUnit ComputeY(UIComponent component, Size componentSize) => 0;
+    public PixelUnit ComputeY(UIComponent component, Size componentSize);
 }
