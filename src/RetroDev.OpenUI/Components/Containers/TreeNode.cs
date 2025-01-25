@@ -50,8 +50,8 @@ public class TreeNode
         // TODO: other way to check life cycle when not tree node? For example pass the app as constructor
         _root?.Application?.LifeCycle?.ThrowIfPropertyCannotBeSet();
         child.indentation = indentation + 1;
-        _root?.AddTreeNode(child, this);
         _children.Add(child);
+        _root?.AddTreeNode(child, this);
         child.Parent = this;
         child.Parent.Collapsed.Value = false;
     }

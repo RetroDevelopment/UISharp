@@ -7,7 +7,7 @@
                 <editBox id="file" autoWidth="stretch" text="calculator.xml" />
             </gridLayout>
             <gridLayout id="theme" rows="1" columns="2" columnSizes="120px;*">
-                <label text="Dark mode:" />
+                <label id="darkModeText" text="Dark mode:" />
                 <checkBox id="darkMode" checked="true" />
             </gridLayout>
 
@@ -15,7 +15,7 @@
             <button id="save" text="Save" autoWidth="stretch" autoHeight="stretch" enabled="false" />
             <button id="refresh" text="Refresh" autoWidth="stretch" autoHeight="stretch" enabled="false" />
 
-            <listBox autoWidth="stretch" autoHeight="stretch" id="components" />
+            <listBox id="components" autoWidth="stretch" autoHeight="stretch" />
 
             <gridLayout id="addremove" rows="1" columns="2">
                 <button id="add" text="Add" autoWidth="stretch" autoHeight="stretch" enabled="false" />

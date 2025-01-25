@@ -1,4 +1,5 @@
-﻿using RetroDev.OpenUI.Components.Core.AutoArea;
+﻿using System.Xml;
+using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Components.Simple;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Properties;
@@ -63,6 +64,7 @@ public class TreeBox : Container
         foldUnfoldButton.Action += (_, _) =>
         {
             component.Collapsed.Value = !component.Collapsed;
+            UpdateCollapseState(component, recursive: true);
         };
 
         var panel = new Panel(Application);
@@ -99,6 +101,8 @@ public class TreeBox : Container
             var index = _listBox.Children.Cast<GridLayout>().ToList().FindIndex(c => c == afterGridLayout);
             if (index + 1 < _listBox.Children.Count()) _nodes.Insert(index + 1, component);
             else _nodes.Add(component);
+
+            UpdateCollapseState(after);
         }
         else
         {
@@ -110,6 +114,9 @@ public class TreeBox : Container
         {
             AddTreeNode(child, component);
         }
+
+        UpdateCollapseState(component);
+        component.Collapsed.ValueChange += (_, _) => UpdateCollapseState(component);
     }
 
     public void RemoveTreeNode(TreeNode node)
@@ -123,7 +130,6 @@ public class TreeBox : Container
             InternalRemoveTreeNode(node);
         }
     }
-
 
     public void InternalRemoveTreeNode(TreeNode node)
     {
@@ -169,50 +175,49 @@ public class TreeBox : Container
         }
     }
 
-
-    protected override void RepositionChildrenImplementation()
+    protected override void RepositionChildren()
     {
         foreach (var gridLayout in _listBox.Children.Cast<GridLayout>())
         {
             // TODO: better way of inferring indentation space.
             var indentationSpace = int.Parse(gridLayout.ColumnSizes.Value.Split(',')[0].TrimEnd("px".ToCharArray()));
-            var componentSize = gridLayout.Children.ElementAt(2).RelativeDrawingArea.Size;
+            var componentSize = gridLayout.Children.ElementAt(2).SizeEstimate;
             gridLayout.Width.Value = indentationSpace + FoldUnfoldButtonSize + componentSize.Width;
             gridLayout.Height.Value = Math.Max(FoldUnfoldButtonSize, componentSize.Height.Value);
         }
-
-        UpdateCollapseState();
     }
 
-    private void UpdateCollapseState()
+    private void UpdateCollapseState(TreeNode node, bool recursive = false)
     {
-        foreach (var node in _nodes)
+        var gridLayout = _listBox.Children.Cast<GridLayout>().ToList().Find(c => c.Children.ElementAt(2) == node.Content.Value) ?? throw new ArgumentException("Cannot find node to expand in tree box");
+        var collapseButton = (Button)gridLayout.Children.ElementAt(1);
+        if (node._children.Count == 0)
         {
-            var gridLayout = _listBox.Children.Cast<GridLayout>().ToList().Find(c => c.Children.ElementAt(2) == node.Content.Value) ?? throw new ArgumentException("Cannot find node to expand in tree box");
-            var collapseButton = (Button)gridLayout.Children.ElementAt(1);
-            if (node._children.Count == 0)
-            {
-                collapseButton.Visibility.Value = ComponentVisibility.Hidden;
-            }
-            else if (node.Collapsed)
-            {
-                collapseButton.Visibility.Value = ComponentVisibility.Visible;
-                collapseButton.Text.Value = "+";
-            }
-            else
-            {
-                collapseButton.Visibility.Value = ComponentVisibility.Visible;
-                collapseButton.Text.Value = "-";
-            }
+            collapseButton.Visibility.Value = ComponentVisibility.Hidden;
+        }
+        else if (node.Collapsed)
+        {
+            collapseButton.Visibility.Value = ComponentVisibility.Visible;
+            collapseButton.Text.Value = "+";
+        }
+        else
+        {
+            collapseButton.Visibility.Value = ComponentVisibility.Visible;
+            collapseButton.Text.Value = "-";
+        }
 
-            if (node.ShouldDisplay)
-            {
-                gridLayout.Visibility.Value = ComponentVisibility.Visible;
-            }
-            else
-            {
-                gridLayout.Visibility.Value = ComponentVisibility.Collapsed;
-            }
+        if (node.ShouldDisplay)
+        {
+            gridLayout.Visibility.Value = ComponentVisibility.Visible;
+        }
+        else
+        {
+            gridLayout.Visibility.Value = ComponentVisibility.Collapsed;
+        }
+
+        if (recursive)
+        {
+            node._children.ForEach(c => UpdateCollapseState(c, true));
         }
     }
 }

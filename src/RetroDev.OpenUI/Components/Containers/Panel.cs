@@ -1,4 +1,5 @@
-﻿using RetroDev.OpenUI.Core.Coordinates;
+﻿using RetroDev.OpenUI.Components.Shapes;
+using RetroDev.OpenUI.Core.Coordinates;
 
 namespace RetroDev.OpenUI.Components.Containers;
 
@@ -7,6 +8,7 @@ namespace RetroDev.OpenUI.Components.Containers;
 /// </summary>
 public class Panel : Container, ISingleContainer
 {
+    private readonly Rectangle _backgroundRectangle;
     private UIComponent? _child;
 
     /// <inheritdoc />
@@ -14,7 +16,7 @@ public class Panel : Container, ISingleContainer
 
     /// <inheritdoc />
 
-    public override IEnumerable<UIComponent> Children => GetChildren();
+    public override IEnumerable<UIComponent> Children => [GetChildren().ElementAt(1)];
 
     /// <summary>
     /// Creates a new panel.
@@ -22,6 +24,9 @@ public class Panel : Container, ISingleContainer
     /// <param name="application">The application owning this component.</param>
     public Panel(Application application) : base(application)
     {
+        _backgroundRectangle = new Rectangle(application);
+        _backgroundRectangle.BackgroundColor.BindDestinationToSource(BackgroundColor);
+        AddChild(_backgroundRectangle);
     }
 
     /// <summary>

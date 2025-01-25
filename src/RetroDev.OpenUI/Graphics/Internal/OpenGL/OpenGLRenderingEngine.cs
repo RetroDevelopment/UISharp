@@ -241,7 +241,7 @@ internal class OpenGLRenderingEngine : IRenderingEngine
     {
         _application.LifeCycle.ThrowIfNotOnRenderingPhase();
         SDL.SDL_GL_SwapWindow(_window);
-        _application.Logger.LogVerbose($"OpenGL performed {_modelGenerator.DrawCalls} draw calls in the latest frame");
+        _application.Logger.LogError($"OpenGL performed {_modelGenerator.DrawCalls} draw calls in the latest frame");
     }
 
     /// <summary>

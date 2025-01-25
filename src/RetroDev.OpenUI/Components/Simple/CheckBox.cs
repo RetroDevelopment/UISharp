@@ -65,8 +65,6 @@ public class CheckBox : UIComponent
 
         _selectionCircle = new Circle(application);
         _selectionCircle.BackgroundColor.BindDestinationToSource(CircleColor);
-        _selectionCircle.Radius.Value = RelativeDrawingArea.Size.Height / 2.0f;
-        Invalidator.RenderingAreaChange += (_, _) => _selectionCircle.Radius.Value = RelativeDrawingArea.Size.Height / 2.0f;
         UpdateSelectionCirclePosition();
         AddChild(_selectionCircle);
 
@@ -74,6 +72,11 @@ public class CheckBox : UIComponent
         Focus.ValueChange += Focus_ValueChange;
         Enabled.ValueChange += Enabled_ValueChange;
         MousePress += CheckBox_MousePress;
+    }
+
+    protected override void RepositionChildren()
+    {
+        _selectionCircle.Radius.Value = RelativeDrawingArea.Size.Height / 2.0f;
     }
 
     private void CheckBox_MousePress(UIComponent sender, Events.MouseEventArgs e)

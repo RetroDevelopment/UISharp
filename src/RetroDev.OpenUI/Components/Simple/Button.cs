@@ -69,7 +69,6 @@ public class Button : UIComponent
         AddChild(_backgroundRectangle);
 
         _buttonTextLabel = new Label(application);
-        _buttonTextLabel.Text.ValueChange += (_, _) => SizeHintCache.MarkDirty();
         _buttonTextLabel.Text.BindDestinationToSource(Text);
         UpdateTextColorBinding();
         AddChild(_buttonTextLabel);

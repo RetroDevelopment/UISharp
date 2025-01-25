@@ -20,23 +20,10 @@ internal class RetaineModeCanvas
     public void Render(UIComponent root, Canvas canvas, IRenderingEngine renderingEngine)
     {
         var renderingEventArgs = new RenderingEventArgs(canvas);
-        var componentsToRender = root.GetComponentTreeNodesDepthFirstSearch()
-                                     .Where(WillBeRendered);
-
-        foreach (var component in componentsToRender)
+        if (root.Visibility.Value == ComponentVisibility.Visible)
         {
-            component.OnRenderFrame(renderingEventArgs);
+            root.OnRenderFrame(renderingEventArgs);
+            root._children.ForEach(c => Render(c, canvas, renderingEngine));
         }
-    }
-
-    private bool WillBeRendered(UIComponent component)
-    {
-        if (component.Visibility != ComponentVisibility.Visible) return false;
-        var drawingArea = component.AbsoluteDrawingArea;
-        if (drawingArea.TopLeft.X > 800 || drawingArea.TopLeft.Y > 600) return false;
-        if (drawingArea.BottomRight.X < 0 || drawingArea.BottomRight.Y < 0) return false;
-        var clippedSize = drawingArea.Clip(component.ClipArea).Size;
-        if (clippedSize.Width == 0 || clippedSize.Height == 0) return false;
-        return true;
     }
 }

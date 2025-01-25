@@ -118,7 +118,7 @@ public class GridLayout : Container, IContainer
     }
 
     /// <inheritdoc />
-    protected override void RepositionChildrenImplementation()
+    protected override void RepositionChildren()
     {
         EnsureRowsColumnFitNumberOfChildren();
 

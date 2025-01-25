@@ -6,7 +6,7 @@ namespace RetroDev.OpenUI.Core.Coordinates;
 using ValueType = float;
 
 [DebuggerDisplay("{ToString()}")]
-public record class PixelUnit : IEquatable<PixelUnit>
+public record class PixelUnit : IEquatable<PixelUnit>, IComparable<PixelUnit>
 {
     public static readonly PixelUnit Auto = float.NaN;
     public static readonly PixelUnit Zero = 0.0f;
@@ -27,4 +27,6 @@ public record class PixelUnit : IEquatable<PixelUnit>
     {
         return Value.GetHashCode();
     }
+
+    public int CompareTo(PixelUnit? other) => (int)(Value - other?.Value ?? 0.0f);
 }

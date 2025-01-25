@@ -37,8 +37,6 @@ public class Label : UIComponent
         Text = new UIProperty<Label, string>(this, string.Empty);
         TextColor = new UIProperty<Label, Color>(this, Application.Theme.TextColor, BindingType.DestinationToSource);
 
-        Text.ValueChange += (_, _) => SizeHintCache.MarkDirty();
-
         _text = new Text(application);
         _text.BackgroundColor.BindDestinationToSource(BackgroundColor);
         _text.TextColor.BindDestinationToSource(TextColor);

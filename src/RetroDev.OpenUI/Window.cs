@@ -86,6 +86,12 @@ public class Window : Container, IContainer
     /// <inheritdoc/>
     protected override Size ComputeSizeHint() => Size.Zero; // Maybe 800x600? Or half screen resolution=    /// <inheritdoc/>
 
+    internal void PreProcessRendering()
+    {
+        Measure();
+        Arrange();
+    }
+
     private void EventSystem_Render(IEventSystem sender, EventArgs e)
     {
         var renderingEngine = _windowManager.RenderingEngine;

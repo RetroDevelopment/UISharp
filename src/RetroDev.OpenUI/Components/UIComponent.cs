@@ -18,13 +18,10 @@ namespace RetroDev.OpenUI.Components;
 /// </summary>
 public abstract class UIComponent
 {
-    private readonly List<UIComponent> _children = [];
+    internal readonly List<UIComponent> _children = [];
     private UIComponent? _focusedComponent;
     private Point? _mouseDragPointAbsolute = null;
     private Point? _mouseLastDragPointAbsolute = null;
-    private CachedValue<Area> _relativeDrawingArea;
-    private CachedValue<Area> _absoluteDrawingArea;
-    private CachedValue<Area> _clipArea;
 
     /// <summary>
     /// Mouse button press inside <see cref="this"/> window.
@@ -178,31 +175,40 @@ public abstract class UIComponent
     public UIProperty<UIComponent, Color> BackgroundColor { get; }
 
     /// <summary>
-    /// The ideal component size which allows to correctly display the whole component.
+    /// The minimum size (in pixels) that allows rendering the component entirely and correctly (including margin and padding).
     /// </summary>  
-    public Size SizeHint => SizeHintCache.Value;
+    /// <remarks>
+    /// This is the size hint of the component in the last frame rendered, and it is kept in sync by updating it when a relevant <see cref="UIProperty{TComponent, TValue}"/>
+    /// changes, but it is updated before rendering the next frame for performance reason.
+    /// Its value can be determined implementing the <see cref="ComputeSizeHint()"/> method.
+    /// If no frame has been rendered yet, the value is <see cref="Size.Zero"/>.
+    /// </remarks>
+    public Size SizeHint { get; private set; } = Size.Zero;
 
     /// <summary>
-    /// The cached value for <see cref="SizeHint"/>.
-    /// Classes deriving from <see cref="UIComponent"/> must implement <see cref="ComputeSizeHint"/> to compute size hints
-    /// and invalidate the cache calling <see cref="CachedValue{T}.MarkDirty"/> whenever the size hint needs to recomputed.
-    /// Size hints are cached because they might be time consuming.
+    /// This is like <see cref="SizeHint"/> but it takes into account manual override (non auto <see cref="Width"/> or
+    /// <see cref="Height"/>).
     /// </summary>
-    protected CachedValue<Size> SizeHintCache { get; }
+    /// <remarks>
+    /// Since, if <see cref="Width"/> or <see cref="Height"/> are <see cref="PixelUnit.Auto"/> the respective <see cref="SizeHint"/>
+    /// value is returned, the same consideration of <see cref="SizeHint"/> apply here, that is, this size estimate reflect the latest
+    /// frame render and it is update during <see cref="ComputeSizeHint()"/> call.
+    /// </remarks>
+    public Size SizeEstimate => Visibility.Value == ComponentVisibility.Collapsed ?
+                                Size.Zero :
+                                new(Width.Value.IsAuto ? SizeHint.Width : Width.Value,
+                                    Height.Value.IsAuto ? SizeHint.Height : Height.Value);
 
     /// <summary>
     /// The 2D area (in pixels) where this component is rendered. The area is relative to the parent area,
     /// so [(0, 0), (100, 100)] would indicate that the component is rendered at the top-left of the paraent component,
     /// and it has size 100x100 pixels.
     /// </summary>
-    public Area RelativeDrawingArea => _relativeDrawingArea.Value;
-
-    /// <summary>
-    /// The size of the container in which <see langword="this" /> <see cref="UIComponent"/> is diplayed.
-    /// If <see langword="this" /> <see cref="UIComponent"/> is <see cref="Root"/> (e.g. a <see cref="Window"/>, the
-    /// container is assumed to be the main screen, so the main screen resolution will be returned.
-    /// </summary>
-    public Size ContainerSize => Parent?.RelativeDrawingArea?.Size ?? Application.ScreenSize;
+    /// <remarks>
+    /// This is the area of the component in the last frame rendered, and it is kept in sync by updating it when a relevant <see cref="UIProperty{TComponent, TValue}"/>
+    /// changes, but it is updated before rendering the next frame for performance reason.
+    /// </remarks>
+    public Area RelativeDrawingArea { get; private set; } = Area.Empty;
 
     /// <summary>
     /// The 2D area (in pixels) where this component is rendered. The area is absolute to the window and it is clipped
@@ -214,12 +220,27 @@ public abstract class UIComponent
     /// The absolute drawing area is clipped so that it doesn't go out of the parent drawing area. Clipping is done by resizing
     /// the area.
     /// </remarks>
-    public Area AbsoluteDrawingArea => _absoluteDrawingArea.Value;
+    /// <remarks>
+    /// This is the area of the component in the last frame rendered, and it is kept in sync by updating it when a relevant <see cref="UIProperty{TComponent, TValue}"/>
+    /// changes, but it is updated before rendering the next frame for performance reason.
+    /// </remarks>
+    public Area AbsoluteDrawingArea { get; private set; } = Area.Empty;
 
     /// <summary>
     /// The area in which where the UI drawing occurs. Every pixel outside of this area will be clipped.
     /// </summary>
-    public Area ClipArea => _clipArea.Value;
+    /// <remarks>
+    /// This is the clip area of the component in the last frame rendered, and it is kept in sync by updating it when a relevant <see cref="UIProperty{TComponent, TValue}"/>
+    /// changes, but it is updated before rendering the next frame for performance reason.
+    /// </remarks>
+    public Area ClipArea { get; private set; } = Area.Empty;
+
+    /// <summary>
+    /// The size (in pixels) of the container in which <see langword="this" /> <see cref="UIComponent"/> is diplayed.
+    /// If <see langword="this" /> <see cref="UIComponent"/> is <see cref="Root"/> (e.g. a <see cref="Window"/>, the
+    /// container is assumed to be the main screen, so the main screen resolution will be returned.
+    /// </summary>
+    public Size ContainerSize => Parent?.RelativeDrawingArea?.Size ?? Application.ScreenSize;
 
     /// <summary>
     /// Creates a new component.
@@ -258,25 +279,85 @@ public abstract class UIComponent
         Enabled = new UIProperty<UIComponent, bool>(this, true);
         BackgroundColor = new UIProperty<UIComponent, Color>(this, Color.Transparent);
 
-        _relativeDrawingArea = new CachedValue<Area>(ComputeRelativeDrawingArea);
-        _absoluteDrawingArea = new CachedValue<Area>(ComputeAbsoluteDrawingArea);
-        _clipArea = new CachedValue<Area>(ComputeClipArea);
-
-        SizeHintCache = new CachedValue<Size>(ComputeSizeHint);
-        SizeHintCache.OnMarkDirty += (_, _) => MarkCachesAsDirty();
+        Invalidator = new Invalidator();
 
         Focus.ValueChange += Focus_ValueChange;
         Enabled.ValueChange += Enabled_ValueChange;
         MousePress += UIComponent_MousePress;
+    }
 
-        Invalidator = new Invalidator(this);
-        Invalidator.RenderingAreaChange += (_, _) => MarkCachesAsDirty();
+    /// <summary>
+    /// Calculates <see langword="this" /> <see cref="UIComponent"/> <see cref="SizeHint"/> by first computing the
+    /// children <see cref="SizeHint"/> and then calling <see cref="ComputeSizeHint"/>.
+    /// </summary>
+    public void Measure()
+    {
+        _children.ForEach(c => c.Measure());
+        SizeHint = ComputeSizeHint();
+    }
+
+    /// <summary>
+    /// Calculates <see langword="this" /> <see cref="RelativeDrawingArea"/>, <see cref="AbsoluteDrawingArea"/> and
+    /// <see cref="ClipArea"/>, and calls <see cref="RepositionChildren"/> to re-arrange child location.
+    /// </summary>
+    public void Arrange()
+    {
+        RelativeDrawingArea = ComputeRelativeDrawingArea();
+        AbsoluteDrawingArea = ComputeAbsoluteDrawingArea();
+        ClipArea = ComputeClipArea();
+        RepositionChildren();
+        _children.ForEach(c => c.Arrange());
+        Validate();
+    }
+
+    /// <summary>
+    /// Validates <see langword="this" /> <see cref="UIComponent"/> and throw <see cref="UIPropertyValidationException"/> if one or more
+    /// properties are in an invalid state.
+    /// Call base.Validate() at the bottom of your implementation if overriding this method.
+    /// </summary>
+    /// <remarks>
+    /// This method may be called at any time to perform validation, but it is automatically called within the <see cref="IEventSystem.BeforeRender"/> event,
+    /// because a <see cref="UIComponent"/> needs to be validated before rendering a frame, which requires accessing component properties.
+    /// Note that validation must should be performed when a property value change (unless strictly necessary) because it makes it more complicated to
+    /// update property values. For example if a <see cref="UIComponent"/> has properties A and B, and validation checks A &lt; B, if A = 10 and B = 20,
+    /// if updating A and B to 30 and 40 respectively, the code below would crash
+    /// A.Value = 30; // would throw exception because A.Value &gt; B.Value (30 &gt; 20).
+    /// B.Value = 40;
+    /// But if validation is not performed, the framework would still allow detecting errors before frame update.
+    /// </remarks>
+    protected virtual void Validate()
+    {
+        if (!Width.Value.IsAuto && Width.Value < 0.0f) throw new UIPropertyValidationException($"Width must be greater or equal to zero, found {Width.Value}", this);
+        if (!Height.Value.IsAuto && Height.Value < 0.0f) throw new UIPropertyValidationException($"Height must be greater or equal to zero, found {Height.Value}", this);
+        if (!Focusable.Value && Focus.Value) throw new UIPropertyValidationException("Cannot focus a component that is not focusable", this);
+        if (!Enabled.Value && Focus.Value) throw new UIPropertyValidationException("Cannot focus a component that is not enabled");
+    }
+
+    /// <summary>
+    /// Re-computes the position and size of the children of <see langword="this" /> <see cref="UIComponent"/> if necessary.
+    /// </summary>
+    /// <remarks>
+    /// This method may be called at any time to update the internal children state, but it is automatically called within the <see cref="IEventSystem.BeforeRender"/> event,
+    /// for performance reason. The method is used mostly for layouts and, if called every time a property changes (<see cref="Width" />, <see cref="Height"/>, etc.)
+    /// it could degrade performance.
+    /// </remarks>
+    /// <remarks>
+    /// This method can reposition child components using the information in <see langword="this" /> component an parent
+    /// <see cref="Parent"/> component but it must not use any information about child components because when this method
+    /// is called, children size (e.g. <see cref="RelativeDrawingArea"/>) has not been updated yet.
+    /// </remarks>
+    protected virtual void RepositionChildren()
+    {
     }
 
     /// <summary>
     /// Computes the ideal component size which allows to correctly display the whole component.
     /// </summary>
-    /// <returns></returns>
+    /// <returns>The size hint.</returns>
+    /// <remarks>
+    /// The size hint can be cauculated using the information in <see langword="this" /> component and child
+    /// components, but it must not use information from the <see cref="Parent"/> component.
+    /// </remarks>
     protected abstract Size ComputeSizeHint();
 
     /// <summary>
@@ -295,7 +376,7 @@ public abstract class UIComponent
         component.Parent?.RemoveChild(component);
         component.Parent = this;
         component.AttachEventsFromParent();
-        component.MarkCachesAsDirty();
+        Application._eventSystem.InvalidateRendering();
         if (index == null) _children.Add(component);
         else if (index + 1 < _children.Count) _children.Insert((int)index + 1, component);
         else _children.Add(component);
@@ -351,60 +432,11 @@ public abstract class UIComponent
         TextInput?.Invoke(this, e);
     }
 
-    /// <summary>
-    /// Validates <see langword="this" /> <see cref="UIComponent"/> and throw <see cref="UIPropertyValidationException"/> if one or more
-    /// properties are in an invalid state.
-    /// Call base.Validate() at the bottom of your implementation if overriding this method.
-    /// </summary>
-    /// <remarks>
-    /// This method may be called at any time to perform validation, but it is automatically called within the <see cref="IEventSystem.BeforeRender"/> event,
-    /// because a <see cref="UIComponent"/> needs to be validated before rendering a frame, which requires accessing component properties.
-    /// Note that validation must should be performed when a property value change (unless strictly necessary) because it makes it more complicated to
-    /// update property values. For example if a <see cref="UIComponent"/> has properties A and B, and validation checks A &lt; B, if A = 10 and B = 20,
-    /// if updating A and B to 30 and 40 respectively, the code below would crash
-    /// A.Value = 30; // would throw exception because A.Value &gt; B.Value (30 &gt; 20).
-    /// B.Value = 40;
-    /// But if validation is not performed, the framework would still allow detecting errors before frame update.
-    /// </remarks>
-    public void Validate()
-    {
-        UIComponentValidateImplementation();
-        ValidateImplementation();
-        _children.ForEach(child => child.Validate());
-    }
-
-    /// <summary>
-    /// Re-computes the position and size of the children of <see langword="this" /> <see cref="UIComponent"/> if necessary.
-    /// </summary>
-    /// <remarks>
-    /// This method may be called at any time to update the internal children state, but it is automatically called within the <see cref="IEventSystem.BeforeRender"/> event,
-    /// for performance reason. The method is used mostly for layouts and, if called every time a property changes (<see cref="Width" />, <see cref="Height"/>, etc.)
-    /// it could degrade performance.
-    /// </remarks>
-    public void RepositionChildren()
-    {
-        if (Visibility.Value == ComponentVisibility.Collapsed) return;
-        RepositionChildrenImplementation();
-        _children.ForEach(child => child.RepositionChildren());
-    }
-
-    /// <summary>
-    /// The validation logic called by <see cref="Validate"/> overridden by subclasses of <see cref="UIComponent"/>.
-    /// </summary>
-    protected virtual void ValidateImplementation()
-    {
-    }
-
-    /// <summary>
-    /// The children repositioning logic called by <see cref="RepositionChildren"/> overridden by subclasses of <see cref="UIComponent"/>.
-    /// </summary>
-    protected virtual void RepositionChildrenImplementation() { }
-
     internal void OnRenderFrame(RenderingEventArgs renderingArgs)
     {
         Application.LifeCycle.ThrowIfNotOnRenderingPhase();
 
-        if (Visibility.Value == Components.ComponentVisibility.Visible)
+        if (Visibility.Value == ComponentVisibility.Visible)
         {
             renderingArgs.Canvas.ContainerAbsoluteDrawingArea = AbsoluteDrawingArea;
             renderingArgs.Canvas.ClippingArea = ClipArea;
@@ -414,14 +446,6 @@ public abstract class UIComponent
 
     internal IEnumerable<UIComponent> GetComponentTreeNodesDepthFirstSearch() =>
         _children.Union(_children.SelectMany(c => c.GetComponentTreeNodesDepthFirstSearch()));
-
-    private void UIComponentValidateImplementation()
-    {
-        if (!Width.Value.IsAuto && Width.Value < 0.0f) throw new UIPropertyValidationException($"Width must be greater or equal to zero, found {Width.Value}", this);
-        if (!Height.Value.IsAuto && Height.Value < 0.0f) throw new UIPropertyValidationException($"Height must be greater or equal to zero, found {Height.Value}", this);
-        if (!Focusable.Value && Focus.Value) throw new UIPropertyValidationException("Cannot focus a component that is not focusable", this);
-        if (!Enabled.Value && Focus.Value) throw new UIPropertyValidationException("Cannot focus a component that is not enabled");
-    }
 
     private void UIComponent_MousePress(UIComponent sender, MouseEventArgs e)
     {
@@ -561,18 +585,8 @@ public abstract class UIComponent
         _focusedComponent = component;
     }
 
-    private void MarkCachesAsDirty()
-    {
-        _relativeDrawingArea.MarkDirty();
-        _absoluteDrawingArea.MarkDirty();
-        _clipArea.MarkDirty();
-        _children.ForEach(c => c.MarkCachesAsDirty());
-    }
-
     private Area ComputeRelativeDrawingArea()
     {
-        if (Visibility.Value == ComponentVisibility.Collapsed) return Area.Empty;
-
         var autoWidth = AutoWidth.Value.ComputeWidth(this);
         var autoHeight = AutoHeight.Value.ComputeHeight(this);
         var actualWidth = Width.Value.IsAuto ? autoWidth : Width.Value;
