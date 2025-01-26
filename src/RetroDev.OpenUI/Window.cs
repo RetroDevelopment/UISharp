@@ -90,6 +90,8 @@ public class Window : Container, IContainer
     {
         Measure();
         Arrange();
+        Measure();
+        Arrange();
     }
 
     private void EventSystem_Render(IEventSystem sender, EventArgs e)

@@ -20,10 +20,6 @@ internal class RetaineModeCanvas
     public void Render(UIComponent root, Canvas canvas, IRenderingEngine renderingEngine)
     {
         var renderingEventArgs = new RenderingEventArgs(canvas);
-        if (root.Visibility.Value == ComponentVisibility.Visible)
-        {
-            root.OnRenderFrame(renderingEventArgs);
-            root._children.ForEach(c => Render(c, canvas, renderingEngine));
-        }
+        root.OnRenderFrame(renderingEventArgs);
     }
 }

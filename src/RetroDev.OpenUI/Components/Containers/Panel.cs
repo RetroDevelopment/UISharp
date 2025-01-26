@@ -6,7 +6,7 @@ namespace RetroDev.OpenUI.Components.Containers;
 /// <summary>
 /// A basic container that contains one object.
 /// </summary>
-public class Panel : Container, ISingleContainer
+public class Panel : Container, ISingleContainer // TODO: ISingleContainer should have a property not SetComponent() and GetChildren does not apply
 {
     private readonly Rectangle _backgroundRectangle;
     private UIComponent? _child;

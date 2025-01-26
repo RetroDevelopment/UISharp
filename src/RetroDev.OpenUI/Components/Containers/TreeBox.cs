@@ -54,9 +54,6 @@ public class TreeBox : Container
     {
         component._root = this;
         var gridLayout = new GridLayout(Application);
-        // Later on in resize children we will set appropriate sizes
-        gridLayout.Width.Value = float.PositiveInfinity;
-        gridLayout.Height.Value = float.PositiveInfinity;
         var foldUnfoldButton = new Button(Application);
         foldUnfoldButton.Text.Value = "*";
         foldUnfoldButton.Width.Value = FoldUnfoldButtonSize;

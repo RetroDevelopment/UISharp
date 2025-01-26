@@ -1,9 +1,6 @@
-﻿using System.Diagnostics.Metrics;
-using System.Linq;
-using RetroDev.OpenUI.Components.Core.AutoArea;
+﻿using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Graphics;
-using RetroDev.OpenUI.Graphics.Shapes;
 using RetroDev.OpenUI.Properties;
 
 namespace RetroDev.OpenUI.Components.Containers;
@@ -76,8 +73,6 @@ public class ListBox : Container, IContainer
     public void RemoveComponent(uint index)
     {
         SelectedIndex.Value = null;
-        _verticalLayout.Width.Value = float.PositiveInfinity;
-        _verticalLayout.Height.Value = float.PositiveInfinity;
         _verticalLayout.RemoveComponent(index);
     }
 
@@ -93,13 +88,14 @@ public class ListBox : Container, IContainer
         {
             var previouslySelectedPanel = _verticalLayout.Panels.ElementAt((int)SelectedIndex.Value);
             previouslySelectedPanel.BackgroundColor.Value = Color.Transparent;
+            previouslySelectedPanel.BackgroundColor.RemoveBinding();
         }
 
         var selectedPanel = (Panel)sender;
         var index = _verticalLayout.Panels.ToList().IndexOf(selectedPanel);
         if (index < 0) throw new ArgumentException($"Cannot find element in list box: make sure the element has not been deleted");
         SelectedIndex.Value = (uint)index;
-        selectedPanel.BackgroundColor.Value = Application.Theme.SecondaryColor.Value;
+        selectedPanel.BackgroundColor.BindDestinationToSource(Application.Theme.SecondaryColor);
     }
 
     private void SelectedIndex_ValueChange(BindableProperty<uint?> sender, ValueChangeEventArgs<uint?> e)

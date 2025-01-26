@@ -302,11 +302,10 @@ public abstract class UIComponent
     /// </summary>
     public void Arrange()
     {
-        RelativeDrawingArea = ComputeRelativeDrawingArea();
-        AbsoluteDrawingArea = ComputeAbsoluteDrawingArea();
-        ClipArea = ComputeClipArea();
+        ComputeDrawingAreas();
         RepositionChildren();
         _children.ForEach(c => c.Arrange());
+        RepositionChildren();
         Validate();
     }
 
@@ -441,11 +440,22 @@ public abstract class UIComponent
             renderingArgs.Canvas.ContainerAbsoluteDrawingArea = AbsoluteDrawingArea;
             renderingArgs.Canvas.ClippingArea = ClipArea;
             RenderFrame.Invoke(this, renderingArgs);
+            _children.ForEach(c => c.OnRenderFrame(renderingArgs));
+            renderingArgs.Canvas.ContainerAbsoluteDrawingArea = AbsoluteDrawingArea;
+            renderingArgs.Canvas.ClippingArea = ClipArea;
+            ChildrenRendered.Invoke(this, renderingArgs);
         }
     }
 
     internal IEnumerable<UIComponent> GetComponentTreeNodesDepthFirstSearch() =>
         _children.Union(_children.SelectMany(c => c.GetComponentTreeNodesDepthFirstSearch()));
+
+    private void ComputeDrawingAreas()
+    {
+        RelativeDrawingArea = ComputeRelativeDrawingArea();
+        AbsoluteDrawingArea = ComputeAbsoluteDrawingArea();
+        ClipArea = ComputeClipArea();
+    }
 
     private void UIComponent_MousePress(UIComponent sender, MouseEventArgs e)
     {
