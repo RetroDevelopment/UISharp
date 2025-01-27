@@ -23,7 +23,6 @@ internal class SDLEventSystem(Application application) : IEventSystem
 
     private Application _application = application;
     private bool _invalidated = true; // TODO: add invalidation logic per component. And maybe glScissor for retained mode. Or detect actual UI property change. If not do not invalidate.
-    private bool _firstTime = true;
 
     /// <summary>
     /// An event that indicates to quit the application.
@@ -79,12 +78,6 @@ internal class SDLEventSystem(Application application) : IEventSystem
     {
         SDL.SDL_StartTextInput();
         SDL_WaitEvent(out var currentEvent);
-
-        if (_firstTime)
-        {
-            EmitRenderingEvents();
-            _firstTime = false;
-        }
 
         var stopwatch = Stopwatch.StartNew();
         // TODO: add more events

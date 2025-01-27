@@ -14,7 +14,7 @@ public class GridLayout : Container, IContainer
     public record AutoSize : IGridSize;
 
     // TODO: Smart auto size that fits exactly all children
-    protected override Size ComputeSizeHint() => new(100, 100);
+    protected override Size ComputeSizeHint() => Visibility == ComponentVisibility.Collapsed ? Size.Zero : new(100, 100);
 
     /// <summary>
     /// The number of layout rows.
@@ -118,7 +118,7 @@ public class GridLayout : Container, IContainer
     }
 
     /// <inheritdoc />
-    protected override void RepositionChildren()
+    protected override void RepositionChildrenImplementation()
     {
         EnsureRowsColumnFitNumberOfChildren();
 

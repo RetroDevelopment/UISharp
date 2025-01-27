@@ -122,7 +122,7 @@ public class ListBox : Container, IContainer
         SelectedIndex.Value = (uint)selectedIndex;
     }
 
-    protected override void RepositionChildren()
+    protected override void RepositionChildrenImplementation()
     {
         if (!Children.Any()) return;
 

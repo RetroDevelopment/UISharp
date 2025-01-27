@@ -108,7 +108,7 @@ class Ctr : UIComponent
 
 internal class Program
 {
-    static void MainNEw(string[] _)
+    static void Maijn(string[] _)
     {
         using var application = new Application();
         application.Logger.Verbosity = OpenUI.Logging.Verbosity.Verbose;

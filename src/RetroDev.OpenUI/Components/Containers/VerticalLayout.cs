@@ -66,7 +66,7 @@ public class VerticalLayout : Container, IContainer
         _panels.Clear();
     }
 
-    protected override void RepositionChildren()
+    protected override void RepositionChildrenImplementation()
     {
         var verticalPosition = PixelUnit.Zero;
 

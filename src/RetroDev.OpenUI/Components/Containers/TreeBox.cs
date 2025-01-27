@@ -172,7 +172,7 @@ public class TreeBox : Container
         }
     }
 
-    protected override void RepositionChildren()
+    protected override void RepositionChildrenImplementation()
     {
         foreach (var gridLayout in _listBox.Children.Cast<GridLayout>())
         {

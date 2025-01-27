@@ -65,14 +65,14 @@ public class ProgressBar : UIComponent
     }
 
     /// <inheritdoc />
-    protected override void Validate()
+    protected override void ValidateImplementation()
     {
         if (Value.Value < MinimumValue.Value) throw new UIPropertyValidationException($"Value {Value.Value} must be greater or equal to MinimumValue {MinimumValue.Value}", this);
         if (Value.Value > MaximumValue.Value) throw new UIPropertyValidationException($"Value {Value.Value} must be less than or equal to MaximumValue {MaximumValue.Value}", this);
         if (MaximumValue.Value < MinimumValue.Value) throw new UIPropertyValidationException($"MaximumValue {MaximumValue.Value} must be greater or equal to {MinimumValue.Value}", this);
     }
 
-    protected override void RepositionChildren()
+    protected override void RepositionChildrenImplementation()
     {
         var size = RelativeDrawingArea.Size;
         var value = Math.Clamp(Value, MinimumValue, MaximumValue);

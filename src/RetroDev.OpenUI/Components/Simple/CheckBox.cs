@@ -74,7 +74,7 @@ public class CheckBox : UIComponent
         MousePress += CheckBox_MousePress;
     }
 
-    protected override void RepositionChildren()
+    protected override void RepositionChildrenImplementation()
     {
         _selectionCircle.Radius.Value = RelativeDrawingArea.Size.Height / 2.0f;
     }
