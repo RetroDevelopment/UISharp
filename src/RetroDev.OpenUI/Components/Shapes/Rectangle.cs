@@ -60,7 +60,15 @@ public class Rectangle : UIComponent
     }
 
     /// <inheritdoc />
-    protected override Size ComputeSizeHint() => new(100, 100);
+    protected override Size ComputeSizeHint(IEnumerable<Size> childrenSize)
+    {
+        var cornerRadiusX = CornerRadiusX.Value.IsAuto ? PixelUnit.Zero : CornerRadiusX.Value;
+        var cornerRadiusY = CornerRadiusY.Value.IsAuto ? PixelUnit.Zero : CornerRadiusY.Value;
+        var minimumSizeBasedOnRadius = Math.Max(cornerRadiusX * 2, cornerRadiusY * 2);
+        var minimumSizeBasedOnCorner = BorderThickness.Value * 2;
+        var minimumSize = Math.Max(minimumSizeBasedOnCorner, minimumSizeBasedOnRadius) + 10;
+        return new Size(minimumSize, minimumSize);
+    }
 
     private void Rectangle_RenderFrame(UIComponent sender, Events.RenderingEventArgs e)
     {

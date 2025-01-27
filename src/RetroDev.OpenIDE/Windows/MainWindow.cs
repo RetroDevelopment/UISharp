@@ -23,7 +23,7 @@ internal class Container : UIComponent
         children.ForEach(c => AddChild(c));
     }
 
-    protected override Size ComputeSizeHint() => new(100, 100);
+    protected override Size ComputeSizeHint(IEnumerable<Size> childrenSize) => new(100, 100);
 }
 
 internal class MainWindow : Window

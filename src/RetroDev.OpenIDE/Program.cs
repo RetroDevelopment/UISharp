@@ -4,6 +4,7 @@ using RetroDev.OpenUI;
 using RetroDev.OpenUI.Components;
 using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Components.Shapes;
+using RetroDev.OpenUI.Components.Simple;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Graphics;
 using RetroDev.OpenUI.Themes;
@@ -98,17 +99,59 @@ class Ctr : UIComponent
         txt.VerticalAlignment.Value = Alignment.Top;
         txt.Width.Value = 30;
         txt.Height.Value = 10;
-        AddChild(txt);
+        //AddChild(txt);
     }
 
     public void Add(Ctr child) => AddChild(child);
 
-    protected override Size ComputeSizeHint() => new(100, 100);
+    protected override Size ComputeSizeHint(IEnumerable<Size> childrenSize) => new(100, 100);
 }
 
 internal class Program
 {
-    static void Maijn(string[] _)
+    static void Main(string[] _)
+    {
+        using var application = new Application();
+        application.Logger.Verbosity = OpenUI.Logging.Verbosity.Verbose;
+
+        var root = new ProgressBar(application);
+        root.BackgroundColor.Value = Color.Gold;
+        root.Value.Value = 10;
+
+        Window window = new Window(application);
+        window.Width.Value = 800;
+        window.Height.Value = 600;
+        window.Visibility.Value = ComponentVisibility.Visible;
+        window.KeyPress += (_, e) =>
+        {
+            if (e.Button == OpenUI.Events.KeyButton.Q) root.AutoWidth.Value = AutoSize.Stretch;
+            if (e.Button == OpenUI.Events.KeyButton.W) root.AutoWidth.Value = AutoSize.Wrap;
+            if (e.Button == OpenUI.Events.KeyButton.A) root.AutoHeight.Value = AutoSize.Stretch;
+            if (e.Button == OpenUI.Events.KeyButton.S) root.AutoHeight.Value = AutoSize.Wrap;
+
+            if (e.Button == OpenUI.Events.KeyButton.E) root.HorizontalAlignment.Value = Alignment.Left;
+            if (e.Button == OpenUI.Events.KeyButton.R) root.HorizontalAlignment.Value = Alignment.Center;
+            if (e.Button == OpenUI.Events.KeyButton.T) root.HorizontalAlignment.Value = Alignment.Right;
+            if (e.Button == OpenUI.Events.KeyButton.D) root.VerticalAlignment.Value = Alignment.Top;
+            if (e.Button == OpenUI.Events.KeyButton.F) root.VerticalAlignment.Value = Alignment.Center;
+            if (e.Button == OpenUI.Events.KeyButton.G) root.VerticalAlignment.Value = Alignment.Bottom;
+
+            if (e.Button == OpenUI.Events.KeyButton.Z) root.Value.Value += 1;
+        };
+        root.MouseDrag += (_, e) =>
+        {
+            if (root.X.Value.IsAuto) root.X.Value = 0;
+            if (root.Y.Value.IsAuto) root.Y.Value = 0;
+            root.X.Value += e.Offset.X;
+            root.Y.Value += e.Offset.Y;
+        };
+
+        window.AddComponent(root);
+
+        application.Run();
+    }
+
+    static void Mainh(string[] _)
     {
         using var application = new Application();
         application.Logger.Verbosity = OpenUI.Logging.Verbosity.Verbose;
@@ -147,7 +190,7 @@ internal class Program
         application.Run();
     }
 
-    static void Main(string[] _)
+    static void Maina(string[] _)
     {
         using var application = new Application();
         application.Logger.Verbosity = OpenUI.Logging.Verbosity.Verbose;

@@ -25,8 +25,8 @@ public class Label : UIComponent
     public UIProperty<Label, Color> TextColor { get; }
 
     /// <inheritdoc/>
-    protected override Size ComputeSizeHint() =>
-        Application.FontServices.ComputeTextSize(Text.Value);
+    protected override Size ComputeSizeHint(IEnumerable<Size> childrenSize) =>
+        childrenSize.ElementAt(0);
 
     /// <summary>
     /// Creates a new label.
@@ -41,8 +41,6 @@ public class Label : UIComponent
         _text.BackgroundColor.BindDestinationToSource(BackgroundColor);
         _text.TextColor.BindDestinationToSource(TextColor);
         _text.DisplayText.BindDestinationToSource(Text);
-
-        Text.ValueChange += (_, _) => RecomputeSizeHint();
 
         AddChild(_text);
     }

@@ -40,7 +40,7 @@ public class ProgressBar : UIComponent
     public UIProperty<ProgressBar, Color> ForegroundColor { get; }
 
     /// <inheritdoc/>
-    protected override Size ComputeSizeHint() => new(100, 20); // TODO: 20 is the common text size, 100 is some value to be big enough. Make sure that the size fits the screen.
+    protected override Size ComputeSizeHint(IEnumerable<Size> childrenSize) => new(100, 20); // TODO: 20 is the common text size, 100 is some value to be big enough. Make sure that the size fits the screen.
 
     /// <summary>
     /// Creates a new label.
@@ -51,32 +51,33 @@ public class ProgressBar : UIComponent
         Value = new UIProperty<ProgressBar, int>(this, 0);
         MinimumValue = new UIProperty<ProgressBar, int>(this, 0);
         MaximumValue = new UIProperty<ProgressBar, int>(this, 100);
-        ForegroundColor = new UIProperty<ProgressBar, Color>(this, Application.Theme.SecondaryColor, BindingType.DestinationToSource);
+        ForegroundColor = new UIProperty<ProgressBar, Color>(this, application.Theme.SecondaryColorDisabled, BindingType.DestinationToSource);
         BackgroundColor.BindDestinationToSource(Application.Theme.PrimaryColor);
 
         _backgroundRectangle = new Rectangle(application);
-        _backgroundRectangle.BackgroundColor.BindDestinationToSource(application.Theme.PrimaryColor);
+        _backgroundRectangle.BackgroundColor.BindDestinationToSource(BackgroundColor);
         AddChild(_backgroundRectangle);
 
         _progressRectangle = new Rectangle(application);
-        _progressRectangle.BackgroundColor.BindDestinationToSource(application.Theme.SecondaryColorDisabled);
+        _progressRectangle.BackgroundColor.BindDestinationToSource(ForegroundColor);
         _progressRectangle.HorizontalAlignment.Value = Alignment.Left;
         AddChild(_progressRectangle);
     }
 
     /// <inheritdoc />
-    protected override void ValidateImplementation()
+    public override void Validate()
     {
+        base.Validate();
         if (Value.Value < MinimumValue.Value) throw new UIPropertyValidationException($"Value {Value.Value} must be greater or equal to MinimumValue {MinimumValue.Value}", this);
         if (Value.Value > MaximumValue.Value) throw new UIPropertyValidationException($"Value {Value.Value} must be less than or equal to MaximumValue {MaximumValue.Value}", this);
         if (MaximumValue.Value < MinimumValue.Value) throw new UIPropertyValidationException($"MaximumValue {MaximumValue.Value} must be greater or equal to {MinimumValue.Value}", this);
     }
 
-    protected override void RepositionChildrenImplementation()
+    protected override List<Area?> RepositionChildren(Size availableSpace, IEnumerable<Size> childrenSize)
     {
-        var size = RelativeDrawingArea.Size;
         var value = Math.Clamp(Value, MinimumValue, MaximumValue);
         var percentage = (value - MinimumValue) / (float)(MaximumValue - MinimumValue);
-        _progressRectangle.Width.Value = size.Width * percentage;
+        var progressRectangleWidth = availableSpace.Width * percentage;
+        return [null, new Area(Point.Zero, new Size(progressRectangleWidth, availableSpace.Height))];
     }
 }

@@ -14,7 +14,32 @@ public class GridLayout : Container, IContainer
     public record AutoSize : IGridSize;
 
     // TODO: Smart auto size that fits exactly all children
-    protected override Size ComputeSizeHint() => Visibility == ComponentVisibility.Collapsed ? Size.Zero : new(100, 100);
+    protected override Size ComputeSizeHint(IEnumerable<Size> childrenSize)
+    {
+        var rowSizes = Parse(RowSizes, Rows.Value);
+        var columnSizes = Parse(ColumnSizes, Columns.Value);
+        var childIndex = 0;
+        var widths = Enumerable.Repeat(PixelUnit.Zero, (int)Rows.Value).ToList();
+        var heights = Enumerable.Repeat(PixelUnit.Zero, (int)Columns.Value).ToList();
+
+        foreach (var childSize in childrenSize)
+        {
+            var row = childIndex / (int)Columns.Value;
+            var column = childIndex % (int)Columns.Value;
+            var rowSize = rowSizes.Count != 0 ? rowSizes[row] : new AutoSize();
+            var columnSize = columnSizes.Count != 0 ? columnSizes[column] : new AutoSize();
+
+            var cellEstimatedWidth = columnSize is AbsoluteSize columnAbsoluteSize ? columnAbsoluteSize.Size : childSize.Width;
+            var cellEstimatedHeight = rowSize is AbsoluteSize rowAbsoluteSize ? rowAbsoluteSize.Size : childSize.Height;
+
+            widths[row] = widths[row] + cellEstimatedWidth;
+            heights[column] = heights[column] + cellEstimatedHeight;
+
+            childIndex++;
+        }
+
+        return new Size(widths.Max(), heights.Max());
+    }
 
     /// <summary>
     /// The number of layout rows.
@@ -118,34 +143,36 @@ public class GridLayout : Container, IContainer
     }
 
     /// <inheritdoc />
-    protected override void RepositionChildrenImplementation()
+    protected override List<Area?> RepositionChildren(Size availableSpace, IEnumerable<Size> childrenSize)
     {
         EnsureRowsColumnFitNumberOfChildren();
 
-        var layoutSize = RelativeDrawingArea.Size;
+        List<Area?> areas = new List<Area?>();
 
         var rowSizeDefinitions = Parse(RowSizes.Value, Rows);
         var columnSizeDefinitions = Parse(ColumnSizes.Value, Columns);
-        var rowSizes = ComputeSizes(layoutSize.Height, rowSizeDefinitions, Rows);
-        var columnSizes = ComputeSizes(layoutSize.Width, columnSizeDefinitions, Columns);
+        var rowSizes = ComputeSizes(availableSpace.Height, rowSizeDefinitions, Rows);
+        var columnSizes = ComputeSizes(availableSpace.Width, columnSizeDefinitions, Columns);
 
         var children = base.GetChildren();
         var size = children.Count();
         var i = 0u;
 
+        // TODO: no need to iterate over children.
         foreach (var child in children)
         {
             var row = i / Columns;
             var column = i % Columns;
-            var cell = (Panel)child;
 
-            cell.Width.Value = columnSizes[(int)column];
-            cell.Height.Value = rowSizes[(int)row];
-            cell.X.Value = column == 0 ? 0.0f : columnSizes[..((int)column)].Sum(p => p.Value);
-            cell.Y.Value = row == 0 ? 0.0f : rowSizes[..((int)row)].Sum(p => p.Value);
-
+            var width = columnSizes[(int)column];
+            var height = rowSizes[(int)row];
+            var x = column == 0 ? 0.0f : columnSizes[..((int)column)].Sum(p => p.Value);
+            var y = row == 0 ? 0.0f : rowSizes[..((int)row)].Sum(p => p.Value);
+            areas.Add(new Area(new Point(x, y), new Size(width, height)));
             i++;
         }
+
+        return areas;
     }
 
     private void EnsureRowsColumnFitNumberOfChildren()

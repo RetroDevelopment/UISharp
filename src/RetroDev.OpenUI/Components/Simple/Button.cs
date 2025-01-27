@@ -45,7 +45,8 @@ public class Button : UIComponent
     public UIProperty<Button, Color> FocusColor { get; }
 
     /// <inheritdoc/>
-    protected override Size ComputeSizeHint() => _buttonTextLabel.SizeHint;
+    protected override Size ComputeSizeHint(IEnumerable<Size> childrenSize) =>
+        childrenSize.ElementAt(1);
 
     /// <summary>
     /// Creates a new button.

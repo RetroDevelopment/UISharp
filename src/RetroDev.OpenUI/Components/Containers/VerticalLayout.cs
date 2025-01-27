@@ -12,8 +12,9 @@ public class VerticalLayout : Container, IContainer
     private readonly List<Panel> _panels = [];
 
     // TODO: once implementing the more complex SizeHint in gridLayout, just do _gridLayout.SizeHint;
-    protected override Size ComputeSizeHint() => new(Children.Max(c => c.SizeEstimate.Width) ?? PixelUnit.Zero,
-                                                     Children.Sum(c => c.SizeEstimate.Height));
+    protected override Size ComputeSizeHint(IEnumerable<Size> childrenSize) =>
+        new(childrenSize.Max(s => s.Width) ?? PixelUnit.Zero,
+            childrenSize.Sum(s => s.Height));
 
     public override IEnumerable<UIComponent> Children => _panels.Select(p => p.Children.ElementAt(0));
 
@@ -39,6 +40,7 @@ public class VerticalLayout : Container, IContainer
             var precedingPanelIndex = Children.ToList().FindIndex(c => c == after);
             if (precedingPanelIndex < 0) throw new ArgumentException("Vertical layout element not found");
             var panel = new Panel(Application);
+            panel.AutoHeight.Value = AutoSize.Wrap;
             panel.SetComponent(component);
             AddChild(panel, precedingPanelIndex);
             _panels.Insert(precedingPanelIndex + 1, panel);
@@ -46,6 +48,7 @@ public class VerticalLayout : Container, IContainer
         else
         {
             var panel = new Panel(Application);
+            panel.AutoHeight.Value = AutoSize.Wrap;
             panel.SetComponent(component);
             _panels.Add(panel);
             AddChild(panel);
@@ -66,18 +69,21 @@ public class VerticalLayout : Container, IContainer
         _panels.Clear();
     }
 
-    protected override void RepositionChildrenImplementation()
+    protected override List<Area?> RepositionChildren(Size availableSpace, IEnumerable<Size> childrenSize)
     {
         var verticalPosition = PixelUnit.Zero;
+        List<Area?> childrenFinalSize = [];
 
-        foreach (var panel in _panels)
+        foreach (var childSize in childrenSize)
         {
-            var child = panel.Children.First();
-            panel.X.Value = 0;
-            panel.Y.Value = verticalPosition;
-            panel.Width.Value = RelativeDrawingArea.Size.Width;
-            panel.Height.Value = child.SizeEstimate.Height;
-            verticalPosition += panel.Height.Value;
+            var x = 0;
+            var y = verticalPosition;
+            var width = availableSpace.Width;
+            var height = childSize.Height;
+            childrenFinalSize.Add(new Area(new Point(x, y), new Size(width, height)));
+            verticalPosition += height;
         }
+
+        return childrenFinalSize;
     }
 }

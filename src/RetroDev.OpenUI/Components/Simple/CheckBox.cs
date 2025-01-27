@@ -40,7 +40,7 @@ public class CheckBox : UIComponent
     public UIProperty<CheckBox, Color> FocusColor { get; }
 
     /// <inheritdoc/>
-    protected override Size ComputeSizeHint() => new(80, 30); // TODO: Maybe same size as default label text size (which is 20).
+    protected override Size ComputeSizeHint(IEnumerable<Size> childrenSize) => new(80, 30); // TODO: Maybe same size as default label text size (which is 20).
 
     /// <summary>
     /// Creates a new checkbox.
@@ -74,9 +74,11 @@ public class CheckBox : UIComponent
         MousePress += CheckBox_MousePress;
     }
 
-    protected override void RepositionChildrenImplementation()
+    protected override List<Area?> RepositionChildren(Size availableSpace, IEnumerable<Size> childrenSize)
     {
-        _selectionCircle.Radius.Value = RelativeDrawingArea.Size.Height / 2.0f;
+        var location = new Point(PixelUnit.Auto, PixelUnit.Auto);
+        var size = new Size(availableSpace.Height, availableSpace.Height);
+        return [null, new Area(location, size)];
     }
 
     private void CheckBox_MousePress(UIComponent sender, Events.MouseEventArgs e)

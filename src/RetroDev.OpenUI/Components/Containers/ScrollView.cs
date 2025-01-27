@@ -3,7 +3,6 @@ using RetroDev.OpenUI.Events;
 using RetroDev.OpenUI.Graphics;
 using RetroDev.OpenUI.Graphics.Shapes;
 using RetroDev.OpenUI.Properties;
-using RetroDev.OpenUI.Themes;
 
 namespace RetroDev.OpenUI.Components.Containers;
 
@@ -18,7 +17,8 @@ public class ScrollView : Container, ISingleContainer
     private bool _moveVerticalBar = false;
 
     /// <inheritdoc />
-    protected override Size ComputeSizeHint() => new(100, 100); // Just a visually appealing size
+    protected override Size ComputeSizeHint(IEnumerable<Size> childrenSize) =>
+        childrenSize.Any() ? childrenSize.First() : Size.Zero;
 
     /// <inheritdoc />
     public override IEnumerable<UIComponent> Children => GetChildren();

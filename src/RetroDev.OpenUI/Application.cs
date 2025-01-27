@@ -208,8 +208,8 @@ public class Application : IDisposable
 
     private void EventSystem_BeforeRender(IEventSystem sender, EventArgs e)
     {
-        _windows.ForEach(w => w.Validate());
-        _windows.ForEach(_w => _w.RepositionChildren());
+        LifeCycle.CurrentState = LifeCycle.State.MEASURE;
+        _windows.ForEach(w => w.Measure());
         LifeCycle.CurrentState = LifeCycle.State.RENDERING;
     }
 

@@ -83,8 +83,17 @@ public class Window : Container, IContainer
         Initialized.Invoke(this, EventArgs.Empty);
     }
 
+    /// <summary>
+    /// Measures all drawing areas necessary to render the window components.
+    /// </summary>
+    public void Measure()
+    {
+        ComputeSizeHint();
+        ComputeDrawingAreas();
+    }
+
     /// <inheritdoc/>
-    protected override Size ComputeSizeHint() => Size.Zero; // Maybe 800x600? Or half screen resolution=    /// <inheritdoc/>
+    protected override Size ComputeSizeHint(IEnumerable<Size> childrenSize) => Size.Zero; // Maybe 800x600? Or half screen resolution=    /// <inheritdoc/>
 
     private void EventSystem_Render(IEventSystem sender, EventArgs e)
     {

@@ -24,7 +24,8 @@ public class TreeBox : Container
     private readonly ListBox _listBox;
     private readonly List<TreeNode> _nodes = [];
 
-    protected override Size ComputeSizeHint() => new(100, 100);
+    protected override Size ComputeSizeHint(IEnumerable<Size> childrenSize) =>
+        childrenSize.First();
 
     public override IEnumerable<UIComponent> Children => _listBox.Children.Cast<GridLayout>().Select(c => c.Children.ElementAt(2));
 
@@ -169,18 +170,6 @@ public class TreeBox : Container
         {
             var selectedNode = _nodes[(int)e.CurrentValue.Value];
             SelectedNode.Value = selectedNode;
-        }
-    }
-
-    protected override void RepositionChildrenImplementation()
-    {
-        foreach (var gridLayout in _listBox.Children.Cast<GridLayout>())
-        {
-            // TODO: better way of inferring indentation space.
-            var indentationSpace = int.Parse(gridLayout.ColumnSizes.Value.Split(',')[0].TrimEnd("px".ToCharArray()));
-            var componentSize = gridLayout.Children.ElementAt(2).SizeEstimate;
-            gridLayout.Width.Value = indentationSpace + FoldUnfoldButtonSize + componentSize.Width;
-            gridLayout.Height.Value = Math.Max(FoldUnfoldButtonSize, componentSize.Height.Value);
         }
     }
 

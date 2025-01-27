@@ -12,7 +12,8 @@ public class Panel : Container, ISingleContainer // TODO: ISingleContainer shoul
     private UIComponent? _child;
 
     /// <inheritdoc />
-    protected override Size ComputeSizeHint() => new(100, 100);
+    protected override Size ComputeSizeHint(IEnumerable<Size> childrenSize) =>
+        childrenSize.Count() == 2 ? childrenSize.ElementAt(1) : Size.Zero;
 
     /// <inheritdoc />
 

@@ -64,7 +64,11 @@ public class Circle : UIComponent
     }
 
     /// <inheritdoc />
-    protected override Size ComputeSizeHint() => new(100, 100);
+    protected override Size ComputeSizeHint(IEnumerable<Size> chilrenSize)
+    {
+        var minimumSize = BorderThickness.Value * 2 + 10; // Display at least border.
+        return new Size(minimumSize, minimumSize);
+    }
 
     private void Rectangle_RenderFrame(UIComponent sender, Events.RenderingEventArgs e)
     {

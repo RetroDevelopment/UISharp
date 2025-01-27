@@ -21,7 +21,8 @@ public class ListBox : Container, IContainer
     private readonly VerticalLayout _verticalLayout;
     private readonly ScrollView _scrollView;
 
-    protected override Size ComputeSizeHint() => new(100, 100);
+    protected override Size ComputeSizeHint(IEnumerable<Size> childrenSize) =>
+        childrenSize.Any() ? childrenSize.First() : Size.Zero;
 
     /// <summary>
     /// The index of the selected element in the list, or <see langword="null" /> if no element is selected.
@@ -120,22 +121,5 @@ public class ListBox : Container, IContainer
         var selectedIndex = _verticalLayout.Children.ToList().IndexOf(e.CurrentValue);
         if (selectedIndex == -1) throw new InvalidOperationException("ListBox selected element not found");
         SelectedIndex.Value = (uint)selectedIndex;
-    }
-
-    protected override void RepositionChildrenImplementation()
-    {
-        if (!Children.Any()) return;
-
-        _scrollView.Width.Value = RelativeDrawingArea.Size.Width;
-        _scrollView.Height.Value = RelativeDrawingArea.Size.Height;
-
-        var verticalLayoutSize = _verticalLayout.RelativeDrawingArea.Size;
-        var scrollViewSize = _scrollView.RelativeDrawingArea.Size;
-
-        if (verticalLayoutSize.Width < scrollViewSize.Width || verticalLayoutSize.Height < scrollViewSize.Height)
-        {
-            _verticalLayout.X.Value = 0;
-            _verticalLayout.Y.Value = 0;
-        }
     }
 }

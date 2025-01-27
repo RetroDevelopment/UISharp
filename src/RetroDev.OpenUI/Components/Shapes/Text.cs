@@ -1,5 +1,4 @@
-﻿using OpenTK.Graphics.OpenGL;
-using RetroDev.OpenUI.Core.Coordinates;
+﻿using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Graphics;
 using RetroDev.OpenUI.Properties;
 
@@ -33,7 +32,8 @@ public class Text : UIComponent
     }
 
     /// <inheritdoc />
-    protected override Size ComputeSizeHint() => new(100, 100);
+    protected override Size ComputeSizeHint(IEnumerable<Size> childrenSize) =>
+        Application.FontServices.ComputeTextSize(DisplayText.Value);
 
     private void Rectangle_RenderFrame(UIComponent sender, Events.RenderingEventArgs e)
     {
