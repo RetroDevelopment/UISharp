@@ -40,7 +40,7 @@ public class CheckBox : UIComponent
     public UIProperty<CheckBox, Color> FocusColor { get; }
 
     /// <inheritdoc/>
-    protected override Size ComputeSizeHint(IEnumerable<Size> childrenSize) => new(80, 30); // TODO: Maybe same size as default label text size (which is 20).
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) => new(80, 30); // TODO: Maybe same size as default label text size (which is 20).
 
     /// <summary>
     /// Creates a new checkbox.

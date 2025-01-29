@@ -40,7 +40,7 @@ public class ProgressBar : UIComponent
     public UIProperty<ProgressBar, Color> ForegroundColor { get; }
 
     /// <inheritdoc/>
-    protected override Size ComputeSizeHint(IEnumerable<Size> childrenSize) => new(100, 20); // TODO: 20 is the common text size, 100 is some value to be big enough. Make sure that the size fits the screen.
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) => new(100, 20); // TODO: 20 is the common text size, 100 is some value to be big enough. Make sure that the size fits the screen.
 
     /// <summary>
     /// Creates a new label.

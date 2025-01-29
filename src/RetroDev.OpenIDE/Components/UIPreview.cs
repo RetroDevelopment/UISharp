@@ -15,5 +15,5 @@ internal class UIPreview : Container
 
     public override IEnumerable<UIComponent> Children => throw new NotImplementedException();
 
-    protected override Size ComputeSizeHint(IEnumerable<Size> childrenSize) => new(100, 100);
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) => new(100, 100);
 }

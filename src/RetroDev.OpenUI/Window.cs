@@ -88,12 +88,12 @@ public class Window : Container, IContainer
     /// </summary>
     public void Measure()
     {
-        ComputeSizeHint();
+        ComputeWrapSize();
         ComputeDrawingAreas();
     }
 
     /// <inheritdoc/>
-    protected override Size ComputeSizeHint(IEnumerable<Size> childrenSize) => Size.Zero; // Maybe 800x600? Or half screen resolution=    /// <inheritdoc/>
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) => Size.Zero; // Maybe 800x600? Or half screen resolution=    /// <inheritdoc/>
 
     private void EventSystem_Render(IEventSystem sender, EventArgs e)
     {

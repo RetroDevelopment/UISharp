@@ -12,12 +12,12 @@ public class Wrap : IAutoSize
     /// </summary>
     /// <param name="component">The component for which to calculate the width.</param>
     /// <returns>The parent width.</returns>
-    public PixelUnit ComputeWidth(UIComponent component) => component.SizeHint.Width;
+    public PixelUnit ComputeWidth(UIComponent component) => component.WrapSize.Width;
 
     /// <summary>
     /// Computes given <paramref name="component"/> height so that it the minimal optimal size allowing to display the full component.
     /// </summary>
     /// <param name="component">The component for which to calculate the height.</param>
     /// <returns>The component height.</returns>
-    public PixelUnit ComputeHeight(UIComponent component) => component.SizeHint.Height;
+    public PixelUnit ComputeHeight(UIComponent component) => component.WrapSize.Height;
 }

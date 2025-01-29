@@ -17,7 +17,7 @@ public class ScrollView : Container, ISingleContainer
     private bool _moveVerticalBar = false;
 
     /// <inheritdoc />
-    protected override Size ComputeSizeHint(IEnumerable<Size> childrenSize) =>
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
         childrenSize.Any() ? childrenSize.First() : Size.Zero;
 
     /// <inheritdoc />

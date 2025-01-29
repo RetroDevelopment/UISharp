@@ -41,7 +41,7 @@ public class EditBox : UIComponent
     public UIProperty<EditBox, Color> DisabledBackgroundColor { get; }
 
     /// <inheritdoc />
-    protected override Size ComputeSizeHint(IEnumerable<Size> childrenSize) => new(20 * 10, 20); // 20 is font size and 10 the characters (estimate)
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) => new(20 * 10, 20); // 20 is font size and 10 the characters (estimate)
 
     /// <summary>
     /// Creates a new edit box to insert text.

@@ -2,6 +2,7 @@
 using RetroDev.OpenIDE.Windows;
 using RetroDev.OpenUI;
 using RetroDev.OpenUI.Components;
+using RetroDev.OpenUI.Components.Containers;
 using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Components.Shapes;
 using RetroDev.OpenUI.Components.Simple;
@@ -104,7 +105,7 @@ class Ctr : UIComponent
 
     public void Add(Ctr child) => AddChild(child);
 
-    protected override Size ComputeSizeHint(IEnumerable<Size> childrenSize) => new(100, 100);
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) => new(100, 100);
 }
 
 internal class Program
@@ -114,9 +115,25 @@ internal class Program
         using var application = new Application();
         application.Logger.Verbosity = OpenUI.Logging.Verbosity.Verbose;
 
-        var root = new ProgressBar(application);
-        root.BackgroundColor.Value = Color.Gold;
-        root.Value.Value = 10;
+        var root = new GridLayout(application);
+        root.BackgroundColor.Value = Color.DarkGray;
+        UIComponent CreateBtn(string txt, bool invisible = false)
+        {
+            var btn = new Button(application);
+            btn.Text.Value = txt;
+            if (invisible) btn.Visibility.Value = ComponentVisibility.Collapsed;
+            return btn;
+        }
+        root.Rows.Value = 3;
+        root.Columns.Value = 2;
+        root.AddComponent(CreateBtn("Button 1 abcdefghijklm", false));
+        root.AddComponent(CreateBtn("Button 2"));
+        root.AddComponent(CreateBtn("Button 3"));
+        root.AddComponent(CreateBtn("Button 4"));
+        root.AddComponent(CreateBtn("Button 5"));
+        root.AddComponent(CreateBtn("Button 6"));
+        root.RowSizes.Value = "100px;*;10%";
+        root.ColumnSizes.Value = "*;*";
 
         Window window = new Window(application);
         window.Width.Value = 800;
@@ -135,8 +152,6 @@ internal class Program
             if (e.Button == OpenUI.Events.KeyButton.D) root.VerticalAlignment.Value = Alignment.Top;
             if (e.Button == OpenUI.Events.KeyButton.F) root.VerticalAlignment.Value = Alignment.Center;
             if (e.Button == OpenUI.Events.KeyButton.G) root.VerticalAlignment.Value = Alignment.Bottom;
-
-            if (e.Button == OpenUI.Events.KeyButton.Z) root.Value.Value += 1;
         };
         root.MouseDrag += (_, e) =>
         {

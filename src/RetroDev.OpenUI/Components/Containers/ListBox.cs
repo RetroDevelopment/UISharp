@@ -21,7 +21,7 @@ public class ListBox : Container, IContainer
     private readonly VerticalLayout _verticalLayout;
     private readonly ScrollView _scrollView;
 
-    protected override Size ComputeSizeHint(IEnumerable<Size> childrenSize) =>
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
         childrenSize.Any() ? childrenSize.First() : Size.Zero;
 
     /// <summary>

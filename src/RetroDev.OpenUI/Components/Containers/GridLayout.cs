@@ -14,31 +14,18 @@ public class GridLayout : Container, IContainer
     public record AutoSize : IGridSize;
 
     // TODO: Smart auto size that fits exactly all children
-    protected override Size ComputeSizeHint(IEnumerable<Size> childrenSize)
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize)
     {
         var rowSizes = Parse(RowSizes, Rows.Value);
         var columnSizes = Parse(ColumnSizes, Columns.Value);
-        var childIndex = 0;
-        var widths = Enumerable.Repeat(PixelUnit.Zero, (int)Rows.Value).ToList();
-        var heights = Enumerable.Repeat(PixelUnit.Zero, (int)Columns.Value).ToList();
+        var maxChildWidth = childrenSize.Max(s => s.Width);
+        var maxChildHeight = childrenSize.Max(s => s.Height);
+        var maxFixedWidth = columnSizes.Where(c => c is AbsoluteSize).Cast<AbsoluteSize>().Max(s => s.Size);
+        var maxFixedHeight = rowSizes.Where(c => c is AbsoluteSize).Cast<AbsoluteSize>().Max(s => s.Size);
 
-        foreach (var childSize in childrenSize)
-        {
-            var row = childIndex / (int)Columns.Value;
-            var column = childIndex % (int)Columns.Value;
-            var rowSize = rowSizes.Count != 0 ? rowSizes[row] : new AutoSize();
-            var columnSize = columnSizes.Count != 0 ? columnSizes[column] : new AutoSize();
-
-            var cellEstimatedWidth = columnSize is AbsoluteSize columnAbsoluteSize ? columnAbsoluteSize.Size : childSize.Width;
-            var cellEstimatedHeight = rowSize is AbsoluteSize rowAbsoluteSize ? rowAbsoluteSize.Size : childSize.Height;
-
-            widths[row] = widths[row] + cellEstimatedWidth;
-            heights[column] = heights[column] + cellEstimatedHeight;
-
-            childIndex++;
-        }
-
-        return new Size(widths.Max(), heights.Max());
+        var optimalCellWidth = Math.Max(maxChildWidth ?? PixelUnit.Zero, maxFixedWidth ?? PixelUnit.Zero);
+        var optimalCellHeight = Math.Max(maxChildHeight ?? PixelUnit.Zero, maxFixedHeight ?? PixelUnit.Zero);
+        return new Size(optimalCellWidth * Columns.Value, optimalCellHeight * Rows.Value);
     }
 
     /// <summary>
@@ -75,6 +62,8 @@ public class GridLayout : Container, IContainer
         Columns = new UIProperty<GridLayout, uint>(this, 0);
         RowSizes = new UIProperty<GridLayout, string>(this, string.Empty);
         ColumnSizes = new UIProperty<GridLayout, string>(this, string.Empty);
+
+        RenderFrame += GridLayout_RenderFrame;
     }
 
     /// <summary>
@@ -257,5 +246,10 @@ public class GridLayout : Container, IContainer
         }
 
         return cumulativeKnownSize;
+    }
+
+    private void GridLayout_RenderFrame(UIComponent sender, Events.RenderingEventArgs e)
+    {
+        e.Canvas.Render(new Graphics.Shapes.Rectangle(BackgroundColor.Value), RelativeDrawingArea.Fill());
     }
 }

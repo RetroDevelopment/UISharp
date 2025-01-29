@@ -45,7 +45,7 @@ public class Button : UIComponent
     public UIProperty<Button, Color> FocusColor { get; }
 
     /// <inheritdoc/>
-    protected override Size ComputeSizeHint(IEnumerable<Size> childrenSize) =>
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
         childrenSize.ElementAt(1);
 
     /// <summary>

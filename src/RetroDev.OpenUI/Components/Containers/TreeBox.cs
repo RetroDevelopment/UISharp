@@ -24,7 +24,7 @@ public class TreeBox : Container
     private readonly ListBox _listBox;
     private readonly List<TreeNode> _nodes = [];
 
-    protected override Size ComputeSizeHint(IEnumerable<Size> childrenSize) =>
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
         childrenSize.First();
 
     public override IEnumerable<UIComponent> Children => _listBox.Children.Cast<GridLayout>().Select(c => c.Children.ElementAt(2));

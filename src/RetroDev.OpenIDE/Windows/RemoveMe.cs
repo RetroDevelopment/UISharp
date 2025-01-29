@@ -34,7 +34,7 @@ internal class RemoveMe : UIComponent
         e.Canvas.Render(rec, new Area(new Point(30.0f, 30.0f), new Size(80.0f, 90.0f)));
     }
 
-    protected override Size ComputeSizeHint(IEnumerable<Size> childrenSize)
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize)
     {
         return new Size(100, 100);
     }

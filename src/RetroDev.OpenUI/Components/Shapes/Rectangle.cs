@@ -60,7 +60,7 @@ public class Rectangle : UIComponent
     }
 
     /// <inheritdoc />
-    protected override Size ComputeSizeHint(IEnumerable<Size> childrenSize)
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize)
     {
         var cornerRadiusX = CornerRadiusX.Value.IsAuto ? PixelUnit.Zero : CornerRadiusX.Value;
         var cornerRadiusY = CornerRadiusY.Value.IsAuto ? PixelUnit.Zero : CornerRadiusY.Value;

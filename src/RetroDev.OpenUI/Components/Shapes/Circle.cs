@@ -64,7 +64,7 @@ public class Circle : UIComponent
     }
 
     /// <inheritdoc />
-    protected override Size ComputeSizeHint(IEnumerable<Size> chilrenSize)
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> chilrenSize)
     {
         var minimumSize = BorderThickness.Value * 2 + 10; // Display at least border.
         return new Size(minimumSize, minimumSize);

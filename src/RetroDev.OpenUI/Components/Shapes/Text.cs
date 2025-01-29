@@ -32,7 +32,7 @@ public class Text : UIComponent
     }
 
     /// <inheritdoc />
-    protected override Size ComputeSizeHint(IEnumerable<Size> childrenSize) =>
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
         Application.FontServices.ComputeTextSize(DisplayText.Value);
 
     private void Rectangle_RenderFrame(UIComponent sender, Events.RenderingEventArgs e)

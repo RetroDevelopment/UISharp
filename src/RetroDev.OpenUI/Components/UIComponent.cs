@@ -180,7 +180,7 @@ public abstract class UIComponent
     /// <summary>
     /// The ideal component size which allows to correctly display the whole component.
     /// </summary>  
-    internal Size SizeHint { get; private set; }
+    internal Size WrapSize { get; private set; }
 
 
     /// <summary>
@@ -244,7 +244,7 @@ public abstract class UIComponent
         Enabled = new UIProperty<UIComponent, bool>(this, true);
         BackgroundColor = new UIProperty<UIComponent, Color>(this, Color.Transparent);
 
-        SizeHint = Size.Zero;
+        WrapSize = Size.Zero;
         RelativeDrawingArea = Area.Empty;
         AbsoluteDrawingArea = Area.Empty;
         ClipArea = Area.Empty;
@@ -266,7 +266,11 @@ public abstract class UIComponent
     /// all estimate sizes of the children.
     /// </param>
     /// <returns>The minimum size necessary to dipslay all the component correctly.</returns>
-    protected abstract Size ComputeSizeHint(IEnumerable<Size> childrenSize);
+    /// <remarks>
+    /// Getting the minimum optimzal size for a component might not be always easy. In that case, it should
+    /// at least get close to it or be as small as possible.
+    /// </remarks>
+    protected abstract Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize);
 
     /// <summary>
     /// Override this method to estabilsh custom final rendering area for <see langword="this" /> component children.
@@ -284,14 +288,19 @@ public abstract class UIComponent
     /// </returns>
     protected virtual List<Area?> RepositionChildren(Size availableSpace, IEnumerable<Size> sizeHints) => [];
 
-    public Size ComputeSizeHint()
+    /// <summary>
+    /// Computes the size of the component if <see cref="AutoSize.Wrap"/> is chose for both width and hight.
+    /// </summary>
+    /// <returns>The wrap size of the component.</returns>
+    public Size ComputeWrapSize()
     {
-        var childrenSize = _children.Select(c => c.ComputeSizeHint()).ToList(); // TODO: only if invalidated call ComputeSizeHint() otherise use SizeHint
-        var sizeHint = ComputeSizeHint(childrenSize);
+        var childrenSize = _children.Select(c => c.ComputeWrapSize()).ToList(); // TODO: only if invalidated call ComputeSizeHint() otherise use SizeHint
+        var sizeHint = ComputeMinimumOptimalSize(childrenSize);
         var width = Width.Value.IsAuto ? sizeHint.Width : Width.Value;
         var height = Height.Value.IsAuto ? sizeHint.Height : Height.Value;
-        SizeHint = new Size(width, height);
-        return SizeHint;
+        var collapsed = Visibility.Value == ComponentVisibility.Collapsed;
+        WrapSize = collapsed ? Size.Zero : new Size(width, height);
+        return WrapSize;
     }
 
     public void ComputeDrawingAreas(Area? relativeDrawingArea = null)
@@ -308,7 +317,7 @@ public abstract class UIComponent
         AbsoluteDrawingArea = ComputeAbsoluteDrawingArea();
         ClipArea = ComputeClipArea();
 
-        var childrenAreas = RepositionChildren(RelativeDrawingArea.Size, _children.Select(c => c.SizeHint));
+        var childrenAreas = RepositionChildren(RelativeDrawingArea.Size, _children.Select(c => c.WrapSize));
 
         if (childrenAreas.Count != 0 && childrenAreas.Count != _children.Count)
         {

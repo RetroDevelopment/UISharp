@@ -25,7 +25,7 @@ public class Label : UIComponent
     public UIProperty<Label, Color> TextColor { get; }
 
     /// <inheritdoc/>
-    protected override Size ComputeSizeHint(IEnumerable<Size> childrenSize) =>
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
         childrenSize.ElementAt(0);
 
     /// <summary>
