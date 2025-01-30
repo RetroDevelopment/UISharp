@@ -90,6 +90,6 @@ public class VerticalLayout : Container, IContainer
 
     private void VerticalLayout_RenderFrame(UIComponent sender, Events.RenderingEventArgs e)
     {
-        e.Canvas.Render(new Graphics.Shapes.Rectangle(BackgroundColor.Value), RelativeDrawingArea.Fill());
+        e.Canvas.Render(new Graphics.Shapes.Rectangle(BackgroundColor.Value), ActualSize.Fill());
     }
 }

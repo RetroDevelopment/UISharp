@@ -8,10 +8,10 @@ namespace RetroDev.OpenUI.Components.Core.AutoArea;
 public interface IHorizontalAlignment
 {
     /// <summary>
-    /// Computes the given <paramref name="component"/> x-coordinate.
+    /// Computes a compomnent x-coordinate.
     /// </summary>
-    /// <param name="component">The component for which to calculate the x-coordinate.</param>
-    /// <param name="componentSize">The component assumed size.</param>
+    /// <param name="parentSize">The compoenent parent size.</param>
+    /// <param name="componentSize">The actual component size.</param>
     /// <returns>The component x-coordinate.</returns>
-    public PixelUnit ComputeX(UIComponent component, Size componentSize);
+    public PixelUnit ComputeX(Size parentSize, Size componentSize);
 }

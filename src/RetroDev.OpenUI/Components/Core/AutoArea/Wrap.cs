@@ -8,16 +8,18 @@ namespace RetroDev.OpenUI.Components.Core.AutoArea;
 public class Wrap : IAutoSize
 {
     /// <summary>
-    /// Computes given <paramref name="component"/> width so that it has the minimal optimal size allowing to display the full component.
+    /// Computes a component width so that it has the minimal optimal size allowing to display the full component.
     /// </summary>
-    /// <param name="component">The component for which to calculate the width.</param>
+    /// <param name="parentSize">The parent component size.</param>
+    /// <param name="wrapSize">The component wrap size.</param>
     /// <returns>The parent width.</returns>
-    public PixelUnit ComputeWidth(UIComponent component) => component.WrapSize.Width;
+    public PixelUnit ComputeWidth(Size parentSize, Size wrapSize) => wrapSize.Width;
 
     /// <summary>
-    /// Computes given <paramref name="component"/> height so that it the minimal optimal size allowing to display the full component.
+    /// Computes a component height so that it the minimal optimal size allowing to display the full component.
     /// </summary>
-    /// <param name="component">The component for which to calculate the height.</param>
+    /// <param name="parentSize">The parent component size.</param>
+    /// <param name="wrapSize">The component wrap size.</param>
     /// <returns>The component height.</returns>
-    public PixelUnit ComputeHeight(UIComponent component) => component.WrapSize.Height;
+    public PixelUnit ComputeHeight(Size parentSize, Size wrapSize) => wrapSize.Height;
 }

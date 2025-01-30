@@ -72,7 +72,7 @@ public class Rectangle : UIComponent
 
     private void Rectangle_RenderFrame(UIComponent sender, Events.RenderingEventArgs e)
     {
-        PixelUnit autoCornerMaximumRadius = Math.Min(RelativeDrawingArea.Size.Width, RelativeDrawingArea.Size.Height) / 2.0f;
+        PixelUnit autoCornerMaximumRadius = Math.Min(ActualSize.Width, ActualSize.Height) / 2.0f;
         PixelUnit autoCornerRadius = autoCornerMaximumRadius * AutoCornerRadiusRatio.Value;
 
         var cornerRadiusX = CornerRadiusX.Value.IsAuto ? autoCornerRadius : CornerRadiusX.Value;
@@ -86,6 +86,6 @@ public class Rectangle : UIComponent
                                                            Rotation.Value);
         var canvas = e.Canvas;
 
-        canvas.Render(rectangleShape, RelativeDrawingArea.Fill());
+        canvas.Render(rectangleShape, ActualSize.Fill());
     }
 }

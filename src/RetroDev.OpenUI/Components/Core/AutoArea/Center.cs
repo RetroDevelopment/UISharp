@@ -8,23 +8,23 @@ namespace RetroDev.OpenUI.Components.Core.AutoArea;
 public class Center : IAlignment
 {
     /// <summary>
-    /// Computes the given <paramref name="component"/> center x-coordinate respect to its container.
+    /// Computes a component center x-coordinate respect to its container.
     /// </summary>
-    /// <param name="component">The component for which to calculate the x-coordinate.</param>
-    /// <param name="componentSize">The component assumed size.</param>
+    /// <param name="parentSize">The compoenent parent size.</param>
+    /// <param name="componentSize">The actual component size.</param>
     /// <returns>The component x-coordinate.</returns>
-    public PixelUnit ComputeX(UIComponent component, Size componentSize) =>
-        ComputeCenterPoint(component, componentSize).X;
+    public PixelUnit ComputeX(Size parentSize, Size componentSize) =>
+        ComputeCenterPoint(parentSize, componentSize).X;
 
     /// <summary>
-    /// Computes the given <paramref name="component"/> center y-coordinate respect to its container.
+    /// Computes a component center y-coordinate respect to its container.
     /// </summary>
-    /// <param name="component">The component for which to calculate the y-coordinate.</param>
-    /// <param name="componentSize">The component assumed size.</param>
+    /// <param name="parentSize">The compoenent parent size.</param>
+    /// <param name="componentSize">The actual component size.</param>
     /// <returns>The component y-coordinate.</returns>
-    public PixelUnit ComputeY(UIComponent component, Size componentSize) =>
-        ComputeCenterPoint(component, componentSize).Y;
+    public PixelUnit ComputeY(Size parentSize, Size componentSize) =>
+        ComputeCenterPoint(parentSize, componentSize).Y;
 
-    private Point ComputeCenterPoint(UIComponent component, Size size) =>
-        new Area(Point.Zero, size).CenterTopLeft(new Area(Point.Zero, component.ContainerSize));
+    private Point ComputeCenterPoint(Size parentSize, Size componentSize) =>
+        new Area(Point.Zero, componentSize).CenterTopLeft(new Area(Point.Zero, parentSize));
 }

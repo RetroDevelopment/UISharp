@@ -1,4 +1,5 @@
-﻿using RetroDev.OpenUI.Components.Containers;
+﻿using Microsoft.VisualBasic;
+using RetroDev.OpenUI.Components.Containers;
 using RetroDev.OpenUI.Components.Core;
 using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Core.Coordinates;
@@ -23,6 +24,10 @@ public abstract class UIComponent
     private UIComponent? _focusedComponent;
     private Point? _mouseDragPointAbsolute = null;
     private Point? _mouseLastDragPointAbsolute = null;
+    private Size _wrapSize; // The size with auto size to wrap.
+    private Area _relativeDrawingArea; // Area relative to the parent. So (0, 0) is top left of parent.
+    private Area _absoluteDrawingArea; // Area relative to the window. So (0, 0) is top left of window.
+    private Area _clipArea; // Absolute clipping area. Each pixel with absolute cooridnates outside of the area are clipped.
 
     /// <summary>
     /// Mouse button press inside <see cref="this"/> window.
@@ -171,43 +176,6 @@ public abstract class UIComponent
     public UIProperty<UIComponent, Color> BackgroundColor { get; }
 
     /// <summary>
-    /// The size (in pixels) of the container in which <see langword="this" /> <see cref="UIComponent"/> is diplayed.
-    /// If <see langword="this" /> <see cref="UIComponent"/> is <see cref="Root"/> (e.g. a <see cref="Window"/>, the
-    /// container is assumed to be the main screen, so the main screen resolution will be returned.
-    /// </summary>
-    public Size ContainerSize => Parent?.RelativeDrawingArea?.Size ?? Application.ScreenSize;
-
-    /// <summary>
-    /// The ideal component size which allows to correctly display the whole component.
-    /// </summary>  
-    internal Size WrapSize { get; private set; }
-
-
-    /// <summary>
-    /// The 2D area (in pixels) where this component is rendered. The area is relative to the parent area,
-    /// so [(0, 0), (100, 100)] would indicate that the component is rendered at the top-left of the paraent component,
-    /// and it has size 100x100 pixels.
-    /// </summary>
-    internal Area RelativeDrawingArea { get; private set; }
-
-    /// <summary>
-    /// The 2D area (in pixels) where this component is rendered. The area is absolute to the window and it is clipped
-    /// so that it doesn't go out of the parent boundaries, if <see langword="this"/> component has a parent.
-    /// So, if this component <see cref="RelativeDrawingArea"/> is [(10, 10), (100, 100)], and the parent <see cref="AbsoluteDrawingArea"/>
-    /// is [(20, 20), (200, 200)], the <see cref="RelativeDrawingArea"/> of <see langword="this"/> component will be [(30, 30), (100, 100)].
-    /// </summary>
-    /// <remarks>
-    /// The absolute drawing area is clipped so that it doesn't go out of the parent drawing area. Clipping is done by resizing
-    /// the area.
-    /// </remarks>
-    internal Area AbsoluteDrawingArea { get; private set; }
-
-    /// <summary>
-    /// The area in which where the UI drawing occurs. Every pixel outside of this area will be clipped.
-    /// </summary>
-    internal Area ClipArea { get; private set; }
-
-    /// <summary>
     /// Creates a new component.
     /// </summary>
     /// <param name="application">The application owning this component.</param>
@@ -244,10 +212,10 @@ public abstract class UIComponent
         Enabled = new UIProperty<UIComponent, bool>(this, true);
         BackgroundColor = new UIProperty<UIComponent, Color>(this, Color.Transparent);
 
-        WrapSize = Size.Zero;
-        RelativeDrawingArea = Area.Empty;
-        AbsoluteDrawingArea = Area.Empty;
-        ClipArea = Area.Empty;
+        _wrapSize = Size.Zero;
+        _relativeDrawingArea = Area.Empty;
+        _absoluteDrawingArea = Area.Empty;
+        _clipArea = Area.Empty;
 
         Focus.ValueChange += Focus_ValueChange;
         Enabled.ValueChange += Enabled_ValueChange;
@@ -289,6 +257,11 @@ public abstract class UIComponent
     protected virtual List<Area?> RepositionChildren(Size availableSpace, IEnumerable<Size> sizeHints) => [];
 
     /// <summary>
+    /// The size of <see langword="this" /> component at the latest frame rendering.
+    /// </summary>
+    public Size ActualSize => _relativeDrawingArea.Size;
+
+    /// <summary>
     /// Computes the size of the component if <see cref="AutoSize.Wrap"/> is chose for both width and hight.
     /// </summary>
     /// <returns>The wrap size of the component.</returns>
@@ -299,25 +272,25 @@ public abstract class UIComponent
         var width = Width.Value.IsAuto ? sizeHint.Width : Width.Value;
         var height = Height.Value.IsAuto ? sizeHint.Height : Height.Value;
         var collapsed = Visibility.Value == ComponentVisibility.Collapsed;
-        WrapSize = collapsed ? Size.Zero : new Size(width, height);
-        return WrapSize;
+        _wrapSize = collapsed ? Size.Zero : new Size(width, height);
+        return _wrapSize;
     }
 
     public void ComputeDrawingAreas(Area? relativeDrawingArea = null)
     {
         if (relativeDrawingArea != null)
         {
-            RelativeDrawingArea = ComputeRelativeDrawingArea(relativeDrawingArea);
+            _relativeDrawingArea = ComputeRelativeDrawingArea(relativeDrawingArea);
         }
         else
         {
-            RelativeDrawingArea = ComputeRelativeDrawingArea();
+            _relativeDrawingArea = ComputeRelativeDrawingArea();
         }
 
-        AbsoluteDrawingArea = ComputeAbsoluteDrawingArea();
-        ClipArea = ComputeClipArea();
+        _absoluteDrawingArea = ComputeAbsoluteDrawingArea();
+        _clipArea = ComputeClipArea();
 
-        var childrenAreas = RepositionChildren(RelativeDrawingArea.Size, _children.Select(c => c.WrapSize));
+        var childrenAreas = RepositionChildren(_relativeDrawingArea.Size, _children.Select(c => c._wrapSize));
 
         if (childrenAreas.Count != 0 && childrenAreas.Count != _children.Count)
         {
@@ -424,12 +397,12 @@ public abstract class UIComponent
 
         if (Visibility.Value == ComponentVisibility.Visible)
         {
-            renderingArgs.Canvas.ContainerAbsoluteDrawingArea = AbsoluteDrawingArea;
-            renderingArgs.Canvas.ClippingArea = ClipArea;
+            renderingArgs.Canvas.ContainerAbsoluteDrawingArea = _absoluteDrawingArea;
+            renderingArgs.Canvas.ClippingArea = _clipArea;
             RenderFrame.Invoke(this, renderingArgs);
             _children.ForEach(c => c.OnRenderFrame(renderingArgs));
-            renderingArgs.Canvas.ContainerAbsoluteDrawingArea = AbsoluteDrawingArea;
-            renderingArgs.Canvas.ClippingArea = ClipArea;
+            renderingArgs.Canvas.ContainerAbsoluteDrawingArea = _absoluteDrawingArea;
+            renderingArgs.Canvas.ClippingArea = _clipArea;
             ChildrenRendered.Invoke(this, renderingArgs);
         }
     }
@@ -468,10 +441,10 @@ public abstract class UIComponent
 
     private void _parent_MouseMove(UIComponent sender, MouseEventArgs mouseEventArgs)
     {
-        if (mouseEventArgs.AbsoluteLocation.IsWithin(AbsoluteDrawingArea) && Visibility.Value == Components.ComponentVisibility.Visible && Enabled)
+        if (mouseEventArgs.AbsoluteLocation.IsWithin(_absoluteDrawingArea) && Visibility.Value == Components.ComponentVisibility.Visible && Enabled)
         {
             MouseMove.Invoke(this, new MouseEventArgs(mouseEventArgs.AbsoluteLocation,
-                                                      mouseEventArgs.AbsoluteLocation - AbsoluteDrawingArea.TopLeft,
+                                                      mouseEventArgs.AbsoluteLocation - _absoluteDrawingArea.TopLeft,
                                                       mouseEventArgs.Button));
         }
 
@@ -486,10 +459,10 @@ public abstract class UIComponent
     private void _parent_MouseRelease(UIComponent sender, MouseEventArgs mouseEventArgs)
     {
         var e = new MouseEventArgs(mouseEventArgs.AbsoluteLocation,
-                                   mouseEventArgs.AbsoluteLocation - AbsoluteDrawingArea.TopLeft,
+                                   mouseEventArgs.AbsoluteLocation - _absoluteDrawingArea.TopLeft,
                                    mouseEventArgs.Button);
 
-        if (mouseEventArgs.AbsoluteLocation.IsWithin(AbsoluteDrawingArea) && Visibility.Value == Components.ComponentVisibility.Visible && Enabled)
+        if (mouseEventArgs.AbsoluteLocation.IsWithin(_absoluteDrawingArea) && Visibility.Value == Components.ComponentVisibility.Visible && Enabled)
         {
             MouseRelease.Invoke(this, e);
         }
@@ -505,10 +478,10 @@ public abstract class UIComponent
 
     private void _parent_MousePress(UIComponent sender, MouseEventArgs mouseEventArgs)
     {
-        if (mouseEventArgs.AbsoluteLocation.IsWithin(AbsoluteDrawingArea) && Visibility.Value == Components.ComponentVisibility.Visible && Enabled)
+        if (mouseEventArgs.AbsoluteLocation.IsWithin(_absoluteDrawingArea) && Visibility.Value == Components.ComponentVisibility.Visible && Enabled)
         {
             MousePress.Invoke(this, new MouseEventArgs(mouseEventArgs.AbsoluteLocation,
-                                                       mouseEventArgs.AbsoluteLocation - AbsoluteDrawingArea.TopLeft,
+                                                       mouseEventArgs.AbsoluteLocation - _absoluteDrawingArea.TopLeft,
                                                        mouseEventArgs.Button));
         }
     }
@@ -577,15 +550,16 @@ public abstract class UIComponent
         if (Visibility.Value == ComponentVisibility.Collapsed) return Area.Empty;
         var sizeOverride = areaOverride?.Size ?? new Size(PixelUnit.Auto, PixelUnit.Auto);
         var locationOverride = areaOverride?.TopLeft ?? new Point(PixelUnit.Auto, PixelUnit.Auto);
+        var parentSize = Parent?._relativeDrawingArea?.Size ?? Application.ScreenSize;
 
-        var autoWidth = AutoWidth.Value.ComputeWidth(this);
-        var autoHeight = AutoHeight.Value.ComputeHeight(this);
+        var autoWidth = AutoWidth.Value.ComputeWidth(parentSize, _wrapSize);
+        var autoHeight = AutoHeight.Value.ComputeHeight(parentSize, _wrapSize);
         var actualWidth = sizeOverride.Width.IsAuto ? (Width.Value.IsAuto ? autoWidth : Width.Value) : sizeOverride.Width;
         var actualHeight = sizeOverride.Height.IsAuto ? (Height.Value.IsAuto ? autoHeight : Height.Value) : sizeOverride.Height;
         var actualSize = new Size(actualWidth, actualHeight);
 
-        var autoX = HorizontalAlignment.Value.ComputeX(this, actualSize);
-        var autoY = VerticalAlignment.Value.ComputeY(this, actualSize);
+        var autoX = HorizontalAlignment.Value.ComputeX(parentSize, actualSize);
+        var autoY = VerticalAlignment.Value.ComputeY(parentSize, actualSize);
         var actualX = locationOverride.X.IsAuto ? (X.Value.IsAuto ? autoX : X.Value) : locationOverride.X;
         var actualY = locationOverride.Y.IsAuto ? (Y.Value.IsAuto ? autoY : Y.Value) : locationOverride.Y;
         var actualTopLeft = new Point(actualX, actualY);
@@ -593,6 +567,6 @@ public abstract class UIComponent
         return new Area(actualTopLeft, actualSize);
     }
 
-    private Area ComputeAbsoluteDrawingArea() => RelativeDrawingArea.ToAbsolute(Parent?.AbsoluteDrawingArea);
-    private Area ComputeClipArea() => AbsoluteDrawingArea.Clip(Parent?.ClipArea);
+    private Area ComputeAbsoluteDrawingArea() => _relativeDrawingArea.ToAbsolute(Parent?._absoluteDrawingArea);
+    private Area ComputeClipArea() => _absoluteDrawingArea.Clip(Parent?._clipArea);
 }

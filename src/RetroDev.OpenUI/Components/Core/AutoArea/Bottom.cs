@@ -8,11 +8,11 @@ namespace RetroDev.OpenUI.Components.Core.AutoArea;
 public class Bottom : IVerticalAlignment
 {
     /// <summary>
-    /// Computes the given <paramref name="component"/> bottommost y-coordinate respect to its container.
+    /// Computes a component bottommost y-coordinate respect to its container.
     /// </summary>
-    /// <param name="component">The component for which to calculate the y-coordinate.</param>
-    /// <param name="componentSize">The component assumed size.</param>
+    /// <param name="parentSize">The parent component size.</param>
+    /// <param name="componentSize">The actual component size.</param>
     /// <returns>The component y-coordinate.</returns>
-    public PixelUnit ComputeY(UIComponent component, Size componentSize) =>
-        component.ContainerSize.Height - componentSize.Height;
+    public PixelUnit ComputeY(Size parentSize, Size componentSize) =>
+        parentSize.Height - componentSize.Height;
 }

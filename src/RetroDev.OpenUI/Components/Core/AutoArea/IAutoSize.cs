@@ -8,16 +8,18 @@ namespace RetroDev.OpenUI.Components.Core.AutoArea;
 public interface IAutoSize
 {
     /// <summary>
-    /// Computes given <paramref name="component"/> width.
+    /// Computes a component width given the <paramref name="parentSize"/>.
     /// </summary>
-    /// <param name="component">The component for which to calculate the width.</param>
+    /// <param name="parentSize">The parent component size.</param>
+    /// <param name="wrapSize">The component wrap size.</param>
     /// <returns>The component width.</returns>
-    PixelUnit ComputeWidth(UIComponent component);
+    PixelUnit ComputeWidth(Size parentSize, Size wrapSize);
 
     /// <summary>
-    /// Computes given <paramref name="component"/> height.
+    /// Computes a component height given the <paramref name="parentSize"/>.
     /// </summary>
-    /// <param name="component">The component for which to calculate the height.</param>
+    /// <param name="parentSize">The parent component size.</param>
+    /// <param name="wrapSize">The component wrap size.</param>
     /// <returns>The component height.</returns>
-    PixelUnit ComputeHeight(UIComponent component);
+    PixelUnit ComputeHeight(Size parentSize, Size wrapSize);
 }

@@ -3,6 +3,7 @@ using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Events.Internal;
 using RetroDev.OpenUI.Graphics.Shapes;
 using RetroDev.OpenUI.Logging;
+using SixLabors.Fonts.Unicode;
 
 namespace RetroDev.OpenUI.Graphics;
 
@@ -17,7 +18,7 @@ public class Canvas
     private readonly LifeCycle _lifeCycle;
     private Statistics _statistics = new(0, 0);
 
-    internal Area? ClippingArea { get; set; }
+    internal Area? ClippingArea { get; set; } = Area.Empty;
     internal Area ContainerAbsoluteDrawingArea { get; set; } = Area.Empty;
 
     /// <summary>

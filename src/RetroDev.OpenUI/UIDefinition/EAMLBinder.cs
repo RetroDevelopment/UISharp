@@ -184,7 +184,6 @@ public class EAMLBinder(TypeMapper typeMapper) : IEAMLBinder
         return true;
     }
 
-
     private List<string> FindAttributeArguments(Ast.Attribute attribute)
     {
         string pattern = @"[^,\s]+";

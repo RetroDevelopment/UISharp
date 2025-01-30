@@ -8,10 +8,10 @@ namespace RetroDev.OpenUI.Components.Core.AutoArea;
 public interface IVerticalAlignment
 {
     /// <summary>
-    /// Computes the given <paramref name="component"/> y-coordinate.
+    /// Computes a compomnent y-coordinate.
     /// </summary>
-    /// <param name="component">The component for which to calculate the y-coordinate.</param>
-    /// <param name="componentSize">The component assumed size.</param>
+    /// <param name="parentSize">The compoenent parent size.</param>
+    /// <param name="componentSize">The actual component size.</param>
     /// <returns>The component y-coordinate.</returns>
-    public PixelUnit ComputeY(UIComponent component, Size componentSize);
+    public PixelUnit ComputeY(Size parentSize, Size componentSize);
 }

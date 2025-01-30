@@ -47,8 +47,8 @@ public class ListBox : Container, IContainer
         _scrollView = new ScrollView(application);
 
         _scrollView.SetComponent(_verticalLayout);
-        _verticalLayout.HorizontalAlignment.Value = Alignment.Left;
-        _verticalLayout.VerticalAlignment.Value = Alignment.Top;
+        _scrollView.AutoWidth.Value = AutoSize.Stretch;
+        _scrollView.AutoHeight.Value = AutoSize.Stretch;
 
         SelectedIndex = new UIProperty<ListBox, uint?>(this, (uint?)null);
         SelectedIndex.ValueChange += SelectedIndex_ValueChange;

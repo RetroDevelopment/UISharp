@@ -8,11 +8,11 @@ namespace RetroDev.OpenUI.Components.Core.AutoArea;
 public class Right : IHorizontalAlignment
 {
     /// <summary>
-    /// Computes the given <paramref name="component"/> rightmost x-coordinate respect to its container.
+    /// Computes a component rightmost x-coordinate respect to its container.
     /// </summary>
-    /// <param name="component">The component for which to calculate the x-coordinate.</param>
-    /// <param name="componentSize">The component assumed size.</param>
+    /// <param name="parentSize">The compoenent parent size.</param>
+    /// <param name="componentSize">The actual component size.</param>
     /// <returns>The component x-coordinate.</returns>
-    public PixelUnit ComputeX(UIComponent component, Size componentSize) =>
-        component.ContainerSize.Width - componentSize.Width;
+    public PixelUnit ComputeX(Size parentSize, Size componentSize) =>
+        parentSize.Width - componentSize.Width;
 }

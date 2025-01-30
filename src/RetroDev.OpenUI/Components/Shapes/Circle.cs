@@ -78,6 +78,6 @@ public class Circle : UIComponent
                                                         Rotation.Value);
         var canvas = e.Canvas;
 
-        canvas.Render(rectangleShape, RelativeDrawingArea.Fill());
+        canvas.Render(rectangleShape, ActualSize.Fill());
     }
 }

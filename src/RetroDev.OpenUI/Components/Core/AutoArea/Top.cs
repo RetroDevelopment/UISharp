@@ -8,10 +8,10 @@ namespace RetroDev.OpenUI.Components.Core.AutoArea;
 public class Top : IVerticalAlignment
 {
     /// <summary>
-    /// Computes the given <paramref name="component"/> topmost y-coordinate respect to its container.
+    /// Computes a component topmost y-coordinate respect to its container.
     /// </summary>
-    /// <param name="component">The component for which to calculate the y-coordinate.</param>
-    /// <param name="componentSize">The component assumed size.</param>
+    /// <param name="parentSize">The compoenent parent size.</param>
+    /// <param name="componentSize">The actual component size.</param>
     /// <returns>The component y-coordinate.</returns>
-    public PixelUnit ComputeY(UIComponent component, Size componentSize) => 0;
+    public PixelUnit ComputeY(Size parentSize, Size componentSize) => 0;
 }

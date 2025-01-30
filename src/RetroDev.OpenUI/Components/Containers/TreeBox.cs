@@ -1,4 +1,5 @@
-﻿using System.Xml;
+﻿using System.Text.RegularExpressions;
+using System.Xml;
 using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Components.Simple;
 using RetroDev.OpenUI.Core.Coordinates;
@@ -39,6 +40,9 @@ public class TreeBox : Container
     {
         _listBox = new ListBox(application);
         AddChild(_listBox);
+
+        _listBox.AutoWidth.Value = AutoSize.Stretch;
+        _listBox.AutoHeight.Value = AutoSize.Stretch;
 
         SelectedNode = new UIProperty<TreeBox, TreeNode?>(this, (TreeNode?)null);
         // TODO SelectedNode can be bound to _listBox.SelectedItem and converters!
@@ -177,19 +181,28 @@ public class TreeBox : Container
     {
         var gridLayout = _listBox.Children.Cast<GridLayout>().ToList().Find(c => c.Children.ElementAt(2) == node.Content.Value) ?? throw new ArgumentException("Cannot find node to expand in tree box");
         var collapseButton = (Button)gridLayout.Children.ElementAt(1);
+
+        // TODO: when using column and row sizes as lists instead of strings no need to use regex
+        string pattern = @"(?<=^.*?,)(\d+)px";
+        string zeroPixelReplacement = "0px";
+        string buttonSizeReplacement = $"{FoldUnfoldButtonSize}px";
+
         if (node._children.Count == 0)
         {
             collapseButton.Visibility.Value = ComponentVisibility.Hidden;
+            gridLayout.ColumnSizes.Value = Regex.Replace(gridLayout.ColumnSizes.Value, pattern, zeroPixelReplacement);
         }
         else if (node.Collapsed)
         {
             collapseButton.Visibility.Value = ComponentVisibility.Visible;
             collapseButton.Text.Value = "+";
+            gridLayout.ColumnSizes.Value = Regex.Replace(gridLayout.ColumnSizes.Value, pattern, buttonSizeReplacement);
         }
         else
         {
             collapseButton.Visibility.Value = ComponentVisibility.Visible;
             collapseButton.Text.Value = "-";
+            gridLayout.ColumnSizes.Value = Regex.Replace(gridLayout.ColumnSizes.Value, pattern, buttonSizeReplacement);
         }
 
         if (node.ShouldDisplay)

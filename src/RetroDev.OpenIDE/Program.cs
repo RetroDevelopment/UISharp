@@ -110,30 +110,28 @@ class Ctr : UIComponent
 
 internal class Program
 {
-    static void Main(string[] _)
+    static void Maink(string[] _)
     {
         using var application = new Application();
         application.Logger.Verbosity = OpenUI.Logging.Verbosity.Verbose;
 
-        var root = new GridLayout(application);
-        root.BackgroundColor.Value = Color.DarkGray;
-        UIComponent CreateBtn(string txt, bool invisible = false)
-        {
-            var btn = new Button(application);
-            btn.Text.Value = txt;
-            if (invisible) btn.Visibility.Value = ComponentVisibility.Collapsed;
-            return btn;
-        }
-        root.Rows.Value = 3;
-        root.Columns.Value = 2;
-        root.AddComponent(CreateBtn("Button 1 abcdefghijklm", false));
-        root.AddComponent(CreateBtn("Button 2"));
-        root.AddComponent(CreateBtn("Button 3"));
-        root.AddComponent(CreateBtn("Button 4"));
-        root.AddComponent(CreateBtn("Button 5"));
-        root.AddComponent(CreateBtn("Button 6"));
-        root.RowSizes.Value = "100px;*;10%";
-        root.ColumnSizes.Value = "*;*";
+        var root = new TreeBox(application);//var root = new TreeBox(application);
+        root.Width.Value = 80;
+        root.Height.Value = 80;
+        root.HorizontalAlignment.Value = Alignment.Center;
+        root.VerticalAlignment.Value = Alignment.Center;
+        root.AutoWidth.Value = AutoSize.Stretch;
+        var lbl = new Label(application);
+        lbl.Text.Value = "First label";
+        var btn = new Button(application);
+        btn.Text.Value = "Click";
+        btn.Action += (_, _) => btn.Height.Value = 300;
+        var n = new TreeNode(btn);
+        root.AddTreeNode(new TreeNode(lbl));
+        root.AddTreeNode(n);
+        n.AddChild(new TreeNode(new Label(application, "Node 1")));
+        n.AddChild(new TreeNode(new Label(application, "Node 2")));
+        n.AddChild(new TreeNode(new Label(application, "Node 3")));
 
         Window window = new Window(application);
         window.Width.Value = 800;
@@ -205,7 +203,7 @@ internal class Program
         application.Run();
     }
 
-    static void Maina(string[] _)
+    static void Main(string[] _)
     {
         using var application = new Application();
         application.Logger.Verbosity = OpenUI.Logging.Verbosity.Verbose;
