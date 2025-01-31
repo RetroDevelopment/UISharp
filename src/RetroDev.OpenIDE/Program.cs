@@ -1,4 +1,6 @@
-﻿using OpenTK.Graphics.ES11;
+﻿using System.ComponentModel;
+using System.Diagnostics;
+using OpenTK.Graphics.ES11;
 using RetroDev.OpenIDE.Windows;
 using RetroDev.OpenUI;
 using RetroDev.OpenUI.Components;
@@ -110,12 +112,12 @@ class Ctr : UIComponent
 
 internal class Program
 {
-    static void Maink(string[] _)
+    static void Makin(string[] _)
     {
         using var application = new Application();
         application.Logger.Verbosity = OpenUI.Logging.Verbosity.Verbose;
 
-        var root = new TreeBox(application);//var root = new TreeBox(application);
+        var root = new TreeBox(application);
         root.Width.Value = 80;
         root.Height.Value = 80;
         root.HorizontalAlignment.Value = Alignment.Center;
@@ -164,10 +166,49 @@ internal class Program
         application.Run();
     }
 
-    static void Mainh(string[] _)
+    [DebuggerDisplay("{label}")]
+    class Node : UIComponent
+    {
+        public string label = "";
+        public Size Hint = new(100, 100);
+
+        public Node(Application a, string l) : base(a) { label = l; }
+
+        public void Add(UIComponent c) => AddChild(c);
+        protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize)
+        {
+            return new(childrenSize.ToList().Sum(c => c.Width.Value) + Hint.Width,
+                       childrenSize.ToList().Sum(c => c.Height.Value) + Hint.Height);
+        }
+    }
+
+    static void Main(string[] _)
     {
         using var application = new Application();
         application.Logger.Verbosity = OpenUI.Logging.Verbosity.Verbose;
+        Window w2 = new Window(application);
+        w2.X.Value = 0;
+        w2.Y.Value = 0;
+        w2.Width.Value = 800;
+        w2.Height.Value = 600;
+        w2.Visibility.Value = ComponentVisibility.Visible;
+        var a = new Node(application, "A");
+        var b = new Node(application, "B");
+        var c = new Node(application, "C");
+        var d = new Node(application, "D");
+        var e = new Node(application, "E");
+        b.Add(d);
+        b.Add(e);
+        w2.AddComponent(a);
+        w2.AddComponent(b);
+        w2.AddComponent(c);
+        w2.MouseMove += (_, _) =>
+        {
+            d.Hint = new Size(d.Hint.Width + 100, d.Hint.Height);
+            d.Invalidate();
+        };
+        application.Run();
+        return;
 
         Window w = new Window(application);
         w.X.Value = 0;
@@ -203,7 +244,7 @@ internal class Program
         application.Run();
     }
 
-    static void Main(string[] _)
+    static void Mains(string[] _)
     {
         using var application = new Application();
         application.Logger.Verbosity = OpenUI.Logging.Verbosity.Verbose;

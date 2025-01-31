@@ -17,7 +17,7 @@ public record Area(Point TopLeft, Size Size)
     /// <summary>
     /// The empty area which requires 0 pizels.
     /// </summary>
-    public static Area Empty => new(Point.Zero, Point.Zero);
+    public static readonly Area Empty = new(Point.Zero, Point.Zero);
 
     /// <summary>
     /// The area central point coordinate in pixels.

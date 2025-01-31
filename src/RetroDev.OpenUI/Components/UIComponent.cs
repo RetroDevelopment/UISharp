@@ -20,6 +20,7 @@ namespace RetroDev.OpenUI.Components;
 public abstract class UIComponent
 {
     internal readonly List<UIComponent> _children = [];
+    internal int _level = 0;
     private UIComponent? _focusedComponent;
     private Point? _mouseDragPointAbsolute = null;
     private Point? _mouseLastDragPointAbsolute = null;
@@ -95,9 +96,11 @@ public abstract class UIComponent
     public UIComponent? Parent { get; private set; }
 
     /// <summary>
-    /// Gets the root component, usually a <see cref="Window"/>.
+    /// Gets the <see cref="Window"/> that contain <see langword="this" /> <see cref="UIComponent"/>.
+    /// If <see langword="this" /> <see cref="UIComponent"/> has not been attached to a <see cref="Window"/>,
+    /// the value is <see langword="null" />.
     /// </summary>
-    public UIComponent Root => Parent?.Root ?? this;
+    public Window? Root => Parent?.Root ?? this as Window;
 
     /// <summary>
     /// The component unique identifier.
@@ -221,6 +224,26 @@ public abstract class UIComponent
         MousePress += UIComponent_MousePress;
     }
 
+    /// <summary>
+    /// Invalidates <see langword="this" /> <see cref="UIComponent"/>. An invalidate component is
+    /// a components that needs to be redrawn.
+    /// Invalidation is done automatically whenever a <see cref="UIProperty{TComponent, TValue}"/> changes,
+    /// but it is possible to manually invalidate if needed.
+    /// </summary>
+    public void Invalidate()
+    {
+        Root?._invalidator?.Invalidate(this);
+        Application._eventSystem.InvalidateRendering();
+    }
+
+    /// <summary>
+    /// Marks <see langword="this" /> <see cref="UIComponent"/> as no longer invalidated.
+    /// </summary>
+    public void CancelInvalidation()
+    {
+        Root?._invalidator?.CancelInvalidation(this);
+    }
+
     // TODO: group protected and publics together
 
     /// <summary>
@@ -264,15 +287,17 @@ public abstract class UIComponent
     /// Computes the size of the component if <see cref="AutoSize.Wrap"/> is chose for both width and hight.
     /// </summary>
     /// <returns>The wrap size of the component.</returns>
-    public Size ComputeWrapSize()
+    public bool ReComputeWrapSize()
     {
-        var childrenSize = _children.Select(c => c.ComputeWrapSize()).ToList(); // TODO: only if invalidated call ComputeSizeHint() otherise use SizeHint
-        var sizeHint = ComputeMinimumOptimalSize(childrenSize);
-        var width = Width.Value.IsAuto ? sizeHint.Width : Width.Value;
-        var height = Height.Value.IsAuto ? sizeHint.Height : Height.Value;
+        var childrenSize = _children.Select(c => c._wrapSize);
+        var minimalOptimalSize = ComputeMinimumOptimalSize(childrenSize);
+        var width = Width.Value.IsAuto ? minimalOptimalSize.Width : Width.Value;
+        var height = Height.Value.IsAuto ? minimalOptimalSize.Height : Height.Value;
         var collapsed = Visibility.Value == ComponentVisibility.Collapsed;
-        _wrapSize = collapsed ? Size.Zero : new Size(width, height);
-        return _wrapSize;
+        var currentWrapSize = _wrapSize;
+        var newWrapSize = collapsed ? Size.Zero : new Size(width, height);
+        _wrapSize = newWrapSize;
+        return currentWrapSize != newWrapSize;
     }
 
     public void ComputeDrawingAreas(Area? relativeDrawingArea = null)
@@ -338,6 +363,8 @@ public abstract class UIComponent
         component.Parent?.RemoveChild(component);
         component.Parent = this;
         component.AttachEventsFromParent();
+        component.RecomputeLevel();
+        component.InvalidateAll();
         Application._eventSystem.InvalidateRendering();
         if (index == null) _children.Add(component);
         else if (index + 1 < _children.Count) _children.Insert((int)index + 1, component);
@@ -535,11 +562,13 @@ public abstract class UIComponent
     // Ensure that only one child component has focus.
     private void RequestFocusFor(UIComponent component)
     {
+        if (Root == null) throw new InvalidOperationException("Cannot request focus for a component not attached to a window");
+
         // Only the root component can manage focus, because only one object can be focusable at a time in a window.
         // TODO: When implementing focus groups, just change the logic here to not delegate this to the parent.
         if (Parent != null)
         {
-            Root.RequestFocusFor(component);
+            Root?.RequestFocusFor(component);
             return;
         }
 
@@ -575,4 +604,33 @@ public abstract class UIComponent
 
     private Area ComputeAbsoluteDrawingArea() => _relativeDrawingArea.ToAbsolute(Parent?._absoluteDrawingArea);
     private Area ComputeClipArea() => _absoluteDrawingArea.Clip(Parent?._clipArea);
+
+    // Recompute the level of this component in the UI hierarchy tree.
+    private void RecomputeLevel()
+    {
+        if (Parent != null && Root != null)
+        {
+            _level = Parent._level + 1;
+        }
+        else
+        {
+            _level = 0;
+        }
+
+        _children.ForEach(c => c.RecomputeLevel());
+    }
+
+    private void InvalidateAll()
+    {
+        if (Root == null) return;
+        Invalidate();
+        _children.ForEach(c => c.Invalidate());
+    }
+
+    private void CancelInvalidationAll()
+    {
+        if (Root == null) return;
+        CancelInvalidation();
+        _children.ForEach(c => c.CancelInvalidation());
+    }
 }

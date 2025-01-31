@@ -15,7 +15,9 @@ namespace RetroDev.OpenUI;
 [EditorSettings(allow: false)]
 public class Window : Container, IContainer
 {
+    internal readonly Invalidator _invalidator = new();
     private readonly IWindowManager _windowManager;
+    private readonly MeasureProvider _measureProvider;
     private readonly RetaineModeCanvas _windowCanvas = new();
 
     /// <summary>
@@ -40,8 +42,11 @@ public class Window : Container, IContainer
     public Window(Application application, IWindowManager? windowManager = null) : base(application, visibility: ComponentVisibility.Collapsed, isFocusable: true)
     {
         _windowManager = windowManager ?? new SDLWindowManager(application);
+        _measureProvider = new MeasureProvider(this, _invalidator);
+
         Application._eventSystem.Render += EventSystem_Render;
         application.AddWindow(this);
+        Invalidate();
 
         BackgroundColor.BindDestinationToSource(Application.Theme.MainBackground);
 
@@ -88,8 +93,9 @@ public class Window : Container, IContainer
     /// </summary>
     public void Measure()
     {
-        ComputeWrapSize();
+        _measureProvider.Measure();
         ComputeDrawingAreas();
+        _invalidator.Clear(); // TODO: remove, rendering will do that
     }
 
     /// <inheritdoc/>

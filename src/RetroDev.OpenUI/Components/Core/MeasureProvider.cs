@@ -1,0 +1,73 @@
+﻿namespace RetroDev.OpenUI.Components.Core;
+
+/// <summary>
+/// Class that performs optimized measurement of <see cref="UIComponent"/> rendering areas, meaning that 
+/// where only invalidated elements will be measured.
+/// </summary>
+/// <param name="window">The <see cref="Window"/> for which to measure the elements.</param>
+/// <param name="invalidator"></param>
+internal class MeasureProvider(Window window, Invalidator invalidator)
+{
+    private readonly Window _window = window;
+    private readonly Invalidator _invalidator = invalidator;
+
+    /// <summary>
+    /// Measures component sizes before rendering.
+    /// </summary>
+    public void Measure()
+    {
+        RecomputeWrapSizes();
+    }
+
+    /// <summary>
+    /// Re-computes wrap sizes of invalidated elements.
+    /// </summary>
+    public void RecomputeWrapSizes()
+    {
+        if (_invalidator.TreeDepth == 0) return;
+
+        var level = _invalidator.TreeDepth - 1;
+        var processQueue = new UniqueQueue<UIComponent>();
+        _invalidator.AddInvalidatedComponentsToQueue(level, processQueue);
+
+        while (level >= 0)
+        {
+            var component = processQueue.Dequeue();
+            var wrapSizeChanged = component.ReComputeWrapSize();
+
+            if (wrapSizeChanged)
+            {
+                component.Invalidate();
+                if (component.Parent != null) processQueue.Enqueue(component.Parent);
+            }
+
+            if (ShouldChangeLevel(processQueue, level))
+            {
+                level = ChangeLevel(processQueue, level);
+            }
+        }
+    }
+
+    private bool ShouldChangeLevel(UniqueQueue<UIComponent> processQueue, int level) =>
+        processQueue.Empty || processQueue.Peek()._level != level;
+
+    private int ChangeLevel(UniqueQueue<UIComponent> processQueue, int level)
+    {
+        if (level == 0) return -1;
+
+        var newLevel = level;
+
+        if (!processQueue.Empty)
+        {
+            newLevel = processQueue.Peek()._level;
+        }
+        else
+        {
+            newLevel = _invalidator.GetNextInvalidatedLevel(level);
+        }
+
+        if (newLevel >= 0) _invalidator.AddInvalidatedComponentsToQueue(newLevel, processQueue);
+
+        return newLevel;
+    }
+}

@@ -32,7 +32,7 @@ public class UIProperty<TComponent, TValue>(TComponent parent, TValue value, Bin
         set
         {
             base.Value = value;
-            Component.Application._eventSystem.InvalidateRendering(); // TODO: do not push one event for each call but just one if the rendering has not been invalidated yet
+            Component.Invalidate();
         }
         get => base.Value;
     }
