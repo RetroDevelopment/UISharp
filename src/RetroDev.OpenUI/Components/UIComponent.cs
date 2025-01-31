@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualBasic;
-using RetroDev.OpenUI.Components.Containers;
+﻿using RetroDev.OpenUI.Components.Containers;
 using RetroDev.OpenUI.Components.Core;
 using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Core.Coordinates;
@@ -304,6 +303,13 @@ public abstract class UIComponent
             child.ComputeDrawingAreas(childArea);
         }
 
+        // TODO: Add PostRepositionChildren(relativeArea, childrenDrawingAreaList) to allow re-repositioning children after knowing their size.
+        // This second pass layout is very useful for scoll view, so you can re-implement it better.
+        // The implementation would be
+        // - Make sure X and Y are not negative but (0, 0) if the element fits the scroll view (it happens when treebox click on unfold button and the size of the box reduces so much that scroll bars disappear)
+        // - Make scroll bars as rectangles and decide their size based on child size.
+        // And finally remove ActualSize property which is dangerous.
+        // Also make sure all drawing areas of children are re calculated recursively in the sub tree.
         Validate();
     }
 
