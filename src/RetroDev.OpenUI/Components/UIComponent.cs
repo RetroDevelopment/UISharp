@@ -608,6 +608,8 @@ public abstract class UIComponent
     // Recompute the level of this component in the UI hierarchy tree.
     private void RecomputeLevel()
     {
+        CancelInvalidation(); // Invalidation is based on _level, which will be wrong if kept where it is. A re-invalidation will be necessary.
+
         if (Parent != null && Root != null)
         {
             _level = Parent._level + 1;
@@ -624,7 +626,7 @@ public abstract class UIComponent
     {
         if (Root == null) return;
         Invalidate();
-        _children.ForEach(c => c.Invalidate());
+        _children.ForEach(c => c.InvalidateAll());
     }
 
     private void CancelInvalidationAll()

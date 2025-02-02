@@ -49,6 +49,7 @@ public class ListBox : Container, IContainer
         _scrollView.SetComponent(_verticalLayout);
         _scrollView.AutoWidth.Value = AutoSize.Stretch;
         _scrollView.AutoHeight.Value = AutoSize.Stretch;
+        _verticalLayout.AutoWidth.Value = AutoSize.Stretch;
 
         SelectedIndex = new UIProperty<ListBox, uint?>(this, (uint?)null);
         SelectedIndex.ValueChange += SelectedIndex_ValueChange;

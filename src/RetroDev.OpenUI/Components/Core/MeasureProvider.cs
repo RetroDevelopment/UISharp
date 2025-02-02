@@ -17,6 +17,7 @@ internal class MeasureProvider(Window window, Invalidator invalidator)
     public void Measure()
     {
         RecomputeWrapSizes();
+        RecomputeDrawingAreas();
     }
 
     /// <summary>
@@ -46,6 +47,14 @@ internal class MeasureProvider(Window window, Invalidator invalidator)
                 level = ChangeLevel(processQueue, level);
             }
         }
+    }
+
+    /// <summary>
+    /// Re-computes components drawing areas of invalidated elements.
+    /// </summary>
+    public void RecomputeDrawingAreas()
+    {
+
     }
 
     private bool ShouldChangeLevel(UniqueQueue<UIComponent> processQueue, int level) =>

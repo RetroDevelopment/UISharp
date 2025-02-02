@@ -5,9 +5,9 @@ namespace RetroDev.OpenUI.Components.Core;
 
 internal class Invalidator
 {
-    private Dictionary<int, HashSet<UIComponent>> _invalidatedItems = [];
+    private SortedDictionary<int, HashSet<UIComponent>> _invalidatedItems = [];
 
-    public int TreeDepth => _invalidatedItems.Keys.Max() + 1;
+    public int TreeDepth => _invalidatedItems.Keys.LastOrDefault(-1) + 1;
 
     public void Invalidate(UIComponent component)
     {
@@ -19,16 +19,17 @@ internal class Invalidator
     public void CancelInvalidation(UIComponent component)
     {
         var level = component._level;
+        // No need to cancel invalidation if the componet has not been invalidated
+        if (!_invalidatedItems.ContainsKey(level) || !_invalidatedItems[level].Contains(component)) return;
         _invalidatedItems[level].Remove(component);
-        if (_invalidatedItems[level].Count == 0) _invalidatedItems.Remove(level);
+        if (_invalidatedItems[level].Count == 0)
+        {
+            _invalidatedItems.Remove(level);
+        }
     }
 
-    public int GetNextInvalidatedLevel(int level)
-    {
-        var keys = _invalidatedItems.Keys.ToList();
-        var index = keys.FindIndex(k => k == level);
-        return index != 0 ? keys[index - 1] : -1;
-    }
+    public int GetNextInvalidatedLevel(int level) =>
+            _invalidatedItems.Keys.Reverse().FirstOrDefault(k => k < level, -1);
 
     public void AddInvalidatedComponentsToQueue(int level, UniqueQueue<UIComponent> queue)
     {
