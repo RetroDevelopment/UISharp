@@ -182,7 +182,7 @@ internal class Program
         }
     }
 
-    static void Maink(string[] _)
+    static void Main(string[] _)
     {
         using var application = new Application();
         application.Logger.Verbosity = OpenUI.Logging.Verbosity.Verbose;
@@ -207,8 +207,8 @@ internal class Program
             d.Hint = new Size(d.Hint.Width + 100, d.Hint.Height);
             d.Invalidate();
         };
-        application.Run();
-        return;
+        //application.Run();
+        //return;
 
         Window w = new Window(application);
         w.X.Value = 0;
@@ -244,7 +244,7 @@ internal class Program
         application.Run();
     }
 
-    static void Main(string[] _)
+    static void Maijn(string[] _)
     {
         using var application = new Application();
         application.Logger.Verbosity = OpenUI.Logging.Verbosity.Verbose;

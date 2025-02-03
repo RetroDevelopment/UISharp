@@ -6,8 +6,6 @@ using RetroDev.OpenUI.Events;
 using RetroDev.OpenUI.Exceptions;
 using RetroDev.OpenUI.Graphics;
 using RetroDev.OpenUI.Properties;
-using RetroDev.OpenUI.Utils;
-using SixLabors.ImageSharp.Formats.Bmp;
 
 namespace RetroDev.OpenUI.Components;
 
@@ -239,13 +237,32 @@ public abstract class UIComponent
 
     /// <summary>
     /// Marks <see langword="this" /> <see cref="UIComponent"/> as no longer invalidated.
+    /// It is usually not necessary to cancel invalidation because it is done automatically by the framework,
+    /// but it is possible to manually override the behaviod if needed.
     /// </summary>
     public void CancelInvalidation()
     {
         Root?._invalidator?.CancelInvalidation(this);
     }
 
-    // TODO: group protected and publics together
+    /// <summary>
+    /// Validates this component checking for inconsistencies.
+    /// </summary>
+    /// <exception cref="UIPropertyValidationException">
+    /// If there is an inconsistency, for example, a <see cref="UIProperty{TComponent, TValue}"/> value out of range.
+    /// </exception>
+    /// <remarks>
+    /// The validation is performed right before rendering, when re-calculating the component sizes. This allows for more flexibility
+    /// when setting values that may temporarely lead to object inconsistency.
+    /// However, since this method is public, validation can occurr at any time.
+    /// </remarks>
+    public virtual void Validate()
+    {
+        if (!Width.Value.IsAuto && Width.Value < 0.0f) throw new UIPropertyValidationException($"Width must be greater or equal to zero, found {Width.Value}", this);
+        if (!Height.Value.IsAuto && Height.Value < 0.0f) throw new UIPropertyValidationException($"Height must be greater or equal to zero, found {Height.Value}", this);
+        if (!Focusable.Value && Focus.Value) throw new UIPropertyValidationException("Cannot focus a component that is not focusable", this);
+        if (!Enabled.Value && Focus.Value) throw new UIPropertyValidationException("Cannot focus a component that is not enabled");
+    }
 
     /// <summary>
     /// Compute the minimum size necessary to dipslay all the component correctly.
@@ -282,67 +299,8 @@ public abstract class UIComponent
     /// <summary>
     /// The size of <see langword="this" /> component at the latest frame rendering.
     /// </summary>
+    /// TODO: remove
     public Size ActualSize => _relativeDrawingArea.Size;
-
-    /// <summary>
-    /// Computes the size of the component if <see cref="AutoSize.Wrap"/> is chose for both width and hight.
-    /// </summary>
-    /// <returns>
-    /// <see langword="true" /> if the size has changeed since the last time thos method was called, otherwise <see langword="false" />.
-    /// </returns>
-    public bool ReComputeWrapSize()
-    {
-        var childrenSize = _children.Select(c => c._wrapSize);
-        var minimalOptimalSize = ComputeMinimumOptimalSize(childrenSize);
-        var width = Width.Value.IsAuto ? minimalOptimalSize.Width : Width.Value;
-        var height = Height.Value.IsAuto ? minimalOptimalSize.Height : Height.Value;
-        var collapsed = Visibility.Value == ComponentVisibility.Collapsed;
-        var currentWrapSize = _wrapSize;
-        var newWrapSize = collapsed ? Size.Zero : new Size(width, height);
-        _wrapSize = newWrapSize;
-        return currentWrapSize != newWrapSize;
-    }
-
-    public void ComputeDrawingAreas(Area? relativeDrawingArea = null, bool rootCall = false)
-    {
-        if (!rootCall) _relativeDrawingAreaOverride = relativeDrawingArea;
-        _relativeDrawingArea = ComputeRelativeDrawingArea(_relativeDrawingAreaOverride);
-        _absoluteDrawingArea = ComputeAbsoluteDrawingArea();
-        _clipArea = ComputeClipArea();
-
-        var childrenAreas = RepositionChildren(_relativeDrawingArea.Size, _children.Select(c => c._wrapSize));
-
-        if (childrenAreas.Count != 0 && childrenAreas.Count != _children.Count)
-        {
-            throw new InvalidOperationException($"{nameof(RepositionChildren)} must return the same number of elements as the number of children or be empty: {childrenAreas.Count()} provided but {_children.Count} exist");
-        }
-
-        for (var i = 0; i < _children.Count; i++)
-        {
-            var child = _children[i];
-            child.CancelInvalidation(); // The parent is already invalidated, so no need to invalidate this component.
-            var childArea = childrenAreas.Count != 0 ? childrenAreas[i] : null;
-            child.ComputeDrawingAreas(childArea);
-        }
-
-        // TODO: Add PostRepositionChildren(relativeArea, childrenDrawingAreaList) to allow re-repositioning children after knowing their size.
-        // This second pass layout is very useful for scoll view, so you can re-implement it better.
-        // The implementation would be
-        // - Make sure X and Y are not negative but (0, 0) if the element fits the scroll view (it happens when treebox click on unfold button and the size of the box reduces so much that scroll bars disappear)
-        // - Make scroll bars as rectangles and decide their size based on child size.
-        // And finally remove ActualSize property which is dangerous.
-        // Also make sure all drawing areas of children are re calculated recursively in the sub tree.
-        Validate();
-    }
-
-    public virtual void Validate()
-    {
-        if (!Width.Value.IsAuto && Width.Value < 0.0f) throw new UIPropertyValidationException($"Width must be greater or equal to zero, found {Width.Value}", this);
-        if (!Height.Value.IsAuto && Height.Value < 0.0f) throw new UIPropertyValidationException($"Height must be greater or equal to zero, found {Height.Value}", this);
-        if (!Focusable.Value && Focus.Value) throw new UIPropertyValidationException("Cannot focus a component that is not focusable", this);
-        if (!Enabled.Value && Focus.Value) throw new UIPropertyValidationException("Cannot focus a component that is not enabled");
-    }
-
 
     /// <summary>
     /// Adds a child to <see langword="this" /> component.
@@ -435,6 +393,65 @@ public abstract class UIComponent
             renderingArgs.Canvas.ClippingArea = _clipArea;
             ChildrenRendered.Invoke(this, renderingArgs);
         }
+    }
+
+    /// <summary>
+    /// Computes the size of the component if <see cref="AutoSize.Wrap"/> is chose for both width and hight.
+    /// </summary>
+    /// <returns>
+    /// <see langword="true" /> if the size has changeed since the last time thos method was called, otherwise <see langword="false" />.
+    /// </returns>
+    internal bool ReComputeWrapSize()
+    {
+        var childrenSize = _children.Select(c => c._wrapSize);
+        var minimalOptimalSize = ComputeMinimumOptimalSize(childrenSize);
+        var width = Width.Value.IsAuto ? minimalOptimalSize.Width : Width.Value;
+        var height = Height.Value.IsAuto ? minimalOptimalSize.Height : Height.Value;
+        var collapsed = Visibility.Value == ComponentVisibility.Collapsed;
+        var currentWrapSize = _wrapSize;
+        var newWrapSize = collapsed ? Size.Zero : new Size(width, height);
+        _wrapSize = newWrapSize;
+        return currentWrapSize != newWrapSize;
+    }
+
+    /// <summary>
+    /// Computed the final component rendering area.
+    /// </summary>
+    /// <param name="relativeDrawingArea">A way to override the rendering area calculated values.</param>
+    /// <param name="rootCall">Whether this is called from <see cref="MeasureProvider"/> and it requires to perform the invalidated subtree area re-calculation.</param>
+    /// <exception cref="InvalidOperationException">
+    /// If <see cref="RepositionChildren(Size, IEnumerable{Size})"/> return list is not empty and it has not the same size as <see cref="_children"/>.
+    /// </exception>
+    internal void ComputeDrawingAreas(Area? relativeDrawingArea = null, bool rootCall = false)
+    {
+        if (!rootCall) _relativeDrawingAreaOverride = relativeDrawingArea;
+        _relativeDrawingArea = ComputeRelativeDrawingArea(_relativeDrawingAreaOverride);
+        _absoluteDrawingArea = ComputeAbsoluteDrawingArea();
+        _clipArea = ComputeClipArea();
+
+        var childrenAreas = RepositionChildren(_relativeDrawingArea.Size, _children.Select(c => c._wrapSize));
+
+        if (childrenAreas.Count != 0 && childrenAreas.Count != _children.Count)
+        {
+            throw new InvalidOperationException($"{nameof(RepositionChildren)} must return the same number of elements as the number of children or be empty: {childrenAreas.Count()} provided but {_children.Count} exist");
+        }
+
+        for (var i = 0; i < _children.Count; i++)
+        {
+            var child = _children[i];
+            child.CancelInvalidation(); // The parent is already invalidated, so no need to invalidate this component.
+            var childArea = childrenAreas.Count != 0 ? childrenAreas[i] : null;
+            child.ComputeDrawingAreas(childArea);
+        }
+
+        // TODO: Add PostRepositionChildren(relativeArea, childrenDrawingAreaList) to allow re-repositioning children after knowing their size.
+        // This second pass layout is very useful for scoll view, so you can re-implement it better.
+        // The implementation would be
+        // - Make sure X and Y are not negative but (0, 0) if the element fits the scroll view (it happens when treebox click on unfold button and the size of the box reduces so much that scroll bars disappear)
+        // - Make scroll bars as rectangles and decide their size based on child size.
+        // And finally remove ActualSize property which is dangerous.
+        // Also make sure all drawing areas of children are re calculated recursively in the sub tree.
+        Validate();
     }
 
     private void UIComponent_MousePress(UIComponent sender, MouseEventArgs e)
