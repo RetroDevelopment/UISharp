@@ -38,6 +38,8 @@ internal class MeasureProvider(Window window, Invalidator invalidator)
 
             if (wrapSizeChanged)
             {
+                // TODO: invalidate only if wrap size actually affects the component rendering area (e.g. manual size or autoWidth or height to wrap)?
+                // Or maybe optimize RecomputeRenderingArea() so that it doesn't visit all children if no change is made to rendering area?
                 component.Invalidate();
                 if (component.Parent != null) processQueue.Enqueue(component.Parent);
             }
