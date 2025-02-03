@@ -28,8 +28,11 @@ internal class Invalidator
         }
     }
 
-    public int GetNextInvalidatedLevel(int level) =>
+    public int GetUpperInvalidatedLevel(int level) =>
             _invalidatedItems.Keys.Reverse().FirstOrDefault(k => k < level, -1);
+
+    public int GetLowerInvalidatedLevel(int level) =>
+        _invalidatedItems.Keys.FirstOrDefault(k => k > level, -1);
 
     public void AddInvalidatedComponentsToQueue(int level, UniqueQueue<UIComponent> queue)
     {

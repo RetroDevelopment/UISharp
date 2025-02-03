@@ -26,9 +26,6 @@
         </gridLayout>
 
         <scrollView id="preview" autoWidth="stretch" autoHeight="stretch" />
-
-        <scrollView id="propertiesScrollView" autoWidth="stretch" autoHeight="stretch">
-            <listBox id="propertyList" autoWidth="stretch" autoHeight="stretch" />
-        </scrollView>
+        <listBox id="propertyList" autoWidth="stretch" autoHeight="stretch" />
     </gridLayout>
 </mainWindow>

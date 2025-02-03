@@ -41,6 +41,7 @@ internal class MainWindow : Window
     private readonly Button _addButton;
     private readonly Button _removeButton;
     private readonly CheckBox _darkMode;
+    private readonly ListBox _propertyList;
 
     public MainWindow(Application parent,
                       GridLayout mainLayout,
@@ -52,7 +53,8 @@ internal class MainWindow : Window
                       Button refresh,
                       Button add,
                       Button remove,
-                      CheckBox darkMode) : base(parent)
+                      CheckBox darkMode,
+                      ListBox propertyList) : base(parent)
     {
         Initialized += MainWindow_Initialized;
         _mainLayout = mainLayout;
@@ -65,6 +67,7 @@ internal class MainWindow : Window
         _addButton = add;
         _removeButton = remove;
         _darkMode = darkMode;
+        _propertyList = propertyList;
     }
 
     private void MainWindow_Initialized(Window sender, EventArgs e)
@@ -186,8 +189,7 @@ internal class MainWindow : Window
 
     private void SelectedNode_ValueChange(BindableProperty<TreeNode?> sender, ValueChangeEventArgs<TreeNode?> e)
     {
-        var scrollView = _mainLayout.GetComponent<ScrollView>("propertiesScrollView");
-        var listBox = scrollView.GetComponent<ListBox>("propertyList");
+        var listBox = _propertyList;
         listBox.Clear();
 
         if (e.CurrentValue == null)

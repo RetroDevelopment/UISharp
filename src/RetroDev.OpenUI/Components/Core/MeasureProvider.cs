@@ -54,7 +54,21 @@ internal class MeasureProvider(Window window, Invalidator invalidator)
     /// </summary>
     public void RecomputeDrawingAreas()
     {
+        var level = 0;
+        var processQueue = new UniqueQueue<UIComponent>();
 
+        while (level != -1)
+        {
+            _invalidator.AddInvalidatedComponentsToQueue(level, processQueue);
+
+            while (!processQueue.Empty)
+            {
+                var component = processQueue.Dequeue();
+                component.ComputeDrawingAreas(rootCall: true);
+            }
+
+            level = _invalidator.GetLowerInvalidatedLevel(level);
+        }
     }
 
     private bool ShouldChangeLevel(UniqueQueue<UIComponent> processQueue, int level) =>
@@ -72,7 +86,7 @@ internal class MeasureProvider(Window window, Invalidator invalidator)
         }
         else
         {
-            newLevel = _invalidator.GetNextInvalidatedLevel(level);
+            newLevel = _invalidator.GetUpperInvalidatedLevel(level);
         }
 
         if (newLevel >= 0) _invalidator.AddInvalidatedComponentsToQueue(newLevel, processQueue);

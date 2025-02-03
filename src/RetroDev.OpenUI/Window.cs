@@ -94,7 +94,6 @@ public class Window : Container, IContainer
     public void Measure()
     {
         _measureProvider.Measure();
-        ComputeDrawingAreas();
         _invalidator.Clear(); // TODO: remove, rendering will do that
     }
 

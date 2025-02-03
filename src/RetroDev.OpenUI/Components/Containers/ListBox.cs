@@ -49,6 +49,10 @@ public class ListBox : Container, IContainer
         _scrollView.SetComponent(_verticalLayout);
         _scrollView.AutoWidth.Value = AutoSize.Stretch;
         _scrollView.AutoHeight.Value = AutoSize.Stretch;
+        // TODO: add property so user can decide if auto width and height are stretch or wrap for vertical layout.
+        // This changes how the list box is displayed. Also add whether to center or do top left, etc. for inner vertical layout components.
+        // What about adding a new auto size like "MaxWrapStretch" that takes maximum size between wrap and stretch?
+        // That is how many list box look like: they occupy at least the layout plus some more.
         _verticalLayout.AutoWidth.Value = AutoSize.Stretch;
 
         SelectedIndex = new UIProperty<ListBox, uint?>(this, (uint?)null);

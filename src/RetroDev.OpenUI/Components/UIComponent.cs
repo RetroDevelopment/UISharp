@@ -25,6 +25,7 @@ public abstract class UIComponent
     private Point? _mouseDragPointAbsolute = null;
     private Point? _mouseLastDragPointAbsolute = null;
     private Size _wrapSize; // The size with auto size to wrap.
+    private Area? _relativeDrawingAreaOverride = null; // Memorizes the latest parameter used in RecomputeDrawingArea()
     private Area _relativeDrawingArea; // Area relative to the parent. So (0, 0) is top left of parent.
     private Area _absoluteDrawingArea; // Area relative to the window. So (0, 0) is top left of window.
     private Area _clipArea; // Absolute clipping area. Each pixel with absolute cooridnates outside of the area are clipped.
@@ -286,7 +287,9 @@ public abstract class UIComponent
     /// <summary>
     /// Computes the size of the component if <see cref="AutoSize.Wrap"/> is chose for both width and hight.
     /// </summary>
-    /// <returns>The wrap size of the component.</returns>
+    /// <returns>
+    /// <see langword="true" /> if the size has changeed since the last time thos method was called, otherwise <see langword="false" />.
+    /// </returns>
     public bool ReComputeWrapSize()
     {
         var childrenSize = _children.Select(c => c._wrapSize);
@@ -300,17 +303,10 @@ public abstract class UIComponent
         return currentWrapSize != newWrapSize;
     }
 
-    public void ComputeDrawingAreas(Area? relativeDrawingArea = null)
+    public void ComputeDrawingAreas(Area? relativeDrawingArea = null, bool rootCall = false)
     {
-        if (relativeDrawingArea != null)
-        {
-            _relativeDrawingArea = ComputeRelativeDrawingArea(relativeDrawingArea);
-        }
-        else
-        {
-            _relativeDrawingArea = ComputeRelativeDrawingArea();
-        }
-
+        if (!rootCall) _relativeDrawingAreaOverride = relativeDrawingArea;
+        _relativeDrawingArea = ComputeRelativeDrawingArea(_relativeDrawingAreaOverride);
         _absoluteDrawingArea = ComputeAbsoluteDrawingArea();
         _clipArea = ComputeClipArea();
 
@@ -324,6 +320,7 @@ public abstract class UIComponent
         for (var i = 0; i < _children.Count; i++)
         {
             var child = _children[i];
+            child.CancelInvalidation(); // The parent is already invalidated, so no need to invalidate this component.
             var childArea = childrenAreas.Count != 0 ? childrenAreas[i] : null;
             child.ComputeDrawingAreas(childArea);
         }
