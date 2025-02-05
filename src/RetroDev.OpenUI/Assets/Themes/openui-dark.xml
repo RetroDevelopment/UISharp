@@ -1,20 +1,12 @@
 <theme>
     <color key="mainBackground" value="#121212" />
-    <!-- Dark gray background -->
     <color key="primaryBackground" value="#1E1E1E" />
-    <!-- Slightly lighter background for containers -->
     <color key="primaryColor" value="#333333" />
-    <!-- Dark gray for edit text background and checkboxes -->
     <color key="primaryColorDisabled" value="#555555" />
-    <!-- Lighter gray for disabled elements -->
+    <color key="primaryColorContrast" value="#999999" />
     <color key="secondaryColor" value="#1976D2" />
-    <!-- Blue for buttons -->
     <color key="secondaryColorDisabled" value="#64B5F6" />
-    <!-- Lighter blue for buttons (hover state, etc.) -->
     <color key="textColor" value="#FFFFFF" />
-    <!-- White text for sufficient contrast -->
     <color key="textColorDisabled" value="#CCCCCC" />
-    <!-- Lighter text color (e.g., for secondary text) -->
     <color key="borderColor" value="#4CAF50" />
-    <!-- Contrasting color for borders (example green) -->
 </theme>

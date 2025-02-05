@@ -20,6 +20,11 @@ internal class LifeCycle
         EVENT_POLL,
 
         /// <summary>
+        /// Measuring drawing areas before rendering.
+        /// </summary>
+        MEASURE,
+
+        /// <summary>
         /// Rendering the UI.
         /// </summary>
         RENDERING,

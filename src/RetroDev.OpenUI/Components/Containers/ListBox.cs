@@ -1,8 +1,6 @@
-﻿using System.Diagnostics.Metrics;
-using RetroDev.OpenUI.Components.AutoArea;
+﻿using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Graphics;
-using RetroDev.OpenUI.Graphics.Shapes;
 using RetroDev.OpenUI.Properties;
 
 namespace RetroDev.OpenUI.Components.Containers;
@@ -23,7 +21,8 @@ public class ListBox : Container, IContainer
     private readonly VerticalLayout _verticalLayout;
     private readonly ScrollView _scrollView;
 
-    protected override Size ComputeSizeHint() => new(100, 100);
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
+        childrenSize.Any() ? childrenSize.First() : Size.Zero;
 
     /// <summary>
     /// The index of the selected element in the list, or <see langword="null" /> if no element is selected.
@@ -35,23 +34,31 @@ public class ListBox : Container, IContainer
     /// </summary>
     public UIProperty<ListBox, UIComponent?> SelectedItem { get; }
 
+    /// <inheritdoc />
     public override IEnumerable<UIComponent> Children => _verticalLayout.Children;
 
+    /// <summary>
+    /// Creates a new grid layout.
+    /// </summary>
+    /// <param name="application">The application owning this component.</param>
     public ListBox(Application application) : base(application)
     {
         _verticalLayout = new VerticalLayout(application);
         _scrollView = new ScrollView(application);
 
         _scrollView.SetComponent(_verticalLayout);
-        _verticalLayout.AutoWidth.Value = AutoSize.Wrap;
-        _verticalLayout.AutoHeight.Value = AutoSize.Wrap;
-        _verticalLayout.HorizontalAlignment.Value = Alignment.Left;
-        _verticalLayout.VerticalAlignment.Value = Alignment.Top;
+        _scrollView.AutoWidth.Value = AutoSize.Stretch;
+        _scrollView.AutoHeight.Value = AutoSize.Stretch;
+        // TODO: add property so user can decide if auto width and height are stretch or wrap for vertical layout.
+        // This changes how the list box is displayed. Also add whether to center or do top left, etc. for inner vertical layout components.
+        // What about adding a new auto size like "MaxWrapStretch" that takes maximum size between wrap and stretch?
+        // That is how many list box look like: they occupy at least the layout plus some more.
+        _verticalLayout.AutoWidth.Value = AutoSize.Stretch;
 
-        SelectedIndex = new UIProperty<ListBox, uint?>(this, null);
+        SelectedIndex = new UIProperty<ListBox, uint?>(this, (uint?)null);
         SelectedIndex.ValueChange += SelectedIndex_ValueChange;
 
-        SelectedItem = new UIProperty<ListBox, UIComponent?>(this, null);
+        SelectedItem = new UIProperty<ListBox, UIComponent?>(this, (UIComponent?)null);
         SelectedItem.ValueChange += SelectedItem_ValueChange;
 
         AddChild(_scrollView);
@@ -62,20 +69,16 @@ public class ListBox : Container, IContainer
         AddComponent(component, null);
     }
 
-    public void AddComponent(UIComponent component, UIComponent? after)
+    public void AddComponent(UIComponent component, UIComponent? after = null)
     {
         _verticalLayout.AddComponent(component, after);
         var container = _verticalLayout.Panels.First(p => p.Children.ElementAt(0) == component);
         container.MousePress += Container_MousePress;
-        container.ChildrenRendered += Container_ChildrenRendered;
     }
 
     public void RemoveComponent(uint index)
     {
         SelectedIndex.Value = null;
-        _verticalLayout.RowSizes.Value = string.Empty;
-        _verticalLayout.Width.Value = float.PositiveInfinity;
-        _verticalLayout.Height.Value = float.PositiveInfinity;
         _verticalLayout.RemoveComponent(index);
     }
 
@@ -85,25 +88,23 @@ public class ListBox : Container, IContainer
         SelectedIndex.Value = null;
     }
 
-    private void Container_ChildrenRendered(UIComponent sender, Events.RenderingEventArgs e)
-    {
-        if (((Panel)sender).Children.ElementAt(0) == SelectedItem.Value)
-        {
-            var rectangle = new Rectangle(new Color(255, 0, 0, 100));
-            var size = sender.RelativeDrawingArea.Size;
-            e.Canvas.Render(rectangle, new Area(Point.Zero, size));
-        }
-    }
-
     private void Container_MousePress(UIComponent sender, Events.MouseEventArgs e)
     {
+        if (SelectedIndex.Value != null)
+        {
+            var previouslySelectedPanel = _verticalLayout.Panels.ElementAt((int)SelectedIndex.Value);
+            previouslySelectedPanel.BackgroundColor.Value = Color.Transparent;
+            previouslySelectedPanel.BackgroundColor.RemoveBinding();
+        }
+
         var selectedPanel = (Panel)sender;
         var index = _verticalLayout.Panels.ToList().IndexOf(selectedPanel);
         if (index < 0) throw new ArgumentException($"Cannot find element in list box: make sure the element has not been deleted");
         SelectedIndex.Value = (uint)index;
+        selectedPanel.BackgroundColor.BindDestinationToSource(Application.Theme.SecondaryColor);
     }
 
-    private void SelectedIndex_ValueChange(ListBox sender, ValueChangeEventArgs<uint?> e)
+    private void SelectedIndex_ValueChange(BindableProperty<uint?> sender, ValueChangeEventArgs<uint?> e)
     {
         var numberOfItems = _verticalLayout.Children.Count();
         if (e.CurrentValue != null && e.CurrentValue.Value > numberOfItems)
@@ -114,7 +115,7 @@ public class ListBox : Container, IContainer
         SelectedItem.Value = e.CurrentValue != null ? Children.ElementAt((int)e.CurrentValue) : null;
     }
 
-    private void SelectedItem_ValueChange(ListBox sender, ValueChangeEventArgs<UIComponent?> e)
+    private void SelectedItem_ValueChange(BindableProperty<UIComponent?> sender, ValueChangeEventArgs<UIComponent?> e)
     {
         if (e.CurrentValue == null)
         {
@@ -125,26 +126,5 @@ public class ListBox : Container, IContainer
         var selectedIndex = _verticalLayout.Children.ToList().IndexOf(e.CurrentValue);
         if (selectedIndex == -1) throw new InvalidOperationException("ListBox selected element not found");
         SelectedIndex.Value = (uint)selectedIndex;
-    }
-
-    protected override void RepositionChildrenImplementation()
-    {
-        if (!Children.Any()) return;
-
-        _scrollView.Width.Value = RelativeDrawingArea.Size.Width;
-        _scrollView.Height.Value = RelativeDrawingArea.Size.Height;
-
-        _verticalLayout.RowSizes.Value = string.Join(',', Children.Select(c => c.RelativeDrawingArea.Size.Height.Value.ToString() + "px"));
-        _verticalLayout.Width.Value = Math.Max(Children.Max(c => c.RelativeDrawingArea.Size.Width.Value), RelativeDrawingArea.Size.Width);
-        _verticalLayout.Height.Value = Children.Sum(c => c.RelativeDrawingArea.Size.Height.Value);
-
-        var verticalLayoutSize = _verticalLayout.RelativeDrawingArea.Size;
-        var scrollViewSize = _scrollView.RelativeDrawingArea.Size;
-
-        if (verticalLayoutSize.Width < scrollViewSize.Width || verticalLayoutSize.Height < scrollViewSize.Height)
-        {
-            _verticalLayout.X.Value = 0;
-            _verticalLayout.Y.Value = 0;
-        }
     }
 }

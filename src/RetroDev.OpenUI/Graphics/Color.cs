@@ -200,6 +200,20 @@ public readonly record struct Color(byte RedComponent = 0, byte GreenComponent =
         }
     }
 
+    /// <summary>
+    /// Creates a new <see cref="Color"/> which is the same as <see langword="this" /> color but with the
+    /// <see cref="AlphaComponent"/> equal to the given <paramref name="alphaValue"/>.
+    /// </summary>
+    /// <param name="alphaValue">The alpha value of the new color.</param>
+    /// <returns>
+    /// A new <see cref="Color"/> where <see cref="RedComponent"/> is <see langword="this" />.<see cref="RedComponent"/>,
+    /// <see cref="GreenComponent"/> is <see langword="this" />.<see cref="GreenComponent"/>,
+    /// <see cref="BlueComponent"/> is <see langword="this" />.<see cref="BlueComponent"/> and <see cref="AlphaComponent"/> is
+    /// the given <paramref name="alphaValue"/>.
+    /// </returns>
+    public Color WithAlpha(byte alphaValue) =>
+        new(RedComponent, GreenComponent, BlueComponent, alphaValue);
+
     /// <inheritdoc />
     public override string ToString() =>
         $"({RedComponent}, {GreenComponent}, {BlueComponent}, {AlphaComponent})";

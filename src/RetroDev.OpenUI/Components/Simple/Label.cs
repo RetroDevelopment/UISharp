@@ -1,10 +1,9 @@
-﻿using RetroDev.OpenUI.Components.AutoArea;
+﻿using RetroDev.OpenUI.Components.Core.AutoArea;
+using RetroDev.OpenUI.Components.Shapes;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Events;
 using RetroDev.OpenUI.Graphics;
-using RetroDev.OpenUI.Graphics.Shapes;
 using RetroDev.OpenUI.Properties;
-using RetroDev.OpenUI.Themes;
 
 namespace RetroDev.OpenUI.Components.Simple;
 
@@ -13,6 +12,8 @@ namespace RetroDev.OpenUI.Components.Simple;
 /// </summary>
 public class Label : UIComponent
 {
+    private readonly Text _text;
+
     /// <summary>
     /// The display text.
     /// </summary>
@@ -24,37 +25,24 @@ public class Label : UIComponent
     public UIProperty<Label, Color> TextColor { get; }
 
     /// <inheritdoc/>
-    protected override Size ComputeSizeHint() =>
-        Application.FontServices.ComputeTextSize(Text.Value);
-
-    /// <inheritdoc />
-    protected override bool DefaultIsFocusable => false;
-
-    /// <inheritdoc />
-    protected override IAutoSize DefaultAutoWidth => AutoSize.Wrap;
-
-    /// <inheritdoc />
-    protected override IAutoSize DefaultAutoHeight => AutoSize.Wrap;
-
-    /// <inheritdoc />
-    protected override IHorizontalAlignment DefaultHorizontalAlignment => Alignment.Center;
-
-    /// <inheritdoc />
-    protected override IVerticalAlignment DefaultVerticalAlignment => Alignment.Center;
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
+        childrenSize.ElementAt(0);
 
     /// <summary>
     /// Creates a new label.
     /// </summary>
-    /// <param name="parent">The application that contain this label.</param>
-    public Label(Application parent) : base(parent)
+    /// <param name="application">The application that contain this label.</param>
+    public Label(Application application) : base(application, isFocusable: false, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
     {
         Text = new UIProperty<Label, string>(this, string.Empty);
-        TextColor = new UIProperty<Label, Color>(this, Theme.DefaultColor);
+        TextColor = new UIProperty<Label, Color>(this, Application.Theme.TextColor, BindingType.DestinationToSource);
 
-        Text.ValueChange += (_, _) => SizeHintCache.MarkDirty();
-        TextColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.TextColor, BindingType.DestinationToSource));
+        _text = new Text(application);
+        _text.BackgroundColor.BindDestinationToSource(BackgroundColor);
+        _text.TextColor.BindDestinationToSource(TextColor);
+        _text.DisplayText.BindDestinationToSource(Text);
 
-        RenderFrame += Label_RenderFrame;
+        AddChild(_text);
     }
 
     /// <summary>
@@ -65,12 +53,5 @@ public class Label : UIComponent
     public Label(Application parent, string text) : this(parent)
     {
         Text.Value = text;
-    }
-
-    private void Label_RenderFrame(UIComponent sender, RenderingEventArgs e)
-    {
-        var canvas = e.Canvas;
-        var text = new Text(BackgroundColor, TextColor, Text);
-        canvas.Render(text, RelativeDrawingArea.Fill());
     }
 }

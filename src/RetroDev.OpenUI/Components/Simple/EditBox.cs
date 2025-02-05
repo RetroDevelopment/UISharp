@@ -1,11 +1,9 @@
-﻿using RetroDev.OpenUI.Components.AutoArea;
+﻿using RetroDev.OpenUI.Components.Core.AutoArea;
+using RetroDev.OpenUI.Components.Shapes;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Events;
 using RetroDev.OpenUI.Graphics;
-using RetroDev.OpenUI.Graphics.Shapes;
 using RetroDev.OpenUI.Properties;
-using RetroDev.OpenUI.Themes;
-using SDL2;
 
 namespace RetroDev.OpenUI.Components.Simple;
 
@@ -14,6 +12,7 @@ namespace RetroDev.OpenUI.Components.Simple;
 /// </summary>
 public class EditBox : UIComponent
 {
+    private readonly Rectangle _backgroundRectangle;
     private readonly Label _inputTextLabel;
 
     /// <summary>
@@ -42,58 +41,49 @@ public class EditBox : UIComponent
     public UIProperty<EditBox, Color> DisabledBackgroundColor { get; }
 
     /// <inheritdoc />
-    protected override IAutoSize DefaultAutoWidth => AutoSize.Wrap;
-
-    /// <inheritdoc />
-    protected override IAutoSize DefaultAutoHeight => AutoSize.Wrap;
-
-    /// <inheritdoc />
-    protected override IHorizontalAlignment DefaultHorizontalAlignment => Alignment.Left;
-
-    /// <inheritdoc />
-    protected override IVerticalAlignment DefaultVerticalAlignment => Alignment.Center;
-
-    /// <inheritdoc />
-    protected override Size ComputeSizeHint() => new(20 * 10, 20); // 20 is font size and 10 the characters (estimate)
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) => new(20 * 10, 20); // 20 is font size and 10 the characters (estimate)
 
     /// <summary>
     /// Creates a new edit box to insert text.
     /// </summary>
-    /// <param name="parent">The application that contains this button.</param>
-    public EditBox(Application parent) : base(parent)
+    /// <param name="application">The application that contains this button.</param>
+    public EditBox(Application application) : base(application, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap, horizontalAlignment: Alignment.Left, verticalAlignment: Alignment.Center)
     {
-        _inputTextLabel = new Label(parent);
-        AddChild(_inputTextLabel);
         Text = new UIProperty<EditBox, string>(this, string.Empty);
-        TextColor = new UIProperty<EditBox, Color>(this, Theme.DefaultColor);
-        DisabledTextColor = new UIProperty<EditBox, Color>(this, Theme.DefaultColor);
-        FocusColor = new UIProperty<EditBox, Color>(this, Theme.DefaultColor);
-        DisabledBackgroundColor = new UIProperty<EditBox, Color>(this, Theme.DefaultColor);
+        TextColor = new UIProperty<EditBox, Color>(this, Application.Theme.TextColor, BindingType.DestinationToSource);
+        DisabledTextColor = new UIProperty<EditBox, Color>(this, Application.Theme.TextColorDisabled, BindingType.DestinationToSource);
+        FocusColor = new UIProperty<EditBox, Color>(this, Application.Theme.BorderColor, BindingType.DestinationToSource);
+        DisabledBackgroundColor = new UIProperty<EditBox, Color>(this, Application.Theme.BorderColor, BindingType.DestinationToSource);
+        BackgroundColor.BindDestinationToSource(Application.Theme.PrimaryBackground);
 
-        _inputTextLabel.Text.AddBinder(new PropertyBinder<EditBox, string>(Text, BindingType.DestinationToSource));
+        _backgroundRectangle = new Rectangle(application);
+        _backgroundRectangle.BackgroundColor.BindDestinationToSource(BackgroundColor);
+        _backgroundRectangle.BorderColor.BindDestinationToSource(Application.Theme.BorderColor);
+        _backgroundRectangle.AutoCornerRadiusRatio.Value = 0.5f;
+        UpdateBackgroundRectangleColorBinding();
+        UpdateBackgroundRectangleBorder();
+        AddChild(_backgroundRectangle);
+
+        _inputTextLabel = new Label(application);
+        _inputTextLabel.Text.BindDestinationToSource(Text);
         _inputTextLabel.AutoWidth.Value = AutoSize.Wrap;
         _inputTextLabel.AutoHeight.Value = AutoSize.Wrap;
         _inputTextLabel.HorizontalAlignment.Value = Alignment.Left;
         _inputTextLabel.VerticalAlignment.Value = Alignment.Center;
-
-        TextColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.TextColor, BindingType.DestinationToSource));
-        DisabledTextColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.TextColorDisabled, BindingType.DestinationToSource));
-        BackgroundColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.PrimaryBackground, BindingType.DestinationToSource));
-        DisabledBackgroundColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.PrimaryColorDisabled, BindingType.DestinationToSource));
-        FocusColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.BorderColor, BindingType.DestinationToSource));
-
         UpdateTextColorBinding();
-        Enabled.ValueChange += Enabled_ValueChange;
-        RenderFrame += EditBox_RenderFrame;
+        AddChild(_inputTextLabel);
+
         MousePress += EditBox_MousePress;
         KeyPress += EditBox_KeyPress;
         TextInput += EditBox_TextInput;
+        Enabled.ValueChange += Enabled_ValueChange;
+        Focus.ValueChange += Focus_ValueChange;
     }
 
     private void EditBox_KeyPress(UIComponent sender, KeyEventArgs e)
     {
         var key = e.Button;
-        if (key == KeyButton.Backspace && !string.IsNullOrEmpty(Text))
+        if (key == KeyButton.Backspace && !string.IsNullOrEmpty(Text.Value))
         {
             Text.Value = Text.Value.Substring(0, Text.Value.Length - 1);
         }
@@ -112,39 +102,51 @@ public class EditBox : UIComponent
         }
     }
 
-    private void EditBox_RenderFrame(UIComponent sender, RenderingEventArgs e)
+    private void Enabled_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
     {
-        var size = RelativeDrawingArea.Size;
-        var canvas = e.Canvas;
-        float minimumDimension = Math.Min(size.Width, size.Height);
-        PixelUnit cornerRadius = (minimumDimension / 2.0f) * 0.5f;
+        UpdateBackgroundRectangleColorBinding();
+        UpdateTextColorBinding();
+    }
 
-        Color rectangleBackgroundColor = Enabled ? BackgroundColor : DisabledBackgroundColor;
-        var backgroundRectangle = new Rectangle(BackgroundColor: rectangleBackgroundColor, CornerRadiusX: cornerRadius, CornerRadiusY: cornerRadius);
-        canvas.Render(backgroundRectangle, RelativeDrawingArea.Fill());
+    private void Focus_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
+    {
+        UpdateBackgroundRectangleBorder();
+    }
 
-        if (Focus.Value)
+    private void UpdateBackgroundRectangleColorBinding()
+    {
+        if (Enabled.Value)
         {
-            var borderRectangle = new Rectangle(BorderColor: FocusColor, BorderThickness: 5.0f, CornerRadiusX: cornerRadius, CornerRadiusY: cornerRadius);
-            canvas.Render(borderRectangle, RelativeDrawingArea.Fill());
+            _backgroundRectangle.BackgroundColor.BindDestinationToSource(BackgroundColor);
+        }
+        else
+        {
+            _backgroundRectangle.BackgroundColor.BindDestinationToSource(DisabledBackgroundColor);
         }
     }
 
     private void UpdateTextColorBinding()
     {
-        _inputTextLabel.TextColor.RemoveBinders();
-        if (Enabled)
+        if (Enabled.Value)
         {
-            _inputTextLabel.TextColor.AddBinder(new PropertyBinder<EditBox, Color>(TextColor, BindingType.DestinationToSource));
+            _inputTextLabel.TextColor.BindDestinationToSource(TextColor);
         }
         else
         {
-            _inputTextLabel.TextColor.AddBinder(new PropertyBinder<EditBox, Color>(DisabledTextColor, BindingType.DestinationToSource));
+            _inputTextLabel.TextColor.BindDestinationToSource(DisabledTextColor);
         }
     }
 
-    private void Enabled_ValueChange(UIComponent sender, ValueChangeEventArgs<bool> e)
+    private void UpdateBackgroundRectangleBorder()
     {
-        UpdateTextColorBinding();
+        if (Focus.Value)
+        {
+            _backgroundRectangle.BorderThickness.Value = 5.0f;
+        }
+        else
+        {
+            _backgroundRectangle.BorderThickness.Value = 0.0f;
+        }
     }
+
 }

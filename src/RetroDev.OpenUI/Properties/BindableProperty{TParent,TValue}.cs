@@ -6,9 +6,7 @@ namespace RetroDev.OpenUI.Properties;
 /// <summary>
 /// A property wrapper that allows for dynamic one or two way binding.
 /// </summary>
-/// <typeparam name="TParent">The class owning this property.</typeparam>
 /// <typeparam name="TValue">The property value type.</typeparam>
-/// <param name="parent">The object owning this property.</param>
 /// <param name="value">The property value.</param>
 /// <param name="allowedBinding">
 /// The allowed <see cref="BindingType"/> (<see cref="BindingType.TwoWays"/> by default).
@@ -17,18 +15,26 @@ namespace RetroDev.OpenUI.Properties;
 /// <remarks>
 /// If <paramref name="allowedBinding"/> is <see cref="BindingType.TwoWays"/> it means that bidirectional binding is allowed, including (<see cref="BindingType.SourceToDestination"/> and <see cref="BindingType.DestinationToSource"/>).
 /// </remarks>
+/// <remarks>
+/// To access a <see cref="BindableProperty{TValue}"/> value, use the <see cref="Value"/> property.
+/// There is no implicit case implemented to avoid confusion between the following
+/// <c>new BindableProperty(AnotherProperty.Value, ...)</c>c>
+/// and
+/// <c>new BindableProperty(AnotherProperty, ...)</c>
+/// The former creates a property with an initial value, the latter creates a property bound to <c>AnotherProperty</c>.
+/// </remarks>
 [DebuggerDisplay("{Value}")]
-public class BindableProperty<TParent, TValue>(TParent parent, TValue value, Application? application = null, BindingType allowedBinding = BindingType.TwoWays)
+public class BindableProperty<TValue>(TValue value, Application? application = null, BindingType allowedBinding = BindingType.TwoWays)
 {
     private readonly Application? _application = application;
     private TValue _value = value;
-    private List<IBinder<TValue>> _binders = [];
+    private IBinder? _binder;
 
     /// <summary>
     /// Triggers then the <see cref="Value"/> changes. Setting <see cref="Value"/> to the same value
     /// does not trigger this event, only modifying the value does.
     /// </summary>
-    public event TypeSafeEventHandler<TParent, ValueChangeEventArgs<TValue>> ValueChange = (_, _) => { };
+    public event TypeSafeEventHandler<BindableProperty<TValue>, ValueChangeEventArgs<TValue>> ValueChange = (_, _) => { };
 
     /// <summary>
     /// The property value.
@@ -43,8 +49,7 @@ public class BindableProperty<TParent, TValue>(TParent parent, TValue value, App
             {
                 var previousValue = _value;
                 _value = value;
-                ValueChange.Invoke(Parent, new ValueChangeEventArgs<TValue>(previousValue, value));
-                NotifySourceToDestnationBinders();
+                ValueChange.Invoke(this, new ValueChangeEventArgs<TValue>(previousValue, value));
             }
         }
         get
@@ -55,11 +60,6 @@ public class BindableProperty<TParent, TValue>(TParent parent, TValue value, App
     }
 
     /// <summary>
-    /// The object owning this property.
-    /// </summary>
-    public TParent Parent => parent;
-
-    /// <summary>
     /// The allowed <see cref="BindingType"/>.
     /// If <paramref name="allowedBinding"/> is <see cref="BindingType.TwoWays"/> it means that bidirectional binding is allowed,
     /// including (<see cref="BindingType.SourceToDestination"/> and <see cref="BindingType.DestinationToSource"/>).
@@ -67,100 +67,153 @@ public class BindableProperty<TParent, TValue>(TParent parent, TValue value, App
     public BindingType AllowedBinding { get; } = allowedBinding;
 
     /// <summary>
-    /// Adds a property binder to this property.
+    /// Creates a new property.
     /// </summary>
-    /// <param name="binder">The binder to bind this propery value with.</param>
-    /// <exception cref="InvalidOperationException">If <paramref name="binder"/> type is either <see cref="BindingType.DestinationToSource"/>
-    /// or <see cref="BindingType.TwoWays"/> and a binder with one of these two types has already been added.</exception>
-    public void AddBinder(IBinder<TValue> binder)
+    /// <param name="destinationProperty">The destination property to bind.</param>
+    /// <param name="bindingType">
+    /// The <see cref="BindingType"/> (<see langword="this"/> property is the source property and).
+    /// the given <paramref name="destinationProperty" /> is the destination property.
+    /// </param>
+    /// <param name="application">The application owning this property.</param>
+    /// <param name="allowedBinding">The allowed <see cref="BindingType"/> (<see cref="BindingType.TwoWays"/> by default).</param>
+    public BindableProperty(BindableProperty<TValue> destinationProperty, BindingType bindingType = BindingType.TwoWays, Application? application = null, BindingType allowedBinding = BindingType.TwoWays) : this(destinationProperty.Value, application, allowedBinding)
     {
-        EnsureBindingIsAllowed(binder);
-
-        switch (binder.Binding)
-        {
-            case BindingType.SourceToDestination:
-                binder.NotifySourceChanged(Value);
-                break;
-            case BindingType.DestinationToSource:
-                EnsureBinderHasNoDestinationToSource();
-                binder.DestinationChange += Binder_DestinationChange;
-                if (binder.CurrentValue != null) Value = binder.CurrentValue;
-                break;
-            case BindingType.TwoWays:
-                EnsureBinderHasNoDestinationToSource();
-                binder.DestinationChange += Binder_DestinationChange;
-                if (binder.CurrentValue != null) Value = binder.CurrentValue;
-                break;
-            default:
-                throw new ArgumentException($"Unhandled binding type {binder.Binding}");
-        }
-
-        _binders.Add(binder);
+        Bind(destinationProperty, bindingType);
     }
 
     /// <summary>
-    /// Removes all the <see cref="IBinder{TValue}"/> bound to <see langword="this"/> property.
+    /// Binds <see langword="this" /> property to the given <paramref name="destinationProperty"/> and removes every existing binding.
     /// </summary>
-    public void RemoveBinders()
+    /// <param name="destinationProperty">The destination property to bind.</param>
+    /// <param name="bindingType">
+    /// The <see cref="BindingType"/> (<see langword="this"/> property is the source property and).
+    /// the given <paramref name="destinationProperty" /> is the destination property.
+    /// </param>
+    public void Bind(BindableProperty<TValue> destinationProperty, BindingType bindingType)
     {
-        _binders.Where(BindsSourceToDestination)
-                .ToList()
-                .ForEach(binder => binder.Unbind());
+        _binder?.Unbind();
+        _binder = new PropertyBinder<TValue, TValue>(this, destinationProperty, bindingType, x => x, x => x);
+    }
 
-        _binders.Where(BindsDestinationToSource)
-                .ToList()
-                .ForEach(binder => binder.DestinationChange -= Binder_DestinationChange);
+    /// <summary>
+    /// Binds <see langword="this" /> property to the given <paramref name="destinationProperty"/> and removes every existing binding.
+    /// </summary>
+    /// <typeparam name="TDestinationValueType">The <paramref name="destinationProperty"/> value type.</typeparam>
+    /// <param name="destinationProperty">The destination property to bind.</param>
+    /// <param name="bindingType">
+    /// The <see cref="BindingType"/> (<see langword="this"/> property is the source property and).
+    /// the given <paramref name="destinationProperty" /> is the destination property.
+    /// </param>
+    /// <param name="converter">A converter to convert source and destination property so that they match.</param>
+    public void Bind<TDestinationValueType>(BindableProperty<TDestinationValueType> destinationProperty, BindingType bindingType, IBindingValueConverter<TValue, TDestinationValueType> converter)
+    {
+        _binder?.Unbind();
+        _binder = new PropertyBinder<TValue, TDestinationValueType>(this, destinationProperty, bindingType, converter);
+    }
 
-        _binders.Clear();
+    /// <summary>
+    /// Binds <see langword="this" /> property to the given <paramref name="destinationProperty"/> and removes every existing binding.
+    /// </summary>
+    /// <typeparam name="TDestinationValueType">The <paramref name="destinationProperty"/> value type.</typeparam>
+    /// <param name="destinationProperty">The destination property to bind.</param>
+    /// <param name="bindingType">
+    /// The <see cref="BindingType"/> (<see langword="this"/> property is the source property and).
+    /// the given <paramref name="destinationProperty" /> is the destination property.
+    /// </param>
+    /// <param name="sourceToDestinationConverter">The function converting from source property value to destination property value.</param>
+    /// <param name="destinationToSourceConverter">The function converting from destination property value to source property value.</param>
+    public void Bind<TDestinationValueType>(BindableProperty<TDestinationValueType> destinationProperty,
+                                            BindingType bindingType,
+                                            Func<TValue, TDestinationValueType> sourceToDestinationConverter,
+                                            Func<TDestinationValueType, TValue> destinationToSourceConverter)
+    {
+        _binder?.Unbind();
+        _binder = new PropertyBinder<TValue, TDestinationValueType>(this, destinationProperty, bindingType, sourceToDestinationConverter, destinationToSourceConverter);
+    }
+
+    /// <summary>
+    /// Binds <see langword="this" /> property to the given <paramref name="destinationProperty"/> using <see cref="BindingType.SourceToDestination"/> binding and removes every existing binding.
+    /// </summary>
+    /// <param name="destinationProperty">The destination property to bind.</param>
+    /// The <see cref="BindingType"/> (<see langword="this"/> property is the source property and).
+    /// the given <paramref name="destinationProperty" /> is the destination property.
+    /// </param>
+    public void BindSourceToDestination(BindableProperty<TValue> destinationProperty)
+    {
+        Bind(destinationProperty, BindingType.SourceToDestination);
+    }
+
+    /// <summary>
+    /// Binds <see langword="this" /> property to the given <paramref name="destinationProperty"/> using <see cref="BindingType.SourceToDestination"/> binding and removes every existing binding.
+    /// </summary>
+    /// <typeparam name="TDestinationValueType">The <paramref name="destinationProperty"/> value type.</typeparam>
+    /// <param name="destinationProperty">The destination property to bind.</param>
+    /// <param name="sourceToDestinationConverter">The function converting from source property value to destination property value.</param>
+    public void BindSourceToDestination<TDestinationValueType>(BindableProperty<TDestinationValueType> destinationProperty,
+                                                               Func<TValue, TDestinationValueType> sourceToDestinationConverter)
+    {
+        Bind(destinationProperty, BindingType.SourceToDestination, sourceToDestinationConverter, _ => throw new InvalidOperationException());
+    }
+
+    /// <summary>
+    /// Binds <see langword="this" /> property to the given <paramref name="destinationProperty"/> using <see cref="BindingType.DestinationToSource"/> binding and removes every existing binding.
+    /// </summary>
+    /// <param name="destinationProperty">The destination property to bind.</param>
+    /// The <see cref="BindingType"/> (<see langword="this"/> property is the source property and).
+    /// the given <paramref name="destinationProperty" /> is the destination property.
+    /// </param>
+    public void BindDestinationToSource(BindableProperty<TValue> destinationProperty)
+    {
+        Bind(destinationProperty, BindingType.DestinationToSource);
+    }
+
+    /// <summary>
+    /// Binds <see langword="this" /> property to the given <paramref name="destinationProperty"/> using <see cref="BindingType.DestinationToSource"/> binding and removes every existing binding.
+    /// </summary>
+    /// <typeparam name="TDestinationValueType">The <paramref name="destinationProperty"/> value type.</typeparam>
+    /// <param name="destinationProperty">The destination property to bind.</param>
+    /// <param name="destinationToSourceConverter">The function converting from destination property value to source property value.</param>
+    public void BindDestinationToSource<TDestinationValueType>(BindableProperty<TDestinationValueType> destinationProperty,
+                                                                    Func<TDestinationValueType, TValue> destinationToSourceConverter)
+    {
+        Bind(destinationProperty, BindingType.DestinationToSource, _ => throw new InvalidOperationException(), destinationToSourceConverter);
     }
 
 
     /// <summary>
-    /// Implicit cast from <see cref="BindableProperty{TParent, TValue}"/> to <typeparamref name="TValue"/>.
+    /// Binds <see langword="this" /> property to the given <paramref name="destinationProperty"/> using <see cref="BindingType.TwoWays"/> binding and removes every existing binding.
     /// </summary>
-    /// <param name="property">The <see cref="BindableProperty{TParent, TValue}"/> to cast.</param>
-    public static implicit operator TValue(BindableProperty<TParent, TValue> property) => property._value;
-
-    private void NotifySourceToDestnationBinders()
+    /// <param name="destinationProperty">The destination property to bind.</param>
+    /// The <see cref="BindingType"/> (<see langword="this"/> property is the source property and).
+    /// the given <paramref name="destinationProperty" /> is the destination property.
+    /// </param>
+    public void BindSourceTwoWays(BindableProperty<TValue> destinationProperty)
     {
-        foreach (var binder in _binders.Where(BindsSourceToDestination))
-        {
-            binder.NotifySourceChanged(_value);
-        }
+        Bind(destinationProperty, BindingType.TwoWays);
     }
 
-    private void EnsureBinderHasNoDestinationToSource()
+    /// <summary>
+    /// Binds <see langword="this" /> property to the given <paramref name="destinationProperty"/> using <see cref="BindingType.TwoWays"/> binding and removes every existing binding.
+    /// </summary>
+    /// <typeparam name="TDestinationValueType">The <paramref name="destinationProperty"/> value type.</typeparam>
+    /// <param name="destinationProperty">The destination property to bind.</param>
+    /// <param name="bindingType">
+    /// <param name="sourceToDestinationConverter">The function converting from source property value to destination property value.</param>
+    /// <param name="destinationToSourceConverter">The function converting from destination property value to source property value.</param>
+    public void BindTwoWays<TDestinationValueType>(BindableProperty<TDestinationValueType> destinationProperty,
+                                                   BindingType bindingType,
+                                                   Func<TValue, TDestinationValueType> sourceToDestinationConverter,
+                                                   Func<TDestinationValueType, TValue> destinationToSourceConverter)
     {
-        if (_binders.Where(BindsDestinationToSource).Count() != 0)
-        {
-            throw new InvalidOperationException("Only one destination to source or two ways binding allowed per property");
-        }
-    }
-
-    private void EnsureBindingIsAllowed(IBinder<TValue> binder)
-    {
-        switch (AllowedBinding)
-        {
-            case BindingType.TwoWays:
-                break;
-            case BindingType.SourceToDestination:
-                if (binder.Binding != BindingType.SourceToDestination) throw new InvalidOperationException($"Binding type not allowed {binder.Binding}: allowed binding is {AllowedBinding}");
-                break;
-            case BindingType.DestinationToSource:
-                if (binder.Binding != BindingType.DestinationToSource) throw new InvalidOperationException($"Binding type not allowed {binder.Binding}: allowed binding is {AllowedBinding}");
-                break;
-        }
+        Bind(destinationProperty, BindingType.TwoWays, sourceToDestinationConverter, destinationToSourceConverter);
     }
 
 
-    private bool BindsSourceToDestination(IBinder<TValue> binder) =>
-        binder.Binding == BindingType.SourceToDestination || binder.Binding == BindingType.TwoWays;
-
-    private bool BindsDestinationToSource(IBinder<TValue> binder) =>
-        binder.Binding == BindingType.DestinationToSource || binder.Binding == BindingType.TwoWays;
-
-    private void Binder_DestinationChange(object? sender, BinderValueChangeEventArgs<TValue> e)
+    /// <summary>
+    /// Removes a binding if any.
+    /// </summary>
+    public void RemoveBinding()
     {
-        Value = e.Value;
+        _binder?.Unbind();
     }
 }

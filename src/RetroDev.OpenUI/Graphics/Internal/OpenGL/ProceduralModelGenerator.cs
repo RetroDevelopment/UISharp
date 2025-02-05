@@ -8,10 +8,18 @@ internal class ProceduralModelGenerator
     public Model2D Rectangle { get; }
     public Model2D Circle { get; }
 
+    public int DrawCalls => Rectangle._drawCalls + Circle._drawCalls;
+
     public ProceduralModelGenerator()
     {
         Rectangle = CreateRectangleModel();
         Circle = CreateCircleModel();
+    }
+
+    public void ResetDrawCallsCount()
+    {
+        Rectangle._drawCalls = 0;
+        Circle._drawCalls = 0;
     }
 
     // The idea around rectangle is the following: each point will be added by the offset (see VertexAttribute.Generate and vertex shader).

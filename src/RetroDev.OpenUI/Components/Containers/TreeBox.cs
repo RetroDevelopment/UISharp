@@ -1,4 +1,6 @@
-﻿using RetroDev.OpenUI.Components.AutoArea;
+﻿using System.Text.RegularExpressions;
+using System.Xml;
+using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Components.Simple;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Properties;
@@ -23,18 +25,26 @@ public class TreeBox : Container
     private readonly ListBox _listBox;
     private readonly List<TreeNode> _nodes = [];
 
-    protected override Size ComputeSizeHint() => new(100, 100);
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
+        childrenSize.First();
 
     public override IEnumerable<UIComponent> Children => _listBox.Children.Cast<GridLayout>().Select(c => c.Children.ElementAt(2));
 
     public UIProperty<TreeBox, TreeNode?> SelectedNode { get; }
 
+    /// <summary>
+    /// Creates a new tree box.
+    /// </summary>
+    /// <param name="parent">The application that contain this scroll view.</param>
     public TreeBox(Application application) : base(application)
     {
         _listBox = new ListBox(application);
         AddChild(_listBox);
 
-        SelectedNode = new UIProperty<TreeBox, TreeNode?>(this, null);
+        _listBox.AutoWidth.Value = AutoSize.Stretch;
+        _listBox.AutoHeight.Value = AutoSize.Stretch;
+
+        SelectedNode = new UIProperty<TreeBox, TreeNode?>(this, (TreeNode?)null);
         // TODO SelectedNode can be bound to _listBox.SelectedItem and converters!
         SelectedNode.ValueChange += SelectedNode_ValueChange;
         _listBox.SelectedIndex.ValueChange += SelectedIndex_ValueChange;
@@ -49,16 +59,14 @@ public class TreeBox : Container
     {
         component._root = this;
         var gridLayout = new GridLayout(Application);
-        // Later on in resize children we will set appropriate sizes
-        gridLayout.Width.Value = float.PositiveInfinity;
-        gridLayout.Height.Value = float.PositiveInfinity;
         var foldUnfoldButton = new Button(Application);
         foldUnfoldButton.Text.Value = "*";
         foldUnfoldButton.Width.Value = FoldUnfoldButtonSize;
         foldUnfoldButton.Height.Value = FoldUnfoldButtonSize;
         foldUnfoldButton.Action += (_, _) =>
         {
-            component.Collapsed.Value = !component.Collapsed;
+            component.Collapsed.Value = !component.Collapsed.Value;
+            UpdateCollapseState(component, recursive: true);
         };
 
         var panel = new Panel(Application);
@@ -95,6 +103,8 @@ public class TreeBox : Container
             var index = _listBox.Children.Cast<GridLayout>().ToList().FindIndex(c => c == afterGridLayout);
             if (index + 1 < _listBox.Children.Count()) _nodes.Insert(index + 1, component);
             else _nodes.Add(component);
+
+            UpdateCollapseState(after);
         }
         else
         {
@@ -106,6 +116,9 @@ public class TreeBox : Container
         {
             AddTreeNode(child, component);
         }
+
+        UpdateCollapseState(component);
+        component.Collapsed.ValueChange += (_, _) => UpdateCollapseState(component);
     }
 
     public void RemoveTreeNode(TreeNode node)
@@ -119,7 +132,6 @@ public class TreeBox : Container
             InternalRemoveTreeNode(node);
         }
     }
-
 
     public void InternalRemoveTreeNode(TreeNode node)
     {
@@ -138,7 +150,7 @@ public class TreeBox : Container
     public void Clear() =>
         _nodes.Where(n => n.Parent == null).ToList().ForEach(RemoveTreeNode);
 
-    private void SelectedNode_ValueChange(TreeBox sender, ValueChangeEventArgs<TreeNode?> e)
+    private void SelectedNode_ValueChange(BindableProperty<TreeNode?> sender, ValueChangeEventArgs<TreeNode?> e)
     {
         if (e.CurrentValue == null)
         {
@@ -152,7 +164,7 @@ public class TreeBox : Container
         }
     }
 
-    private void SelectedIndex_ValueChange(ListBox sender, ValueChangeEventArgs<uint?> e)
+    private void SelectedIndex_ValueChange(BindableProperty<uint?> sender, ValueChangeEventArgs<uint?> e)
     {
         if (e.CurrentValue == null)
         {
@@ -165,50 +177,46 @@ public class TreeBox : Container
         }
     }
 
-
-    protected override void RepositionChildrenImplementation()
+    private void UpdateCollapseState(TreeNode node, bool recursive = false)
     {
-        foreach (var gridLayout in _listBox.Children.Cast<GridLayout>())
+        var gridLayout = _listBox.Children.Cast<GridLayout>().ToList().Find(c => c.Children.ElementAt(2) == node.Content.Value) ?? throw new ArgumentException("Cannot find node to expand in tree box");
+        var collapseButton = (Button)gridLayout.Children.ElementAt(1);
+
+        // TODO: when using column and row sizes as lists instead of strings no need to use regex
+        string pattern = @"(?<=^.*?,)(\d+)px";
+        string zeroPixelReplacement = "0px";
+        string buttonSizeReplacement = $"{FoldUnfoldButtonSize}px";
+
+        if (node._children.Count == 0)
         {
-            // TODO: better way of inferring indentation space.
-            var indentationSpace = int.Parse(gridLayout.ColumnSizes.Value.Split(',')[0].TrimEnd("px".ToCharArray()));
-            var componentSize = gridLayout.Children.ElementAt(2).RelativeDrawingArea.Size;
-            gridLayout.Width.Value = indentationSpace + FoldUnfoldButtonSize + componentSize.Width;
-            gridLayout.Height.Value = Math.Max(FoldUnfoldButtonSize, componentSize.Height.Value);
+            collapseButton.Visibility.Value = ComponentVisibility.Hidden;
+            gridLayout.ColumnSizes.Value = Regex.Replace(gridLayout.ColumnSizes.Value, pattern, zeroPixelReplacement);
+        }
+        else if (node.Collapsed.Value)
+        {
+            collapseButton.Visibility.Value = ComponentVisibility.Visible;
+            collapseButton.Text.Value = "+";
+            gridLayout.ColumnSizes.Value = Regex.Replace(gridLayout.ColumnSizes.Value, pattern, buttonSizeReplacement);
+        }
+        else
+        {
+            collapseButton.Visibility.Value = ComponentVisibility.Visible;
+            collapseButton.Text.Value = "-";
+            gridLayout.ColumnSizes.Value = Regex.Replace(gridLayout.ColumnSizes.Value, pattern, buttonSizeReplacement);
         }
 
-        UpdateCollapseState();
-    }
-
-    private void UpdateCollapseState()
-    {
-        foreach (var node in _nodes)
+        if (node.ShouldDisplay)
         {
-            var gridLayout = _listBox.Children.Cast<GridLayout>().ToList().Find(c => c.Children.ElementAt(2) == node.Content.Value) ?? throw new ArgumentException("Cannot find node to expand in tree box");
-            var collapseButton = (Button)gridLayout.Children.ElementAt(1);
-            if (node._children.Count == 0)
-            {
-                collapseButton.Visibility.Value = ComponentVisibility.Hidden;
-            }
-            else if (node.Collapsed)
-            {
-                collapseButton.Visibility.Value = ComponentVisibility.Visible;
-                collapseButton.Text.Value = "+";
-            }
-            else
-            {
-                collapseButton.Visibility.Value = ComponentVisibility.Visible;
-                collapseButton.Text.Value = "-";
-            }
+            gridLayout.Visibility.Value = ComponentVisibility.Visible;
+        }
+        else
+        {
+            gridLayout.Visibility.Value = ComponentVisibility.Collapsed;
+        }
 
-            if (node.ShouldDisplay)
-            {
-                gridLayout.Visibility.Value = ComponentVisibility.Visible;
-            }
-            else
-            {
-                gridLayout.Visibility.Value = ComponentVisibility.Collapsed;
-            }
+        if (recursive)
+        {
+            node._children.ForEach(c => UpdateCollapseState(c, true));
         }
     }
 }

@@ -9,6 +9,7 @@ namespace RetroDev.OpenUI.Graphics.Internal.OpenGL;
 internal class ShaderProgram
 {
     private readonly int _id;
+    private Dictionary<string, int> _uniformLocationCache = [];
 
     public ShaderProgram(IEnumerable<Shader> shaders, ILogger logger)
     {
@@ -92,8 +93,11 @@ internal class ShaderProgram
 
     private int GetUniformLocation(string name)
     {
+        if (_uniformLocationCache.ContainsKey(name)) return _uniformLocationCache[name];
+
         var uniformLocation = GL.GetUniformLocation(_id, name);
         if (uniformLocation == -1) throw new RenderingException($"Cannot find uniform {name}");
+        _uniformLocationCache.Add(name, uniformLocation);
 
         return uniformLocation;
     }

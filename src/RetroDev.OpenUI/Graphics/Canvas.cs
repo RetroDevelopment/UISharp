@@ -2,6 +2,8 @@
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Events.Internal;
 using RetroDev.OpenUI.Graphics.Shapes;
+using RetroDev.OpenUI.Logging;
+using SixLabors.Fonts.Unicode;
 
 namespace RetroDev.OpenUI.Graphics;
 
@@ -10,10 +12,13 @@ namespace RetroDev.OpenUI.Graphics;
 /// </summary>
 public class Canvas
 {
+    internal record struct Statistics(uint Elements, uint Text);
+
     private readonly IRenderingEngine _renderingEngine;
     private readonly LifeCycle _lifeCycle;
+    private Statistics _statistics = new(0, 0);
 
-    internal Area? ClippingArea { get; set; }
+    internal Area? ClippingArea { get; set; } = Area.Empty;
     internal Area ContainerAbsoluteDrawingArea { get; set; } = Area.Empty;
 
     /// <summary>
@@ -35,6 +40,7 @@ public class Canvas
     public int CreateTexture(RgbaImage image)
     {
         _lifeCycle.ThrowIfNotOnRenderingPhase();
+        _statistics.Elements++;
         return _renderingEngine.CreateTexture(image);
     }
 
@@ -46,6 +52,7 @@ public class Canvas
     public void Render(Rectangle rectangle, Area area)
     {
         _lifeCycle.ThrowIfNotOnRenderingPhase();
+        _statistics.Elements++;
         _renderingEngine.Render(rectangle, area.ToAbsolute(ContainerAbsoluteDrawingArea), ClippingArea);
     }
 
@@ -57,6 +64,7 @@ public class Canvas
     public void Render(Circle circle, Area area)
     {
         _lifeCycle.ThrowIfNotOnRenderingPhase();
+        _statistics.Elements++;
         _renderingEngine.Render(circle, area.ToAbsolute(ContainerAbsoluteDrawingArea), ClippingArea);
     }
 
@@ -68,6 +76,14 @@ public class Canvas
     public void Render(Text text, Area area)
     {
         _lifeCycle.ThrowIfNotOnRenderingPhase();
+        _statistics.Elements++;
+        _statistics.Text++;
         _renderingEngine.Render(text, area.ToAbsolute(ContainerAbsoluteDrawingArea), ClippingArea);
+    }
+
+    internal void LogStatistics(ILogger logger)
+    {
+        logger.LogVerbose($"Elements rendered: {_statistics.Elements}");
+        logger.LogVerbose($"Text rendered: {_statistics.Text} / {_statistics.Elements} elements");
     }
 }

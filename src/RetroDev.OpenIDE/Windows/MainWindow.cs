@@ -2,8 +2,8 @@
 using RetroDev.OpenIDE.Components;
 using RetroDev.OpenUI;
 using RetroDev.OpenUI.Components;
-using RetroDev.OpenUI.Components.AutoArea;
 using RetroDev.OpenUI.Components.Containers;
+using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Components.Simple;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Properties;
@@ -23,7 +23,7 @@ internal class Container : UIComponent
         children.ForEach(c => AddChild(c));
     }
 
-    protected override Size ComputeSizeHint() => new(100, 100);
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) => new(100, 100);
 }
 
 internal class MainWindow : Window
@@ -41,6 +41,7 @@ internal class MainWindow : Window
     private readonly Button _addButton;
     private readonly Button _removeButton;
     private readonly CheckBox _darkMode;
+    private readonly ListBox _propertyList;
 
     public MainWindow(Application parent,
                       GridLayout mainLayout,
@@ -52,7 +53,8 @@ internal class MainWindow : Window
                       Button refresh,
                       Button add,
                       Button remove,
-                      CheckBox darkMode) : base(parent)
+                      CheckBox darkMode,
+                      ListBox propertyList) : base(parent)
     {
         Initialized += MainWindow_Initialized;
         _mainLayout = mainLayout;
@@ -65,6 +67,7 @@ internal class MainWindow : Window
         _addButton = add;
         _removeButton = remove;
         _darkMode = darkMode;
+        _propertyList = propertyList;
     }
 
     private void MainWindow_Initialized(Window sender, EventArgs e)
@@ -111,7 +114,7 @@ internal class MainWindow : Window
     private void SaveButton_Action(Button sender, EventArgs e)
     {
         var xml = Application.UIDefinitionManager.CodeGenerator.Generate(_rootNode!);
-        File.WriteAllText(GetUIDefinitionFullPath(_fileEditBox.Text), xml);
+        File.WriteAllText(GetUIDefinitionFullPath(_fileEditBox.Text.Value), xml);
     }
 
     private void RefreshButton_Action(Button sender, EventArgs e)
@@ -129,7 +132,7 @@ internal class MainWindow : Window
         var selectedNode = _astTreeBox.SelectedNode;
         var componentToAdd = _components.SelectedItem;
 
-        var componentName = ((Label)selectedItem).Text;
+        var componentName = ((Label)selectedItem).Text.Value;
         var childNode = CreateNode(componentName);
         var astChildNode = new Component(componentName, [], []);
         var parent = selectedNode.Value;
@@ -172,7 +175,7 @@ internal class MainWindow : Window
         CreateComponentInstance();
     }
 
-    private void Checked_ValueChange(CheckBox sender, ValueChangeEventArgs<bool> e)
+    private void Checked_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
     {
         if (e.CurrentValue)
         {
@@ -184,10 +187,9 @@ internal class MainWindow : Window
         }
     }
 
-    private void SelectedNode_ValueChange(TreeBox sender, ValueChangeEventArgs<TreeNode?> e)
+    private void SelectedNode_ValueChange(BindableProperty<TreeNode?> sender, ValueChangeEventArgs<TreeNode?> e)
     {
-        var scrollView = _mainLayout.GetComponent<ScrollView>("propertiesScrollView");
-        var listBox = scrollView.GetComponent<ListBox>("propertyList");
+        var listBox = _propertyList;
         listBox.Clear();
 
         if (e.CurrentValue == null)
@@ -235,7 +237,7 @@ internal class MainWindow : Window
         UpdateAddRemoveButtonState();
     }
 
-    private void SelectedItem_ValueChange(ListBox sender, ValueChangeEventArgs<UIComponent?> e)
+    private void SelectedItem_ValueChange(BindableProperty<UIComponent?> sender, ValueChangeEventArgs<UIComponent?> e)
     {
         UpdateAddRemoveButtonState();
     }
@@ -308,7 +310,7 @@ internal class MainWindow : Window
 
         if (_astTreeBox.SelectedNode.Value != null && _components.SelectedItem.Value != null)
         {
-            var name = ((Label)(_astTreeBox.SelectedNode.Value.Content)).Text;
+            var name = ((Label)(_astTreeBox.SelectedNode.Value.Content.Value)).Text.Value;
             var type = Application.UIDefinitionManager.TypeMapper.GetUIComponent(name);
             if (type == null) throw new Exception($"Cannot find type for component {name} to add.");
             _addButton.Enabled.Value = (type.GetInterfaces().Contains(typeof(IGenericContainer)));

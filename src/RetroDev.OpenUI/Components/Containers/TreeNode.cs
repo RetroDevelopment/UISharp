@@ -15,8 +15,8 @@ public class TreeNode
     private int indentation = 0;
 
     // TODO: pass LifeCycle to property so that you can treat is a UI
-    public BindableProperty<TreeNode, UIComponent> Content { get; set; }
-    public BindableProperty<TreeNode, bool> Collapsed { get; set; }
+    public BindableProperty<UIComponent> Content { get; set; }
+    public BindableProperty<bool> Collapsed { get; set; }
     public TreeNode? Parent { get; private set; }
 
     public bool ShouldDisplay
@@ -28,7 +28,7 @@ public class TreeNode
                 return true;
             }
 
-            if (Parent != null && Parent.ShouldDisplay && !Parent.Collapsed)
+            if (Parent != null && Parent.ShouldDisplay && !Parent.Collapsed.Value)
             {
                 return true;
             }
@@ -41,8 +41,8 @@ public class TreeNode
 
     public TreeNode(UIComponent component)
     {
-        Content = new BindableProperty<TreeNode, UIComponent>(this, component);
-        Collapsed = new BindableProperty<TreeNode, bool>(this, false);
+        Content = new BindableProperty<UIComponent>(component); // TODO: pass application
+        Collapsed = new BindableProperty<bool>(false);
     }
 
     public void AddChild(TreeNode child)
@@ -50,8 +50,8 @@ public class TreeNode
         // TODO: other way to check life cycle when not tree node? For example pass the app as constructor
         _root?.Application?.LifeCycle?.ThrowIfPropertyCannotBeSet();
         child.indentation = indentation + 1;
-        _root?.AddTreeNode(child, this);
         _children.Add(child);
+        _root?.AddTreeNode(child, this);
         child.Parent = this;
         child.Parent.Collapsed.Value = false;
     }

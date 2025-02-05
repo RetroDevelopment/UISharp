@@ -35,6 +35,7 @@ internal class Model2D
     private readonly int _vbo;
     private readonly int _ebo;
     private readonly int _vertexCount;
+    internal int _drawCalls;
 
     /// <summary>
     /// Creates a new 2D model which generates a shape with the given <paramref name="points"/> which can be configured as a border or fill shape.
@@ -96,6 +97,7 @@ internal class Model2D
 
         GL.BindVertexArray(0); // Unbind the VAO after rendering
         GL.BindTexture(TextureTarget.Texture2D, 0); // Unbind texture
+        _drawCalls++;
     }
 
     private void AddVertexAttribute(VertexAttribute vertexAttrubute,

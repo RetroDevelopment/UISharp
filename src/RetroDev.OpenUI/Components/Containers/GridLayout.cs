@@ -14,7 +14,75 @@ public class GridLayout : Container, IContainer
     public record AutoSize : IGridSize;
 
     // TODO: Smart auto size that fits exactly all children
-    protected override Size ComputeSizeHint() => new(100, 100);
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize)
+    {
+        // TODO: refactor and take into account relative width and height
+        var childrenSizeList = childrenSize.ToList();
+        var columnSizeDefinitions = Parse(ColumnSizes.Value, Columns.Value);
+        var rowSizeDefinitions = Parse(RowSizes.Value, Rows.Value);
+        var autoColumnCells = 0;
+        var maximumColumnWidth = PixelUnit.Zero;
+        var cumulativeFixedWidth = PixelUnit.Zero;
+        var autoRowCells = 0;
+        var maximumRowHeight = PixelUnit.Zero;
+        var cumulativeFixedHeight = PixelUnit.Zero;
+        int index = 0;
+
+        foreach (var column in columnSizeDefinitions)
+        {
+            if (column is AutoSize || column is RelateiveSize)
+            {
+                for (int rowIndex = 0; rowIndex < Rows.Value; rowIndex++)
+                {
+                    var childIndex = rowIndex * (int)Columns.Value + index;
+                    if (childIndex >= childrenSizeList.Count) break;
+                    maximumColumnWidth = Math.Max(maximumColumnWidth, childrenSizeList[childIndex].Width);
+                }
+
+                autoColumnCells++;
+            }
+            else if (column is AbsoluteSize size)
+            {
+                cumulativeFixedWidth += size.Size;
+            }
+
+            index++;
+        }
+
+        index = 0;
+
+        foreach (var row in rowSizeDefinitions)
+        {
+            if (row is AutoSize || row is RelateiveSize)
+            {
+                for (int columnIndex = 0; columnIndex < Columns.Value; columnIndex++)
+                {
+                    var childIndex = index * (int)Columns.Value + columnIndex;
+                    if (childIndex >= childrenSizeList.Count) break;
+                    maximumRowHeight = Math.Max(maximumRowHeight, childrenSizeList[childIndex].Height);
+                }
+
+                autoRowCells++;
+            }
+            else if (row is AbsoluteSize size)
+            {
+                cumulativeFixedHeight += size.Size;
+            }
+
+            index++;
+        }
+
+        //var rowSizes = Parse(RowSizes, Rows.Value);
+        //var columnSizes = Parse(ColumnSizes, Columns.Value);
+        //var maxChildWidth = childrenSize.Max(s => s.Width);
+        //var maxChildHeight = childrenSize.Max(s => s.Height);
+        //var maxFixedWidth = columnSizes.Where(c => c is AbsoluteSize).Cast<AbsoluteSize>().Max(s => s.Size);
+        //var maxFixedHeight = rowSizes.Where(c => c is AbsoluteSize).Cast<AbsoluteSize>().Max(s => s.Size);
+        //
+        var optimalCellWidth = maximumColumnWidth * autoColumnCells + cumulativeFixedWidth;
+        var optimalCellHeight = maximumRowHeight * autoRowCells + cumulativeFixedHeight;
+        return new Size(optimalCellWidth, optimalCellHeight);
+    }
 
     /// <summary>
     /// The number of layout rows.
@@ -43,13 +111,15 @@ public class GridLayout : Container, IContainer
     /// <summary>
     /// Creates a new grid layout.
     /// </summary>
-    /// <param name="parent">The application owning this component.</param>
-    public GridLayout(Application parent) : base(parent)
+    /// <param name="application">The application owning this component.</param>
+    public GridLayout(Application application) : base(application)
     {
         Rows = new UIProperty<GridLayout, uint>(this, 0);
         Columns = new UIProperty<GridLayout, uint>(this, 0);
         RowSizes = new UIProperty<GridLayout, string>(this, string.Empty);
         ColumnSizes = new UIProperty<GridLayout, string>(this, string.Empty);
+
+        RenderFrame += GridLayout_RenderFrame;
     }
 
     /// <summary>
@@ -89,10 +159,10 @@ public class GridLayout : Container, IContainer
     /// <exception cref="ArgumentException">If the given <paramref name="row"/> and <paramref name="column"/> do not exist.</exception>
     public void RemoveComponent(uint row, uint column)
     {
-        if (row >= Rows) throw new ArgumentException($"Cannot remove component at row {row}, grid layout has only {Rows.Value} rows");
-        if (column >= Columns) throw new ArgumentException($"Cannot remove component at column {column}, grid layout has only {Columns.Value} columns");
+        if (row >= Rows.Value) throw new ArgumentException($"Cannot remove component at row {row}, grid layout has only {Rows.Value} rows");
+        if (column >= Columns.Value) throw new ArgumentException($"Cannot remove component at column {column}, grid layout has only {Columns.Value} columns");
 
-        var indexOfElement = row * Columns + column;
+        var indexOfElement = row * Columns.Value + column;
         var children = GetChildren();
         if (indexOfElement > children.Count()) throw new ArgumentException($"Cannot remove element at row {row} and column {column}: there are only {children.Count()} elements in the grid layout");
         var element = GetChildren().ElementAt((int)indexOfElement);
@@ -118,40 +188,44 @@ public class GridLayout : Container, IContainer
     }
 
     /// <inheritdoc />
-    protected override void RepositionChildrenImplementation()
+    protected override List<Area?> RepositionChildren(Size availableSpace, IEnumerable<Size> childrenSize)
     {
         EnsureRowsColumnFitNumberOfChildren();
 
-        var layoutSize = RelativeDrawingArea.Size;
+        if (availableSpace == Size.Zero) return Enumerable.Repeat<Area?>(Area.Empty, childrenSize.Count()).ToList();
 
-        var rowSizeDefinitions = Parse(RowSizes.Value, Rows);
-        var columnSizeDefinitions = Parse(ColumnSizes.Value, Columns);
-        var rowSizes = ComputeSizes(layoutSize.Height, rowSizeDefinitions, Rows);
-        var columnSizes = ComputeSizes(layoutSize.Width, columnSizeDefinitions, Columns);
+        List<Area?> areas = new List<Area?>();
+
+        var rowSizeDefinitions = Parse(RowSizes.Value, Rows.Value);
+        var columnSizeDefinitions = Parse(ColumnSizes.Value, Columns.Value);
+        var rowSizes = ComputeSizes(availableSpace.Height, rowSizeDefinitions, Rows.Value);
+        var columnSizes = ComputeSizes(availableSpace.Width, columnSizeDefinitions, Columns.Value);
 
         var children = base.GetChildren();
         var size = children.Count();
         var i = 0u;
 
+        // TODO: no need to iterate over children.
         foreach (var child in children)
         {
-            var row = i / Columns;
-            var column = i % Columns;
-            var cell = (Panel)child;
+            var row = i / Columns.Value;
+            var column = i % Columns.Value;
 
-            cell.Width.Value = columnSizes[(int)column];
-            cell.Height.Value = rowSizes[(int)row];
-            cell.X.Value = column == 0 ? 0.0f : columnSizes[..((int)column)].Sum(p => p.Value);
-            cell.Y.Value = row == 0 ? 0.0f : rowSizes[..((int)row)].Sum(p => p.Value);
-
+            var width = columnSizes[(int)column];
+            var height = rowSizes[(int)row];
+            var x = column == 0 ? 0.0f : columnSizes[..((int)column)].Sum(p => p.Value);
+            var y = row == 0 ? 0.0f : rowSizes[..((int)row)].Sum(p => p.Value);
+            areas.Add(new Area(new Point(x, y), new Size(width, height)));
             i++;
         }
+
+        return areas;
     }
 
     private void EnsureRowsColumnFitNumberOfChildren()
     {
         var numberOfItems = GetChildren().Count();
-        var maximumNumberOfItems = Rows * Columns;
+        var maximumNumberOfItems = Rows.Value * Columns.Value;
 
         if (numberOfItems > maximumNumberOfItems)
         {
@@ -230,5 +304,10 @@ public class GridLayout : Container, IContainer
         }
 
         return cumulativeKnownSize;
+    }
+
+    private void GridLayout_RenderFrame(UIComponent sender, Events.RenderingEventArgs e)
+    {
+        e.Canvas.Render(new Graphics.Shapes.Rectangle(BackgroundColor.Value), ActualSize.Fill());
     }
 }

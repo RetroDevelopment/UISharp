@@ -1,24 +1,33 @@
-﻿using RetroDev.OpenUI.Core.Coordinates;
+﻿using RetroDev.OpenUI.Components.Shapes;
+using RetroDev.OpenUI.Core.Coordinates;
 
 namespace RetroDev.OpenUI.Components.Containers;
 
 /// <summary>
 /// A basic container that contains one object.
 /// </summary>
-public class Panel : Container, ISingleContainer
+public class Panel : Container, ISingleContainer // TODO: ISingleContainer should have a property not SetComponent() and GetChildren does not apply
 {
+    private readonly Rectangle _backgroundRectangle;
     private UIComponent? _child;
 
-    protected override Size ComputeSizeHint() => new(100, 100);
+    /// <inheritdoc />
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
+        childrenSize.Count() == 2 ? childrenSize.ElementAt(1) : Size.Zero;
 
-    public override IEnumerable<UIComponent> Children => GetChildren();
+    /// <inheritdoc />
+
+    public override IEnumerable<UIComponent> Children => [GetChildren().ElementAt(1)];
 
     /// <summary>
     /// Creates a new panel.
     /// </summary>
-    /// <param name="parent">The application owning this component.</param>
-    public Panel(Application parent) : base(parent)
+    /// <param name="application">The application owning this component.</param>
+    public Panel(Application application) : base(application)
     {
+        _backgroundRectangle = new Rectangle(application);
+        _backgroundRectangle.BackgroundColor.BindDestinationToSource(BackgroundColor);
+        AddChild(_backgroundRectangle);
     }
 
     /// <summary>

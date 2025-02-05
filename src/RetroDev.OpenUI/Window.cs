@@ -1,12 +1,11 @@
 ﻿using RetroDev.OpenUI.Components;
 using RetroDev.OpenUI.Components.Containers;
+using RetroDev.OpenUI.Components.Core;
 using RetroDev.OpenUI.Core;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Core.Internal;
 using RetroDev.OpenUI.Events;
 using RetroDev.OpenUI.Graphics;
-using RetroDev.OpenUI.Properties;
-using RetroDev.OpenUI.Themes;
 
 namespace RetroDev.OpenUI;
 
@@ -16,9 +15,10 @@ namespace RetroDev.OpenUI;
 [EditorSettings(allow: false)]
 public class Window : Container, IContainer
 {
+    internal readonly Invalidator _invalidator = new();
     private readonly IWindowManager _windowManager;
-
-    protected override ComponentVisibility DefaultVisibility => ComponentVisibility.Collapsed;
+    private readonly MeasureProvider _measureProvider;
+    private readonly RenderProvider _renderProvider;
 
     /// <summary>
     /// Raised when <see langword="this" /> <see cref="Window"/> has been initialized.
@@ -27,25 +27,37 @@ public class Window : Container, IContainer
     public event TypeSafeEventHandler<Window, EventArgs> Initialized = (_, _) => { };
 
     /// <inheritdoc/>
-    protected override Size ComputeSizeHint() => Size.Zero; // Maybe 800x600? Or half screen resolution=
-
     public override IEnumerable<UIComponent> Children => GetChildren();
 
-    public Window(Application parent, IWindowManager? windowManager = null) : base(parent)
+    /// <summary>
+    /// Creates a new window.
+    /// </summary>
+    /// <param name="application">The application owning this window.</param>
+    /// <param name="windowManager">
+    /// The optional <see cref="IWindowManager"/> that contains the implementation to actually render and manage windows.
+    /// It can be injected to provide a custom implementation of window lifecycle (for example to use a specific window management framework) 
+    /// or for unit testing.
+    /// If not provided, the default OpenUI window manager will be used (it is not public).
+    /// </param>
+    public Window(Application application, IWindowManager? windowManager = null) : base(application, visibility: ComponentVisibility.Collapsed, isFocusable: true)
     {
-        _windowManager = windowManager ?? new SDLWindowManager(parent);
-        Application._eventSystem.Render += EventSystem_Render;
-        parent.AddWindow(this);
+        _windowManager = windowManager ?? new SDLWindowManager(application);
+        _measureProvider = new MeasureProvider(this, _invalidator);
+        _renderProvider = new RenderProvider(_invalidator);
 
-        BackgroundColor.AddBinder(new PropertyBinder<Theme, Color>(Application.Theme.MainBackground, BindingType.DestinationToSource));
+        Application._eventSystem.Render += EventSystem_Render;
+        application.AddWindow(this);
+        Invalidate();
+
+        BackgroundColor.BindDestinationToSource(Application.Theme.MainBackground);
 
         Visibility.ValueChange += (_, args) => _windowManager.Visible = args.CurrentValue == ComponentVisibility.Visible;
-        parent._eventSystem.MousePress += EventSystem_MousePress;
-        parent._eventSystem.MouseRelease += EventSystem_MouseRelease;
-        parent._eventSystem.MouseMove += EventSystem_MouseMove;
-        parent._eventSystem.KeyPress += EventSystem_KeyPress;
-        parent._eventSystem.KeyRelease += EventSystem_KeyRelease;
-        parent._eventSystem.TextInput += EventSystem_TextInput;
+        application._eventSystem.MousePress += EventSystem_MousePress;
+        application._eventSystem.MouseRelease += EventSystem_MouseRelease;
+        application._eventSystem.MouseMove += EventSystem_MouseMove;
+        application._eventSystem.KeyPress += EventSystem_KeyPress;
+        application._eventSystem.KeyRelease += EventSystem_KeyRelease;
+        application._eventSystem.TextInput += EventSystem_TextInput;
     }
 
     /// <summary>
@@ -77,14 +89,22 @@ public class Window : Container, IContainer
         Initialized.Invoke(this, EventArgs.Empty);
     }
 
+    /// <summary>
+    /// Measures all drawing areas necessary to render the window components.
+    /// </summary>
+    public void Measure() =>
+        _measureProvider.Measure();
+
+    /// <inheritdoc/>
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) => Size.Zero; // Maybe 800x600? Or half screen resolution=    /// <inheritdoc/>
+
     private void EventSystem_Render(IEventSystem sender, EventArgs e)
     {
         var renderingEngine = _windowManager.RenderingEngine;
-        renderingEngine.InitializeFrame(BackgroundColor);
         var canvas = new Canvas(renderingEngine, Application.LifeCycle);
-        var renderingEventArgs = new RenderingEventArgs(canvas);
-        OnRenderFrame(renderingEventArgs);
+        _renderProvider.Render(this, canvas, renderingEngine);
         renderingEngine.FinalizeFrame();
+        canvas.LogStatistics(Application.Logger);
     }
 
     public void Shutdown()
