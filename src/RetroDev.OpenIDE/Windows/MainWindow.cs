@@ -114,7 +114,7 @@ internal class MainWindow : Window
     private void SaveButton_Action(Button sender, EventArgs e)
     {
         var xml = Application.UIDefinitionManager.CodeGenerator.Generate(_rootNode!);
-        File.WriteAllText(GetUIDefinitionFullPath(_fileEditBox.Text), xml);
+        File.WriteAllText(GetUIDefinitionFullPath(_fileEditBox.Text.Value), xml);
     }
 
     private void RefreshButton_Action(Button sender, EventArgs e)
@@ -132,7 +132,7 @@ internal class MainWindow : Window
         var selectedNode = _astTreeBox.SelectedNode;
         var componentToAdd = _components.SelectedItem;
 
-        var componentName = ((Label)selectedItem).Text;
+        var componentName = ((Label)selectedItem).Text.Value;
         var childNode = CreateNode(componentName);
         var astChildNode = new Component(componentName, [], []);
         var parent = selectedNode.Value;
@@ -310,7 +310,7 @@ internal class MainWindow : Window
 
         if (_astTreeBox.SelectedNode.Value != null && _components.SelectedItem.Value != null)
         {
-            var name = ((Label)(_astTreeBox.SelectedNode.Value.Content)).Text;
+            var name = ((Label)(_astTreeBox.SelectedNode.Value.Content.Value)).Text.Value;
             var type = Application.UIDefinitionManager.TypeMapper.GetUIComponent(name);
             if (type == null) throw new Exception($"Cannot find type for component {name} to add.");
             _addButton.Enabled.Value = (type.GetInterfaces().Contains(typeof(IGenericContainer)));

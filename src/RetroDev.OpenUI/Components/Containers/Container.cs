@@ -31,7 +31,7 @@ public abstract class Container(Application application,
     /// <exception cref="InvalidCastException">If the component was found but with a type not assignable to <typeparamref name="TComponent"/>.</exception>
     public virtual TComponent GetComponent<TComponent>(string id) where TComponent : UIComponent
     {
-        var children = Children.Where(c => c.ID == id);
+        var children = Children.Where(c => c.ID.Value == id);
         if (!children.Any()) throw new ArgumentException($"Child with ID {id} not found in component with id {ID.Value}");
         return (TComponent)children.First();
     }

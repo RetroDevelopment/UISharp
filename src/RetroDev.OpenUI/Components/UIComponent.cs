@@ -202,7 +202,6 @@ public abstract class UIComponent
         Y = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Auto);
         Width = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Auto);
         Height = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Auto);
-        Height = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Auto);
         Visibility = new UIProperty<UIComponent, ComponentVisibility>(this, visibility);
         AutoWidth = new UIProperty<UIComponent, IAutoSize>(this, autoWidth ?? AutoSize.Stretch);
         AutoHeight = new UIProperty<UIComponent, IAutoSize>(this, autoHeight ?? AutoSize.Stretch);
@@ -426,7 +425,8 @@ public abstract class UIComponent
     {
         if (!rootCall) _relativeDrawingAreaOverride = relativeDrawingArea;
         _relativeDrawingArea = ComputeRelativeDrawingArea(_relativeDrawingAreaOverride);
-        _absoluteDrawingArea = ComputeAbsoluteDrawingArea();
+        var absoluteDrawingArea = ComputeAbsoluteDrawingArea();
+        _absoluteDrawingArea = absoluteDrawingArea;
         _clipArea = ComputeClipArea();
 
         var childrenAreas = RepositionChildren(_relativeDrawingArea.Size, _children.Select(c => c._wrapSize));
@@ -436,10 +436,15 @@ public abstract class UIComponent
             throw new InvalidOperationException($"{nameof(RepositionChildren)} must return the same number of elements as the number of children or be empty: {childrenAreas.Count()} provided but {_children.Count} exist");
         }
 
+        // TODO: no need to go recursively if nothing has changed
         for (var i = 0; i < _children.Count; i++)
         {
             var child = _children[i];
-            child.CancelInvalidation(); // The parent is already invalidated, so no need to invalidate this component.
+            // The parent is already invalidated, so no need to invalidate this component. This ensures that if a component is invalidated already, the children won't
+            // TODO: if using rendering instancing, make sure to invalidate each component that has changed.
+            // then we will go through each and update the instance buffer portion accordingly.
+            // As opposed to now, this will ensure that each invalidated component is in the invalidated list so it is possible to update instances.
+            child.CancelInvalidation();
             var childArea = childrenAreas.Count != 0 ? childrenAreas[i] : null;
             child.ComputeDrawingAreas(childArea);
         }
@@ -488,7 +493,7 @@ public abstract class UIComponent
 
     private void _parent_MouseMove(UIComponent sender, MouseEventArgs mouseEventArgs)
     {
-        if (mouseEventArgs.AbsoluteLocation.IsWithin(_absoluteDrawingArea) && Visibility.Value == Components.ComponentVisibility.Visible && Enabled)
+        if (mouseEventArgs.AbsoluteLocation.IsWithin(_absoluteDrawingArea) && Visibility.Value == Components.ComponentVisibility.Visible && Enabled.Value)
         {
             MouseMove.Invoke(this, new MouseEventArgs(mouseEventArgs.AbsoluteLocation,
                                                       mouseEventArgs.AbsoluteLocation - _absoluteDrawingArea.TopLeft,
@@ -509,7 +514,7 @@ public abstract class UIComponent
                                    mouseEventArgs.AbsoluteLocation - _absoluteDrawingArea.TopLeft,
                                    mouseEventArgs.Button);
 
-        if (mouseEventArgs.AbsoluteLocation.IsWithin(_absoluteDrawingArea) && Visibility.Value == Components.ComponentVisibility.Visible && Enabled)
+        if (mouseEventArgs.AbsoluteLocation.IsWithin(_absoluteDrawingArea) && Visibility.Value == Components.ComponentVisibility.Visible && Enabled.Value)
         {
             MouseRelease.Invoke(this, e);
         }
@@ -525,7 +530,7 @@ public abstract class UIComponent
 
     private void _parent_MousePress(UIComponent sender, MouseEventArgs mouseEventArgs)
     {
-        if (mouseEventArgs.AbsoluteLocation.IsWithin(_absoluteDrawingArea) && Visibility.Value == Components.ComponentVisibility.Visible && Enabled)
+        if (mouseEventArgs.AbsoluteLocation.IsWithin(_absoluteDrawingArea) && Visibility.Value == Components.ComponentVisibility.Visible && Enabled.Value)
         {
             MousePress.Invoke(this, new MouseEventArgs(mouseEventArgs.AbsoluteLocation,
                                                        mouseEventArgs.AbsoluteLocation - _absoluteDrawingArea.TopLeft,
@@ -535,7 +540,7 @@ public abstract class UIComponent
 
     private void _parent_KeyPress(UIComponent sender, KeyEventArgs keyEventArgs)
     {
-        if (Visibility.Value == Components.ComponentVisibility.Visible && (Focus || !Focusable))
+        if (Visibility.Value == Components.ComponentVisibility.Visible && (Focus.Value || !Focusable.Value))
         {
             KeyPress.Invoke(this, new KeyEventArgs(keyEventArgs.Button));
         }
@@ -543,7 +548,7 @@ public abstract class UIComponent
 
     private void _parent_KeyRelease(UIComponent sender, KeyEventArgs keyEventArgs)
     {
-        if (Visibility.Value == ComponentVisibility.Visible && (Focus || this is Container))
+        if (Visibility.Value == ComponentVisibility.Visible && (Focus.Value || this is Container))
         {
             KeyRelease.Invoke(this, new KeyEventArgs(keyEventArgs.Button));
         }
@@ -551,7 +556,7 @@ public abstract class UIComponent
 
     private void _parent_TextInput(UIComponent sender, TextInputEventArgs textInputEventArgs)
     {
-        if (Visibility.Value == ComponentVisibility.Visible && (Focus || this is Container))
+        if (Visibility.Value == ComponentVisibility.Visible && (Focus.Value || this is Container))
         {
             TextInput.Invoke(this, new TextInputEventArgs(textInputEventArgs.Text));
         }

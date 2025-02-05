@@ -75,8 +75,8 @@ public class ProgressBar : UIComponent
 
     protected override List<Area?> RepositionChildren(Size availableSpace, IEnumerable<Size> childrenSize)
     {
-        var value = Math.Clamp(Value, MinimumValue, MaximumValue);
-        var percentage = (value - MinimumValue) / (float)(MaximumValue - MinimumValue);
+        var value = Math.Clamp(Value.Value, MinimumValue.Value, MaximumValue.Value);
+        var percentage = (value - MinimumValue.Value) / (float)(MaximumValue.Value - MinimumValue.Value);
         var progressRectangleWidth = availableSpace.Width * percentage;
         return [null, new Area(Point.Zero, new Size(progressRectangleWidth, availableSpace.Height))];
     }

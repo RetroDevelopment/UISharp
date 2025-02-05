@@ -18,7 +18,7 @@ public class Window : Container, IContainer
     internal readonly Invalidator _invalidator = new();
     private readonly IWindowManager _windowManager;
     private readonly MeasureProvider _measureProvider;
-    private readonly RetaineModeCanvas _windowCanvas = new();
+    private readonly RenderProvider _renderProvider;
 
     /// <summary>
     /// Raised when <see langword="this" /> <see cref="Window"/> has been initialized.
@@ -43,6 +43,7 @@ public class Window : Container, IContainer
     {
         _windowManager = windowManager ?? new SDLWindowManager(application);
         _measureProvider = new MeasureProvider(this, _invalidator);
+        _renderProvider = new RenderProvider(_invalidator);
 
         Application._eventSystem.Render += EventSystem_Render;
         application.AddWindow(this);
@@ -91,11 +92,8 @@ public class Window : Container, IContainer
     /// <summary>
     /// Measures all drawing areas necessary to render the window components.
     /// </summary>
-    public void Measure()
-    {
+    public void Measure() =>
         _measureProvider.Measure();
-        _invalidator.Clear(); // TODO: remove, rendering will do that
-    }
 
     /// <inheritdoc/>
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) => Size.Zero; // Maybe 800x600? Or half screen resolution=    /// <inheritdoc/>
@@ -103,9 +101,8 @@ public class Window : Container, IContainer
     private void EventSystem_Render(IEventSystem sender, EventArgs e)
     {
         var renderingEngine = _windowManager.RenderingEngine;
-        renderingEngine.InitializeFrame(BackgroundColor);
         var canvas = new Canvas(renderingEngine, Application.LifeCycle);
-        _windowCanvas.Render(this, canvas, renderingEngine);
+        _renderProvider.Render(this, canvas, renderingEngine);
         renderingEngine.FinalizeFrame();
         canvas.LogStatistics(Application.Logger);
     }

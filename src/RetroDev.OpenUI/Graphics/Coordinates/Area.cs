@@ -13,6 +13,7 @@ public record Area(Point TopLeft, Size Size)
 {
     private readonly Point _center = new(TopLeft.X + Size.Width / 2, TopLeft.Y + Size.Height / 2);
     private readonly Point _bottomRight = new(TopLeft.X + Size.Width, TopLeft.Y + Size.Height);
+    private readonly Point _bottomLeft = new(TopLeft.X, TopLeft.Y + Size.Height);
 
     /// <summary>
     /// The empty area which requires 0 pizels.
@@ -24,11 +25,15 @@ public record Area(Point TopLeft, Size Size)
     /// </summary>
     public Point Center => _center;
 
-
     /// <summary>
     /// The area bottom-right point coordinate in pixels.
     /// </summary>
     public Point BottomRight => _bottomRight;
+
+    /// <summary>
+    /// The area bottom-left point coordinate in pixels.
+    /// </summary>
+    public Point BottomLeft => _bottomLeft;
 
     public Area(Point topLeft, Point bottomRight) : this(topLeft, new Size(bottomRight.X - topLeft.X, bottomRight.Y - topLeft.Y)) { }
 
@@ -82,4 +87,19 @@ public record Area(Point TopLeft, Size Size)
     /// <returns>The area with <see cref="Point.Zero"/> coordinate and the same <see cref="Size"/> as <see langword="this" /> area.</returns>
     public Area Fill() =>
         new Area(Point.Zero, Size);
+
+    /// <summary>
+    /// Merges <see langword="this" /> area with the given <paramref name="area"/>.
+    /// </summary>
+    /// <param name="area">The <see cref="Area"/> to merge.</param>
+    /// <returns>The minimum area that contains both <see langword="this" /> area and the given <paramref name="area"/>.</returns>
+    public Area Merge(Area area)
+    {
+        var leftX = Math.Min(this.TopLeft.X, area.TopLeft.X);
+        var topY = Math.Min(this.TopLeft.Y, area.TopLeft.Y);
+        var rightX = Math.Max(this.BottomRight.X, area.BottomRight.X);
+        var bottomY = Math.Max(this.BottomRight.Y, area.BottomRight.Y);
+
+        return new Area(new Point(leftX, topY), new Point(rightX, bottomY));
+    }
 }

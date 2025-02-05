@@ -15,6 +15,14 @@ namespace RetroDev.OpenUI.Properties;
 /// <remarks>
 /// If <paramref name="allowedBinding"/> is <see cref="BindingType.TwoWays"/> it means that bidirectional binding is allowed, including (<see cref="BindingType.SourceToDestination"/> and <see cref="BindingType.DestinationToSource"/>).
 /// </remarks>
+/// <remarks>
+/// To access a <see cref="BindableProperty{TValue}"/> value, use the <see cref="Value"/> property.
+/// There is no implicit case implemented to avoid confusion between the following
+/// <c>new BindableProperty(AnotherProperty.Value, ...)</c>c>
+/// and
+/// <c>new BindableProperty(AnotherProperty, ...)</c>
+/// The former creates a property with an initial value, the latter creates a property bound to <c>AnotherProperty</c>.
+/// </remarks>
 [DebuggerDisplay("{Value}")]
 public class BindableProperty<TValue>(TValue value, Application? application = null, BindingType allowedBinding = BindingType.TwoWays)
 {
@@ -50,7 +58,6 @@ public class BindableProperty<TValue>(TValue value, Application? application = n
             return _value;
         }
     }
-
 
     /// <summary>
     /// The allowed <see cref="BindingType"/>.
@@ -209,10 +216,4 @@ public class BindableProperty<TValue>(TValue value, Application? application = n
     {
         _binder?.Unbind();
     }
-
-    /// <summary>
-    /// Implicit cast from <see cref="BindableProperty{TValue}"/> to <typeparamref name="TValue"/>.
-    /// </summary>
-    /// <param name="property">The <see cref="BindableProperty{TValue}"/> to cast.</param>
-    public static implicit operator TValue(BindableProperty<TValue> property) => property._value;
 }

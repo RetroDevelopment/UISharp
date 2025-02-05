@@ -18,8 +18,8 @@ public class GridLayout : Container, IContainer
     {
         // TODO: refactor and take into account relative width and height
         var childrenSizeList = childrenSize.ToList();
-        var columnSizeDefinitions = Parse(ColumnSizes.Value, Columns);
-        var rowSizeDefinitions = Parse(RowSizes.Value, Rows);
+        var columnSizeDefinitions = Parse(ColumnSizes.Value, Columns.Value);
+        var rowSizeDefinitions = Parse(RowSizes.Value, Rows.Value);
         var autoColumnCells = 0;
         var maximumColumnWidth = PixelUnit.Zero;
         var cumulativeFixedWidth = PixelUnit.Zero;
@@ -159,10 +159,10 @@ public class GridLayout : Container, IContainer
     /// <exception cref="ArgumentException">If the given <paramref name="row"/> and <paramref name="column"/> do not exist.</exception>
     public void RemoveComponent(uint row, uint column)
     {
-        if (row >= Rows) throw new ArgumentException($"Cannot remove component at row {row}, grid layout has only {Rows.Value} rows");
-        if (column >= Columns) throw new ArgumentException($"Cannot remove component at column {column}, grid layout has only {Columns.Value} columns");
+        if (row >= Rows.Value) throw new ArgumentException($"Cannot remove component at row {row}, grid layout has only {Rows.Value} rows");
+        if (column >= Columns.Value) throw new ArgumentException($"Cannot remove component at column {column}, grid layout has only {Columns.Value} columns");
 
-        var indexOfElement = row * Columns + column;
+        var indexOfElement = row * Columns.Value + column;
         var children = GetChildren();
         if (indexOfElement > children.Count()) throw new ArgumentException($"Cannot remove element at row {row} and column {column}: there are only {children.Count()} elements in the grid layout");
         var element = GetChildren().ElementAt((int)indexOfElement);
@@ -196,10 +196,10 @@ public class GridLayout : Container, IContainer
 
         List<Area?> areas = new List<Area?>();
 
-        var rowSizeDefinitions = Parse(RowSizes.Value, Rows);
-        var columnSizeDefinitions = Parse(ColumnSizes.Value, Columns);
-        var rowSizes = ComputeSizes(availableSpace.Height, rowSizeDefinitions, Rows);
-        var columnSizes = ComputeSizes(availableSpace.Width, columnSizeDefinitions, Columns);
+        var rowSizeDefinitions = Parse(RowSizes.Value, Rows.Value);
+        var columnSizeDefinitions = Parse(ColumnSizes.Value, Columns.Value);
+        var rowSizes = ComputeSizes(availableSpace.Height, rowSizeDefinitions, Rows.Value);
+        var columnSizes = ComputeSizes(availableSpace.Width, columnSizeDefinitions, Columns.Value);
 
         var children = base.GetChildren();
         var size = children.Count();
@@ -208,8 +208,8 @@ public class GridLayout : Container, IContainer
         // TODO: no need to iterate over children.
         foreach (var child in children)
         {
-            var row = i / Columns;
-            var column = i % Columns;
+            var row = i / Columns.Value;
+            var column = i % Columns.Value;
 
             var width = columnSizes[(int)column];
             var height = rowSizes[(int)row];
@@ -225,7 +225,7 @@ public class GridLayout : Container, IContainer
     private void EnsureRowsColumnFitNumberOfChildren()
     {
         var numberOfItems = GetChildren().Count();
-        var maximumNumberOfItems = Rows * Columns;
+        var maximumNumberOfItems = Rows.Value * Columns.Value;
 
         if (numberOfItems > maximumNumberOfItems)
         {

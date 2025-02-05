@@ -83,7 +83,7 @@ public class CheckBox : UIComponent
 
     private void CheckBox_MousePress(UIComponent sender, Events.MouseEventArgs e)
     {
-        Checked.Value = !Checked;
+        Checked.Value = !Checked.Value;
         Focus.Value = true;
     }
 

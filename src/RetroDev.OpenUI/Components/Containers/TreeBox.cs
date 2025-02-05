@@ -65,7 +65,7 @@ public class TreeBox : Container
         foldUnfoldButton.Height.Value = FoldUnfoldButtonSize;
         foldUnfoldButton.Action += (_, _) =>
         {
-            component.Collapsed.Value = !component.Collapsed;
+            component.Collapsed.Value = !component.Collapsed.Value;
             UpdateCollapseState(component, recursive: true);
         };
 
@@ -192,7 +192,7 @@ public class TreeBox : Container
             collapseButton.Visibility.Value = ComponentVisibility.Hidden;
             gridLayout.ColumnSizes.Value = Regex.Replace(gridLayout.ColumnSizes.Value, pattern, zeroPixelReplacement);
         }
-        else if (node.Collapsed)
+        else if (node.Collapsed.Value)
         {
             collapseButton.Visibility.Value = ComponentVisibility.Visible;
             collapseButton.Text.Value = "+";

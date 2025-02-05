@@ -34,6 +34,14 @@ internal class Invalidator
     public int GetLowerInvalidatedLevel(int level) =>
         _invalidatedItems.Keys.FirstOrDefault(k => k > level, -1);
 
+    public UIComponent? GetNextInvalidatedComponent()
+    {
+        if (_invalidatedItems.Count == 0) return null;
+
+        var topMostLevel = _invalidatedItems.Keys.First();
+        return _invalidatedItems[topMostLevel].First();
+    }
+
     public void AddInvalidatedComponentsToQueue(int level, UniqueQueue<UIComponent> queue)
     {
         if (!_invalidatedItems.ContainsKey(level)) return;
@@ -44,6 +52,9 @@ internal class Invalidator
         }
     }
 
-    // TODO: do we need it?
-    public void Clear() { _invalidatedItems.Clear(); }
+    // TODO: remove this once implementing instancing
+    public void Reset()
+    {
+        _invalidatedItems.Clear();
+    }
 }

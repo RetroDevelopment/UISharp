@@ -1,17 +1,13 @@
-﻿using System.Numerics;
-using OpenTK;
+﻿using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using RetroDev.OpenUI.Core;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Core.Internal;
-using RetroDev.OpenUI.Events.Internal;
 using RetroDev.OpenUI.Exceptions;
 using RetroDev.OpenUI.Graphics.Shapes;
 using RetroDev.OpenUI.Resources;
 using RetroDev.OpenUI.Utils;
 using SDL2;
-using SixLabors.Fonts.Unicode;
-using static RetroDev.OpenUI.Graphics.Internal.OpenGL.Model2D;
 
 namespace RetroDev.OpenUI.Graphics.Internal.OpenGL;
 
@@ -100,6 +96,7 @@ internal class OpenGLRenderingEngine : IRenderingEngine
         GL.LoadBindings(new SDL2OpenGLBindings()); // Load OpenGL.NET bindings
 
         LoggingUtils.SDLCheck(() => SDL.SDL_GL_SetSwapInterval(1), application.Logger, warning: true); // Enable VSync
+
         _shader = new ShaderProgram([new Shader(ShaderType.VertexShader, shaderResources["default.vert"], _application.Logger),
                                      new Shader(ShaderType.FragmentShader, shaderResources["default.frag"], _application.Logger)],
                                      _application.Logger);
@@ -109,7 +106,9 @@ internal class OpenGLRenderingEngine : IRenderingEngine
         // SDLCheck(() => SDL.SDL_GL_SetSwapInterval(0)); // This will run the CPU and GPU at 100%
         // GL.Enable(EnableCap.Multisample); // TODO: should enable anti aliasing
 
+        GL.Enable(EnableCap.ScissorTest);
         GL.Enable(EnableCap.Blend);
+
         GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
         ViewportSize = new(800, 600); // TODO: SDLWindowEngine will need to update this property when the window size change
@@ -224,13 +223,18 @@ internal class OpenGLRenderingEngine : IRenderingEngine
     /// <param name="backgroundColor">
     /// The frame background color.
     /// </param>
+    /// <param name="clipArea">
+    /// The area within the viewport where to draw. This is used for retained mode rendering: when a component
+    /// is invalidated, only its invalidated <see cref="Area"/> needs to be redrawn, so <see cref="InitializeFrame(Color, Area)"/> will
+    /// will be called for each invalidated component but only for the given <paramref name="clipArea"/>.
+    /// </param>
     public void InitializeFrame(Color backroundColor)
     {
         _application.LifeCycle.ThrowIfNotOnRenderingPhase();
         LoggingUtils.SDLCheck(() => SDL.SDL_GL_MakeCurrent(_window, _glContext), _application.Logger);
         var openGlBackgroundColor = backroundColor.ToOpenGLColor();
         GL.ClearColor(openGlBackgroundColor.X, openGlBackgroundColor.Y, openGlBackgroundColor.Z, openGlBackgroundColor.W);
-        GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+        GL.Clear(ClearBufferMask.ColorBufferBit);
         _modelGenerator.ResetDrawCallsCount();
     }
 
@@ -241,7 +245,7 @@ internal class OpenGLRenderingEngine : IRenderingEngine
     {
         _application.LifeCycle.ThrowIfNotOnRenderingPhase();
         SDL.SDL_GL_SwapWindow(_window);
-        _application.Logger.LogError($"OpenGL performed {_modelGenerator.DrawCalls} draw calls in the latest frame");
+        _application.Logger.LogVerbose($"OpenGL performed {_modelGenerator.DrawCalls} draw calls in the latest frame");
     }
 
     /// <summary>

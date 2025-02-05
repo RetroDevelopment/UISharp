@@ -28,7 +28,7 @@ public class TreeNode
                 return true;
             }
 
-            if (Parent != null && Parent.ShouldDisplay && !Parent.Collapsed)
+            if (Parent != null && Parent.ShouldDisplay && !Parent.Collapsed.Value)
             {
                 return true;
             }

@@ -182,31 +182,31 @@ internal class Program
         }
     }
 
-    static void Main(string[] _)
+    static void Mainj(string[] _)
     {
         using var application = new Application();
         application.Logger.Verbosity = OpenUI.Logging.Verbosity.Verbose;
-        Window w2 = new Window(application);
-        w2.X.Value = 0;
-        w2.Y.Value = 0;
-        w2.Width.Value = 800;
-        w2.Height.Value = 600;
-        w2.Visibility.Value = ComponentVisibility.Visible;
-        var a = new Node(application, "A");
-        var b = new Node(application, "B");
-        var c = new Node(application, "C");
-        var d = new Node(application, "D");
-        var e = new Node(application, "E");
-        b.Add(d);
-        b.Add(e);
-        w2.AddComponent(a);
-        w2.AddComponent(b);
-        w2.AddComponent(c);
-        w2.MouseMove += (_, _) =>
-        {
-            d.Hint = new Size(d.Hint.Width + 100, d.Hint.Height);
-            d.Invalidate();
-        };
+        //Window w2 = new Window(application);
+        //w2.X.Value = 0;
+        //w2.Y.Value = 0;
+        //w2.Width.Value = 800;
+        //w2.Height.Value = 600;
+        //w2.Visibility.Value = ComponentVisibility.Visible;
+        //var a = new Node(application, "A");
+        //var b = new Node(application, "B");
+        //var c = new Node(application, "C");
+        //var d = new Node(application, "D");
+        //var e = new Node(application, "E");
+        //b.Add(d);
+        //b.Add(e);
+        //w2.AddComponent(a);
+        //w2.AddComponent(b);
+        //w2.AddComponent(c);
+        //w2.MouseMove += (_, _) =>
+        //{
+        //    d.Hint = new Size(d.Hint.Width + 100, d.Hint.Height);
+        //    d.Invalidate();
+        //};
         //application.Run();
         //return;
 
@@ -244,10 +244,10 @@ internal class Program
         application.Run();
     }
 
-    static void Maijn(string[] _)
+    static void Main(string[] _)
     {
         using var application = new Application();
-        application.Logger.Verbosity = OpenUI.Logging.Verbosity.Verbose;
+        // application.Logger.Verbosity = OpenUI.Logging.Verbosity.Verbose;
         application.ShowWindow<MainWindow>();
         application.Run();
     }

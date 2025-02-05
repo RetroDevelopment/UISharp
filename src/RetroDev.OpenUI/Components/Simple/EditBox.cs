@@ -83,7 +83,7 @@ public class EditBox : UIComponent
     private void EditBox_KeyPress(UIComponent sender, KeyEventArgs e)
     {
         var key = e.Button;
-        if (key == KeyButton.Backspace && !string.IsNullOrEmpty(Text))
+        if (key == KeyButton.Backspace && !string.IsNullOrEmpty(Text.Value))
         {
             Text.Value = Text.Value.Substring(0, Text.Value.Length - 1);
         }
