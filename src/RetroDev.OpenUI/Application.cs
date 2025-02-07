@@ -31,6 +31,11 @@ public class Application : IDisposable
     internal readonly IEventSystem _eventSystem;
 
     /// <summary>
+    /// Triggered when the application is started and ready to show windows and process events.
+    /// </summary>
+    public event TypeSafeEventHandler<Application, EventArgs> ApplicationStarted = (_, _) => { };
+
+    /// <summary>
     /// The logging injected implementation.
     /// </summary>
     public ILogger Logger { get; set; }
@@ -58,7 +63,7 @@ public class Application : IDisposable
     /// <summary>
     /// The primary screen size.
     /// </summary>
-    public Size ScreenSize => new(800, 600); //TODO: real screen size
+    public Size ScreenSize => _uiEnvironment.ScreenSize;
 
     internal LifeCycle LifeCycle { get; } = new();
 
@@ -107,6 +112,7 @@ public class Application : IDisposable
 
         Logger.LogInfo("Application started");
         _eventSystem.ApplicationQuit += (_, _) => _shoudQuit = true;
+        ApplicationStarted.Invoke(this, EventArgs.Empty);
         _eventSystem.BeforeRender += EventSystem_BeforeRender;
         _eventSystem.InvalidateRendering();
 

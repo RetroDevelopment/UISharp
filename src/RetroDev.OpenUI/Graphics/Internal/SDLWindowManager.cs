@@ -1,4 +1,5 @@
-﻿using RetroDev.OpenUI.Events;
+﻿using RetroDev.OpenUI.Core.Coordinates;
+using RetroDev.OpenUI.Events;
 using RetroDev.OpenUI.Exceptions;
 using RetroDev.OpenUI.Graphics.Internal.OpenGL;
 using RetroDev.OpenUI.Utils;
@@ -18,6 +19,7 @@ internal class SDLWindowManager : IWindowManager
         _application = application;
 
         // TODO: this is opengl specific code but also sdl specific code. Where to place it?
+        // TODO: do we need this for each windown manager or only onece?
         LoggingUtils.SDLCheck(() => SDL.SDL_GL_SetAttribute(SDL.SDL_GLattr.SDL_GL_CONTEXT_MAJOR_VERSION, 3), application.Logger);
         LoggingUtils.SDLCheck(() => SDL.SDL_GL_SetAttribute(SDL.SDL_GLattr.SDL_GL_CONTEXT_MINOR_VERSION, 3), application.Logger);
         LoggingUtils.SDLCheck(() => SDL.SDL_GL_SetAttribute(SDL.SDL_GLattr.SDL_GL_CONTEXT_PROFILE_MASK, SDL.SDL_GLprofile.SDL_GL_CONTEXT_PROFILE_CORE), application.Logger);
@@ -26,11 +28,11 @@ internal class SDLWindowManager : IWindowManager
         LoggingUtils.SDLCheck(() => SDL.SDL_GL_SetAttribute(SDL.SDL_GLattr.SDL_GL_MULTISAMPLEBUFFERS, 1), application.Logger); // Enable multisampling
         LoggingUtils.SDLCheck(() => SDL.SDL_GL_SetAttribute(SDL.SDL_GLattr.SDL_GL_MULTISAMPLESAMPLES, 16), application.Logger);  // Number of samples (e.g., 4 for 4x MSAA)
 
-        _window = SDL.SDL_CreateWindow("Test widnow",
+        _window = SDL.SDL_CreateWindow("Test window",
                                        SDL.SDL_WINDOWPOS_CENTERED,
                                        SDL.SDL_WINDOWPOS_CENTERED,
                                        800, 600,
-                                       SDL.SDL_WindowFlags.SDL_WINDOW_HIDDEN | SDL.SDL_WindowFlags.SDL_WINDOW_OPENGL);
+                                       SDL.SDL_WindowFlags.SDL_WINDOW_HIDDEN | SDL.SDL_WindowFlags.SDL_WINDOW_OPENGL | SDL.SDL_WindowFlags.SDL_WINDOW_RESIZABLE);
 
         if (_window == IntPtr.Zero) throw new UIInitializationException($"Error creating window: {SDL.SDL_GetError()}");
         RenderingEngine = new OpenGLRenderingEngine(_application, _window);
@@ -73,6 +75,40 @@ internal class SDLWindowManager : IWindowManager
             {
                 SDL.SDL_HideWindow(_window);
             }
+        }
+    }
+
+    /// <summary>
+    /// The area where to render the window relative to the screen.
+    /// </summary>
+    public Area RenderingArea
+    {
+        get
+        {
+            _application.LifeCycle.ThrowIfNotOnUIThread();
+
+            int top = 0;
+            int left = 0;
+            int bottom = 0;
+            int right = 0;
+            LoggingUtils.SDLCheck(() => SDL.SDL_GetWindowBordersSize(_window, out top, out left, out bottom, out right), _application.Logger);
+            SDL.SDL_GetWindowPosition(_window, out var x, out var y);
+            SDL.SDL_GetWindowSize(_window, out var width, out var height);
+            return new Area(new Point(x - left, y - top), new Size(width, height));
+        }
+        set
+        {
+            _application.LifeCycle.ThrowIfNotOnUIThread();
+
+            int top = 0;
+            int left = 0;
+            int bottom = 0;
+            int right = 0;
+            LoggingUtils.SDLCheck(() => SDL.SDL_GetWindowBordersSize(_window, out top, out left, out bottom, out right), _application.Logger);
+            var position = value.TopLeft;
+            var size = value.Size;
+            SDL.SDL_SetWindowPosition(_window, (int)position.X + left, (int)position.Y + top);
+            SDL.SDL_SetWindowSize(_window, (int)size.Width, (int)size.Height);
         }
     }
 

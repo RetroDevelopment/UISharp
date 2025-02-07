@@ -20,7 +20,7 @@ internal class ShaderProgram
         }
 
         GL.LinkProgram(_id);
-        LoggingUtils.LogShaderStatus($"linking shaders", _id, logger);
+        LoggingUtils.LogProgramStatus($"linking shaders", _id, logger);
 
         foreach (var shader in shaders)
         {

@@ -8,21 +8,13 @@ namespace RetroDev.OpenUI.Properties;
 /// </summary>
 /// <typeparam name="TComponent">The class owning this property.</typeparam>
 /// <typeparam name="TValue">The property value type.</typeparam>
-/// <param name="parent">The object owning this property.</param>
-/// <param name="value">The property value.</param>
-/// <param name="allowedBinding">
-/// The allowed <see cref="BindingType"/> (<see cref="BindingType.TwoWays"/> by default).
-/// </param>
-/// <remarks>
-/// If <paramref name="allowedBinding"/> is <see cref="BindingType.TwoWays"/> it means that bidirectional binding is allowed, including (<see cref="BindingType.SourceToDestination"/> and <see cref="BindingType.DestinationToSource"/>).
-/// </remarks>
 [DebuggerDisplay("{Value}")]
-public class UIProperty<TComponent, TValue>(TComponent parent, TValue value, BindingType allowedBinding = BindingType.TwoWays) : BindableProperty<TValue>(value, parent.Application, allowedBinding) where TComponent : UIComponent
+public class UIProperty<TComponent, TValue> : BindableProperty<TValue> where TComponent : UIComponent
 {
     /// <summary>
     /// The <see cref="UIComponent"/> owning <see langword="this" /> <see cref="UIProperty{TComponent, TValue}"/>.
     /// </summary>
-    public TComponent Component { get; } = parent;
+    public TComponent Component { get; }
 
     /// <summary>
     /// The property value.
@@ -32,9 +24,25 @@ public class UIProperty<TComponent, TValue>(TComponent parent, TValue value, Bin
         set
         {
             base.Value = value;
-            Component.Invalidate();
         }
         get => base.Value;
+    }
+
+    /// <summary>
+    /// Creates a new property.
+    /// </summary>
+    /// <param name="parent">The object owning this property.</param>
+    /// <param name="value">The property value.</param>
+    /// <param name="allowedBinding">
+    /// The allowed <see cref="BindingType"/> (<see cref="BindingType.TwoWays"/> by default).
+    /// </param>
+    /// <remarks>
+    /// If <paramref name="allowedBinding"/> is <see cref="BindingType.TwoWays"/> it means that bidirectional binding is allowed, including (<see cref="BindingType.SourceToDestination"/> and <see cref="BindingType.DestinationToSource"/>).
+    /// </remarks>
+    public UIProperty(TComponent parent, TValue value, BindingType allowedBinding = BindingType.TwoWays) : base(value, parent.Application, allowedBinding)
+    {
+        Component = parent;
+        ValueChange += (_, _) => Component.Invalidate();
     }
 
     /// <summary>

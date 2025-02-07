@@ -1,4 +1,5 @@
-﻿using RetroDev.OpenUI.Events;
+﻿using RetroDev.OpenUI.Core.Coordinates;
+using RetroDev.OpenUI.Events;
 
 namespace RetroDev.OpenUI.Core;
 
@@ -23,6 +24,11 @@ public interface IWindowManager
     /// Whether the window is visible.
     /// </summary>
     bool Visible { get; set; }
+
+    /// <summary>
+    /// The area where to render the window relative to the screen.
+    /// </summary>
+    Area RenderingArea { get; set; }
 
     /// <summary>
     /// Dispose the window and deallocates all the graphical resources.

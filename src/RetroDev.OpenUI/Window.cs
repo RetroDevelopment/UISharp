@@ -51,13 +51,17 @@ public class Window : Container, IContainer
 
         BackgroundColor.BindDestinationToSource(Application.Theme.MainBackground);
 
-        Visibility.ValueChange += (_, args) => _windowManager.Visible = args.CurrentValue == ComponentVisibility.Visible;
+        Visibility.ValueChange += Visibility_ValueChange;
+        RenderingAreaChange += Window_RenderingAreaChange;
+
         application._eventSystem.MousePress += EventSystem_MousePress;
         application._eventSystem.MouseRelease += EventSystem_MouseRelease;
         application._eventSystem.MouseMove += EventSystem_MouseMove;
         application._eventSystem.KeyPress += EventSystem_KeyPress;
         application._eventSystem.KeyRelease += EventSystem_KeyRelease;
         application._eventSystem.TextInput += EventSystem_TextInput;
+        application._eventSystem.WindowMove += EventSystem_WindowMove;
+        application._eventSystem.WindowResize += EventSystem_WindowResize;
     }
 
     /// <summary>
@@ -96,7 +100,34 @@ public class Window : Container, IContainer
         _measureProvider.Measure();
 
     /// <inheritdoc/>
-    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) => Size.Zero; // Maybe 800x600? Or half screen resolution=    /// <inheritdoc/>
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize)
+    {
+        var screenSize = Application.ScreenSize;
+
+        var children = Children.ToList();
+        var numberOfChildren = children.Count;
+        var childrenSizeList = childrenSize.ToList();
+        var maxRight = PixelUnit.Zero;
+        var maxBottom = PixelUnit.Zero;
+
+        for (int i = 0; i < numberOfChildren; i++)
+        {
+            var child = children[i];
+            var childWrapSize = childrenSizeList[i];
+
+            var childX = child.X.Value.IsAuto ? PixelUnit.Zero : child.X.Value;
+            var childY = child.Y.Value.IsAuto ? PixelUnit.Zero : child.Y.Value;
+            var childWidth = childWrapSize.Width;
+            var childHeight = childWrapSize.Height;
+            maxRight = Math.Max(maxRight, childX + childWidth);
+            maxBottom = Math.Max(maxBottom, childY + childHeight);
+        }
+
+        maxRight = Math.Min(screenSize.Width, maxRight);
+        maxBottom = Math.Min(screenSize.Height, maxBottom);
+
+        return new Size(maxRight, maxBottom);
+    }
 
     private void EventSystem_Render(IEventSystem sender, EventArgs e)
     {
@@ -160,5 +191,30 @@ public class Window : Container, IContainer
         {
             OnTextInput(windowArgs.Args);
         }
+    }
+
+    private void EventSystem_WindowMove(IEventSystem sender, WindowEventArgs<WindowMoveEventArgs> e)
+    {
+        var topLeft = e.Args.TopLeft;
+        X.Value = topLeft.X;
+        Y.Value = topLeft.Y;
+    }
+
+    private void EventSystem_WindowResize(IEventSystem sender, WindowEventArgs<WindowResizeEventArgs> e)
+    {
+        var size = e.Args.Size;
+        Width.Value = size.Width;
+        Height.Value = size.Height;
+    }
+
+    private void Visibility_ValueChange(Properties.BindableProperty<ComponentVisibility> sender, Properties.ValueChangeEventArgs<ComponentVisibility> e)
+    {
+        _windowManager.Visible = (e.CurrentValue == ComponentVisibility.Visible);
+    }
+
+    private void Window_RenderingAreaChange(UIComponent sender, RenderingAreaEventArgs e)
+    {
+        _windowManager.RenderingArea = e.RenderingArea;
+        _windowManager.RenderingEngine.ViewportSize = e.RenderingArea.Size;
     }
 }

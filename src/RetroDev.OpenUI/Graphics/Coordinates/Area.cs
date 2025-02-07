@@ -102,4 +102,8 @@ public record Area(Point TopLeft, Size Size)
 
         return new Area(new Point(leftX, topY), new Point(rightX, bottomY));
     }
+
+    /// <inheritdoc />
+    public override string ToString() =>
+        $"{TopLeft} ; {Size}";
 }

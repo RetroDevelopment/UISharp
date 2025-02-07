@@ -12,6 +12,11 @@ namespace RetroDev.OpenUI.Core;
 public interface IRenderingEngine
 {
     /// <summary>
+    /// The víewport size in pixels.
+    /// </summary>
+    Size ViewportSize { get; set; }
+
+    /// <summary>
     /// Creates a texture with the given <paramref name="image"/> and stores it in memory.
     /// </summary>
     /// <param name="image">An RGBA image.</param>

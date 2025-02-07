@@ -69,11 +69,26 @@ internal class OpenGLRenderingEngine : IRenderingEngine
     private readonly int _defaultTexture;
 
     private readonly ProceduralModelGenerator _modelGenerator;
+    private Size _viewportSize = Size.Zero;
 
     /// <summary>
     /// The víewport size in pixels.
     /// </summary>
-    public Size ViewportSize { get; set; }
+    public Size ViewportSize
+    {
+        get
+        {
+            _application.LifeCycle.ThrowIfNotOnUIThread();
+            return _viewportSize;
+        }
+        set
+        {
+            _application.LifeCycle.ThrowIfNotOnUIThread();
+            _viewportSize = value;
+            LoggingUtils.SDLCheck(() => SDL.SDL_GL_MakeCurrent(_window, _glContext), _application.Logger);
+            LoggingUtils.OpenGLCheck(() => GL.Viewport(0, 0, (int)value.Width, (int)value.Height), _application.Logger);
+        }
+    }
 
     public OpenGLRenderingEngine(Application application, nint window)
     {
@@ -93,7 +108,8 @@ internal class OpenGLRenderingEngine : IRenderingEngine
         }
 
         LoggingUtils.SDLCheck(() => SDL.SDL_GL_MakeCurrent(window, _glContext), _application.Logger);
-        GL.LoadBindings(new SDL2OpenGLBindings()); // Load OpenGL.NET bindings
+        // Load OpenGL.NET bindings
+        LoggingUtils.OpenGLCheck(() => GL.LoadBindings(new SDL2OpenGLBindings()), _application.Logger);
 
         LoggingUtils.SDLCheck(() => SDL.SDL_GL_SetSwapInterval(1), application.Logger, warning: true); // Enable VSync
 
@@ -105,13 +121,8 @@ internal class OpenGLRenderingEngine : IRenderingEngine
 
         // SDLCheck(() => SDL.SDL_GL_SetSwapInterval(0)); // This will run the CPU and GPU at 100%
         // GL.Enable(EnableCap.Multisample); // TODO: should enable anti aliasing
-
-        GL.Enable(EnableCap.ScissorTest);
-        GL.Enable(EnableCap.Blend);
-
-        GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
-
-        ViewportSize = new(800, 600); // TODO: SDLWindowEngine will need to update this property when the window size change
+        LoggingUtils.OpenGLCheck(() => GL.Enable(EnableCap.Blend), _application.Logger);
+        LoggingUtils.OpenGLCheck(() => GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha), _application.Logger);
 
         _defaultTexture = CreateTexture(new RgbaImage([0, 0, 0, 0], 1, 1));
         _modelGenerator = new ProceduralModelGenerator();
@@ -132,24 +143,24 @@ internal class OpenGLRenderingEngine : IRenderingEngine
         // But for now, let's keep it simple.
 
         // Texture is RGBA, so [R1, G1, B1, A1, R2, G2, etc.]
-        int textureID;
-        GL.GenTextures(1, out textureID);
-        GL.BindTexture(TextureTarget.Texture2D, textureID);
+        var textureID = 0;
+        LoggingUtils.OpenGLCheck(() => GL.GenTextures(1, out textureID), _application.Logger);
+        LoggingUtils.OpenGLCheck(() => GL.BindTexture(TextureTarget.Texture2D, textureID), _application.Logger);
 
         // Set texture parameters
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+        LoggingUtils.OpenGLCheck(() => GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat), _application.Logger);
+        LoggingUtils.OpenGLCheck(() => GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat), _application.Logger);
+        LoggingUtils.OpenGLCheck(() => GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear), _application.Logger);
+        LoggingUtils.OpenGLCheck(() => GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear), _application.Logger);
 
         // Upload the image data to the texture
-        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, image.Data);
+        LoggingUtils.OpenGLCheck(() => GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, image.Data), _application.Logger);
 
         // Generate mipmaps for the texture
-        GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
+        LoggingUtils.OpenGLCheck(() => GL.GenerateMipmap(GenerateMipmapTarget.Texture2D), _application.Logger);
 
         // Unbind the texture
-        GL.BindTexture(TextureTarget.Texture2D, 0);
+        LoggingUtils.OpenGLCheck(() => GL.BindTexture(TextureTarget.Texture2D, 0), _application.Logger);
 
         // Return the texture ID
         return textureID;
@@ -233,8 +244,8 @@ internal class OpenGLRenderingEngine : IRenderingEngine
         _application.LifeCycle.ThrowIfNotOnRenderingPhase();
         LoggingUtils.SDLCheck(() => SDL.SDL_GL_MakeCurrent(_window, _glContext), _application.Logger);
         var openGlBackgroundColor = backroundColor.ToOpenGLColor();
-        GL.ClearColor(openGlBackgroundColor.X, openGlBackgroundColor.Y, openGlBackgroundColor.Z, openGlBackgroundColor.W);
-        GL.Clear(ClearBufferMask.ColorBufferBit);
+        LoggingUtils.OpenGLCheck(() => GL.ClearColor(openGlBackgroundColor.X, openGlBackgroundColor.Y, openGlBackgroundColor.Z, openGlBackgroundColor.W), _application.Logger);
+        LoggingUtils.OpenGLCheck(() => GL.Clear(ClearBufferMask.ColorBufferBit), _application.Logger);
         _modelGenerator.ResetDrawCallsCount();
     }
 

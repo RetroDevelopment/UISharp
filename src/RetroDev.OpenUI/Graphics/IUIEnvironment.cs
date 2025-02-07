@@ -1,4 +1,5 @@
-﻿using RetroDev.OpenUI.Exceptions;
+﻿using RetroDev.OpenUI.Core.Coordinates;
+using RetroDev.OpenUI.Exceptions;
 
 namespace RetroDev.OpenUI.Core;
 
@@ -7,6 +8,11 @@ namespace RetroDev.OpenUI.Core;
 /// </summary>
 public interface IUIEnvironment
 {
+    /// <summary>
+    /// Gets the size of the main display.
+    /// </summary>
+    Size ScreenSize { get; }
+
     /// <summary>
     /// Initializes the UI Environment.
     /// </summary>

@@ -65,14 +65,19 @@ public abstract class UIComponent
     public event TypeSafeEventHandler<UIComponent, KeyEventArgs> KeyPress = (_, _) => { };
 
     /// <summary>
-    /// Key is released inside <see cref="this"/> window.
+    /// Key is released inside <see langword="this"/> window.
     /// </summary>
     public event TypeSafeEventHandler<UIComponent, KeyEventArgs> KeyRelease = (_, _) => { };
 
     /// <summary>
-    /// Text is inserted in <see cref="this"/> window.
+    /// Text is inserted in <see langword="this"/> window.
     /// </summary>
     public event TypeSafeEventHandler<UIComponent, TextInputEventArgs> TextInput = (_, _) => { };
+
+    /// <summary>
+    /// Triggered when <see langword="this" /> <see cref="UIComponent"/> drawing area changes.
+    /// </summary>
+    public event TypeSafeEventHandler<UIComponent, RenderingAreaEventArgs> RenderingAreaChange = (_, _) => { };
 
     /// <summary>
     /// A frame need to be rendered. Use this event to render at the bottom of the children.
@@ -425,8 +430,7 @@ public abstract class UIComponent
     {
         if (!rootCall) _relativeDrawingAreaOverride = relativeDrawingArea;
         _relativeDrawingArea = ComputeRelativeDrawingArea(_relativeDrawingAreaOverride);
-        var absoluteDrawingArea = ComputeAbsoluteDrawingArea();
-        _absoluteDrawingArea = absoluteDrawingArea;
+        _absoluteDrawingArea = ComputeAbsoluteDrawingArea();
         _clipArea = ComputeClipArea();
 
         var childrenAreas = RepositionChildren(_relativeDrawingArea.Size, _children.Select(c => c._wrapSize));
@@ -457,6 +461,7 @@ public abstract class UIComponent
         // And finally remove ActualSize property which is dangerous.
         // Also make sure all drawing areas of children are re calculated recursively in the sub tree.
         Validate();
+        RenderingAreaChange.Invoke(this, new RenderingAreaEventArgs(_relativeDrawingArea));
     }
 
     private void UIComponent_MousePress(UIComponent sender, MouseEventArgs e)
@@ -618,10 +623,11 @@ public abstract class UIComponent
         var actualY = locationOverride.Y.IsAuto ? (Y.Value.IsAuto ? autoY : Y.Value) : locationOverride.Y;
         var actualTopLeft = new Point(actualX, actualY);
 
+        // Windows X and Y position will be relative to the screen, but the relative area location is Point.Zero, because it is relative to the viewport (i.e. the window itslef).
         return new Area(actualTopLeft, actualSize);
     }
 
-    private Area ComputeAbsoluteDrawingArea() => _relativeDrawingArea.ToAbsolute(Parent?._absoluteDrawingArea);
+    private Area ComputeAbsoluteDrawingArea() => Parent != null ? _relativeDrawingArea.ToAbsolute(Parent._absoluteDrawingArea) : _relativeDrawingArea.Fill();
     private Area ComputeClipArea() => _absoluteDrawingArea.Clip(Parent?._clipArea);
 
     // Recompute the level of this component in the UI hierarchy tree.

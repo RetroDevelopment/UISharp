@@ -248,7 +248,7 @@ internal class Program
     {
         using var application = new Application();
         // application.Logger.Verbosity = OpenUI.Logging.Verbosity.Verbose;
-        application.ShowWindow<MainWindow>();
+        application.ApplicationStarted += (_, _) => application.ShowWindow<MainWindow>();
         application.Run();
     }
 }

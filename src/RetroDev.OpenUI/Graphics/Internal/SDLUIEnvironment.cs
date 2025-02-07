@@ -1,6 +1,8 @@
-﻿using RetroDev.OpenUI.Exceptions;
+﻿using RetroDev.OpenUI.Core.Coordinates;
+using RetroDev.OpenUI.Exceptions;
 using RetroDev.OpenUI.Utils;
 using SDL2;
+using static SDL2.SDL;
 
 namespace RetroDev.OpenUI.Core.Internal;
 
@@ -14,6 +16,19 @@ internal class SDLUIEnvironment(Application application) : IUIEnvironment
     private static object s_lock = new();
 
     private Application _application = application;
+
+    /// <summary>
+    /// Gets the size of the main display.
+    /// </summary>
+    public Size ScreenSize
+    {
+        get
+        {
+            _application.LifeCycle.ThrowIfNotOnUIThread();
+            SDL.SDL_GetCurrentDisplayMode(0, out var displayMode);
+            return new Size(displayMode.w, displayMode.h);
+        }
+    }
 
     /// <summary>
     /// Initializes the UI environment.

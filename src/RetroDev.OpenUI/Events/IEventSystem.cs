@@ -46,6 +46,16 @@ public interface IEventSystem
     event TypeSafeEventHandler<IEventSystem, WindowEventArgs<TextInputEventArgs>> TextInput;
 
     /// <summary>
+    /// The window has been moved.
+    /// </summary>
+    event TypeSafeEventHandler<IEventSystem, WindowEventArgs<WindowMoveEventArgs>> WindowMove;
+
+    /// <summary>
+    /// The window has been resized.
+    /// </summary>
+    event TypeSafeEventHandler<IEventSystem, WindowEventArgs<WindowResizeEventArgs>> WindowResize;
+
+    /// <summary>
     /// Before rendering.
     /// </summary>
     event TypeSafeEventHandler<IEventSystem, EventArgs> BeforeRender;

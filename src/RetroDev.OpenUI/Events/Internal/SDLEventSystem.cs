@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
+using RetroDev.OpenUI.Core;
 using RetroDev.OpenUI.Core.Coordinates;
 using RetroDev.OpenUI.Core.Internal;
 using RetroDev.OpenUI.Events;
@@ -60,6 +61,16 @@ internal class SDLEventSystem(Application application) : IEventSystem
     /// to the appropriate string depending on keyboard layout.
     /// </summary>
     public event TypeSafeEventHandler<IEventSystem, WindowEventArgs<TextInputEventArgs>> TextInput = (_, _) => { };
+
+    /// <summary>
+    /// The window has been moved.
+    /// </summary>
+    public event TypeSafeEventHandler<IEventSystem, WindowEventArgs<WindowMoveEventArgs>> WindowMove = (_, _) => { };
+
+    /// <summary>
+    /// The window has been resized.
+    /// </summary>
+    public event TypeSafeEventHandler<IEventSystem, WindowEventArgs<WindowResizeEventArgs>> WindowResize = (_, _) => { };
 
     /// <summary>
     /// Before rendering.
@@ -149,6 +160,35 @@ internal class SDLEventSystem(Application application) : IEventSystem
                     TextInput.Invoke(this, textInputArgs);
                     textInputArgs.Log("textInput", _application.Logger);
                     break;
+                case SDL_EventType.SDL_WINDOWEVENT:
+                    // TODO: fix issue that UI thread freezes while resizing window. Either use a thread to constantly
+                    // poll the window size or use platform specific solutions.
+                    var windowEvent = currentEvent.window;
+                    var windowId = GetWindowIdFromWindowEvent(windowEvent);
+
+                    switch (windowEvent.windowEvent)
+                    {
+                        case SDL_WindowEventID.SDL_WINDOWEVENT_MOVED:
+                            nint windowPtr = SDL.SDL_GetWindowFromID(windowEvent.windowID);
+                            SDL.SDL_GetWindowBordersSize(windowPtr, out int top, out int left, out int bottom, out int right);
+                            var movedArgs = new WindowEventArgs<WindowMoveEventArgs>(
+                                windowId,
+                                new WindowMoveEventArgs(new Point(windowEvent.data1 - left, windowEvent.data2 - top)));
+                            movedArgs.Log("windowMove", _application.Logger);
+                            WindowMove.Invoke(this, movedArgs);
+                            break;
+
+                        case SDL_WindowEventID.SDL_WINDOWEVENT_RESIZED:
+                        case SDL_WindowEventID.SDL_WINDOWEVENT_SIZE_CHANGED:
+                            var resizedArgs = new WindowEventArgs<WindowResizeEventArgs>(
+                                windowId,
+                                new WindowResizeEventArgs(new Size(windowEvent.data1, windowEvent.data2))
+                            );
+                            resizedArgs.Log("windowResize", _application.Logger);
+                            WindowResize.Invoke(this, resizedArgs);
+                            break;
+                    }
+                    break;
             }
             // Exit the loop if more than 10 milliseconds have passed to render frame (otherwise the loop can last too long skipping frames)
             if (stopwatch.ElapsedMilliseconds > 10) break;
@@ -212,6 +252,9 @@ internal class SDLEventSystem(Application application) : IEventSystem
 
     private static SDLWindowId GetWindowIdFromTextInputEvent(SDL_TextInputEvent textInputEvent) =>
         new((int)textInputEvent.windowID);
+
+    private static SDLWindowId GetWindowIdFromWindowEvent(SDL_WindowEvent windowEvent) =>
+    new((int)windowEvent.windowID);
 
     private static MouseButton GetMouseButton(SDL_MouseButtonEvent currentEvent) => currentEvent.button switch
     {
