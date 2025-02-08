@@ -70,6 +70,11 @@ internal class SDLEventSystem(Application application) : IEventSystem
     public event TypeSafeEventHandler<IEventSystem, WindowEventArgs<WindowResizeEventArgs>> WindowResize = (_, _) => { };
 
     /// <summary>
+    /// The mouse wheel has been moved.
+    /// </summary>
+    public event TypeSafeEventHandler<IEventSystem, WindowEventArgs<MouseWheelEventArgs>> MouseWheel = (_, _) => { };
+
+    /// <summary>
     /// Before rendering.
     /// </summary>
     public event TypeSafeEventHandler<IEventSystem, EventArgs> BeforeRender = (_, _) => { };
@@ -168,23 +173,25 @@ internal class SDLEventSystem(Application application) : IEventSystem
                         case SDL_WindowEventID.SDL_WINDOWEVENT_MOVED:
                             var windowPtr = SDL_GetWindowFromID(windowEvent.windowID);
                             SDL_GetWindowBordersSize(windowPtr, out var top, out var left, out var bottom, out var right);
-                            var movedArgs = new WindowEventArgs<WindowMoveEventArgs>(
-                                windowId,
-                                new WindowMoveEventArgs(new Point(windowEvent.data1 - left, windowEvent.data2 - top)));
+                            var movedArgs = new WindowEventArgs<WindowMoveEventArgs>(windowId, new WindowMoveEventArgs(new Point(windowEvent.data1 - left, windowEvent.data2 - top)));
                             movedArgs.Log("windowMove", _application.Logger);
                             WindowMove.Invoke(this, movedArgs);
                             break;
 
                         case SDL_WindowEventID.SDL_WINDOWEVENT_RESIZED:
                         case SDL_WindowEventID.SDL_WINDOWEVENT_SIZE_CHANGED:
-                            var resizedArgs = new WindowEventArgs<WindowResizeEventArgs>(
-                                windowId,
-                                new WindowResizeEventArgs(new Size(windowEvent.data1, windowEvent.data2))
-                            );
+                            var resizedArgs = new WindowEventArgs<WindowResizeEventArgs>(windowId, new WindowResizeEventArgs(new Size(windowEvent.data1, windowEvent.data2)));
                             resizedArgs.Log("windowResize", _application.Logger);
                             WindowResize.Invoke(this, resizedArgs);
                             break;
                     }
+                    break;
+                case SDL_EventType.SDL_MOUSEWHEEL:
+                    var wheelEvent = currentEvent.wheel;
+                    var mouseWheelWindowId = GetWidnowIdFromWeelEvent(wheelEvent);
+                    var mouseWheelArgs = new WindowEventArgs<MouseWheelEventArgs>(mouseWheelWindowId, new MouseWheelEventArgs(wheelEvent.x, wheelEvent.y));
+                    mouseWheelArgs.Log("mouseWheel", _application.Logger);
+                    MouseWheel.Invoke(this, mouseWheelArgs);
                     break;
             }
             // Exit the loop if more than 10 milliseconds have passed to render frame (otherwise the loop can last too long skipping frames)
@@ -251,7 +258,10 @@ internal class SDLEventSystem(Application application) : IEventSystem
         new(textInputEvent.windowID);
 
     private static SDLWindowId GetWindowIdFromWindowEvent(SDL_WindowEvent windowEvent) =>
-    new(windowEvent.windowID);
+        new(windowEvent.windowID);
+
+    private static SDLWindowId GetWidnowIdFromWeelEvent(SDL_MouseWheelEvent mouseWheelEvent) =>
+        new(mouseWheelEvent.windowID);
 
     private static MouseButton GetMouseButton(SDL_MouseButtonEvent currentEvent) => currentEvent.button switch
     {

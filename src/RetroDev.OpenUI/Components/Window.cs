@@ -35,6 +35,11 @@ public class Window : Container, IContainer
     public override IEnumerable<UIComponent> Children => GetChildren();
 
     /// <summary>
+    /// The window title.
+    /// </summary>
+    public UIProperty<Window, string> Title { get; }
+
+    /// <summary>
     /// Creates a new window.
     /// </summary>
     /// <param name="application">The application owning this window.</param>
@@ -50,6 +55,9 @@ public class Window : Container, IContainer
         _renderProvider = new RenderProvider(_invalidator);
         _renderingEngine = renderingEngine ?? new OpenGLRenderingEngine(application, new SDLOpenGLRenderingContext(application));
         _windowId = Application.WindowManager.CreateWindow(_renderingEngine.RenderingContext);
+
+        Title = new UIProperty<Window, string>(this, string.Empty);
+        Title.ValueChange += Title_ValueChange;
 
         Application.EventSystem.Render += EventSystem_Render;
         application.AddWindow(this);
@@ -68,6 +76,7 @@ public class Window : Container, IContainer
         application.EventSystem.TextInput += EventSystem_TextInput;
         application.EventSystem.WindowMove += EventSystem_WindowMove;
         application.EventSystem.WindowResize += EventSystem_WindowResize;
+        application.EventSystem.MouseWheel += EventSystem_MouseWheel;
     }
 
     /// <summary>
@@ -213,6 +222,14 @@ public class Window : Container, IContainer
         Height.Value = size.Height;
     }
 
+    private void EventSystem_MouseWheel(IEventSystem sender, WindowEventArgs<MouseWheelEventArgs> windowArgs)
+    {
+        if (windowArgs.WindowId.Equals(_windowId))
+        {
+            OnMouseWheel(windowArgs.Args);
+        }
+    }
+
     private void Visibility_ValueChange(BindableProperty<ComponentVisibility> sender, ValueChangeEventArgs<ComponentVisibility> e)
     {
         if (e.CurrentValue == ComponentVisibility.Visible)
@@ -229,5 +246,10 @@ public class Window : Container, IContainer
     {
         Application.WindowManager.SetRenderingArea(_windowId, e.RenderingArea);
         _renderingEngine.ViewportSize = e.RenderingArea.Size;
+    }
+
+    private void Title_ValueChange(BindableProperty<string> sender, ValueChangeEventArgs<string> e)
+    {
+        Application.WindowManager.SetTitle(_windowId, e.CurrentValue);
     }
 }

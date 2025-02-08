@@ -44,6 +44,7 @@ public class ScrollView : Container, ISingleContainer
         MouseDrag += ScrollView_MouseDrag;
         MouseDragBegin += ScrollView_MouseDragBegin;
         MouseDragEnd += ScrollView_MouseDragEnd;
+        MouseWheel += ScrollView_MouseWheel;
     }
 
     /// <summary>
@@ -106,6 +107,33 @@ public class ScrollView : Container, ISingleContainer
     {
         _moveHorizontalBar = false;
         _moveVerticalBar = false;
+    }
+
+    private void ScrollView_MouseWheel(UIComponent sender, MouseWheelEventArgs e)
+    {
+        // TODO: mouseDrag event and this event join in same method
+        if (_child == null) return;
+        var mouseWheelSpeed = 4.0f; // How fast scroll should go.
+
+        var horizontalScrollBarArea = GetHorizontalScrollBarArea();
+        var verticalScrollBarArea = GetVerticalScrollBarArea();
+        var maximumHorizontalScrollBarAreaWidth = GetMaximumHorizontalScrollBarAreaWidth();
+        var maximumVerticalScrollBarAreaHeight = GetMaximumVerticalScrollBarAreaHeight();
+
+        if (!_moveHorizontalBar && horizontalScrollBarArea != null)
+        {
+            var offsetXFactor = -(e.HorizontalMovement * mouseWheelSpeed) / (maximumHorizontalScrollBarAreaWidth - horizontalScrollBarArea.Size.Width);
+            var maximumChildHorizontalScroll = GetMaximumChildHorizontalScroll();
+            _child.X.Value = Math.Clamp(_child.X.Value - offsetXFactor * maximumChildHorizontalScroll, -maximumChildHorizontalScroll, 0.0f);
+        }
+
+        if (!_moveVerticalBar && verticalScrollBarArea != null)
+        {
+            var offsetYFactor = -(e.VerticalMovement * mouseWheelSpeed) / (maximumVerticalScrollBarAreaHeight - verticalScrollBarArea.Size.Height);
+            var maximumChildVerticalScroll = GetMaximumChildVerticalScroll();
+            _child.Y.Value = Math.Clamp(_child.Y.Value - offsetYFactor * maximumChildVerticalScroll, -maximumChildVerticalScroll, 0.0f);
+        }
+
     }
 
     private void ScrollView_MouseDrag(UIComponent sender, MouseDragEventArgs e)

@@ -55,6 +55,11 @@ public interface IEventSystem
     event TypeSafeEventHandler<IEventSystem, WindowEventArgs<WindowResizeEventArgs>> WindowResize;
 
     /// <summary>
+    /// The mouse wheel has been moved.
+    /// </summary>
+    event TypeSafeEventHandler<IEventSystem, WindowEventArgs<MouseWheelEventArgs>> MouseWheel;
+
+    /// <summary>
     /// Before rendering.
     /// </summary>
     event TypeSafeEventHandler<IEventSystem, EventArgs> BeforeRender;

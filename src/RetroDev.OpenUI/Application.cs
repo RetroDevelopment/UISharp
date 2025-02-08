@@ -124,6 +124,7 @@ public class Application : IDisposable
         }
 
         LifeCycle.CurrentState = LifeCycle.State.QUIT;
+        // TODO: run disposing here!
         Logger.LogInfo("Application terminated");
     }
 

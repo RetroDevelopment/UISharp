@@ -20,6 +20,7 @@ public abstract class UIComponent
     internal readonly List<UIComponent> _children = [];
     internal int _level = 0;
     private UIComponent? _focusedComponent;
+    private Point? _mouseAbsoluteLocation = null;
     private Point? _mouseDragPointAbsolute = null;
     private Point? _mouseLastDragPointAbsolute = null;
     private Size _wrapSize; // The size with auto size to wrap.
@@ -73,6 +74,11 @@ public abstract class UIComponent
     /// Text is inserted in <see langword="this"/> window.
     /// </summary>
     public event TypeSafeEventHandler<UIComponent, TextInputEventArgs> TextInput = (_, _) => { };
+
+    /// <summary>
+    /// Mouse wheel has been moved.
+    /// </summary>
+    public event TypeSafeEventHandler<UIComponent, MouseWheelEventArgs> MouseWheel = (_, _) => { };
 
     /// <summary>
     /// Triggered when <see langword="this" /> <see cref="UIComponent"/> drawing area changes.
@@ -354,32 +360,37 @@ public abstract class UIComponent
 
     protected void OnMousePress(MouseEventArgs e)
     {
-        MousePress?.Invoke(this, e);
+        MousePress.Invoke(this, e);
     }
 
     protected void OnMouseRelease(MouseEventArgs e)
     {
-        MouseRelease?.Invoke(this, e);
+        MouseRelease.Invoke(this, e);
     }
 
     protected void OnMouseMove(MouseEventArgs e)
     {
-        MouseMove?.Invoke(this, e);
+        MouseMove.Invoke(this, e);
     }
 
     protected void OnKeyPress(KeyEventArgs e)
     {
-        KeyPress?.Invoke(this, e);
+        KeyPress.Invoke(this, e);
     }
 
     protected void OnKeyRelease(KeyEventArgs e)
     {
-        KeyRelease?.Invoke(this, e);
+        KeyRelease.Invoke(this, e);
     }
 
     protected void OnTextInput(TextInputEventArgs e)
     {
-        TextInput?.Invoke(this, e);
+        TextInput.Invoke(this, e);
+    }
+
+    protected void OnMouseWheel(MouseWheelEventArgs e)
+    {
+        MouseWheel.Invoke(this, e);
     }
 
     internal IEnumerable<UIComponent> GetComponentTreeNodesDepthFirstSearch() =>
@@ -485,6 +496,7 @@ public abstract class UIComponent
         Parent.KeyPress += _parent_KeyPress;
         Parent.KeyRelease += _parent_KeyRelease;
         Parent.TextInput += _parent_TextInput;
+        Parent.MouseWheel += _parent_MouseWheel;
     }
 
     private void DetachEventsFromParent()
@@ -496,10 +508,12 @@ public abstract class UIComponent
         Parent.KeyPress -= _parent_KeyPress;
         Parent.KeyRelease -= _parent_KeyRelease;
         Parent.TextInput -= _parent_TextInput;
+        Parent.MouseWheel -= _parent_MouseWheel;
     }
 
     private void _parent_MouseMove(UIComponent sender, MouseEventArgs mouseEventArgs)
     {
+        _mouseAbsoluteLocation = mouseEventArgs.AbsoluteLocation;
         if (mouseEventArgs.AbsoluteLocation.IsWithin(_absoluteDrawingArea) && Visibility.Value == Components.ComponentVisibility.Visible && Enabled.Value)
         {
             MouseMove.Invoke(this, new MouseEventArgs(mouseEventArgs.AbsoluteLocation,
@@ -549,7 +563,7 @@ public abstract class UIComponent
     {
         if (Visibility.Value == Components.ComponentVisibility.Visible && (Focus.Value || !Focusable.Value))
         {
-            KeyPress.Invoke(this, new KeyEventArgs(keyEventArgs.Button));
+            KeyPress.Invoke(this, keyEventArgs);
         }
     }
 
@@ -557,7 +571,7 @@ public abstract class UIComponent
     {
         if (Visibility.Value == ComponentVisibility.Visible && (Focus.Value || this is Container))
         {
-            KeyRelease.Invoke(this, new KeyEventArgs(keyEventArgs.Button));
+            KeyRelease.Invoke(this, keyEventArgs);
         }
     }
 
@@ -565,7 +579,15 @@ public abstract class UIComponent
     {
         if (Visibility.Value == ComponentVisibility.Visible && (Focus.Value || this is Container))
         {
-            TextInput.Invoke(this, new TextInputEventArgs(textInputEventArgs.Text));
+            TextInput.Invoke(this, textInputEventArgs);
+        }
+    }
+
+    private void _parent_MouseWheel(UIComponent sender, MouseWheelEventArgs mouseWheelEventArgs)
+    {
+        if (Visibility.Value == ComponentVisibility.Visible && _mouseAbsoluteLocation != null && _mouseAbsoluteLocation.IsWithin(_absoluteDrawingArea))
+        {
+            MouseWheel.Invoke(this, mouseWheelEventArgs);
         }
     }
 
