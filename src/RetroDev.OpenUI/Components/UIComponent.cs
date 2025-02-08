@@ -1,11 +1,11 @@
 ﻿using RetroDev.OpenUI.Components.Containers;
 using RetroDev.OpenUI.Components.Core;
 using RetroDev.OpenUI.Components.Core.AutoArea;
-using RetroDev.OpenUI.Core.Coordinates;
-using RetroDev.OpenUI.Events;
+using RetroDev.OpenUI.Core.Graphics;
+using RetroDev.OpenUI.Core.Windowing.Events;
 using RetroDev.OpenUI.Exceptions;
-using RetroDev.OpenUI.Graphics;
-using RetroDev.OpenUI.Properties;
+using RetroDev.OpenUI.UI.Coordinates;
+using RetroDev.OpenUI.UI.Properties;
 
 namespace RetroDev.OpenUI.Components;
 
@@ -236,7 +236,7 @@ public abstract class UIComponent
     public void Invalidate()
     {
         Root?._invalidator?.Invalidate(this);
-        Application._eventSystem.InvalidateRendering();
+        Application.EventSystem.InvalidateRendering();
     }
 
     /// <summary>
@@ -324,7 +324,8 @@ public abstract class UIComponent
         component.AttachEventsFromParent();
         component.RecomputeLevel();
         component.InvalidateAll();
-        Application._eventSystem.InvalidateRendering();
+        Invalidate();
+        Application.EventSystem.InvalidateRendering();
         if (index == null) _children.Add(component);
         else if (index + 1 < _children.Count) _children.Insert((int)index + 1, component);
         else _children.Add(component);
@@ -345,6 +346,7 @@ public abstract class UIComponent
     protected bool RemoveChild(UIComponent component)
     {
         Application.LifeCycle.ThrowIfPropertyCannotBeSet();
+        Invalidate();
         component.DetachEventsFromParent();
         if (component.Parent == this) component.Parent = null;
         return _children.Remove(component);

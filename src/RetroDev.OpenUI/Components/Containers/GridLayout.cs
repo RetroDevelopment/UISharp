@@ -1,5 +1,7 @@
-﻿using RetroDev.OpenUI.Core.Coordinates;
-using RetroDev.OpenUI.Properties;
+﻿using RetroDev.OpenUI.Core.Graphics.Shapes;
+using RetroDev.OpenUI.Core.Windowing.Events;
+using RetroDev.OpenUI.UI.Coordinates;
+using RetroDev.OpenUI.UI.Properties;
 
 namespace RetroDev.OpenUI.Components.Containers;
 
@@ -306,8 +308,8 @@ public class GridLayout : Container, IContainer
         return cumulativeKnownSize;
     }
 
-    private void GridLayout_RenderFrame(UIComponent sender, Events.RenderingEventArgs e)
+    private void GridLayout_RenderFrame(UIComponent sender, RenderingEventArgs e)
     {
-        e.Canvas.Render(new Graphics.Shapes.Rectangle(BackgroundColor.Value), ActualSize.Fill());
+        e.Canvas.Render(new Rectangle(BackgroundColor.Value), ActualSize.Fill());
     }
 }

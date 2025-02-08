@@ -1,6 +1,6 @@
 ﻿using RetroDev.OpenUI.Components.Core.AutoArea;
-using RetroDev.OpenUI.Core.Coordinates;
-using RetroDev.OpenUI.Properties;
+using RetroDev.OpenUI.Core.Windowing.Events;
+using RetroDev.OpenUI.UI.Coordinates;
 
 namespace RetroDev.OpenUI.Components.Containers;
 
@@ -88,8 +88,8 @@ public class VerticalLayout : Container, IContainer
         return childrenFinalSize;
     }
 
-    private void VerticalLayout_RenderFrame(UIComponent sender, Events.RenderingEventArgs e)
+    private void VerticalLayout_RenderFrame(UIComponent sender, RenderingEventArgs e)
     {
-        e.Canvas.Render(new Graphics.Shapes.Rectangle(BackgroundColor.Value), ActualSize.Fill());
+        e.Canvas.Render(new OpenUI.Core.Graphics.Shapes.Rectangle(BackgroundColor.Value), ActualSize.Fill());
     }
 }

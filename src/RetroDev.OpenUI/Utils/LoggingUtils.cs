@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
 using System.Security.Cryptography;
 using OpenTK.Graphics.OpenGL;
-using RetroDev.OpenUI.Events;
+using RetroDev.OpenUI.Core.Windowing.Events;
 using RetroDev.OpenUI.Exceptions;
 using RetroDev.OpenUI.Logging;
 using SDL2;

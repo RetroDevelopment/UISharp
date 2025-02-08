@@ -1,8 +1,6 @@
-﻿using RetroDev.OpenUI.Core;
-using RetroDev.OpenUI.Core.Coordinates;
-using RetroDev.OpenUI.Events;
-using RetroDev.OpenUI.Events.Internal;
-using RetroDev.OpenUI.Graphics;
+﻿using RetroDev.OpenUI.Core.Graphics;
+using RetroDev.OpenUI.Core.Windowing.Events;
+using RetroDev.OpenUI.UI;
 
 namespace RetroDev.OpenUI.Components.Core;
 

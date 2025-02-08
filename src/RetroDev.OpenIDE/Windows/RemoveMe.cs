@@ -1,8 +1,9 @@
 ﻿using RetroDev.OpenUI;
 using RetroDev.OpenUI.Components;
-using RetroDev.OpenUI.Core.Coordinates;
-using RetroDev.OpenUI.Graphics;
-using RetroDev.OpenUI.Graphics.Shapes;
+using RetroDev.OpenUI.Core.Graphics;
+using RetroDev.OpenUI.Core.Graphics.Shapes;
+using RetroDev.OpenUI.Core.Windowing.Events;
+using RetroDev.OpenUI.UI.Coordinates;
 
 namespace RetroDev.OpenIDE.Windows;
 
@@ -18,7 +19,7 @@ internal class RemoveMe : UIComponent
         RenderFrame += RemoveMe_RenderFrame;
     }
 
-    private void RemoveMe_RenderFrame(UIComponent sender, OpenUI.Events.RenderingEventArgs e)
+    private void RemoveMe_RenderFrame(UIComponent sender, RenderingEventArgs e)
     {
         radiusX = (radiusX + 1) % 20.0f;
         radiusY = (radiusY + 1.5f) % 25.0f;

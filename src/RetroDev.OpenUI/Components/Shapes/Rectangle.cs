@@ -1,6 +1,7 @@
-﻿using RetroDev.OpenUI.Core.Coordinates;
-using RetroDev.OpenUI.Graphics;
-using RetroDev.OpenUI.Properties;
+﻿using RetroDev.OpenUI.Core.Graphics;
+using RetroDev.OpenUI.Core.Windowing.Events;
+using RetroDev.OpenUI.UI.Coordinates;
+using RetroDev.OpenUI.UI.Properties;
 
 namespace RetroDev.OpenUI.Components.Shapes;
 
@@ -70,7 +71,7 @@ public class Rectangle : UIComponent
         return new Size(minimumSize, minimumSize);
     }
 
-    private void Rectangle_RenderFrame(UIComponent sender, Events.RenderingEventArgs e)
+    private void Rectangle_RenderFrame(UIComponent sender, RenderingEventArgs e)
     {
         PixelUnit autoCornerMaximumRadius = Math.Min(ActualSize.Width, ActualSize.Height) / 2.0f;
         PixelUnit autoCornerRadius = autoCornerMaximumRadius * AutoCornerRadiusRatio.Value;
@@ -78,12 +79,12 @@ public class Rectangle : UIComponent
         var cornerRadiusX = CornerRadiusX.Value.IsAuto ? autoCornerRadius : CornerRadiusX.Value;
         var cornerRadiusY = CornerRadiusY.Value.IsAuto ? autoCornerRadius : CornerRadiusY.Value;
 
-        var rectangleShape = new Graphics.Shapes.Rectangle(BackgroundColor.Value,
-                                                           BorderColor.Value,
-                                                           BorderThickness.Value,
-                                                           cornerRadiusX,
-                                                           cornerRadiusY,
-                                                           Rotation.Value);
+        var rectangleShape = new OpenUI.Core.Graphics.Shapes.Rectangle(BackgroundColor.Value,
+                                                                       BorderColor.Value,
+                                                                       BorderThickness.Value,
+                                                                       cornerRadiusX,
+                                                                       cornerRadiusY,
+                                                                       Rotation.Value);
         var canvas = e.Canvas;
 
         canvas.Render(rectangleShape, ActualSize.Fill());

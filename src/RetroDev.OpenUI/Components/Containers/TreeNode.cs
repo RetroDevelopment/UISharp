@@ -1,4 +1,4 @@
-﻿using RetroDev.OpenUI.Properties;
+﻿using RetroDev.OpenUI.UI.Properties;
 
 namespace RetroDev.OpenUI.Components.Containers;
 

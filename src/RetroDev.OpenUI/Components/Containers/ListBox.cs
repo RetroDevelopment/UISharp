@@ -1,7 +1,8 @@
 ﻿using RetroDev.OpenUI.Components.Core.AutoArea;
-using RetroDev.OpenUI.Core.Coordinates;
-using RetroDev.OpenUI.Graphics;
-using RetroDev.OpenUI.Properties;
+using RetroDev.OpenUI.Core.Graphics;
+using RetroDev.OpenUI.Core.Windowing.Events;
+using RetroDev.OpenUI.UI.Coordinates;
+using RetroDev.OpenUI.UI.Properties;
 
 namespace RetroDev.OpenUI.Components.Containers;
 
@@ -88,7 +89,7 @@ public class ListBox : Container, IContainer
         SelectedIndex.Value = null;
     }
 
-    private void Container_MousePress(UIComponent sender, Events.MouseEventArgs e)
+    private void Container_MousePress(UIComponent sender, MouseEventArgs e)
     {
         if (SelectedIndex.Value != null)
         {

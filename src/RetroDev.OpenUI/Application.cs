@@ -1,15 +1,15 @@
 ﻿using RetroDev.OpenUI.Components;
-using RetroDev.OpenUI.Core;
-using RetroDev.OpenUI.Core.Coordinates;
-using RetroDev.OpenUI.Core.Internal;
-using RetroDev.OpenUI.Events;
-using RetroDev.OpenUI.Events.Internal;
+using RetroDev.OpenUI.Core.Graphics.Font;
+using RetroDev.OpenUI.Core.Graphics.Font.Internal;
+using RetroDev.OpenUI.Core.Windowing;
+using RetroDev.OpenUI.Core.Windowing.Events;
+using RetroDev.OpenUI.Core.Windowing.Events.Internal;
+using RetroDev.OpenUI.Core.Windowing.SDL;
 using RetroDev.OpenUI.Exceptions;
-using RetroDev.OpenUI.Graphics;
-using RetroDev.OpenUI.Graphics.Internal;
 using RetroDev.OpenUI.Logging;
-using RetroDev.OpenUI.Resources;
-using RetroDev.OpenUI.Themes;
+using RetroDev.OpenUI.UI.Coordinates;
+using RetroDev.OpenUI.UI.Resources;
+using RetroDev.OpenUI.UI.Themes;
 using RetroDev.OpenUI.UIDefinition;
 
 namespace RetroDev.OpenUI;
@@ -24,16 +24,20 @@ public class Application : IDisposable
     private bool _disposed = false;
     private bool _shoudQuit = false;
 
-    // ===========================
-    // Dependency injection fields
-    // ===========================
-    private readonly IUIEnvironment _uiEnvironment;
-    internal readonly IEventSystem _eventSystem;
-
     /// <summary>
     /// Triggered when the application is started and ready to show windows and process events.
     /// </summary>
     public event TypeSafeEventHandler<Application, EventArgs> ApplicationStarted = (_, _) => { };
+
+    /// <summary>
+    /// The window manager interacting with the OS to create and manage systems.
+    /// </summary>
+    public IWindowManager WindowManager { get; }
+
+    /// <summary>
+    /// Event emitter.
+    /// </summary>
+    public IEventSystem EventSystem => WindowManager.EventSystem;
 
     /// <summary>
     /// The logging injected implementation.
@@ -63,39 +67,36 @@ public class Application : IDisposable
     /// <summary>
     /// The primary screen size.
     /// </summary>
-    public Size ScreenSize => _uiEnvironment.ScreenSize;
+    public Size ScreenSize => WindowManager.ScreenSize;
 
     internal LifeCycle LifeCycle { get; } = new();
 
     /// <summary>
     /// Creates a new application.
     /// </summary>
-    /// <param name="uIEnvironment">The UI environment used to manage the main application status.</param>
-    /// <param name="eventSystem">The event system used in this application.</param>
+    /// <param name="windowManager">The low-level implementation of window manager interacting with the OS to create and manage windows.</param>
     /// <param name="resourceManager">The object that loads resources from the project.</param>
     /// <param name="logger">The logging implementation.</param>
     /// <param name="createTheme">
     /// The function that creates a <see cref="Theme"/>. The theme will be automatically created, so pass this function if you want to inject <see cref="Theme"/>
-    /// with an instance of a class derived from <see cref="Themes.Theme"/>.
+    /// with an instance of a class derived from <see cref="UI.Themes.Theme"/>.
     /// </param>
     /// <remarks>The application, as well as all the UI related operations, must run in the same thread as this constructor is invoked.</remarks>
-    public Application(IUIEnvironment? uIEnvironment = null,
-                       IEventSystem? eventSystem = null,
+    public Application(IWindowManager? windowManager = null,
                        IResourceManager? resourceManager = null,
                        ILogger? logger = null,
                        Func<Application, Theme>? createTheme = null)
     {
-        _uiEnvironment = uIEnvironment ?? new SDLUIEnvironment(this);
-        _eventSystem = eventSystem ?? new SDLEventSystem(this);
+        LifeCycle.RegisterUIThread();
+        Logger = logger ?? new ConsoleLogger();
+        WindowManager = windowManager ?? new SDLWindowManager(this);
         ResourceManager = resourceManager ?? new EmbeddedResourceManager();
         Theme = createTheme != null ? createTheme(this) : new Theme(this);
         _themeParser = new ThemeParser(Theme);
-        Logger = logger ?? new ConsoleLogger();
-        LifeCycle.RegisterUIThread();
         LifeCycle.CurrentState = LifeCycle.State.INIT;
 
         LoadThemeResource("openui-dark");
-        _uiEnvironment.Initialize();
+        WindowManager.Initialize();
     }
 
     /// <summary>
@@ -111,15 +112,15 @@ public class Application : IDisposable
         LifeCycle.ThrowIfNotOnUIThread();
 
         Logger.LogInfo("Application started");
-        _eventSystem.ApplicationQuit += (_, _) => _shoudQuit = true;
+        EventSystem.ApplicationQuit += (_, _) => _shoudQuit = true;
         ApplicationStarted.Invoke(this, EventArgs.Empty);
-        _eventSystem.BeforeRender += EventSystem_BeforeRender;
-        _eventSystem.InvalidateRendering();
+        EventSystem.BeforeRender += EventSystem_BeforeRender;
+        EventSystem.InvalidateRendering();
 
         while (!_shoudQuit)
         {
             LifeCycle.CurrentState = LifeCycle.State.EVENT_POLL;
-            _eventSystem.ProcessEvents();
+            EventSystem.ProcessEvents();
         }
 
         LifeCycle.CurrentState = LifeCycle.State.QUIT;
@@ -224,7 +225,7 @@ public class Application : IDisposable
     private void DisposeUnmanagedResources()
     {
         _windows.ForEach((window) => window.Shutdown());
-        _uiEnvironment.Shutdown();
+        WindowManager.Shutdown();
     }
 
     ~Application()

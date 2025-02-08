@@ -1,7 +1,7 @@
 ﻿using RetroDev.OpenUI.Components;
 using System.Reflection;
-using RetroDev.OpenUI.Properties;
 using RetroDev.OpenUI.Exceptions;
+using RetroDev.OpenUI.UI.Properties;
 
 namespace RetroDev.OpenUI.UIDefinition;
 

@@ -1,8 +1,8 @@
-﻿using RetroDev.OpenUI.Core.Coordinates;
-using RetroDev.OpenUI.Events;
-using RetroDev.OpenUI.Graphics;
-using RetroDev.OpenUI.Graphics.Shapes;
-using RetroDev.OpenUI.Properties;
+﻿using RetroDev.OpenUI.Core.Graphics;
+using RetroDev.OpenUI.Core.Graphics.Shapes;
+using RetroDev.OpenUI.Core.Windowing.Events;
+using RetroDev.OpenUI.UI.Coordinates;
+using RetroDev.OpenUI.UI.Properties;
 
 namespace RetroDev.OpenUI.Components.Containers;
 
@@ -86,7 +86,7 @@ public class ScrollView : Container, ISingleContainer
         }
     }
 
-    private void ScrollView_MouseDragBegin(UIComponent sender, Events.MouseEventArgs e)
+    private void ScrollView_MouseDragBegin(UIComponent sender, MouseEventArgs e)
     {
         var horizontalScrollBarArea = GetHorizontalScrollBarArea();
         var verticalScrollBarArea = GetVerticalScrollBarArea();

@@ -5,8 +5,8 @@ using RetroDev.OpenUI.Components;
 using RetroDev.OpenUI.Components.Containers;
 using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Components.Simple;
-using RetroDev.OpenUI.Core.Coordinates;
-using RetroDev.OpenUI.Properties;
+using RetroDev.OpenUI.UI.Coordinates;
+using RetroDev.OpenUI.UI.Properties;
 using RetroDev.OpenUI.UIDefinition.Ast;
 using Attribute = RetroDev.OpenUI.UIDefinition.Ast.Attribute;
 

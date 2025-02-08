@@ -2,7 +2,7 @@
 using RetroDev.OpenUI.Components;
 using RetroDev.OpenUI.Components.Containers;
 using RetroDev.OpenUI.Components.Core.AutoArea;
-using RetroDev.OpenUI.Core.Coordinates;
+using RetroDev.OpenUI.UI.Coordinates;
 
 namespace RetroDev.OpenIDE.Components;
 

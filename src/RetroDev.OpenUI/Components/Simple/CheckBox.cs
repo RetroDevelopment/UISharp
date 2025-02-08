@@ -1,8 +1,9 @@
 ﻿using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Components.Shapes;
-using RetroDev.OpenUI.Core.Coordinates;
-using RetroDev.OpenUI.Graphics;
-using RetroDev.OpenUI.Properties;
+using RetroDev.OpenUI.Core.Graphics;
+using RetroDev.OpenUI.Core.Windowing.Events;
+using RetroDev.OpenUI.UI.Coordinates;
+using RetroDev.OpenUI.UI.Properties;
 
 namespace RetroDev.OpenUI.Components.Simple;
 
@@ -81,7 +82,7 @@ public class CheckBox : UIComponent
         return [null, new Area(location, size)];
     }
 
-    private void CheckBox_MousePress(UIComponent sender, Events.MouseEventArgs e)
+    private void CheckBox_MousePress(UIComponent sender, MouseEventArgs e)
     {
         Checked.Value = !Checked.Value;
         Focus.Value = true;
