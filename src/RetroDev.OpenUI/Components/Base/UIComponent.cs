@@ -6,7 +6,7 @@ using RetroDev.OpenUI.Exceptions;
 using RetroDev.OpenUI.UI.Coordinates;
 using RetroDev.OpenUI.UI.Properties;
 
-namespace RetroDev.OpenUI.Components;
+namespace RetroDev.OpenUI.Components.Base;
 
 // TODO: Same way as before, add a TextResourceManager class to manage text (e.g. with language) and create it in Application.
 // They can also have dictionary/xml. Then bind these properties in your project and you will get automatic language change.
@@ -515,7 +515,7 @@ public abstract class UIComponent
     private void _parent_MouseMove(UIComponent sender, MouseEventArgs mouseEventArgs)
     {
         _mouseAbsoluteLocation = mouseEventArgs.AbsoluteLocation;
-        if (mouseEventArgs.AbsoluteLocation.IsWithin(_absoluteDrawingArea) && Visibility.Value == Components.ComponentVisibility.Visible && Enabled.Value)
+        if (mouseEventArgs.AbsoluteLocation.IsWithin(_absoluteDrawingArea) && Visibility.Value == ComponentVisibility.Visible && Enabled.Value)
         {
             MouseMove.Invoke(this, new MouseEventArgs(mouseEventArgs.AbsoluteLocation,
                                                       mouseEventArgs.AbsoluteLocation - _absoluteDrawingArea.TopLeft,
@@ -536,7 +536,7 @@ public abstract class UIComponent
                                    mouseEventArgs.AbsoluteLocation - _absoluteDrawingArea.TopLeft,
                                    mouseEventArgs.Button);
 
-        if (mouseEventArgs.AbsoluteLocation.IsWithin(_absoluteDrawingArea) && Visibility.Value == Components.ComponentVisibility.Visible && Enabled.Value)
+        if (mouseEventArgs.AbsoluteLocation.IsWithin(_absoluteDrawingArea) && Visibility.Value == ComponentVisibility.Visible && Enabled.Value)
         {
             MouseRelease.Invoke(this, e);
         }
@@ -552,7 +552,7 @@ public abstract class UIComponent
 
     private void _parent_MousePress(UIComponent sender, MouseEventArgs mouseEventArgs)
     {
-        if (mouseEventArgs.AbsoluteLocation.IsWithin(_absoluteDrawingArea) && Visibility.Value == Components.ComponentVisibility.Visible && Enabled.Value)
+        if (mouseEventArgs.AbsoluteLocation.IsWithin(_absoluteDrawingArea) && Visibility.Value == ComponentVisibility.Visible && Enabled.Value)
         {
             MousePress.Invoke(this, new MouseEventArgs(mouseEventArgs.AbsoluteLocation,
                                                        mouseEventArgs.AbsoluteLocation - _absoluteDrawingArea.TopLeft,
@@ -562,7 +562,7 @@ public abstract class UIComponent
 
     private void _parent_KeyPress(UIComponent sender, KeyEventArgs keyEventArgs)
     {
-        if (Visibility.Value == Components.ComponentVisibility.Visible && (Focus.Value || !Focusable.Value))
+        if (Visibility.Value == ComponentVisibility.Visible && (Focus.Value || !Focusable.Value))
         {
             KeyPress.Invoke(this, keyEventArgs);
         }
@@ -638,14 +638,14 @@ public abstract class UIComponent
 
         var autoWidth = AutoWidth.Value.ComputeWidth(parentSize, _wrapSize);
         var autoHeight = AutoHeight.Value.ComputeHeight(parentSize, _wrapSize);
-        var actualWidth = sizeOverride.Width.IsAuto ? (Width.Value.IsAuto ? autoWidth : Width.Value) : sizeOverride.Width;
-        var actualHeight = sizeOverride.Height.IsAuto ? (Height.Value.IsAuto ? autoHeight : Height.Value) : sizeOverride.Height;
+        var actualWidth = sizeOverride.Width.IsAuto ? Width.Value.IsAuto ? autoWidth : Width.Value : sizeOverride.Width;
+        var actualHeight = sizeOverride.Height.IsAuto ? Height.Value.IsAuto ? autoHeight : Height.Value : sizeOverride.Height;
         var actualSize = new Size(actualWidth, actualHeight);
 
         var autoX = HorizontalAlignment.Value.ComputeX(parentSize, actualSize);
         var autoY = VerticalAlignment.Value.ComputeY(parentSize, actualSize);
-        var actualX = locationOverride.X.IsAuto ? (X.Value.IsAuto ? autoX : X.Value) : locationOverride.X;
-        var actualY = locationOverride.Y.IsAuto ? (Y.Value.IsAuto ? autoY : Y.Value) : locationOverride.Y;
+        var actualX = locationOverride.X.IsAuto ? X.Value.IsAuto ? autoX : X.Value : locationOverride.X;
+        var actualY = locationOverride.Y.IsAuto ? Y.Value.IsAuto ? autoY : Y.Value : locationOverride.Y;
         var actualTopLeft = new Point(actualX, actualY);
 
         // Windows X and Y position will be relative to the screen, but the relative area location is Point.Zero, because it is relative to the viewport (i.e. the window itslef).

@@ -1,6 +1,6 @@
 ﻿using RetroDev.OpenUI.Components.Core.AutoArea;
 
-namespace RetroDev.OpenUI.Components;
+namespace RetroDev.OpenUI.Components.Base;
 
 /// <summary>
 /// Abstract class for all containers, which lay out multiple <see cref="UIComponent"/> instances.

@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics;
-using RetroDev.OpenUI.Components;
+using RetroDev.OpenUI.Components.Base;
 
 namespace RetroDev.OpenUI.UI.Properties;
 

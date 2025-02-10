@@ -1,4 +1,6 @@
-﻿namespace RetroDev.OpenUI.Components.Core;
+﻿using RetroDev.OpenUI.Components.Base;
+
+namespace RetroDev.OpenUI.Components.Core;
 
 /// <summary>
 /// Class that performs optimized measurement of <see cref="UIComponent"/> rendering areas, meaning that 

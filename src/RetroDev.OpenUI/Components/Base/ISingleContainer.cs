@@ -1,4 +1,4 @@
-﻿namespace RetroDev.OpenUI.Components;
+﻿namespace RetroDev.OpenUI.Components.Base;
 
 /// <summary>
 /// All containers implementing a single child must implement this interface.

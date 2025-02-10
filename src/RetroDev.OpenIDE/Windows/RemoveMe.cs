@@ -1,5 +1,5 @@
 ﻿using RetroDev.OpenUI;
-using RetroDev.OpenUI.Components;
+using RetroDev.OpenUI.Components.Base;
 using RetroDev.OpenUI.Core.Graphics;
 using RetroDev.OpenUI.Core.Graphics.Shapes;
 using RetroDev.OpenUI.Core.Windowing.Events;

@@ -1,5 +1,6 @@
 ﻿using RetroDev.OpenUI;
 using RetroDev.OpenUI.Components;
+using RetroDev.OpenUI.Components.Base;
 using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.UI.Coordinates;
 

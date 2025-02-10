@@ -1,4 +1,5 @@
-﻿using RetroDev.OpenUI.Components.Core.AutoArea;
+﻿using RetroDev.OpenUI.Components.Base;
+using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Components.Shapes;
 using RetroDev.OpenUI.Core.Graphics;
 using RetroDev.OpenUI.Exceptions;

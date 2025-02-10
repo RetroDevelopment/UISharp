@@ -1,7 +1,7 @@
 ﻿using RetroDev.OpenUI.Components.Core;
 using RetroDev.OpenUI.Components.Core.AutoArea;
 
-namespace RetroDev.OpenUI.Components;
+namespace RetroDev.OpenUI.Components.Base;
 
 /// <summary>
 /// The root of a UI component hierarchy. This is typically a rendering unit, such as, a window or a mobile

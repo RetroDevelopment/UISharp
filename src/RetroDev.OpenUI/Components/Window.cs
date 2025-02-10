@@ -9,6 +9,7 @@ using RetroDev.OpenUI.UI.Properties;
 using RetroDev.OpenUI.Core.Windowing.SDL;
 using RetroDev.OpenUI.UI;
 using RetroDev.OpenUI.Components.Core.AutoArea;
+using RetroDev.OpenUI.Components.Base;
 
 namespace RetroDev.OpenUI.Components;
 

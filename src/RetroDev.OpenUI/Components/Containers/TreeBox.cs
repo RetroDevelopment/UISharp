@@ -1,5 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using System.Xml;
+using RetroDev.OpenUI.Components.Base;
 using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Components.Simple;
 using RetroDev.OpenUI.UI.Coordinates;

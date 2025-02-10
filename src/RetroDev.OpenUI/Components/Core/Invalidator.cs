@@ -1,5 +1,6 @@
 ﻿using OpenTK.Graphics.ES11;
 using OpenTK.Graphics.OpenGL;
+using RetroDev.OpenUI.Components.Base;
 
 namespace RetroDev.OpenUI.Components.Core;
 

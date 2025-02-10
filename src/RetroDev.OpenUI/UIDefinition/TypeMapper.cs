@@ -1,4 +1,4 @@
-﻿using RetroDev.OpenUI.Components;
+﻿using RetroDev.OpenUI.Components.Base;
 using RetroDev.OpenUI.UI.Properties;
 using System.Reflection;
 

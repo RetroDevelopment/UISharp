@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 using System.Text.RegularExpressions;
-using RetroDev.OpenUI.Components;
+using RetroDev.OpenUI.Components.Base;
 using RetroDev.OpenUI.Exceptions;
 using RetroDev.OpenUI.UI.Properties;
 

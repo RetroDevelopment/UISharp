@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using RetroDev.OpenUI.Components;
+using RetroDev.OpenUI.Components.Base;
 using RetroDev.OpenUI.Exceptions;
 using Component = RetroDev.OpenUI.UIDefinition.Ast.Component;
 
@@ -95,7 +96,7 @@ public class InstanceCreator(Application application, TypeMapper typeMapper, IEA
         foreach (var childInstance in childrenInstances)
         {
             var childComponent = component.Components[i];
-            if (instance is Components.IContainer multipleContainer)
+            if (instance is IContainer multipleContainer)
             {
                 multipleContainer.AddComponent(childInstance);
             }

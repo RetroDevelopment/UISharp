@@ -2,6 +2,7 @@
 using RetroDev.OpenIDE.Components;
 using RetroDev.OpenUI;
 using RetroDev.OpenUI.Components;
+using RetroDev.OpenUI.Components.Base;
 using RetroDev.OpenUI.Components.Containers;
 using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Components.Simple;

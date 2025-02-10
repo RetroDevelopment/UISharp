@@ -1,6 +1,6 @@
 ﻿using RetroDev.OpenUI.Components.Core.AutoArea;
 
-namespace RetroDev.OpenUI.Components;
+namespace RetroDev.OpenUI.Components.Base;
 
 /// <summary>
 /// Represents a widget that is part of the UI tree but it is not a root.
