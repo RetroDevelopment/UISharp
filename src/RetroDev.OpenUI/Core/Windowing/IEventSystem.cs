@@ -9,6 +9,9 @@ public interface IEventSystem
 {
     /// <summary>
     /// An event that indicates to quit the application.
+    /// The only way to trigger this event is that there is a call to <see cref="Quit"/>, because
+    /// quitting the application must be managed by the <see cref="Application"/> class and not implicity by
+    /// the event system underneath, unless there are specific needs or interrupts.
     /// </summary>
     event TypeSafeEventHandler<IEventSystem, EventArgs> ApplicationQuit;
 
@@ -55,6 +58,26 @@ public interface IEventSystem
     event TypeSafeEventHandler<IEventSystem, WindowEventArgs<WindowResizeEventArgs>> WindowResize;
 
     /// <summary>
+    /// The window is shown.
+    /// </summary>
+    event TypeSafeEventHandler<IEventSystem, WindowEventArgs<EventArgs>> WindowOpen;
+
+    /// <summary>
+    /// The window is closed by clicking on the close button or by shutting it down.
+    /// </summary>
+    event TypeSafeEventHandler<IEventSystem, WindowEventArgs<EventArgs>> WindowClose;
+
+    /// <summary>
+    /// The window is maximized.
+    /// </summary>
+    event TypeSafeEventHandler<IEventSystem, WindowEventArgs<EventArgs>> WindowMaximized;
+
+    /// <summary>
+    /// The window is minimized.
+    /// </summary>
+    event TypeSafeEventHandler<IEventSystem, WindowEventArgs<EventArgs>> WindowMinimized;
+
+    /// <summary>
     /// The mouse wheel has been moved.
     /// </summary>
     event TypeSafeEventHandler<IEventSystem, WindowEventArgs<MouseWheelEventArgs>> MouseWheel;
@@ -73,6 +96,11 @@ public interface IEventSystem
     /// Processes all the pending events.
     /// </summary>
     void ProcessEvents();
+
+    /// <summary>
+    /// Terminates the event queue processing.
+    /// </summary>
+    void Quit();
 
     // TODO: we will need a more sophysticated event queue for pushing custom events (dispatcher?)
     /// <summary>

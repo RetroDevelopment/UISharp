@@ -20,6 +20,27 @@ namespace RetroDev.OpenUI.Components;
 [EditorSettings(allow: false)]
 public class Window : UIRoot
 {
+    /// <summary>
+    /// The default behavior when closing the window.
+    /// </summary>
+    public enum WindowCloseBehavior
+    {
+        /// <summary>
+        /// Do nothing.
+        /// </summary>
+        None,
+
+        /// <summary>
+        /// Hides the window.
+        /// </summary>
+        HideWindow,
+
+        /// <summary>
+        /// Quits the whole application.
+        /// </summary>
+        QuitApplication
+    };
+
     private readonly IRenderingEngine _renderingEngine;
     private readonly IWindowId _windowId;
 
@@ -33,17 +54,37 @@ public class Window : UIRoot
     /// Raised when <see langword="this" /> <see cref="Window"/> has been initialized.
     /// This happens when all the initial <see cref="UIComponent"/> have been added to the window.
     /// </summary>
-    public event TypeSafeEventHandler<Window, EventArgs> Initialized = (_, _) => { };
+    public event TypeSafeEventHandler<Window, EventArgs>? Initialized;
 
     /// <summary>
     /// Raised when the window is moved.
     /// </summary>
-    public event TypeSafeEventHandler<Window, WindowMoveEventArgs> WindowMove = (_, _) => { };
+    public event TypeSafeEventHandler<Window, WindowMoveEventArgs>? WindowMove;
 
     /// <summary>
     /// Raised when the window size is changed.
     /// </summary>
-    public event TypeSafeEventHandler<Window, WindowResizeEventArgs> WindowResize = (_, _) => { };
+    public event TypeSafeEventHandler<Window, WindowResizeEventArgs>? WindowResize;
+
+    /// <summary>
+    /// Raised when the window is shown.
+    /// </summary>
+    public event TypeSafeEventHandler<Window, EventArgs>? WindowOpen;
+
+    /// <summary>
+    /// Raised when the window is closed.
+    /// </summary>
+    public event TypeSafeEventHandler<Window, EventArgs>? WindowClose;
+
+    /// <summary>
+    /// Raised when the window is maximized.
+    /// </summary>
+    public event TypeSafeEventHandler<Window, EventArgs>? WindowMaximized;
+
+    /// <summary>
+    /// Raised when the window is minimized.
+    /// </summary>
+    public event TypeSafeEventHandler<Window, EventArgs>? WindowMinimized;
 
     /// <inheritdoc/>
     public override IEnumerable<UIWidget> Children => GetChildrenNodes();
@@ -59,6 +100,13 @@ public class Window : UIRoot
     public UIProperty<Window, bool> Resizable { get; }
 
     /// <summary>
+    /// The default action to execute when closing the window.
+    /// By default, the first window created has the <see cref="WindowCloseBehavior.QuitApplication"/> and the subsequent
+    /// windows have the <see cref="WindowCloseBehavior.HideWindow"/>.
+    /// </summary>
+    public UIProperty<Window, WindowCloseBehavior> CloseBehavior { get; }
+
+    /// <summary>
     /// Creates a new window.
     /// </summary>
     /// <param name="application">The application owning this window.</param>
@@ -71,17 +119,20 @@ public class Window : UIRoot
     public Window(Application application, IRenderingEngine? renderingEngine = null) :
         base(application, visibility: ComponentVisibility.Collapsed, isFocusable: true, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
     {
+        application.AddWindow(this);
         _renderingEngine = renderingEngine ?? new OpenGLRenderingEngine(application, new SDLOpenGLRenderingContext(application));
         _windowId = Application.WindowManager.CreateWindow(_renderingEngine.RenderingContext);
 
         Title = new UIProperty<Window, string>(this, string.Empty);
         Resizable = new UIProperty<Window, bool>(this, true);
+        CloseBehavior = new UIProperty<Window, WindowCloseBehavior>(this, application.Windows.Count() > 1 ? WindowCloseBehavior.HideWindow : WindowCloseBehavior.QuitApplication);
+        UpdateCloseBehavior();
 
         Application.EventSystem.Render += EventSystem_Render;
-        application.AddWindow(this);
         Invalidate();
 
         BackgroundColor.BindDestinationToSource(Application.Theme.MainBackground);
+        CloseBehavior.ValueChange += (_, _) => UpdateCloseBehavior();
 
         Visibility.ValueChange += Visibility_ValueChange;
         RenderingAreaChange += Window_RenderingAreaChange;
@@ -95,6 +146,10 @@ public class Window : UIRoot
         application.EventSystem.WindowMove += EventSystem_WindowMove;
         application.EventSystem.WindowResize += EventSystem_WindowResize;
         application.EventSystem.MouseWheel += EventSystem_MouseWheel;
+        application.EventSystem.WindowOpen += EventSystem_WindowOpen;
+        application.EventSystem.WindowClose += EventSystem_WindowClose;
+        application.EventSystem.WindowMaximized += EventSystem_WindowMaximized;
+        application.EventSystem.WindowMinimized += EventSystem_WindowMinimized;
         // TODO remove events on dispose?
     }
 
@@ -115,7 +170,7 @@ public class Window : UIRoot
     /// </summary>
     public void OnInitialized()
     {
-        Initialized.Invoke(this, EventArgs.Empty);
+        Initialized?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>
@@ -225,7 +280,7 @@ public class Window : UIRoot
             var topLeft = windowArgs.Args.TopLeft;
             X.Value = topLeft.X;
             Y.Value = topLeft.Y;
-            WindowMove.Invoke(this, windowArgs.Args);
+            WindowMove?.Invoke(this, windowArgs.Args);
         }
     }
 
@@ -236,7 +291,39 @@ public class Window : UIRoot
             var size = windowArgs.Args.Size;
             Width.Value = size.Width;
             Height.Value = size.Height;
-            WindowResize.Invoke(this, windowArgs.Args);
+            WindowResize?.Invoke(this, windowArgs.Args);
+        }
+    }
+
+    private void EventSystem_WindowOpen(IEventSystem sender, WindowEventArgs<EventArgs> windowArgs)
+    {
+        if (windowArgs.WindowId.Equals(_windowId))
+        {
+            WindowOpen?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    private void EventSystem_WindowClose(IEventSystem sender, WindowEventArgs<EventArgs> windowArgs)
+    {
+        if (windowArgs.WindowId.Equals(_windowId))
+        {
+            WindowClose?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    private void EventSystem_WindowMaximized(IEventSystem sender, WindowEventArgs<EventArgs> windowArgs)
+    {
+        if (windowArgs.WindowId.Equals(_windowId))
+        {
+            WindowMaximized?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    private void EventSystem_WindowMinimized(IEventSystem sender, WindowEventArgs<EventArgs> windowArgs)
+    {
+        if (windowArgs.WindowId.Equals(_windowId))
+        {
+            WindowMinimized?.Invoke(this, EventArgs.Empty);
         }
     }
 
@@ -250,13 +337,13 @@ public class Window : UIRoot
 
     private void Visibility_ValueChange(BindableProperty<ComponentVisibility> sender, ValueChangeEventArgs<ComponentVisibility> e)
     {
-        _scheduleVisibilityChange = true;
         if (Visibility.Value != ComponentVisibility.Visible)
         {
             Application.WindowManager.HideWindow(_windowId);
         }
         else
         {
+            // TODO: Push to event queue
             _scheduleVisibilityChange = true;
         }
     }
@@ -265,6 +352,15 @@ public class Window : UIRoot
     {
         Application.WindowManager.SetRenderingArea(_windowId, e.RenderingArea);
         _renderingEngine.ViewportSize = e.RenderingArea.Size;
+    }
+
+    private void Window_WindowClose(Window sender, EventArgs e)
+    {
+        Visibility.Value = ComponentVisibility.Hidden;
+        if (CloseBehavior.Value == WindowCloseBehavior.QuitApplication)
+        {
+            Application.Quit();
+        }
     }
 
     private void UpdateWindowAppearance()
@@ -278,5 +374,23 @@ public class Window : UIRoot
         Application.WindowManager.SetTitle(_windowId, Title.Value);
         Application.WindowManager.SetOpacity(_windowId, BackgroundColor.Value.AlphaComponent);
         Application.WindowManager.SetResizable(_windowId, Resizable.Value);
+    }
+
+    private void UpdateCloseBehavior()
+    {
+        switch (CloseBehavior.Value)
+        {
+            case WindowCloseBehavior.None:
+                WindowClose -= Window_WindowClose;
+                break;
+            case WindowCloseBehavior.HideWindow:
+                WindowClose += Window_WindowClose;
+                break;
+            case WindowCloseBehavior.QuitApplication:
+                WindowClose += Window_WindowClose;
+                break;
+            default:
+                throw new InvalidOperationException($"Unhandled enum {CloseBehavior.Value}");
+        }
     }
 }

@@ -137,7 +137,7 @@ internal class Program
         Window window = new Window(application);
         window.Width.Value = 800;
         window.Height.Value = 600;
-        window.Visibility.Value = ComponentVisibility.Visible;
+        window.Visibility.Value = UIComponent.ComponentVisibility.Visible;
         window.KeyPress += (_, e) =>
         {
             if (e.Button == KeyButton.Q) root.AutoWidth.Value = AutoSize.Stretch;
@@ -214,7 +214,7 @@ internal class Program
         w.Y.Value = 0;
         w.Width.Value = 800;
         w.Height.Value = 600;
-        w.Visibility.Value = ComponentVisibility.Visible;
+        w.Visibility.Value = UIComponent.ComponentVisibility.Visible;
 
         var root = new Ctr(application, Color.Blue, null);
         w.AddComponent(root);

@@ -16,6 +16,27 @@ namespace RetroDev.OpenUI.Components.Base;
 /// </summary>
 public abstract class UIComponent
 {
+    /// <summary>
+    /// Defines visibility rules.
+    /// </summary>
+    public enum ComponentVisibility
+    {
+        /// <summary>
+        /// The component is visible.
+        /// </summary>
+        Visible,
+
+        /// <summary>
+        /// The component is invisible but it still occupies the space in the UI, meaning that it preserves the drawing area.
+        /// </summary>
+        Hidden,
+
+        /// <summary>
+        /// The component is invisible and it does not occupy any space, meaning that the rendering area is zero.
+        /// </summary>
+        Collapsed
+    }
+
     // The visual children, part of the actual hierarchy.
     // TODO: use a UIComponentCollection<UINode> to manage bindings etc.
     internal readonly List<UIWidget> _childNodes = [];

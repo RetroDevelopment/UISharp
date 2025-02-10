@@ -1,4 +1,5 @@
 ﻿using RetroDev.OpenUI.Components;
+using RetroDev.OpenUI.Components.Base;
 using RetroDev.OpenUI.Core.Graphics.Font;
 using RetroDev.OpenUI.Core.Graphics.Font.Internal;
 using RetroDev.OpenUI.Core.Windowing;
@@ -68,6 +69,11 @@ public class Application : IDisposable
     /// The primary screen size.
     /// </summary>
     public Size ScreenSize => WindowManager.ScreenSize;
+
+    /// <summary>
+    /// The list of all windows managed by <see langword="this" /> <see cref="Application"/>.
+    /// </summary>
+    public IEnumerable<Window> Windows => _windows;
 
     internal LifeCycle LifeCycle { get; } = new();
 
@@ -163,7 +169,7 @@ public class Application : IDisposable
         var component = UIDefinitionManager.CreateUIComponent(windowXmlDefinition);
         if (component is not TWindow) throw new InvalidOperationException($"Expected a window of type {typeof(TWindow)} but type {component.GetType()} found instead");
         var window = (TWindow)component;
-        window.Visibility.Value = ComponentVisibility.Visible;
+        window.Visibility.Value = UIComponent.ComponentVisibility.Visible;
         return window;
     }
 
@@ -175,6 +181,16 @@ public class Application : IDisposable
     {
         _themeParser.Parse(ResourceManager.Themes[themeName]);
         Logger.LogInfo($"Theme: {themeName}");
+    }
+
+    /// <summary>
+    /// Quits the application.
+    /// </summary>
+    public void Quit()
+    {
+        Logger.LogInfo("Application quit requested");
+        LifeCycle.ThrowIfNotOnUIThread();
+        EventSystem.Quit();
     }
 
     /// <summary>

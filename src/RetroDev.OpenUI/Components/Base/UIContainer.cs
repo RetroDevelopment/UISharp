@@ -13,7 +13,7 @@ namespace RetroDev.OpenUI.Components.Base;
 /// <param name="horizontalAlignment">The component horizontal alignment (relative to its <see cref="Parent"/>).</param>
 /// <param name="verticalAlignment">The component vertical alignment (relative to its <see cref="Parent"/>).</param>
 public abstract class UIContainer(Application application,
-                                ComponentVisibility visibility = ComponentVisibility.Visible,
+                                UIComponent.ComponentVisibility visibility = UIComponent.ComponentVisibility.Visible,
                                 bool isFocusable = false,
                                 IAutoSize? autoWidth = null,
                                 IAutoSize? autoHeight = null,
