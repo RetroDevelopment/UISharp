@@ -10,7 +10,7 @@ namespace RetroDev.OpenUI.Components.Simple;
 /// <summary>
 /// A bar displaying progress.
 /// </summary>
-public class ProgressBar : UIComponent
+public class ProgressBar : UIWidget
 {
     private readonly Rectangle _backgroundRectangle;
     private readonly Rectangle _progressRectangle;
@@ -54,12 +54,12 @@ public class ProgressBar : UIComponent
 
         _backgroundRectangle = new Rectangle(application);
         _backgroundRectangle.BackgroundColor.BindDestinationToSource(BackgroundColor);
-        AddChild(_backgroundRectangle);
+        AddChildNode(_backgroundRectangle);
 
         _progressRectangle = new Rectangle(application);
         _progressRectangle.BackgroundColor.BindDestinationToSource(ForegroundColor);
         _progressRectangle.HorizontalAlignment.Value = Alignment.Left;
-        AddChild(_progressRectangle);
+        AddChildNode(_progressRectangle);
     }
 
     /// <inheritdoc />

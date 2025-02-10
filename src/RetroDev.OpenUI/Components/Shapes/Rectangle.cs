@@ -8,7 +8,7 @@ namespace RetroDev.OpenUI.Components.Shapes;
 /// <summary>
 /// A rectangle shape with possibly rounded corners.
 /// </summary>
-public class Rectangle : UIComponent
+public class Rectangle : UIWidget
 {
     /// <summary>
     /// The rectangle border color.

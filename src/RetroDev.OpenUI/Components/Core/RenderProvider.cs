@@ -9,7 +9,7 @@ namespace RetroDev.OpenUI.Components.Core;
 /// for each component to redraw, but it only draws elements that need to be redrawn.
 /// </summary>
 /// <param name="invalidator">The invalidator that contains the list of invalidated <see cref="UIComponent"/> to render.</param>
-internal class RenderProvider(Invalidator invalidator)
+public class RenderProvider(Invalidator invalidator)
 {
     private readonly Invalidator _invalidator = invalidator;
 

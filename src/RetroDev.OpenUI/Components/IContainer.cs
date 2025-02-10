@@ -9,5 +9,5 @@ public interface IContainer : IGenericContainer
     /// Adds a component to <see langword="this" /> container.
     /// </summary>
     /// <param name="component">The component to add.</param>
-    void AddComponent(UIComponent component);
+    void AddComponent(UIWidget component);
 }

@@ -10,7 +10,7 @@ namespace RetroDev.OpenUI.Components.Simple;
 /// <summary>
 /// A checkbox to mark with a tick if something is checked.
 /// </summary>
-public class CheckBox : UIComponent
+public class CheckBox : UIWidget
 {
     private readonly Rectangle _backgroundRectangle;
     private readonly Circle _selectionCircle;
@@ -62,12 +62,12 @@ public class CheckBox : UIComponent
         _backgroundRectangle.BorderColor.BindDestinationToSource(Application.Theme.BorderColor);
         UpdateBackgroundRectangleColorBindings();
         UpdateBackgroundRectangleBorder();
-        AddChild(_backgroundRectangle);
+        AddChildNode(_backgroundRectangle);
 
         _selectionCircle = new Circle(application);
         _selectionCircle.BackgroundColor.BindDestinationToSource(CircleColor);
         UpdateSelectionCirclePosition();
-        AddChild(_selectionCircle);
+        AddChildNode(_selectionCircle);
 
         Checked.ValueChange += Checked_ValueChange;
         Focus.ValueChange += Focus_ValueChange;

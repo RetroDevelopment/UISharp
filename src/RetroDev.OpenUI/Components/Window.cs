@@ -1,5 +1,4 @@
-﻿using RetroDev.OpenUI.Components.Containers;
-using RetroDev.OpenUI.Components.Core;
+﻿using RetroDev.OpenUI.Components.Core;
 using RetroDev.OpenUI.Core.Contexts;
 using RetroDev.OpenUI.Core.Graphics;
 using RetroDev.OpenUI.Core.Graphics.OpenGL;
@@ -18,12 +17,9 @@ namespace RetroDev.OpenUI.Components;
 /// </summary>
 // TODO: add disposable or shutdown method to call renderingEngine.Shutdown();
 [EditorSettings(allow: false)]
-public class Window : Container, IContainer
+public class Window : UIRoot
 {
-    internal readonly Invalidator _invalidator = new();
     private readonly IRenderingEngine _renderingEngine;
-    private readonly MeasureProvider _measureProvider;
-    private readonly RenderProvider _renderProvider;
     private readonly IWindowId _windowId;
 
     // If visibility changes, this flag is true so that the the window is actually displayed, but only
@@ -49,7 +45,7 @@ public class Window : Container, IContainer
     public event TypeSafeEventHandler<Window, WindowResizeEventArgs> WindowResize = (_, _) => { };
 
     /// <inheritdoc/>
-    public override IEnumerable<UIComponent> Children => GetChildren();
+    public override IEnumerable<UIWidget> Children => GetChildrenNodes();
 
     /// <summary>
     /// The window title.
@@ -74,8 +70,6 @@ public class Window : Container, IContainer
     public Window(Application application, IRenderingEngine? renderingEngine = null) :
         base(application, visibility: ComponentVisibility.Collapsed, isFocusable: true, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
     {
-        _measureProvider = new MeasureProvider(this, _invalidator);
-        _renderProvider = new RenderProvider(_invalidator);
         _renderingEngine = renderingEngine ?? new OpenGLRenderingEngine(application, new SDLOpenGLRenderingContext(application));
         _windowId = Application.WindowManager.CreateWindow(_renderingEngine.RenderingContext);
 
@@ -104,24 +98,15 @@ public class Window : Container, IContainer
     }
 
     /// <summary>
-    /// Adds a component to this window.
-    /// </summary>
-    /// <param name="component">The component to add.</param>
-    public void AddComponent(UIComponent component)
-    {
-        AddChild(component);
-    }
-
-    /// <summary>
     /// Removes a component from this window.
     /// </summary>
     /// <param name="component">The component to remove.</param>
     /// <returns><see langword="true" /> if the component has been successfully removed, otherwise <see langword="false"/>
     /// (for example, if the component has never been added).
     /// </returns>
-    public bool RemoveComponent(UIComponent component)
+    public bool RemoveComponent(UIWidget component)
     {
-        return RemoveChild(component);
+        return RemoveChildNode(component);
     }
 
     /// <summary>
@@ -135,8 +120,7 @@ public class Window : Container, IContainer
     /// <summary>
     /// Measures all drawing areas necessary to render the window components.
     /// </summary>
-    public void Measure() =>
-        _measureProvider.Measure();
+    public void Measure() => MeasureProvider.Measure();
 
     /// <inheritdoc/>
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize)
@@ -173,7 +157,7 @@ public class Window : Container, IContainer
         UpdateWindowAppearance();
         var renderingEngine = _renderingEngine;
         var canvas = new Canvas(renderingEngine, Application.LifeCycle);
-        _renderProvider.Render(this, canvas, renderingEngine);
+        RenderProvider.Render(this, canvas, renderingEngine);
         renderingEngine.FinalizeFrame();
         canvas.LogStatistics(Application.Logger);
     }

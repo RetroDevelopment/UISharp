@@ -17,7 +17,7 @@ namespace RetroDev.OpenUI.Components.Containers;
 /// Although list boxes are typically used to list text in order to allow selecting one or more options,
 /// the <see cref="TreeBox"/> class allows to list not only text but any <see cref="UIComponent"/>.
 /// </remarks>
-public class TreeBox : Container
+public class TreeBox : UIContainer
 {
     private static readonly PixelUnit FoldUnfoldButtonSize = 20;
     private static readonly PixelUnit IndentationSize = 20;
@@ -28,7 +28,7 @@ public class TreeBox : Container
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
         childrenSize.First();
 
-    public override IEnumerable<UIComponent> Children => _listBox.Children.Cast<GridLayout>().Select(c => c.Children.ElementAt(2));
+    public override IEnumerable<UIWidget> Children => _listBox.Children.Cast<GridLayout>().Select(c => c.Children.ElementAt(2));
 
     public UIProperty<TreeBox, TreeNode?> SelectedNode { get; }
 
@@ -39,7 +39,7 @@ public class TreeBox : Container
     public TreeBox(Application application) : base(application)
     {
         _listBox = new ListBox(application);
-        AddChild(_listBox);
+        AddChildNode(_listBox);
 
         _listBox.AutoWidth.Value = AutoSize.Stretch;
         _listBox.AutoHeight.Value = AutoSize.Stretch;

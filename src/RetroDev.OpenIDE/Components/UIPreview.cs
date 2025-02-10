@@ -1,20 +1,19 @@
 ﻿using RetroDev.OpenUI;
 using RetroDev.OpenUI.Components;
-using RetroDev.OpenUI.Components.Containers;
 using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.UI.Coordinates;
 
 namespace RetroDev.OpenIDE.Components;
 
 [EditorSettings(allow: false)]
-internal class UIPreview : Container
+internal class UIPreview : UIContainer
 {
-    public UIPreview(Application application, List<UIComponent> children) : base(application, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
+    public UIPreview(Application application, List<UIWidget> children) : base(application, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
     {
-        children.ForEach(c => AddChild(c));
+        children.ForEach(c => AddChildNode(c));
     }
 
-    public override IEnumerable<UIComponent> Children => base.GetChildren();
+    public override IEnumerable<UIWidget> Children => base.GetChildrenNodes();
 
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize)
     {

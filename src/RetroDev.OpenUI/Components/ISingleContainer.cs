@@ -9,5 +9,5 @@ public interface ISingleContainer : IGenericContainer
     /// Sets the child component.
     /// </summary>
     /// <param name="component">The child component contained in <see langword="this" /> container.</param>
-    public void SetComponent(UIComponent component);
+    public void SetComponent(UIWidget component);
 }

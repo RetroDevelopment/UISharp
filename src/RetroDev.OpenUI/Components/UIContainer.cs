@@ -1,6 +1,6 @@
 ﻿using RetroDev.OpenUI.Components.Core.AutoArea;
 
-namespace RetroDev.OpenUI.Components.Containers;
+namespace RetroDev.OpenUI.Components;
 
 /// <summary>
 /// Abstract class for all containers, which lay out multiple <see cref="UIComponent"/> instances.
@@ -12,15 +12,15 @@ namespace RetroDev.OpenUI.Components.Containers;
 /// <param name="autoHeight">How to automatically determine this component height.</param>
 /// <param name="horizontalAlignment">The component horizontal alignment (relative to its <see cref="Parent"/>).</param>
 /// <param name="verticalAlignment">The component vertical alignment (relative to its <see cref="Parent"/>).</param>
-public abstract class Container(Application application,
-                      ComponentVisibility visibility = ComponentVisibility.Visible,
-                      bool isFocusable = false,
-                      IAutoSize? autoWidth = null,
-                      IAutoSize? autoHeight = null,
-                      IHorizontalAlignment? horizontalAlignment = null,
-                      IVerticalAlignment? verticalAlignment = null) : UIComponent(application, visibility, isFocusable, autoWidth, autoHeight, horizontalAlignment, verticalAlignment), IGenericContainer
+public abstract class UIContainer(Application application,
+                                ComponentVisibility visibility = ComponentVisibility.Visible,
+                                bool isFocusable = false,
+                                IAutoSize? autoWidth = null,
+                                IAutoSize? autoHeight = null,
+                                IHorizontalAlignment? horizontalAlignment = null,
+                                IVerticalAlignment? verticalAlignment = null) : UIWidget(application, visibility, isFocusable, autoWidth, autoHeight, horizontalAlignment, verticalAlignment), IGenericContainer
 {
-    public abstract IEnumerable<UIComponent> Children { get; }
+    public abstract IEnumerable<UIWidget> Children { get; }
 
     /// <summary>
     /// Gets the child component with <see cref="ID"/> equal to the given <paramref name="id"/>.
@@ -29,7 +29,7 @@ public abstract class Container(Application application,
     /// <returns>The component.</returns>
     /// <exception cref="ArgumentException">If the component does not exist.</exception>
     /// <exception cref="InvalidCastException">If the component was found but with a type not assignable to <typeparamref name="TComponent"/>.</exception>
-    public virtual TComponent GetComponent<TComponent>(string id) where TComponent : UIComponent
+    public TComponent GetComponent<TComponent>(string id) where TComponent : UIWidget
     {
         var children = Children.Where(c => c.ID.Value == id);
         if (!children.Any()) throw new ArgumentException($"Child with ID {id} not found in component with id {ID.Value}");

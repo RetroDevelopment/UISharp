@@ -17,7 +17,7 @@ namespace RetroDev.OpenUI.Components.Containers;
 /// Although list boxes are typically used to list text in order to allow selecting one or more options,
 /// the <see cref="ListBox"/> class allows to list not only text but any <see cref="UIComponent"/>.
 /// </remarks>
-public class ListBox : Container, IContainer
+public class ListBox : UIContainer, IContainer
 {
     private readonly VerticalLayout _verticalLayout;
     private readonly ScrollView _scrollView;
@@ -33,10 +33,10 @@ public class ListBox : Container, IContainer
     /// <summary>
     /// The selected element in the list, or <see langword="null" /> if no element is selected.
     /// </summary>
-    public UIProperty<ListBox, UIComponent?> SelectedItem { get; }
+    public UIProperty<ListBox, UIWidget?> SelectedItem { get; }
 
     /// <inheritdoc />
-    public override IEnumerable<UIComponent> Children => _verticalLayout.Children;
+    public override IEnumerable<UIWidget> Children => _verticalLayout.Children;
 
     /// <summary>
     /// Creates a new grid layout.
@@ -59,18 +59,18 @@ public class ListBox : Container, IContainer
         SelectedIndex = new UIProperty<ListBox, uint?>(this, (uint?)null);
         SelectedIndex.ValueChange += SelectedIndex_ValueChange;
 
-        SelectedItem = new UIProperty<ListBox, UIComponent?>(this, (UIComponent?)null);
+        SelectedItem = new UIProperty<ListBox, UIWidget?>(this, (UIWidget?)null);
         SelectedItem.ValueChange += SelectedItem_ValueChange;
 
-        AddChild(_scrollView);
+        AddChildNode(_scrollView);
     }
 
-    public void AddComponent(UIComponent component)
+    public void AddComponent(UIWidget component)
     {
         AddComponent(component, null);
     }
 
-    public void AddComponent(UIComponent component, UIComponent? after = null)
+    public void AddComponent(UIWidget component, UIComponent? after = null)
     {
         _verticalLayout.AddComponent(component, after);
         var container = _verticalLayout.Panels.First(p => p.Children.ElementAt(0) == component);
@@ -116,7 +116,7 @@ public class ListBox : Container, IContainer
         SelectedItem.Value = e.CurrentValue != null ? Children.ElementAt((int)e.CurrentValue) : null;
     }
 
-    private void SelectedItem_ValueChange(BindableProperty<UIComponent?> sender, ValueChangeEventArgs<UIComponent?> e)
+    private void SelectedItem_ValueChange(BindableProperty<UIWidget?> sender, ValueChangeEventArgs<UIWidget?> e)
     {
         if (e.CurrentValue == null)
         {

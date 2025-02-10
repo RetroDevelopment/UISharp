@@ -8,7 +8,7 @@ namespace RetroDev.OpenUI.Components.Shapes;
 /// <summary>
 /// Displays test in the UI.
 /// </summary>
-public class Text : UIComponent
+public class Text : UIWidget
 {
     /// <summary>
     /// The text color.

@@ -19,9 +19,9 @@ namespace RetroDev.OpenIDE.Windows;
 [EditorSettings(allow: false)]
 internal class Container : UIComponent
 {
-    public Container(Application application, List<UIComponent> children) : base(application)
+    public Container(Application application, List<UIWidget> children) : base(application)
     {
-        children.ForEach(c => AddChild(c));
+        children.ForEach(c => AddChildNode(c));
     }
 
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) => new(100, 100);
@@ -113,7 +113,6 @@ internal class MainWindow : Window
         Window w = new Window(Application);
         w.AddComponent(new Label(Application, "This is a modal"));
         w.Visibility.Value = ComponentVisibility.Visible;
-        this.AddComponent(w);
     }
 
     private void SaveButton_Action(Button sender, EventArgs e)
@@ -242,7 +241,7 @@ internal class MainWindow : Window
         UpdateAddRemoveButtonState();
     }
 
-    private void SelectedItem_ValueChange(BindableProperty<UIComponent?> sender, ValueChangeEventArgs<UIComponent?> e)
+    private void SelectedItem_ValueChange(BindableProperty<UIWidget?> sender, ValueChangeEventArgs<UIWidget?> e)
     {
         UpdateAddRemoveButtonState();
     }
@@ -280,7 +279,7 @@ internal class MainWindow : Window
 
     private void CreateComponentInstance()
     {
-        var components = _rootNode!.Components.Select(Application.UIDefinitionManager.InstanceCreator.CreateUIComponent).ToList();
+        var components = _rootNode!.Components.Select(Application.UIDefinitionManager.InstanceCreator.CreateUIComponent).Cast<UIWidget>().ToList();
         var container = new UIPreview(Application, components);
         _mainLayout.GetComponent<ScrollView>("preview").SetComponent(container);
     }

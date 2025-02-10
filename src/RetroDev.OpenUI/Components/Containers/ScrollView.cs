@@ -9,10 +9,10 @@ namespace RetroDev.OpenUI.Components.Containers;
 /// <summary>
 /// Allows to scroll the child component in case it is bigger than the scroll view size.
 /// </summary>
-public class ScrollView : Container, ISingleContainer
+public class ScrollView : UIContainer, ISingleContainer
 {
     private const int ScrollBarSize = 15;
-    private UIComponent? _child;
+    private UIWidget? _child;
     private bool _moveHorizontalBar = false;
     private bool _moveVerticalBar = false;
 
@@ -21,7 +21,7 @@ public class ScrollView : Container, ISingleContainer
         childrenSize.Any() ? childrenSize.First() : Size.Zero;
 
     /// <inheritdoc />
-    public override IEnumerable<UIComponent> Children => GetChildren();
+    public override IEnumerable<UIWidget> Children => GetChildrenNodes();
 
     /// <summary>
     /// The color of the horizontal and vertical scroll bars.
@@ -51,15 +51,15 @@ public class ScrollView : Container, ISingleContainer
     /// Sets the component to be inserted in <see langword="this" /> scroll view.
     /// </summary>
     /// <param name="component">The component to be inserted in <see langword="this" /> scroll view.</param>
-    public void SetComponent(UIComponent component)
+    public void SetComponent(UIWidget component)
     {
-        if (_child != null) RemoveChild(_child);
+        if (_child != null) RemoveChildNode(_child);
         _child = component;
 
         if (_child.X.Value == PixelUnit.Auto) _child.X.Value = 0;
         if (_child.Y.Value == PixelUnit.Auto) _child.Y.Value = 0;
 
-        AddChild(_child);
+        AddChildNode(_child);
     }
 
     private void ScrollView_ChildrenRendered(UIComponent sender, RenderingEventArgs e)

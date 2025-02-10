@@ -8,7 +8,7 @@ namespace RetroDev.OpenUI.Components.Containers;
 /// <summary>
 /// A layout displaying all element in a row x column grid.
 /// </summary>
-public class GridLayout : Container, IContainer
+public class GridLayout : UIContainer, IContainer
 {
     public interface IGridSize { }
     public record AbsoluteSize(PixelUnit Size) : IGridSize;
@@ -103,12 +103,12 @@ public class GridLayout : Container, IContainer
     // TODO: Use UIPropertyList to enable binding
     public UIProperty<GridLayout, string> ColumnSizes { get; }
 
-    public override IEnumerable<UIComponent> Children => GetChildren().Cast<Panel>().Select(c => c.Children.First());
+    public override IEnumerable<UIWidget> Children => Panels.Select(c => c.Children.First());
 
     /// <summary>
     /// Gets the panel wrapping the layout children.
     /// </summary>
-    public IEnumerable<Panel> Panels => GetChildren().Cast<Panel>();
+    public IEnumerable<Panel> Panels => GetChildrenNodes().Cast<Panel>();
 
     /// <summary>
     /// Creates a new grid layout.
@@ -125,24 +125,24 @@ public class GridLayout : Container, IContainer
     }
 
     /// <summary>
-    /// Adds a <see cref="UIComponent"/> to <see langword="this" /> layout.
+    /// Adds a <see cref="UIWidget"/> to <see langword="this" /> layout.
     /// </summary>
     /// <param name="component">The component to add.</param>
-    public void AddComponent(UIComponent component)
+    public void AddComponent(UIWidget component)
     {
         var panel = new Panel(Application);
         panel.SetComponent(component);
-        AddChild(panel);
+        AddChildNode(panel);
     }
 
     /// <summary>
-    /// Add a <see cref="UIComponent"/> to <see langword="this" /> layout in a specific position.
+    /// Add a <see cref="UIWidget"/> to <see langword="this" /> layout in a specific position.
     /// </summary>
     /// <param name="component">The component to add.</param>
     /// <param name="row">The row where to position the component (zero-based index).</param>
     /// <param name="column">The column where to position the component (zero-based index).</param>
     /// <exception cref="ArgumentException">If <paramref name="row"/> and <paramref name="column"/> is not in the allowed range.</exception>
-    public void AddComponent(UIComponent component, int row, int column)
+    public void AddComponent(UIWidget component, int row, int column)
     {
         var position = row * Columns.Value + column;
         var count = Children.Count();
@@ -150,7 +150,7 @@ public class GridLayout : Container, IContainer
 
         var panel = new Panel(Application);
         panel.SetComponent(component);
-        AddChild(panel, (int)position);
+        AddChildNode(panel, (int)position);
     }
 
     /// <summary>
@@ -165,10 +165,10 @@ public class GridLayout : Container, IContainer
         if (column >= Columns.Value) throw new ArgumentException($"Cannot remove component at column {column}, grid layout has only {Columns.Value} columns");
 
         var indexOfElement = row * Columns.Value + column;
-        var children = GetChildren();
+        var children = GetChildrenNodes();
         if (indexOfElement > children.Count()) throw new ArgumentException($"Cannot remove element at row {row} and column {column}: there are only {children.Count()} elements in the grid layout");
-        var element = GetChildren().ElementAt((int)indexOfElement);
-        RemoveChild(element);
+        var element = GetChildrenNodes().ElementAt((int)indexOfElement);
+        RemoveChildNode(element);
     }
 
     /// <summary>
@@ -180,7 +180,7 @@ public class GridLayout : Container, IContainer
 
         for (int i = 0; i < count; i++)
         {
-            RemoveChild(Panels.Last());
+            RemoveChildNode(Panels.Last());
         }
 
         Rows.Value = 0;
@@ -203,7 +203,7 @@ public class GridLayout : Container, IContainer
         var rowSizes = ComputeSizes(availableSpace.Height, rowSizeDefinitions, Rows.Value);
         var columnSizes = ComputeSizes(availableSpace.Width, columnSizeDefinitions, Columns.Value);
 
-        var children = base.GetChildren();
+        var children = base.GetChildrenNodes();
         var size = children.Count();
         var i = 0u;
 
@@ -226,7 +226,7 @@ public class GridLayout : Container, IContainer
 
     private void EnsureRowsColumnFitNumberOfChildren()
     {
-        var numberOfItems = GetChildren().Count();
+        var numberOfItems = GetChildrenNodes().Count();
         var maximumNumberOfItems = Rows.Value * Columns.Value;
 
         if (numberOfItems > maximumNumberOfItems)

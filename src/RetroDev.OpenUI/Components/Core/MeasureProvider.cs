@@ -4,11 +4,9 @@
 /// Class that performs optimized measurement of <see cref="UIComponent"/> rendering areas, meaning that 
 /// where only invalidated elements will be measured.
 /// </summary>
-/// <param name="window">The <see cref="Window"/> for which to measure the elements.</param>
 /// <param name="invalidator"></param>
-internal class MeasureProvider(Window window, Invalidator invalidator)
+public class MeasureProvider(Invalidator invalidator)
 {
-    private readonly Window _window = window;
     private readonly Invalidator _invalidator = invalidator;
 
     /// <summary>

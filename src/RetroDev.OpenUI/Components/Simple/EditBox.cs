@@ -10,7 +10,7 @@ namespace RetroDev.OpenUI.Components.Simple;
 /// <summary>
 /// A box that allows to enter text.
 /// </summary>
-public class EditBox : UIComponent
+public class EditBox : UIWidget
 {
     private readonly Rectangle _backgroundRectangle;
     private readonly Label _inputTextLabel;
@@ -62,7 +62,7 @@ public class EditBox : UIComponent
         _backgroundRectangle.AutoCornerRadiusRatio.Value = 0.5f;
         UpdateBackgroundRectangleColorBinding();
         UpdateBackgroundRectangleBorder();
-        AddChild(_backgroundRectangle);
+        AddChildNode(_backgroundRectangle);
 
         _inputTextLabel = new Label(application);
         _inputTextLabel.Text.BindDestinationToSource(Text);
@@ -71,7 +71,7 @@ public class EditBox : UIComponent
         _inputTextLabel.HorizontalAlignment.Value = Alignment.Left;
         _inputTextLabel.VerticalAlignment.Value = Alignment.Center;
         UpdateTextColorBinding();
-        AddChild(_inputTextLabel);
+        AddChildNode(_inputTextLabel);
 
         MousePress += EditBox_MousePress;
         KeyPress += EditBox_KeyPress;

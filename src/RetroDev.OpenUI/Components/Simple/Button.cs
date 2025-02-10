@@ -9,7 +9,7 @@ namespace RetroDev.OpenUI.Components.Simple;
 /// <summary>
 /// A clickable button.
 /// </summary>
-public class Button : UIComponent
+public class Button : UIWidget
 {
     private readonly Rectangle _backgroundRectangle;
     private readonly Label _buttonTextLabel;
@@ -67,12 +67,12 @@ public class Button : UIComponent
         _backgroundRectangle.AutoCornerRadiusRatio.Value = 0.5f;
         UpdateBackgroundRectangleColorBinding();
         UpdateBackgroundRectangleBorder();
-        AddChild(_backgroundRectangle);
+        AddChildNode(_backgroundRectangle);
 
         _buttonTextLabel = new Label(application);
         _buttonTextLabel.Text.BindDestinationToSource(Text);
         UpdateTextColorBinding();
-        AddChild(_buttonTextLabel);
+        AddChildNode(_buttonTextLabel);
 
         MousePress += Button_MousePress; // TODO: managing button action is more complicated than intercepting key press events.
         Enabled.ValueChange += Enabled_ValueChange;

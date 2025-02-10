@@ -9,7 +9,7 @@ namespace RetroDev.OpenUI.Components.Simple;
 /// <summary>
 /// A label displaying text.
 /// </summary>
-public class Label : UIComponent
+public class Label : UIWidget
 {
     private readonly Text _text;
 
@@ -41,7 +41,7 @@ public class Label : UIComponent
         _text.TextColor.BindDestinationToSource(TextColor);
         _text.DisplayText.BindDestinationToSource(Text);
 
-        AddChild(_text);
+        AddChildNode(_text);
     }
 
     /// <summary>

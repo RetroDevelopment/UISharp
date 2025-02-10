@@ -1,5 +1,4 @@
-﻿using RetroDev.OpenUI.Components.Containers;
-using RetroDev.OpenUI.Components.Core;
+﻿using RetroDev.OpenUI.Components.Core;
 using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Core.Graphics;
 using RetroDev.OpenUI.Core.Windowing.Events;
@@ -17,7 +16,9 @@ namespace RetroDev.OpenUI.Components;
 /// </summary>
 public abstract class UIComponent
 {
-    internal readonly List<UIComponent> _children = [];
+    // The visual children, part of the actual hierarchy.
+    // TODO: use a UIComponentCollection<UINode> to manage bindings etc.
+    internal readonly List<UIWidget> _childNodes = [];
     internal int _level = 0;
     private UIComponent? _focusedComponent;
     private Point? _mouseAbsoluteLocation = null;
@@ -61,17 +62,17 @@ public abstract class UIComponent
     public event TypeSafeEventHandler<UIComponent, MouseEventArgs> MouseDragEnd = (_, _) => { };
 
     /// <summary>
-    /// Key is pressed inside <see cref="this"/> window.
+    /// Key is pressed inside <see cref="this"/> <see cref="UIComponent"/>.
     /// </summary>
     public event TypeSafeEventHandler<UIComponent, KeyEventArgs> KeyPress = (_, _) => { };
 
     /// <summary>
-    /// Key is released inside <see langword="this"/> window.
+    /// Key is released inside <see langword="this"/> <see cref="UIComponent"/>.
     /// </summary>
     public event TypeSafeEventHandler<UIComponent, KeyEventArgs> KeyRelease = (_, _) => { };
 
     /// <summary>
-    /// Text is inserted in <see langword="this"/> window.
+    /// Text is inserted in <see langword="this"/> <see cref="UIComponent"/>.
     /// </summary>
     public event TypeSafeEventHandler<UIComponent, TextInputEventArgs> TextInput = (_, _) => { };
 
@@ -106,11 +107,11 @@ public abstract class UIComponent
     public UIComponent? Parent { get; private set; }
 
     /// <summary>
-    /// Gets the <see cref="Window"/> that contain <see langword="this" /> <see cref="UIComponent"/>.
-    /// If <see langword="this" /> <see cref="UIComponent"/> has not been attached to a <see cref="Window"/>,
+    /// Gets the <see cref="UIRoot"/> that contain <see langword="this" /> <see cref="UIComponent"/>.
+    /// If <see langword="this" /> <see cref="UIComponent"/> has not been attached to a <see cref="UIRoot"/>,
     /// the value is <see langword="null" />.
     /// </summary>
-    public Window? Root => Parent?.Root ?? this as Window;
+    public UIRoot? Root => Parent?.Root ?? this as UIRoot;
 
     /// <summary>
     /// The component unique identifier.
@@ -241,7 +242,7 @@ public abstract class UIComponent
     /// </summary>
     public void Invalidate()
     {
-        Root?._invalidator?.Invalidate(this);
+        Root?.Invalidator?.Invalidate(this);
         Application.EventSystem.InvalidateRendering();
     }
 
@@ -252,7 +253,7 @@ public abstract class UIComponent
     /// </summary>
     public void CancelInvalidation()
     {
-        Root?._invalidator?.CancelInvalidation(this);
+        Root?.Invalidator?.CancelInvalidation(this);
     }
 
     /// <summary>
@@ -322,40 +323,40 @@ public abstract class UIComponent
     /// <exception cref="ArgumentException">
     /// If a child with the same <see cref="ID"/> as the given <paramref name="component"/> already exists.
     /// </exception>
-    protected virtual void AddChild(UIComponent component, int? index = null)
+    protected virtual void AddChildNode(UIWidget component, int? index = null)
     {
         Application.LifeCycle.ThrowIfPropertyCannotBeSet();
-        component.Parent?.RemoveChild(component);
+        component.Parent?.RemoveChildNode(component);
         component.Parent = this;
         component.AttachEventsFromParent();
         component.RecomputeLevel();
         component.InvalidateAll();
         Invalidate();
         Application.EventSystem.InvalidateRendering();
-        if (index == null) _children.Add(component);
-        else if (index + 1 < _children.Count) _children.Insert((int)index + 1, component);
-        else _children.Add(component);
+        if (index == null) _childNodes.Add(component);
+        else if (index + 1 < _childNodes.Count) _childNodes.Insert((int)index + 1, component);
+        else _childNodes.Add(component);
     }
 
     /// <summary>
     /// Gets all the child components of <see cref="this"/> comoponet.
     /// </summary>
     /// <returns>The list of child component.</returns>
-    protected virtual IEnumerable<UIComponent> GetChildren() =>
-        new List<UIComponent>(_children);
+    protected virtual IEnumerable<UIWidget> GetChildrenNodes() =>
+        new List<UIWidget>(_childNodes);
 
     /// <summary>
     /// Removes the given child <paramref name="component"/> from <see cref="this"/> component.
     /// </summary>
     /// <param name="component">The child component to remove.</param>
     /// <returns><see langword="true" /> if successfully removed, otherwise <see langword="false" />.</returns>
-    protected bool RemoveChild(UIComponent component)
+    protected bool RemoveChildNode(UIWidget component)
     {
         Application.LifeCycle.ThrowIfPropertyCannotBeSet();
         Invalidate();
         component.DetachEventsFromParent();
         if (component.Parent == this) component.Parent = null;
-        return _children.Remove(component);
+        return _childNodes.Remove(component);
     }
 
     protected void OnMousePress(MouseEventArgs e)
@@ -394,7 +395,7 @@ public abstract class UIComponent
     }
 
     internal IEnumerable<UIComponent> GetComponentTreeNodesDepthFirstSearch() =>
-        _children.Union(_children.SelectMany(c => c.GetComponentTreeNodesDepthFirstSearch()));
+        _childNodes.Union(_childNodes.SelectMany(c => c.GetComponentTreeNodesDepthFirstSearch()));
 
     internal void OnRenderFrame(RenderingEventArgs renderingArgs)
     {
@@ -405,7 +406,7 @@ public abstract class UIComponent
             renderingArgs.Canvas.ContainerAbsoluteDrawingArea = _absoluteDrawingArea;
             renderingArgs.Canvas.ClippingArea = _clipArea;
             RenderFrame.Invoke(this, renderingArgs);
-            _children.ForEach(c => c.OnRenderFrame(renderingArgs));
+            _childNodes.ForEach(c => c.OnRenderFrame(renderingArgs));
             renderingArgs.Canvas.ContainerAbsoluteDrawingArea = _absoluteDrawingArea;
             renderingArgs.Canvas.ClippingArea = _clipArea;
             ChildrenRendered.Invoke(this, renderingArgs);
@@ -420,7 +421,7 @@ public abstract class UIComponent
     /// </returns>
     internal bool ReComputeWrapSize()
     {
-        var childrenSize = _children.Select(c => c._wrapSize);
+        var childrenSize = _childNodes.Select(c => c._wrapSize);
         var minimalOptimalSize = ComputeMinimumOptimalSize(childrenSize);
         var width = Width.Value.IsAuto ? minimalOptimalSize.Width : Width.Value;
         var height = Height.Value.IsAuto ? minimalOptimalSize.Height : Height.Value;
@@ -437,7 +438,7 @@ public abstract class UIComponent
     /// <param name="relativeDrawingArea">A way to override the rendering area calculated values.</param>
     /// <param name="rootCall">Whether this is called from <see cref="MeasureProvider"/> and it requires to perform the invalidated subtree area re-calculation.</param>
     /// <exception cref="InvalidOperationException">
-    /// If <see cref="RepositionChildren(Size, IEnumerable{Size})"/> return list is not empty and it has not the same size as <see cref="_children"/>.
+    /// If <see cref="RepositionChildren(Size, IEnumerable{Size})"/> return list is not empty and it has not the same size as <see cref="_childNodes"/>.
     /// </exception>
     internal void ComputeDrawingAreas(Area? relativeDrawingArea = null, bool rootCall = false)
     {
@@ -446,17 +447,17 @@ public abstract class UIComponent
         _absoluteDrawingArea = ComputeAbsoluteDrawingArea();
         _clipArea = ComputeClipArea();
 
-        var childrenAreas = RepositionChildren(_relativeDrawingArea.Size, _children.Select(c => c._wrapSize));
+        var childrenAreas = RepositionChildren(_relativeDrawingArea.Size, _childNodes.Select(c => c._wrapSize));
 
-        if (childrenAreas.Count != 0 && childrenAreas.Count != _children.Count)
+        if (childrenAreas.Count != 0 && childrenAreas.Count != _childNodes.Count)
         {
-            throw new InvalidOperationException($"{nameof(RepositionChildren)} must return the same number of elements as the number of children or be empty: {childrenAreas.Count()} provided but {_children.Count} exist");
+            throw new InvalidOperationException($"{nameof(RepositionChildren)} must return the same number of elements as the number of children or be empty: {childrenAreas.Count()} provided but {_childNodes.Count} exist");
         }
 
         // TODO: no need to go recursively if nothing has changed
-        for (var i = 0; i < _children.Count; i++)
+        for (var i = 0; i < _childNodes.Count; i++)
         {
-            var child = _children[i];
+            var child = _childNodes[i];
             // The parent is already invalidated, so no need to invalidate this component. This ensures that if a component is invalidated already, the children won't
             // TODO: if using rendering instancing, make sure to invalidate each component that has changed.
             // then we will go through each and update the instance buffer portion accordingly.
@@ -569,7 +570,7 @@ public abstract class UIComponent
 
     private void _parent_KeyRelease(UIComponent sender, KeyEventArgs keyEventArgs)
     {
-        if (Visibility.Value == ComponentVisibility.Visible && (Focus.Value || this is Container))
+        if (Visibility.Value == ComponentVisibility.Visible && (Focus.Value || this is UIContainer))
         {
             KeyRelease.Invoke(this, keyEventArgs);
         }
@@ -577,7 +578,7 @@ public abstract class UIComponent
 
     private void _parent_TextInput(UIComponent sender, TextInputEventArgs textInputEventArgs)
     {
-        if (Visibility.Value == ComponentVisibility.Visible && (Focus.Value || this is Container))
+        if (Visibility.Value == ComponentVisibility.Visible && (Focus.Value || this is UIContainer))
         {
             TextInput.Invoke(this, textInputEventArgs);
         }
@@ -668,20 +669,20 @@ public abstract class UIComponent
             _level = 0;
         }
 
-        _children.ForEach(c => c.RecomputeLevel());
+        _childNodes.ForEach(c => c.RecomputeLevel());
     }
 
     private void InvalidateAll()
     {
         if (Root == null) return;
         Invalidate();
-        _children.ForEach(c => c.InvalidateAll());
+        _childNodes.ForEach(c => c.InvalidateAll());
     }
 
     private void CancelInvalidationAll()
     {
         if (Root == null) return;
         CancelInvalidation();
-        _children.ForEach(c => c.CancelInvalidation());
+        _childNodes.ForEach(c => c.CancelInvalidation());
     }
 }

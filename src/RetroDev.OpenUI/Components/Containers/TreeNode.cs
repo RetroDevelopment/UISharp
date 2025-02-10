@@ -15,7 +15,7 @@ public class TreeNode
     private int indentation = 0;
 
     // TODO: pass LifeCycle to property so that you can treat is a UI
-    public BindableProperty<UIComponent> Content { get; set; }
+    public BindableProperty<UIWidget> Content { get; set; }
     public BindableProperty<bool> Collapsed { get; set; }
     public TreeNode? Parent { get; private set; }
 
@@ -39,9 +39,9 @@ public class TreeNode
 
     internal int Indentation => indentation;
 
-    public TreeNode(UIComponent component)
+    public TreeNode(UIWidget component)
     {
-        Content = new BindableProperty<UIComponent>(component); // TODO: pass application
+        Content = new BindableProperty<UIWidget>(component); // TODO: pass application
         Collapsed = new BindableProperty<bool>(false);
     }
 

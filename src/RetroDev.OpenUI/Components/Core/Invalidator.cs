@@ -3,7 +3,7 @@ using OpenTK.Graphics.OpenGL;
 
 namespace RetroDev.OpenUI.Components.Core;
 
-internal class Invalidator
+public class Invalidator
 {
     private SortedDictionary<int, HashSet<UIComponent>> _invalidatedItems = [];
 

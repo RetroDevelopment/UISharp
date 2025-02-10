@@ -8,7 +8,7 @@ namespace RetroDev.OpenUI.Components.Shapes;
 /// <summary>
 /// A circle shape.
 /// </summary>
-public class Circle : UIComponent
+public class Circle : UIWidget
 {
     /// <summary>
     /// The circle border color.

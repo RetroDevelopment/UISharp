@@ -51,7 +51,7 @@ namespace RetroDev.OpenIDE;
 // Dynamic and scalable interfaces.
 // Lightweight and efficient tools for medium-sized applications.
 
-class Ctr : UIComponent
+class Ctr : UIWidget
 {
     static int idx = 0;
     private Rectangle _rectangle;
@@ -85,13 +85,13 @@ class Ctr : UIComponent
             if (e.Button == KeyButton.S && Focus.Value) Height.Value -= 10;
             if (e.Button == KeyButton.R && Focus.Value) _rectangle.Rotation.Value += 0.01f;
         };
-        AddChild(_rectangle);
+        AddChildNode(_rectangle);
 
         var c = new Circle(application);
         c.Width.Value = 10;
         c.Height.Value = 10;
         c.BackgroundColor.Value = Color.Brown;
-        AddChild(c);
+        AddChildNode(c);
 
         var txt = new Text(application);
         txt.TextColor.Value = Color.Magenta;
@@ -103,7 +103,7 @@ class Ctr : UIComponent
         //AddChild(txt);
     }
 
-    public void Add(Ctr child) => AddChild(child);
+    public void Add(Ctr child) => AddChildNode(child);
 
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) => new(100, 100);
 }
@@ -172,7 +172,7 @@ internal class Program
 
         public Node(Application a, string l) : base(a) { label = l; }
 
-        public void Add(UIComponent c) => AddChild(c);
+        public void Add(UIWidget c) => AddChildNode(c);
         protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize)
         {
             return new(childrenSize.ToList().Sum(c => c.Width.Value) + Hint.Width,
