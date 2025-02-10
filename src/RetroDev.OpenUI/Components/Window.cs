@@ -9,6 +9,7 @@ using RetroDev.OpenUI.UI.Coordinates;
 using RetroDev.OpenUI.UI.Properties;
 using RetroDev.OpenUI.Core.Windowing.SDL;
 using RetroDev.OpenUI.UI;
+using RetroDev.OpenUI.Components.Core.AutoArea;
 
 namespace RetroDev.OpenUI.Components;
 
@@ -25,11 +26,27 @@ public class Window : Container, IContainer
     private readonly RenderProvider _renderProvider;
     private readonly IWindowId _windowId;
 
+    // If visibility changes, this flag is true so that the the window is actually displayed, but only
+    // after, when the rendering area will be updated.
+    // TODO: consider pushing the event in a priority queue to be done before rendering.
+    // Let's see when we will have implement an event queue.
+    private bool _scheduleVisibilityChange = false;
+
     /// <summary>
     /// Raised when <see langword="this" /> <see cref="Window"/> has been initialized.
     /// This happens when all the initial <see cref="UIComponent"/> have been added to the window.
     /// </summary>
     public event TypeSafeEventHandler<Window, EventArgs> Initialized = (_, _) => { };
+
+    /// <summary>
+    /// Raised when the window is moved.
+    /// </summary>
+    public event TypeSafeEventHandler<Window, WindowMoveEventArgs> WindowMove = (_, _) => { };
+
+    /// <summary>
+    /// Raised when the window size is changed.
+    /// </summary>
+    public event TypeSafeEventHandler<Window, WindowResizeEventArgs> WindowResize = (_, _) => { };
 
     /// <inheritdoc/>
     public override IEnumerable<UIComponent> Children => GetChildren();
@@ -38,6 +55,11 @@ public class Window : Container, IContainer
     /// The window title.
     /// </summary>
     public UIProperty<Window, string> Title { get; }
+
+    /// <summary>
+    /// Whether the window is resizable.
+    /// </summary>
+    public UIProperty<Window, bool> Resizable { get; }
 
     /// <summary>
     /// Creates a new window.
@@ -49,7 +71,8 @@ public class Window : Container, IContainer
     /// <see cref="IRenderingEngine"/>. If using opengl but not based on SDL, you can create a <see cref="OpenGLRenderingEngine"/> but you must implement and use your custom
     /// instance of <see cref="IRenderingContext"/>.
     /// </param>
-    public Window(Application application, IRenderingEngine? renderingEngine = null) : base(application, visibility: ComponentVisibility.Collapsed, isFocusable: true)
+    public Window(Application application, IRenderingEngine? renderingEngine = null) :
+        base(application, visibility: ComponentVisibility.Collapsed, isFocusable: true, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
     {
         _measureProvider = new MeasureProvider(this, _invalidator);
         _renderProvider = new RenderProvider(_invalidator);
@@ -57,7 +80,7 @@ public class Window : Container, IContainer
         _windowId = Application.WindowManager.CreateWindow(_renderingEngine.RenderingContext);
 
         Title = new UIProperty<Window, string>(this, string.Empty);
-        Title.ValueChange += Title_ValueChange;
+        Resizable = new UIProperty<Window, bool>(this, true);
 
         Application.EventSystem.Render += EventSystem_Render;
         application.AddWindow(this);
@@ -77,6 +100,7 @@ public class Window : Container, IContainer
         application.EventSystem.WindowMove += EventSystem_WindowMove;
         application.EventSystem.WindowResize += EventSystem_WindowResize;
         application.EventSystem.MouseWheel += EventSystem_MouseWheel;
+        // TODO remove events on dispose?
     }
 
     /// <summary>
@@ -146,6 +170,7 @@ public class Window : Container, IContainer
 
     private void EventSystem_Render(IEventSystem sender, EventArgs e)
     {
+        UpdateWindowAppearance();
         var renderingEngine = _renderingEngine;
         var canvas = new Canvas(renderingEngine, Application.LifeCycle);
         _renderProvider.Render(this, canvas, renderingEngine);
@@ -208,18 +233,26 @@ public class Window : Container, IContainer
         }
     }
 
-    private void EventSystem_WindowMove(IEventSystem sender, WindowEventArgs<WindowMoveEventArgs> e)
+    private void EventSystem_WindowMove(IEventSystem sender, WindowEventArgs<WindowMoveEventArgs> windowArgs)
     {
-        var topLeft = e.Args.TopLeft;
-        X.Value = topLeft.X;
-        Y.Value = topLeft.Y;
+        if (windowArgs.WindowId.Equals(_windowId))
+        {
+            var topLeft = windowArgs.Args.TopLeft;
+            X.Value = topLeft.X;
+            Y.Value = topLeft.Y;
+            WindowMove.Invoke(this, windowArgs.Args);
+        }
     }
 
-    private void EventSystem_WindowResize(IEventSystem sender, WindowEventArgs<WindowResizeEventArgs> e)
+    private void EventSystem_WindowResize(IEventSystem sender, WindowEventArgs<WindowResizeEventArgs> windowArgs)
     {
-        var size = e.Args.Size;
-        Width.Value = size.Width;
-        Height.Value = size.Height;
+        if (windowArgs.WindowId.Equals(_windowId))
+        {
+            var size = windowArgs.Args.Size;
+            Width.Value = size.Width;
+            Height.Value = size.Height;
+            WindowResize.Invoke(this, windowArgs.Args);
+        }
     }
 
     private void EventSystem_MouseWheel(IEventSystem sender, WindowEventArgs<MouseWheelEventArgs> windowArgs)
@@ -232,13 +265,14 @@ public class Window : Container, IContainer
 
     private void Visibility_ValueChange(BindableProperty<ComponentVisibility> sender, ValueChangeEventArgs<ComponentVisibility> e)
     {
-        if (e.CurrentValue == ComponentVisibility.Visible)
+        _scheduleVisibilityChange = true;
+        if (Visibility.Value != ComponentVisibility.Visible)
         {
-            Application.WindowManager.ShowWindow(_windowId);
+            Application.WindowManager.HideWindow(_windowId);
         }
         else
         {
-            Application.WindowManager.HideWindow(_windowId);
+            _scheduleVisibilityChange = true;
         }
     }
 
@@ -248,8 +282,16 @@ public class Window : Container, IContainer
         _renderingEngine.ViewportSize = e.RenderingArea.Size;
     }
 
-    private void Title_ValueChange(BindableProperty<string> sender, ValueChangeEventArgs<string> e)
+    private void UpdateWindowAppearance()
     {
-        Application.WindowManager.SetTitle(_windowId, e.CurrentValue);
+        if (_scheduleVisibilityChange)
+        {
+            Application.WindowManager.ShowWindow(_windowId);
+            _scheduleVisibilityChange = false;
+        }
+
+        Application.WindowManager.SetTitle(_windowId, Title.Value);
+        Application.WindowManager.SetOpacity(_windowId, BackgroundColor.Value.AlphaComponent);
+        Application.WindowManager.SetResizable(_windowId, Resizable.Value);
     }
 }

@@ -120,17 +120,6 @@ public class SDLWindowManager : IWindowManager
             SDL_SetWindowPosition(id.Handle, (int)position.X + left, (int)position.Y + top);
             SDL_SetWindowSize(id.Handle, (int)size.Width, (int)size.Height);
         });
-
-        // _application.LifeCycle.ThrowIfNotOnUIThread();
-        // 
-        // var top = 0;
-        // var left = 0;
-        // var bottom = 0;
-        // var right = 0;
-        // LoggingUtils.SDLCheck(() => SDL.SDL_GetWindowBordersSize(_window, out top, out left, out bottom, out right), _application.Logger);
-        // SDL.SDL_GetWindowPosition(_window, out var x, out var y);
-        // SDL.SDL_GetWindowSize(_window, out var width, out var height);
-        // return new Area(new Point(x - left, y - top), new Size(width, height));
     }
 
     /// <summary>
@@ -141,6 +130,22 @@ public class SDLWindowManager : IWindowManager
     /// <exception cref="ArgumentException">If the <paramref name="windowId"/> is not a <see cref="SDLWindowId"/>.</exception>
     public void SetTitle(IWindowId windowId, string title) =>
         ExecuteOnWindow(windowId, id => SDL_SetWindowTitle(id.Handle, title));
+
+    /// <summary>
+    /// Sets the opacity of the window with the given <paramref name="windowId"/>.
+    /// </summary>
+    /// <param name="windowId">The identifier of the window for which to set opacity.</param>
+    /// <param name="opacity">The opacity, where 0 means fully transparent and 255 means fully opaque.</param>
+    public void SetOpacity(IWindowId windowId, byte opacity) =>
+        ExecuteOnWindow(windowId, id => SDL_SetWindowOpacity(id.Handle, opacity / 255.0f));
+
+    /// <summary>
+    /// Sets whether the window with the given <paramref name="windowId"/> is reiszable.
+    /// </summary>
+    /// <param name="windowId">The identifier of the window for which to set if it is resizable.</param>
+    /// <param name="resizable"><see langword="true" /> if the window is resizable, otherwise <see langword="false" />.</param>
+    public void SetResizable(IWindowId windowId, bool resizable) =>
+        ExecuteOnWindow(windowId, id => SDL_SetWindowResizable(id.Handle, resizable ? SDL_bool.SDL_TRUE : SDL_bool.SDL_FALSE));
 
     /// <summary>
     /// Dispose the window and deallocates all the graphical resources.

@@ -54,11 +54,25 @@ public interface IWindowManager
     void SetRenderingArea(IWindowId windowId, Area renderingArea);
 
     /// <summary>
-    /// Sets the title for the window with the given <paramref name="windowId"/>-
+    /// Sets the title for the window with the given <paramref name="windowId"/>.
     /// </summary>
     /// <param name="windowId">The identifier of the window for which to set the title.</param>
     /// <param name="title">The window title.</param>
     void SetTitle(IWindowId windowId, string title);
+
+    /// <summary>
+    /// Sets the opacity of the window with the given <paramref name="windowId"/>.
+    /// </summary>
+    /// <param name="windowId">The identifier of the window for which to set opacity.</param>
+    /// <param name="opacity">The opacity, where 0 means fully transparent and 255 means fully opaque.</param>
+    void SetOpacity(IWindowId windowId, byte opacity);
+
+    /// <summary>
+    /// Sets whether the window with the given <paramref name="windowId"/> is reiszable.
+    /// </summary>
+    /// <param name="windowId">The identifier of the window for which to set if it is resizable.</param>
+    /// <param name="resizable"><see langword="true" /> if the window is resizable, otherwise <see langword="false" />.</param>
+    void SetResizable(IWindowId windowId, bool resizable);
 
     /// <summary>
     /// Closes the UI environment. Make sure that no other SDL operation is performed after calling this method!

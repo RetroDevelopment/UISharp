@@ -20,7 +20,7 @@ internal class SDLEventSystem(Application application) : IEventSystem
     }
 
     private Application _application = application;
-    private bool _invalidated = true; // TODO: add invalidation logic per component. And maybe glScissor for retained mode. Or detect actual UI property change. If not do not invalidate.
+    private bool _invalidated = false; // TODO: add invalidation logic per component. And maybe glScissor for retained mode. Or detect actual UI property change. If not do not invalidate.
 
     /// <summary>
     /// An event that indicates to quit the application.

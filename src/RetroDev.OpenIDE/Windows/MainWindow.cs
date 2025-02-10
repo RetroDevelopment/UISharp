@@ -5,6 +5,7 @@ using RetroDev.OpenUI.Components;
 using RetroDev.OpenUI.Components.Containers;
 using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Components.Simple;
+using RetroDev.OpenUI.Core.Graphics;
 using RetroDev.OpenUI.UI.Coordinates;
 using RetroDev.OpenUI.UI.Properties;
 using RetroDev.OpenUI.UIDefinition.Ast;
@@ -109,6 +110,10 @@ internal class MainWindow : Window
         LoadXml(_fileEditBox.Text.Value);
         _saveButton.Enabled.Value = true;
         _refreshButton.Enabled.Value = true;
+        Window w = new Window(Application);
+        w.AddComponent(new Label(Application, "This is a modal"));
+        w.Visibility.Value = ComponentVisibility.Visible;
+        this.AddComponent(w);
     }
 
     private void SaveButton_Action(Button sender, EventArgs e)
