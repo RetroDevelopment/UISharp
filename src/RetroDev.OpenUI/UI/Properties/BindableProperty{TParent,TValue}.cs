@@ -34,7 +34,7 @@ public class BindableProperty<TValue>(TValue value, Application? application = n
     /// Triggers then the <see cref="Value"/> changes. Setting <see cref="Value"/> to the same value
     /// does not trigger this event, only modifying the value does.
     /// </summary>
-    public event TypeSafeEventHandler<BindableProperty<TValue>, ValueChangeEventArgs<TValue>> ValueChange = (_, _) => { };
+    public event TypeSafeEventHandler<BindableProperty<TValue>, ValueChangeEventArgs<TValue>>? ValueChange;
 
     /// <summary>
     /// The property value.
@@ -49,7 +49,7 @@ public class BindableProperty<TValue>(TValue value, Application? application = n
             {
                 var previousValue = _value;
                 _value = value;
-                ValueChange.Invoke(this, new ValueChangeEventArgs<TValue>(previousValue, value));
+                ValueChange?.Invoke(this, new ValueChangeEventArgs<TValue>(previousValue, value));
             }
         }
         get
