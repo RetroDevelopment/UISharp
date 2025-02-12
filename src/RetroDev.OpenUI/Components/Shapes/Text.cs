@@ -1,6 +1,7 @@
 ﻿using RetroDev.OpenUI.Components.Base;
 using RetroDev.OpenUI.Core.Graphics;
 using RetroDev.OpenUI.Core.Windowing.Events;
+using RetroDev.OpenUI.UI;
 using RetroDev.OpenUI.UI.Coordinates;
 using RetroDev.OpenUI.UI.Properties;
 
@@ -22,6 +23,11 @@ public class Text : UIWidget
     public UIProperty<Text, string> DisplayText { get; }
 
     /// <summary>
+    /// The <see cref="DisplayText"/> <see cref="Font"/>.
+    /// </summary>
+    public UIProperty<Text, Font> Font { get; }
+
+    /// <summary>
     /// Creates a new text.
     /// </summary>
     /// <param name="application">The parent application.</param>
@@ -29,19 +35,23 @@ public class Text : UIWidget
     {
         TextColor = new UIProperty<Text, Color>(this, Color.Transparent);
         DisplayText = new UIProperty<Text, string>(this, string.Empty);
-
+        Font = new UIProperty<Text, Font>(this, new Font(application, "FreeSans", 20, FontType.Regular));
         RenderFrame += Rectangle_RenderFrame;
     }
 
     /// <inheritdoc />
-    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
-        Application.FontServices.ComputeTextSize(DisplayText.Value);
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize)
+    {
+        if (Root == null) return Size.Zero;
+        return Root.RenderingEngine.ComputeTextSize(DisplayText.Value, Font.Value.ToGraphicsFont());
+    }
 
     private void Rectangle_RenderFrame(UIComponent sender, RenderingEventArgs e)
     {
         var textShape = new OpenUI.Core.Graphics.Shapes.Text(BackgroundColor.Value,
                                                              TextColor.Value,
-                                                             DisplayText.Value);
+                                                             DisplayText.Value,
+                                                             Font.Value.ToGraphicsFont());
         var canvas = e.Canvas;
 
         canvas.Render(textShape, ActualSize.Fill());

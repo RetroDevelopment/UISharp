@@ -62,7 +62,6 @@ public class Window : UIRoot
         Minimized
     }
 
-    private readonly IRenderingEngine _renderingEngine;
     private readonly IWindowId _windowId;
 
     // If visibility changes, this flag is true so that the the window is actually displayed, but only
@@ -163,11 +162,10 @@ public class Window : UIRoot
     /// instance of <see cref="IRenderingContext"/>.
     /// </param>
     public Window(Application application, IRenderingEngine? renderingEngine = null) :
-        base(application, visibility: ComponentVisibility.Collapsed, isFocusable: true, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
+        base(application, visibility: ComponentVisibility.Collapsed, renderingEngine: renderingEngine, isFocusable: true, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
     {
         application.AddWindow(this);
-        _renderingEngine = renderingEngine ?? new OpenGLRenderingEngine(application, new SDLOpenGLRenderingContext(application));
-        _windowId = Application.WindowManager.CreateWindow(_renderingEngine.RenderingContext);
+        _windowId = Application.WindowManager.CreateWindow(RenderingEngine.RenderingContext);
 
         Title = new UIProperty<Window, string>(this, string.Empty);
         Resizable = new UIProperty<Window, bool>(this, true);
@@ -296,7 +294,7 @@ public class Window : UIRoot
     private void EventSystem_Render(IEventSystem sender, EventArgs e)
     {
         UpdateWindowAppearance();
-        var renderingEngine = _renderingEngine;
+        var renderingEngine = RenderingEngine;
         var canvas = new Canvas(renderingEngine, Application.LifeCycle);
         RenderProvider.Render(this, canvas, renderingEngine);
         renderingEngine.FinalizeFrame();
@@ -465,7 +463,7 @@ public class Window : UIRoot
     private void Window_RenderingAreaChange(UIComponent sender, RenderingAreaEventArgs e)
     {
         Application.WindowManager.SetRenderingArea(_windowId, e.RenderingArea);
-        _renderingEngine.ViewportSize = e.RenderingArea.Size;
+        RenderingEngine.ViewportSize = e.RenderingArea.Size;
     }
 
     private void Window_WindowClose(Window sender, EventArgs e)
@@ -484,7 +482,6 @@ public class Window : UIRoot
         Width.Value = PixelUnit.Auto;
         Height.Value = PixelUnit.Auto;
     }
-
 
     private void UpdateWindowAppearance()
     {

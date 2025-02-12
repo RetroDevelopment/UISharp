@@ -4,31 +4,33 @@ using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 
-namespace RetroDev.OpenUI.Core.Graphics.Font.Internal;
+namespace RetroDev.OpenUI.Core.Graphics.Fonts;
 
-internal class SixLaborsFontRenderingEngine : IFontRenderingEngine
+/// <summary>
+/// The font rendering engine implemented using the SixLabors library.
+/// </summary>
+public class SixLaborsFontRenderingEngine : IFontRenderingEngine
 {
-    private static FontCollection? _fontCollection;
-    private static FontFamily? _fontFamily;
-    private static SixLabors.Fonts.Font? _font;
+    private readonly Dictionary<Font, SixLabors.Fonts.Font> _fonts = [];
 
-    public RgbaImage ConvertTextToRgbaImage(string text, int fontSize, Color textColor)
+    /// <inheritdoc />
+    public RgbaImage ConvertTextToRgbaImage(string text, Font font, Color textColor)
     {
-        // Locate the font file or use a fallback
-        var fontPath = File.Exists("C:\\Windows\\Fonts\\arial.ttf")
-            ? "C:\\Windows\\Fonts\\arial.ttf"
-            : "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf";
+        if (string.IsNullOrEmpty(text)) return RgbaImage.Empty;
 
-        // Load the font
-        if (_font == null)
+        if (!_fonts.ContainsKey(font))
         {
-            _fontCollection = new FontCollection();
-            _fontFamily = _fontCollection.Add(fontPath);
-            _font = _fontFamily.Value.CreateFont(fontSize, FontStyle.Regular);
+            using var stream = new MemoryStream(font.Data);
+            var fontCollection = new FontCollection();
+            var fontFamily = fontCollection.Add(stream);
+            var sixLaborsFont = fontFamily.CreateFont(font.Size, FontStyle.Regular);
+            _fonts.Add(font, sixLaborsFont);
         }
 
+        var sixLaborsLoadedFont = _fonts[font];
+
         // Measure the size of the rendered text
-        var textOptions = new RichTextOptions(_font)
+        var textOptions = new RichTextOptions(sixLaborsLoadedFont)
         {
             HorizontalAlignment = HorizontalAlignment.Left,
             VerticalAlignment = VerticalAlignment.Top
@@ -53,7 +55,7 @@ internal class SixLaborsFontRenderingEngine : IFontRenderingEngine
         image.Mutate(ctx =>
         {
             ctx.Clear(SixLabors.ImageSharp.Color.Transparent);
-            ctx.DrawText(text, _font, rgbaTextColor, new PointF(offsetX, offsetY));
+            ctx.DrawText(text, sixLaborsLoadedFont, rgbaTextColor, new PointF(offsetX, offsetY));
         });
 
         // Extract raw RGBA pixel data
@@ -61,5 +63,12 @@ internal class SixLaborsFontRenderingEngine : IFontRenderingEngine
         image.CopyPixelDataTo(pixelData);
 
         return new RgbaImage(pixelData, width, height);
+    }
+
+    /// <inheritdoc />
+    public UI.Coordinates.Size ComputeTextSize(string text, Font font)
+    {
+        var img = ConvertTextToRgbaImage(text, font, Color.Red);
+        return new UI.Coordinates.Size(img.Width, img.Height);
     }
 }

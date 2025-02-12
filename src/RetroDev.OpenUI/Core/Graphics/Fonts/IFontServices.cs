@@ -1,6 +1,6 @@
 ﻿using RetroDev.OpenUI.UI.Coordinates;
 
-namespace RetroDev.OpenUI.Core.Graphics.Font;
+namespace RetroDev.OpenUI.Core.Graphics.Fonts;
 
 public interface IFontServices
 {

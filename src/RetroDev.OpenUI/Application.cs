@@ -1,7 +1,5 @@
 ﻿using RetroDev.OpenUI.Components;
 using RetroDev.OpenUI.Components.Base;
-using RetroDev.OpenUI.Core.Graphics.Font;
-using RetroDev.OpenUI.Core.Graphics.Font.Internal;
 using RetroDev.OpenUI.Core.Windowing;
 using RetroDev.OpenUI.Core.Windowing.Events;
 using RetroDev.OpenUI.Core.Windowing.Events.Internal;
@@ -46,11 +44,6 @@ public class Application : IDisposable
     public ILogger Logger { get; set; }
 
     /// <summary>
-    /// A set of services to manage font.
-    /// </summary>
-    public IFontServices FontServices => new FontServices();
-
-    /// <summary>
     /// Manages all resources.
     /// </summary>
     public IResourceManager ResourceManager { get; }
@@ -58,7 +51,7 @@ public class Application : IDisposable
     /// <summary>
     /// The UIDefinition language manager, loading and generating xml UIDefinition files.
     /// </summary>
-    public UIDefinitionManager UIDefinitionManager => new UIDefinitionManager(this);
+    public UIDefinitionManager UIDefinitionManager => new(this);
 
     /// <summary>
     /// The main theme used in the application.

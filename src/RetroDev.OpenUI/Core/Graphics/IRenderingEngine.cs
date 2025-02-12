@@ -1,5 +1,6 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using RetroDev.OpenUI.Core.Contexts;
+using RetroDev.OpenUI.Core.Graphics.Fonts;
 using RetroDev.OpenUI.Core.Graphics.Shapes;
 using RetroDev.OpenUI.Exceptions;
 using RetroDev.OpenUI.UI.Coordinates;
@@ -60,6 +61,14 @@ public interface IRenderingEngine
     /// If <see langword="null" /> no clipping area will be specified.
     /// </param>
     void Render(Text text, Area area, Area? clippingArea);
+
+    /// <summary>
+    /// Calculates the size to display the given <paramref name="text"/>.
+    /// </summary>
+    /// <param name="text">The text to display.</param>
+    /// <param name="font">The text font.</param>
+    /// <returns>The size to correctly and fully display the given <paramref name="text"/>.</returns>
+    Size ComputeTextSize(string text, Font font);
 
     /// <summary>
     /// This method is invoked when starting the rendering of a frame.

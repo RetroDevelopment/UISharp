@@ -9,6 +9,7 @@ namespace RetroDev.OpenUI.UI.Resources;
 public abstract class EmbeddedResourcesBase(string resourceLocation)
 {
     private readonly string _resourceLocation = resourceLocation;
+    private readonly Dictionary<string, byte[]> _resourceCache = [];
 
     /// <summary>
     /// Loads a resource file with the given <paramref name="resourceName"/>.
@@ -31,12 +32,19 @@ public abstract class EmbeddedResourcesBase(string resourceLocation)
     /// <returns>The binary data contained in the loaded file.</returns>
     protected byte[] LoadEmbeddedBinaryResource(string resourceName)
     {
+        if (_resourceCache.ContainsKey(resourceName))
+        {
+            return _resourceCache[resourceName];
+        }
+
         using var stream = GetEmbeddedResourceStream(resourceName);
 
         // Read the content of the resource
         using var reader = new MemoryStream();
         stream.CopyTo(reader);
-        return reader.ToArray();
+        var data = reader.ToArray();
+        _resourceCache[resourceName] = data;
+        return data;
     }
 
     private Stream GetEmbeddedResourceStream(string resourceName)

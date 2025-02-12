@@ -1,5 +1,9 @@
 ﻿using RetroDev.OpenUI.Components.Core;
 using RetroDev.OpenUI.Components.Core.AutoArea;
+using RetroDev.OpenUI.Core.Contexts;
+using RetroDev.OpenUI.Core.Graphics;
+using RetroDev.OpenUI.Core.Graphics.OpenGL;
+using RetroDev.OpenUI.Core.Windowing.SDL;
 
 namespace RetroDev.OpenUI.Components.Base;
 
@@ -28,23 +32,41 @@ public abstract class UIRoot : UIComponent, IContainer
     /// </summary>
     protected RenderProvider RenderProvider { get; }
 
+    /// <summary>
+    /// The rendering engine responsible of drawing graphics in the viewport.
+    /// </summary>
+    // TODO: remove Canvas and implement retained mode rendering engine
+    public IRenderingEngine RenderingEngine { get; }
+
     public abstract IEnumerable<UIWidget> Children { get; }
 
     /// <summary>
     /// Creates a new root component.
     /// </summary>
     /// <param name="application">The application owning this component.</param>
+    /// <param name="renderingEngine">
+    /// The rendering engine to render this root component. By default the <see cref="OpenGLRenderingEngine"/> with <see cref="SDLOpenGLRenderingContext"/> is created.
+    /// If you want to create another rendering engine (e.g. Vulkan) or you are not using the standard <see cref="SDLWindowManager"/>, you pass an instance of
+    /// </param>
     /// <param name="visibility">Whether the component is rendered or not.</param>
     /// <param name="isFocusable">Whether the component can get focus.</param>
     /// <param name="autoWidth">How to automatically determine this component width.</param>
     /// <param name="autoHeight">How to automatically determine this component height.</param>
     /// <param name="horizontalAlignment">The component horizontal alignment (relative to its <see cref="Parent"/>).</param>
     /// <param name="verticalAlignment">The component vertical alignment (relative to its <see cref="Parent"/>).</param>
-    protected UIRoot(Application application, ComponentVisibility visibility = ComponentVisibility.Visible, bool isFocusable = true, IAutoSize? autoWidth = null, IAutoSize? autoHeight = null, IHorizontalAlignment? horizontalAlignment = null, IVerticalAlignment? verticalAlignment = null) : base(application, visibility, isFocusable, autoWidth, autoHeight, horizontalAlignment, verticalAlignment)
+    protected UIRoot(Application application,
+                     IRenderingEngine? renderingEngine = null,
+                     ComponentVisibility visibility = ComponentVisibility.Visible,
+                     bool isFocusable = true,
+                     IAutoSize? autoWidth = null,
+                     IAutoSize? autoHeight = null,
+                     IHorizontalAlignment? horizontalAlignment = null,
+                     IVerticalAlignment? verticalAlignment = null) : base(application, visibility, isFocusable, autoWidth, autoHeight, horizontalAlignment, verticalAlignment)
     {
         Invalidator = new Invalidator();
         MeasureProvider = new MeasureProvider(Invalidator);
         RenderProvider = new RenderProvider(Invalidator);
+        RenderingEngine = renderingEngine ?? new OpenGLRenderingEngine(application, new SDLOpenGLRenderingContext(application));
     }
 
     /// <summary>

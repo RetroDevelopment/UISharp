@@ -6,4 +6,7 @@
 /// <param name="Data">The image rgba data.</param>
 /// <param name="Width">The image width in pixels.</param>
 /// <param name="Height">The image height in pixels.</param>
-public record RgbaImage(byte[] Data, int Width, int Height);
+public record RgbaImage(byte[] Data, int Width, int Height)
+{
+    public static RgbaImage Empty => new([], 0, 0);
+}

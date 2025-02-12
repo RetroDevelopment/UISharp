@@ -1,7 +1,7 @@
 ﻿using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using RetroDev.OpenUI.Core.Contexts;
-using RetroDev.OpenUI.Core.Graphics.Font.Internal;
+using RetroDev.OpenUI.Core.Graphics.Fonts;
 using RetroDev.OpenUI.Core.Graphics.Shapes;
 using RetroDev.OpenUI.UI.Coordinates;
 using RetroDev.OpenUI.UI.Resources;
@@ -60,6 +60,7 @@ public class OpenGLRenderingEngine : IRenderingEngine
     }
 
     private readonly Application _application;
+    private readonly IFontRenderingEngine _fontEngine;
     private readonly IOpenGLRenderingContext _context;
     private readonly ShaderProgram _shader;
     private readonly Dictionary<string, int> _textCache = [];
@@ -93,11 +94,12 @@ public class OpenGLRenderingEngine : IRenderingEngine
     /// </summary>
     public IRenderingContext RenderingContext => _context;
 
-    public OpenGLRenderingEngine(Application application, IOpenGLRenderingContext context)
+    public OpenGLRenderingEngine(Application application, IOpenGLRenderingContext context, IFontRenderingEngine? fontEngine = null)
     {
         _application = application;
         _application.LifeCycle.ThrowIfNotOnUIThread();
         _context = context;
+        _fontEngine = fontEngine ?? new SixLaborsFontRenderingEngine();
 
         _application.Logger.LogInfo("Using OpenGL rendering");
         _application.Logger.LogDebug("OpenGL Loading shaders");
@@ -205,7 +207,7 @@ public class OpenGLRenderingEngine : IRenderingEngine
 
         if (!_textCache.TryGetValue(textKey, out var textureId))
         {
-            var textureImage = new SixLaborsFontRenderingEngine().ConvertTextToRgbaImage(text.Value, 20, text.ForegroundColor);
+            var textureImage = _fontEngine.ConvertTextToRgbaImage(text.Value, text.Font, text.ForegroundColor);
             textureId = CreateTexture(textureImage);
             _textCache[textKey] = textureId;
         }
@@ -221,6 +223,15 @@ public class OpenGLRenderingEngine : IRenderingEngine
         _shader.SetOffsetMultiplier(OpenTK.Mathematics.Vector2.Zero);
         _modelGenerator.Rectangle.Render(text.TextureID.Value);
     }
+
+    /// <summary>
+    /// Calculates the size to display the given <paramref name="text"/>.
+    /// </summary>
+    /// <param name="text">The text to display.</param>
+    /// <param name="font">The text font.</param>
+    /// <returns>The size to correctly and fully display the given <paramref name="text"/>.</returns>
+    public Size ComputeTextSize(string text, Font font) =>
+        _fontEngine.ComputeTextSize(text, font);
 
     /// <summary>
     /// This method is invoked when starting the rendering of a frame.
