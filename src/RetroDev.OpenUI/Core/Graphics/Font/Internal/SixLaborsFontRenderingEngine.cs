@@ -38,7 +38,8 @@ internal class SixLaborsFontRenderingEngine : IFontRenderingEngine
         var advance = TextMeasurer.MeasureAdvance(text, textOptions);
 
         var width = (int)Math.Floor(advance.Left + advance.Width);
-        var height = (int)Math.Floor(advance.Top + advance.Height);
+        // + 1 to avoid rounding errors
+        var height = (int)Math.Floor(advance.Top + advance.Height) + 1;
 
         // Create the image with transparent background
         using var image = new Image<Rgba32>(width, height);
