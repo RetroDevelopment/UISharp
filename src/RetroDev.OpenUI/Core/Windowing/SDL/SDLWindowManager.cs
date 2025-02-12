@@ -60,7 +60,9 @@ public class SDLWindowManager : IWindowManager
                 throw new UIInitializationException("SDL environment can only be initialized once and in one thread.");
             }
 
-            LoggingUtils.SDLCheck(() => SDL2.SDL.SDL_InitSubSystem(SDL_INIT_VIDEO), _logger);
+            LoggingUtils.SDLCheck(() => SDL_InitSubSystem(SDL_INIT_VIDEO), _logger);
+            SDL_GetVersion(out var version);
+            _logger.LogInfo($"Window manger based on SDL {version.major}.{version.minor}.{version.patch}");
             s_isInitialized = true;
         }
     }
@@ -148,6 +150,48 @@ public class SDLWindowManager : IWindowManager
         ExecuteOnWindow(windowId, id => SDL_SetWindowResizable(id.Handle, resizable ? SDL_bool.SDL_TRUE : SDL_bool.SDL_FALSE));
 
     /// <summary>
+    /// Focuses the window with <paramref name="windowId"/>.
+    /// </summary>
+    /// <param name="windowId">The identifier of the window to focus.</param>
+    public void FocusWindow(IWindowId windowId) =>
+        ExecuteOnWindow(windowId, id => SDL_RaiseWindow(id.Handle));
+
+    /// <summary>
+    /// Maximizes the window with <paramref name="windowID"/>.
+    /// </summary>
+    /// <param name="windowId">The identifier of the window to maximize.</param>
+    public void Maximize(IWindowId windowID) =>
+        ExecuteOnWindow(windowID, id => SDL_MaximizeWindow(id.Handle));
+
+    /// <summary>
+    /// Minimizes the window with <paramref name="windowID"/>.
+    /// </summary>
+    /// <param name="windowId">The identifier of the window to minimize.</param>
+    public void Minimize(IWindowId windowID) =>
+        ExecuteOnWindow(windowID, id => SDL_MinimizeWindow(id.Handle));
+
+    /// <summary>
+    /// Sets the window with <paramref name="windowID"/> in full screen mode.
+    /// </summary>
+    /// <param name="windowId">The identifier of the window to set in full screen.</param>
+    public void SetFullScreen(IWindowId windowID) =>
+        ExecuteOnWindow(windowID, id => SDL_SetWindowFullscreen(id.Handle, (uint)SDL_WindowFlags.SDL_WINDOW_FULLSCREEN));
+
+    /// <summary>
+    /// Restores the window with <paramref name="windowID"/> from full screen mode.
+    /// </summary>
+    /// <param name="windowId">The identifier of the window to restore from full screen.</param>
+    public void RestoreFullScreen(IWindowId windowID) =>
+        ExecuteOnWindow(windowID, id => SDL_SetWindowFullscreen(id.Handle, 0));
+
+    /// <summary>
+    /// Restores maximize and minimize state of the window with <paramref name="windowID"/>.
+    /// </summary>
+    /// <param name="windowId">The identifier of the window to maximize.</param>
+    public void RestoreWindow(IWindowId windowId) =>
+        ExecuteOnWindow(windowId, id => SDL_RestoreWindow(id.Handle));
+
+    /// <summary>
     /// Dispose the window and deallocates all the graphical resources.
     /// </summary>
     public void Shutdown()
@@ -164,6 +208,19 @@ public class SDLWindowManager : IWindowManager
         if (windowId is SDLWindowId sdlWindowId)
         {
             action(sdlWindowId);
+        }
+        else
+        {
+            throw new ArgumentException($"The given ID {windowId} is not an SDL window ID");
+        }
+    }
+
+    private TResult ExecuteOnWindow<TResult>(IWindowId windowId, Func<SDLWindowId, TResult> callback)
+    {
+        _ensureOnUIThread();
+        if (windowId is SDLWindowId sdlWindowId)
+        {
+            return callback(sdlWindowId);
         }
         else
         {

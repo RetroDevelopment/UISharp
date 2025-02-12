@@ -75,6 +75,42 @@ public interface IWindowManager
     void SetResizable(IWindowId windowId, bool resizable);
 
     /// <summary>
+    /// Focuses the window with <paramref name="windowId"/>.
+    /// </summary>
+    /// <param name="windowId">The identifier of the window to focus.</param>
+    void FocusWindow(IWindowId windowId);
+
+    /// <summary>
+    /// Maximizes the window with <paramref name="windowID"/>.
+    /// </summary>
+    /// <param name="windowId">The identifier of the window to maximize.</param>
+    void Maximize(IWindowId windowID);
+
+    /// <summary>
+    /// Minimizes the window with <paramref name="windowID"/>.
+    /// </summary>
+    /// <param name="windowId">The identifier of the window to minimize.</param>
+    void Minimize(IWindowId windowID);
+
+    /// <summary>
+    /// Sets the window with <paramref name="windowID"/> in full screen mode.
+    /// </summary>
+    /// <param name="windowId">The identifier of the window to set in full screen.</param>
+    void SetFullScreen(IWindowId windowID);
+
+    /// <summary>
+    /// Restores the window with <paramref name="windowID"/> from full screen mode.
+    /// </summary>
+    /// <param name="windowId">The identifier of the window to restore from full screen.</param>
+    public void RestoreFullScreen(IWindowId windowID);
+
+    /// <summary>
+    /// Restores maximize and minimize state of the window with <paramref name="windowID"/>.
+    /// </summary>
+    /// <param name="windowId">The identifier of the window to maximize.</param>
+    void RestoreWindow(IWindowId windowId);
+
+    /// <summary>
     /// Closes the UI environment. Make sure that no other SDL operation is performed after calling this method!
     /// </summary>
     public void Shutdown();

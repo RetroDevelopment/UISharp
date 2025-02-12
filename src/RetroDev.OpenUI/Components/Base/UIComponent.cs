@@ -54,68 +54,68 @@ public abstract class UIComponent
     /// <summary>
     /// Mouse button press inside <see cref="this"/> window.
     /// </summary>
-    public event TypeSafeEventHandler<UIComponent, MouseEventArgs> MousePress = (_, _) => { };
+    public event TypeSafeEventHandler<UIComponent, MouseEventArgs>? MousePress;
 
     /// <summary>
     /// Mouse button release inside <see cref="this"/> window.
     /// </summary>
-    public event TypeSafeEventHandler<UIComponent, MouseEventArgs> MouseRelease = (_, _) => { };
+    public event TypeSafeEventHandler<UIComponent, MouseEventArgs>? MouseRelease;
 
     /// <summary>
     /// Mouse position changed inside <see cref="this"/> window.
     /// </summary>
-    public event TypeSafeEventHandler<UIComponent, MouseEventArgs> MouseMove = (_, _) => { };
+    public event TypeSafeEventHandler<UIComponent, MouseEventArgs>? MouseMove;
 
     /// <summary>
     /// Mouse dragging. This means that a left click has happend whithin <see cref="this"/> compnent <see cref="AbsoluteDrawingArea"/>
     /// and the mouse is moving while still pressed.
     /// </summary>
-    public event TypeSafeEventHandler<UIComponent, MouseDragEventArgs> MouseDrag = (_, _) => { };
+    public event TypeSafeEventHandler<UIComponent, MouseDragEventArgs>? MouseDrag;
 
     /// <summary>
     /// Mouse dragging start.
     /// </summary>
-    public event TypeSafeEventHandler<UIComponent, MouseEventArgs> MouseDragBegin = (_, _) => { };
+    public event TypeSafeEventHandler<UIComponent, MouseEventArgs>? MouseDragBegin;
 
     /// <summary>
     /// Mouse dragging ends.
     /// </summary>
-    public event TypeSafeEventHandler<UIComponent, MouseEventArgs> MouseDragEnd = (_, _) => { };
+    public event TypeSafeEventHandler<UIComponent, MouseEventArgs>? MouseDragEnd;
 
     /// <summary>
     /// Key is pressed inside <see cref="this"/> <see cref="UIComponent"/>.
     /// </summary>
-    public event TypeSafeEventHandler<UIComponent, KeyEventArgs> KeyPress = (_, _) => { };
+    public event TypeSafeEventHandler<UIComponent, KeyEventArgs>? KeyPress;
 
     /// <summary>
     /// Key is released inside <see langword="this"/> <see cref="UIComponent"/>.
     /// </summary>
-    public event TypeSafeEventHandler<UIComponent, KeyEventArgs> KeyRelease = (_, _) => { };
+    public event TypeSafeEventHandler<UIComponent, KeyEventArgs>? KeyRelease;
 
     /// <summary>
     /// Text is inserted in <see langword="this"/> <see cref="UIComponent"/>.
     /// </summary>
-    public event TypeSafeEventHandler<UIComponent, TextInputEventArgs> TextInput = (_, _) => { };
+    public event TypeSafeEventHandler<UIComponent, TextInputEventArgs>? TextInput;
 
     /// <summary>
     /// Mouse wheel has been moved.
     /// </summary>
-    public event TypeSafeEventHandler<UIComponent, MouseWheelEventArgs> MouseWheel = (_, _) => { };
+    public event TypeSafeEventHandler<UIComponent, MouseWheelEventArgs>? MouseWheel;
 
     /// <summary>
     /// Triggered when <see langword="this" /> <see cref="UIComponent"/> drawing area changes.
     /// </summary>
-    public event TypeSafeEventHandler<UIComponent, RenderingAreaEventArgs> RenderingAreaChange = (_, _) => { };
+    public event TypeSafeEventHandler<UIComponent, RenderingAreaEventArgs>? RenderingAreaChange;
 
     /// <summary>
     /// A frame need to be rendered. Use this event to render at the bottom of the children.
     /// </summary>
-    public event TypeSafeEventHandler<UIComponent, RenderingEventArgs> RenderFrame = (_, _) => { };
+    public event TypeSafeEventHandler<UIComponent, RenderingEventArgs>? RenderFrame;
 
     /// <summary>
     /// The children components have been rendered. Use this event handler to render on top of the children.
     /// </summary>
-    public event TypeSafeEventHandler<UIComponent, RenderingEventArgs> ChildrenRendered = (_, _) => { };
+    public event TypeSafeEventHandler<UIComponent, RenderingEventArgs>? ChildrenRendered;
 
     /// <summary>
     /// The application in which <see langword="this"/> <see cref="UIComponent"/> runs.
@@ -382,37 +382,37 @@ public abstract class UIComponent
 
     protected void OnMousePress(MouseEventArgs e)
     {
-        MousePress.Invoke(this, e);
+        MousePress?.Invoke(this, e);
     }
 
     protected void OnMouseRelease(MouseEventArgs e)
     {
-        MouseRelease.Invoke(this, e);
+        MouseRelease?.Invoke(this, e);
     }
 
     protected void OnMouseMove(MouseEventArgs e)
     {
-        MouseMove.Invoke(this, e);
+        MouseMove?.Invoke(this, e);
     }
 
     protected void OnKeyPress(KeyEventArgs e)
     {
-        KeyPress.Invoke(this, e);
+        KeyPress?.Invoke(this, e);
     }
 
     protected void OnKeyRelease(KeyEventArgs e)
     {
-        KeyRelease.Invoke(this, e);
+        KeyRelease?.Invoke(this, e);
     }
 
     protected void OnTextInput(TextInputEventArgs e)
     {
-        TextInput.Invoke(this, e);
+        TextInput?.Invoke(this, e);
     }
 
     protected void OnMouseWheel(MouseWheelEventArgs e)
     {
-        MouseWheel.Invoke(this, e);
+        MouseWheel?.Invoke(this, e);
     }
 
     internal IEnumerable<UIComponent> GetComponentTreeNodesDepthFirstSearch() =>
@@ -426,11 +426,11 @@ public abstract class UIComponent
         {
             renderingArgs.Canvas.ContainerAbsoluteDrawingArea = _absoluteDrawingArea;
             renderingArgs.Canvas.ClippingArea = _clipArea;
-            RenderFrame.Invoke(this, renderingArgs);
+            RenderFrame?.Invoke(this, renderingArgs);
             _childNodes.ForEach(c => c.OnRenderFrame(renderingArgs));
             renderingArgs.Canvas.ContainerAbsoluteDrawingArea = _absoluteDrawingArea;
             renderingArgs.Canvas.ClippingArea = _clipArea;
-            ChildrenRendered.Invoke(this, renderingArgs);
+            ChildrenRendered?.Invoke(this, renderingArgs);
         }
     }
 
@@ -496,14 +496,14 @@ public abstract class UIComponent
         // And finally remove ActualSize property which is dangerous.
         // Also make sure all drawing areas of children are re calculated recursively in the sub tree.
         Validate();
-        RenderingAreaChange.Invoke(this, new RenderingAreaEventArgs(_relativeDrawingArea));
+        RenderingAreaChange?.Invoke(this, new RenderingAreaEventArgs(_relativeDrawingArea));
     }
 
     private void UIComponent_MousePress(UIComponent sender, MouseEventArgs e)
     {
         if (e.Button == MouseButton.Left)
         {
-            MouseDragBegin.Invoke(this, e);
+            MouseDragBegin?.Invoke(this, e);
             _mouseDragPointAbsolute = e.AbsoluteLocation;
             _mouseLastDragPointAbsolute = e.AbsoluteLocation;
         }
@@ -538,7 +538,7 @@ public abstract class UIComponent
         _mouseAbsoluteLocation = mouseEventArgs.AbsoluteLocation;
         if (mouseEventArgs.AbsoluteLocation.IsWithin(_absoluteDrawingArea) && Visibility.Value == ComponentVisibility.Visible && Enabled.Value)
         {
-            MouseMove.Invoke(this, new MouseEventArgs(mouseEventArgs.AbsoluteLocation,
+            MouseMove?.Invoke(this, new MouseEventArgs(mouseEventArgs.AbsoluteLocation,
                                                       mouseEventArgs.AbsoluteLocation - _absoluteDrawingArea.TopLeft,
                                                       mouseEventArgs.Button));
         }
@@ -547,7 +547,7 @@ public abstract class UIComponent
         {
             var offset = mouseEventArgs.AbsoluteLocation - _mouseLastDragPointAbsolute;
             _mouseLastDragPointAbsolute = mouseEventArgs.AbsoluteLocation;
-            MouseDrag.Invoke(this, new MouseDragEventArgs(_mouseDragPointAbsolute, _mouseLastDragPointAbsolute, offset));
+            MouseDrag?.Invoke(this, new MouseDragEventArgs(_mouseDragPointAbsolute, _mouseLastDragPointAbsolute, offset));
         }
     }
 
@@ -559,12 +559,12 @@ public abstract class UIComponent
 
         if (mouseEventArgs.AbsoluteLocation.IsWithin(_absoluteDrawingArea) && Visibility.Value == ComponentVisibility.Visible && Enabled.Value)
         {
-            MouseRelease.Invoke(this, e);
+            MouseRelease?.Invoke(this, e);
         }
 
         if (_mouseDragPointAbsolute != null)
         {
-            MouseDragEnd.Invoke(this, e);
+            MouseDragEnd?.Invoke(this, e);
         }
 
         _mouseDragPointAbsolute = null;
@@ -575,7 +575,7 @@ public abstract class UIComponent
     {
         if (mouseEventArgs.AbsoluteLocation.IsWithin(_absoluteDrawingArea) && Visibility.Value == ComponentVisibility.Visible && Enabled.Value)
         {
-            MousePress.Invoke(this, new MouseEventArgs(mouseEventArgs.AbsoluteLocation,
+            MousePress?.Invoke(this, new MouseEventArgs(mouseEventArgs.AbsoluteLocation,
                                                        mouseEventArgs.AbsoluteLocation - _absoluteDrawingArea.TopLeft,
                                                        mouseEventArgs.Button));
         }
@@ -585,7 +585,7 @@ public abstract class UIComponent
     {
         if (Visibility.Value == ComponentVisibility.Visible && (Focus.Value || !Focusable.Value))
         {
-            KeyPress.Invoke(this, keyEventArgs);
+            KeyPress?.Invoke(this, keyEventArgs);
         }
     }
 
@@ -593,7 +593,7 @@ public abstract class UIComponent
     {
         if (Visibility.Value == ComponentVisibility.Visible && (Focus.Value || this is UIContainer))
         {
-            KeyRelease.Invoke(this, keyEventArgs);
+            KeyRelease?.Invoke(this, keyEventArgs);
         }
     }
 
@@ -601,7 +601,7 @@ public abstract class UIComponent
     {
         if (Visibility.Value == ComponentVisibility.Visible && (Focus.Value || this is UIContainer))
         {
-            TextInput.Invoke(this, textInputEventArgs);
+            TextInput?.Invoke(this, textInputEventArgs);
         }
     }
 
@@ -609,7 +609,7 @@ public abstract class UIComponent
     {
         if (Visibility.Value == ComponentVisibility.Visible && _mouseAbsoluteLocation != null && _mouseAbsoluteLocation.IsWithin(_absoluteDrawingArea))
         {
-            MouseWheel.Invoke(this, mouseWheelEventArgs);
+            MouseWheel?.Invoke(this, mouseWheelEventArgs);
         }
     }
 

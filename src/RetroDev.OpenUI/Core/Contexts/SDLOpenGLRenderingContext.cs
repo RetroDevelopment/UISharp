@@ -1,8 +1,6 @@
-﻿using RetroDev.OpenUI.Components;
-using RetroDev.OpenUI.Core.Windowing.SDL;
+﻿using RetroDev.OpenUI.Core.Windowing.SDL;
 using RetroDev.OpenUI.Exceptions;
 using RetroDev.OpenUI.Utils;
-using SDL2;
 using static SDL2.SDL;
 
 namespace RetroDev.OpenUI.Core.Contexts;
@@ -24,12 +22,15 @@ public class SDLOpenGLRenderingContext : ISDLRenderingContext, IOpenGLRenderingC
     /// Creates a new rendering context.
     /// </summary>
     /// <param name="application">The application that owns this context.</param>
+    /// <param name="openGlVersion">The OpenGL verison. If <see langword="null" /> the defulat version will be used.</param>
     /// <exception cref="UIInitializationException">If an error occurs during window creation.</exception>
-    internal SDLOpenGLRenderingContext(Application application)
+    internal SDLOpenGLRenderingContext(Application application, Version? openGlVersion = null)
     {
         _application = application;
-        LoggingUtils.SDLCheck(() => SDL_GL_SetAttribute(SDL_GLattr.SDL_GL_CONTEXT_MAJOR_VERSION, 3), _application.Logger);
-        LoggingUtils.SDLCheck(() => SDL_GL_SetAttribute(SDL_GLattr.SDL_GL_CONTEXT_MINOR_VERSION, 3), _application.Logger);
+        var openglActionVersion = openGlVersion ?? new Version(3, 3);
+        _application.Logger.LogInfo($"Using OpenGL version {openglActionVersion}");
+        LoggingUtils.SDLCheck(() => SDL_GL_SetAttribute(SDL_GLattr.SDL_GL_CONTEXT_MAJOR_VERSION, openglActionVersion.Major), _application.Logger);
+        LoggingUtils.SDLCheck(() => SDL_GL_SetAttribute(SDL_GLattr.SDL_GL_CONTEXT_MINOR_VERSION, openglActionVersion.Minor), _application.Logger);
         LoggingUtils.SDLCheck(() => SDL_GL_SetAttribute(SDL_GLattr.SDL_GL_CONTEXT_PROFILE_MASK, SDL_GLprofile.SDL_GL_CONTEXT_PROFILE_CORE), _application.Logger);
 
         // Enable multisampling and set the number of samples
@@ -44,7 +45,7 @@ public class SDLOpenGLRenderingContext : ISDLRenderingContext, IOpenGLRenderingC
 
         if (handle == nint.Zero) throw new UIInitializationException($"Error creating window: {SDL_GetError()}");
         WindowId = new SDLWindowId(handle);
-        _openGlContext = SDL.SDL_GL_CreateContext(handle);
+        _openGlContext = SDL_GL_CreateContext(handle);
         if (_openGlContext == nint.Zero)
         {
             throw new UIInitializationException($"Unable to create OpenGL context: {SDL_GetError()}");

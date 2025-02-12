@@ -22,7 +22,6 @@ internal class SDLEventSystem(Application application) : IEventSystem
 
     private Application _application = application;
     private bool _invalidated = false; // TODO: add invalidation logic per component. And maybe glScissor for retained mode. Or detect actual UI property change. If not do not invalidate.
-    private bool _quit = false;
 
     /// <summary>
     /// An event that indicates to quit the application.
@@ -79,7 +78,7 @@ internal class SDLEventSystem(Application application) : IEventSystem
     /// <summary>
     /// The window is closed by clicking on the close button or by shutting it down.
     /// </summary>
-    public event TypeSafeEventHandler<IEventSystem, WindowEventArgs<EventArgs>>? WindowClose;
+    public event TypeSafeEventHandler<IEventSystem, WindowEventArgs<EventArgs>>? WindowCloseRequest;
 
     /// <summary>
     /// The window is maximized.
@@ -90,6 +89,21 @@ internal class SDLEventSystem(Application application) : IEventSystem
     /// The window is minimized.
     /// </summary>
     public event TypeSafeEventHandler<IEventSystem, WindowEventArgs<EventArgs>>? WindowMinimized;
+
+    /// <summary>
+    /// The window maximize/minimzed status is removed.
+    /// </summary>
+    public event TypeSafeEventHandler<IEventSystem, WindowEventArgs<EventArgs>>? WindowRestored;
+
+    /// <summary>
+    /// The window gains focus.
+    /// </summary>
+    public event TypeSafeEventHandler<IEventSystem, WindowEventArgs<EventArgs>>? WindowFocusGain;
+
+    /// <summary>
+    /// The window looses focus.
+    /// </summary>
+    public event TypeSafeEventHandler<IEventSystem, WindowEventArgs<EventArgs>>? WindowFocusLost;
 
     /// <summary>
     /// The mouse wheel has been moved.
@@ -119,6 +133,7 @@ internal class SDLEventSystem(Application application) : IEventSystem
 
         do
         {
+            if ((int)currentEvent.type == (int)SDL_CustomEventType.SDL_QUIT) break;
             switch (currentEvent.type)
             {
                 case SDL_EventType.SDL_MOUSEBUTTONDOWN:
@@ -201,10 +216,9 @@ internal class SDLEventSystem(Application application) : IEventSystem
                             WindowResize?.Invoke(this, resizedArgs);
                             break;
                         case SDL_WindowEventID.SDL_WINDOWEVENT_CLOSE:
-                        case SDL_WindowEventID.SDL_WINDOWEVENT_HIDDEN:
                             var closeArgs = new WindowEventArgs<EventArgs>(windowId, EventArgs.Empty);
                             closeArgs.Log("windowClose", _application.Logger);
-                            WindowClose?.Invoke(this, closeArgs);
+                            WindowCloseRequest?.Invoke(this, closeArgs);
                             break;
                         case SDL_WindowEventID.SDL_WINDOWEVENT_SHOWN:
                             var showArgs = new WindowEventArgs<EventArgs>(windowId, EventArgs.Empty);
@@ -221,6 +235,21 @@ internal class SDLEventSystem(Application application) : IEventSystem
                             minimzeArgs.Log("windowMinimize", _application.Logger);
                             WindowMinimized?.Invoke(this, minimzeArgs);
                             break;
+                        case SDL_WindowEventID.SDL_WINDOWEVENT_RESTORED:
+                            var restoreArgs = new WindowEventArgs<EventArgs>(windowId, EventArgs.Empty);
+                            restoreArgs.Log("windowRestore", _application.Logger);
+                            WindowRestored?.Invoke(this, restoreArgs);
+                            break;
+                        case SDL_WindowEventID.SDL_WINDOWEVENT_FOCUS_GAINED:
+                            var focusGainArgs = new WindowEventArgs<EventArgs>(windowId, EventArgs.Empty);
+                            focusGainArgs.Log("windowFocusGain", _application.Logger);
+                            WindowFocusGain?.Invoke(this, focusGainArgs);
+                            break;
+                        case SDL_WindowEventID.SDL_WINDOWEVENT_FOCUS_LOST:
+                            var focusLostArgs = new WindowEventArgs<EventArgs>(windowId, EventArgs.Empty);
+                            focusLostArgs.Log("windowFocusGain", _application.Logger);
+                            WindowFocusLost?.Invoke(this, focusLostArgs);
+                            break;
                     }
                     break;
                 case SDL_EventType.SDL_MOUSEWHEEL:
@@ -233,7 +262,7 @@ internal class SDLEventSystem(Application application) : IEventSystem
             }
             // Exit the loop if more than 10 milliseconds have passed to render frame (otherwise the loop can last too long skipping frames)
             if (stopwatch.ElapsedMilliseconds > 10) break;
-        } while (SDL_PollEvent(out currentEvent) != 0 && !_quit);
+        } while (SDL_PollEvent(out currentEvent) != 0);
 
         SDL_StopTextInput();
         if (_invalidated) EmitRenderingEvents();
@@ -252,12 +281,15 @@ internal class SDLEventSystem(Application application) : IEventSystem
     }
 
     /// <summary>
-    /// Quits the event processing.
+    /// Terminates the event queue processing.
     /// </summary>
-    public void Quit()
+    /// <param name="emitQuitEvent">Whether to emit <see cref="ApplicationQuit"/>.</param>
+    public void Quit(bool emitQuitEvent)
     {
-        _quit = true;
-        ApplicationQuit?.Invoke(this, EventArgs.Empty);
+        var quitEvent = new SDL_Event();
+        quitEvent.type = (SDL_EventType)SDL_CustomEventType.SDL_QUIT; // Set the event type
+        SDL_PushEvent(ref quitEvent);
+        if (emitQuitEvent) ApplicationQuit?.Invoke(this, EventArgs.Empty);
     }
 
     private static string GetString(SDL_TextInputEvent textInputEvent)

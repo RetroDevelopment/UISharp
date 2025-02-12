@@ -41,6 +41,27 @@ public class Window : UIRoot
         QuitApplication
     };
 
+    /// <summary>
+    /// Indicates a special window status that alters the window rendering area.
+    /// </summary>
+    public enum WindowSizeStatus
+    {
+        /// <summary>
+        /// The window occupies the rendering area size.
+        /// </summary>
+        None,
+
+        /// <summary>
+        /// The window is maximized and it occupise the full screen.
+        /// </summary>
+        Maximized,
+
+        /// <summary>
+        /// The window is minimized.
+        /// </summary>
+        Minimized
+    }
+
     private readonly IRenderingEngine _renderingEngine;
     private readonly IWindowId _windowId;
 
@@ -49,6 +70,9 @@ public class Window : UIRoot
     // TODO: consider pushing the event in a priority queue to be done before rendering.
     // Let's see when we will have implement an event queue.
     private bool _scheduleVisibilityChange = false;
+
+    private Window? _modalChild;
+    private Window? _modalOwner;
 
     /// <summary>
     /// Raised when <see langword="this" /> <see cref="Window"/> has been initialized.
@@ -72,19 +96,12 @@ public class Window : UIRoot
     public event TypeSafeEventHandler<Window, EventArgs>? WindowOpen;
 
     /// <summary>
-    /// Raised when the window is closed.
+    /// Raised when the window manager requests that the window is closed.
+    /// Note that this does not necessarely mean that the window will be closed (see <see cref="CloseBehavior"/>).
+    /// If you want to be notified when a window is actually closed (meaning hidden) use the <see cref="UIComponent.Visibility"/> <see cref="BindableProperty{TValue}.ValueChange"/>
+    /// event.
     /// </summary>
-    public event TypeSafeEventHandler<Window, EventArgs>? WindowClose;
-
-    /// <summary>
-    /// Raised when the window is maximized.
-    /// </summary>
-    public event TypeSafeEventHandler<Window, EventArgs>? WindowMaximized;
-
-    /// <summary>
-    /// Raised when the window is minimized.
-    /// </summary>
-    public event TypeSafeEventHandler<Window, EventArgs>? WindowMinimized;
+    public event TypeSafeEventHandler<Window, EventArgs>? WindowCloseRequest;
 
     /// <inheritdoc/>
     public override IEnumerable<UIWidget> Children => GetChildrenNodes();
@@ -107,6 +124,35 @@ public class Window : UIRoot
     public UIProperty<Window, WindowCloseBehavior> CloseBehavior { get; }
 
     /// <summary>
+    /// The special status altering the window rendering area.
+    /// </summary>
+    public UIProperty<Window, WindowSizeStatus> SizeStatus { get; }
+
+    /// <summary>
+    /// Whether the window is displayed in full screen.
+    /// </summary>
+    public UIProperty<Window, bool> FullScreen { get; }
+
+    /// <summary>
+    /// A <see cref="Window"/> that acts as modal for <see langword="this" /> window.
+    /// When this property is not <see langword="null" />, the assigned window is assumed to be modal
+    /// and all window events directed to this <see langword="this" /> <see cref="Window"/> will be discarded.
+    /// </summary>
+    public Window? ModalChild
+    {
+        get
+        {
+            Application.LifeCycle.ThrowIfNotOnUIThread();
+            return _modalChild;
+        }
+        set
+        {
+            Application.LifeCycle.ThrowIfNotOnUIThread();
+            _modalChild = value;
+        }
+    }
+
+    /// <summary>
     /// Creates a new window.
     /// </summary>
     /// <param name="application">The application owning this window.</param>
@@ -126,7 +172,11 @@ public class Window : UIRoot
         Title = new UIProperty<Window, string>(this, string.Empty);
         Resizable = new UIProperty<Window, bool>(this, true);
         CloseBehavior = new UIProperty<Window, WindowCloseBehavior>(this, application.Windows.Count() > 1 ? WindowCloseBehavior.HideWindow : WindowCloseBehavior.QuitApplication);
+        SizeStatus = new UIProperty<Window, WindowSizeStatus>(this, WindowSizeStatus.None);
+        FullScreen = new UIProperty<Window, bool>(this, false);
         UpdateCloseBehavior();
+
+        FullScreen.ValueChange += FullScreen_ValueChange;
 
         Application.EventSystem.Render += EventSystem_Render;
         Invalidate();
@@ -147,9 +197,12 @@ public class Window : UIRoot
         application.EventSystem.WindowResize += EventSystem_WindowResize;
         application.EventSystem.MouseWheel += EventSystem_MouseWheel;
         application.EventSystem.WindowOpen += EventSystem_WindowOpen;
-        application.EventSystem.WindowClose += EventSystem_WindowClose;
+        application.EventSystem.WindowCloseRequest += EventSystem_WindowCloseRequest;
         application.EventSystem.WindowMaximized += EventSystem_WindowMaximized;
         application.EventSystem.WindowMinimized += EventSystem_WindowMinimized;
+        application.EventSystem.WindowRestored += EventSystem_WindowRestored;
+        application.EventSystem.WindowFocusGain += EventSystem_WindowFocusGain;
+        application.EventSystem.WindowFocusLost += EventSystem_WindowFocusLost;
         // TODO remove events on dispose?
     }
 
@@ -177,6 +230,38 @@ public class Window : UIRoot
     /// Measures all drawing areas necessary to render the window components.
     /// </summary>
     public void Measure() => MeasureProvider.Measure();
+
+    /// <summary>
+    /// Shows <see langword="this" /> <see cref="Window"/>.
+    /// </summary>
+    public void Show()
+    {
+        Visibility.Value = ComponentVisibility.Visible;
+    }
+
+    /// <summary>
+    /// Shows <see langword="this" /> <see cref="Window"/> as modal.
+    /// </summary>
+    /// <param name="owner">The window for which <see langword="this"/> <see cref="Window"/> is modal.</param>
+    public void ShowModal(Window owner)
+    {
+        owner.ModalChild = this;
+        _modalOwner = owner;
+        Show();
+    }
+
+    /// <summary>
+    /// Closes <see langword="this" /> <see cref="Window"/>.
+    /// </summary>
+    public void Close()
+    {
+        Visibility.Value = ComponentVisibility.Hidden;
+        if (_modalOwner != null)
+        {
+            _modalOwner._modalChild = null;
+            _modalOwner = null;
+        }
+    }
 
     /// <inheritdoc/>
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize)
@@ -226,7 +311,7 @@ public class Window : UIRoot
 
     private void EventSystem_MousePress(object? sender, WindowEventArgs<MouseEventArgs> windowArgs)
     {
-        if (windowArgs.WindowId.Equals(_windowId))
+        if (ShouldPropagateEvent(windowArgs))
         {
             OnMousePress(windowArgs.Args);
         }
@@ -234,16 +319,15 @@ public class Window : UIRoot
 
     private void EventSystem_MouseRelease(object? sender, WindowEventArgs<MouseEventArgs> windowArgs)
     {
-        if (windowArgs.WindowId.Equals(_windowId))
+        if (ShouldPropagateEvent(windowArgs))
         {
             OnMouseRelease(windowArgs.Args);
         }
-
     }
 
     private void EventSystem_MouseMove(object? sender, WindowEventArgs<MouseEventArgs> windowArgs)
     {
-        if (windowArgs.WindowId.Equals(_windowId))
+        if (ShouldPropagateEvent(windowArgs))
         {
             OnMouseMove(windowArgs.Args);
         }
@@ -251,7 +335,7 @@ public class Window : UIRoot
 
     private void EventSystem_KeyPress(object? sender, WindowEventArgs<KeyEventArgs> windowArgs)
     {
-        if (windowArgs.WindowId.Equals(_windowId))
+        if (ShouldPropagateEvent(windowArgs))
         {
             OnKeyPress(windowArgs.Args);
         }
@@ -259,7 +343,7 @@ public class Window : UIRoot
 
     private void EventSystem_KeyRelease(object? sender, WindowEventArgs<KeyEventArgs> windowArgs)
     {
-        if (windowArgs.WindowId.Equals(_windowId))
+        if (ShouldPropagateEvent(windowArgs))
         {
             OnKeyRelease(windowArgs.Args);
         }
@@ -267,7 +351,7 @@ public class Window : UIRoot
 
     private void EventSystem_TextInput(object? sender, WindowEventArgs<TextInputEventArgs> windowArgs)
     {
-        if (windowArgs.WindowId.Equals(_windowId))
+        if (ShouldPropagateEvent(windowArgs))
         {
             OnTextInput(windowArgs.Args);
         }
@@ -275,7 +359,7 @@ public class Window : UIRoot
 
     private void EventSystem_WindowMove(IEventSystem sender, WindowEventArgs<WindowMoveEventArgs> windowArgs)
     {
-        if (windowArgs.WindowId.Equals(_windowId))
+        if (ShouldPropagateEvent(windowArgs))
         {
             var topLeft = windowArgs.Args.TopLeft;
             X.Value = topLeft.X;
@@ -286,7 +370,7 @@ public class Window : UIRoot
 
     private void EventSystem_WindowResize(IEventSystem sender, WindowEventArgs<WindowResizeEventArgs> windowArgs)
     {
-        if (windowArgs.WindowId.Equals(_windowId))
+        if (ShouldPropagateEvent(windowArgs))
         {
             var size = windowArgs.Args.Size;
             Width.Value = size.Width;
@@ -297,39 +381,69 @@ public class Window : UIRoot
 
     private void EventSystem_WindowOpen(IEventSystem sender, WindowEventArgs<EventArgs> windowArgs)
     {
-        if (windowArgs.WindowId.Equals(_windowId))
+        if (ShouldPropagateEvent(windowArgs))
         {
             WindowOpen?.Invoke(this, EventArgs.Empty);
         }
     }
 
-    private void EventSystem_WindowClose(IEventSystem sender, WindowEventArgs<EventArgs> windowArgs)
+    private void EventSystem_WindowCloseRequest(IEventSystem sender, WindowEventArgs<EventArgs> windowArgs)
     {
-        if (windowArgs.WindowId.Equals(_windowId))
+        if (ShouldPropagateEvent(windowArgs))
         {
-            WindowClose?.Invoke(this, EventArgs.Empty);
+            WindowCloseRequest?.Invoke(this, EventArgs.Empty);
         }
     }
 
     private void EventSystem_WindowMaximized(IEventSystem sender, WindowEventArgs<EventArgs> windowArgs)
     {
-        if (windowArgs.WindowId.Equals(_windowId))
+        if (ShouldPropagateEvent(windowArgs))
         {
-            WindowMaximized?.Invoke(this, EventArgs.Empty);
+            SizeStatus.Value = WindowSizeStatus.Maximized;
         }
     }
 
     private void EventSystem_WindowMinimized(IEventSystem sender, WindowEventArgs<EventArgs> windowArgs)
     {
-        if (windowArgs.WindowId.Equals(_windowId))
+        if (ShouldPropagateEvent(windowArgs))
         {
-            WindowMinimized?.Invoke(this, EventArgs.Empty);
+            SizeStatus.Value = WindowSizeStatus.Minimized;
         }
     }
 
+    private void EventSystem_WindowRestored(IEventSystem sender, WindowEventArgs<EventArgs> windowArgs)
+    {
+        if (ShouldPropagateEvent(windowArgs))
+        {
+            SizeStatus.Value = WindowSizeStatus.None;
+        }
+    }
+
+    private void EventSystem_WindowFocusGain(IEventSystem sender, WindowEventArgs<EventArgs> windowArgs)
+    {
+        if (ShouldRedirectToModal(windowArgs))
+        {
+            Application.WindowManager.FocusWindow(_modalChild!._windowId);
+        }
+
+        if (ShouldPropagateEvent(windowArgs))
+        {
+            Focus.Value = true;
+        }
+    }
+
+    private void EventSystem_WindowFocusLost(IEventSystem sender, WindowEventArgs<EventArgs> windowArgs)
+    {
+        if (ShouldPropagateEvent(windowArgs))
+        {
+            Focus.Value = false;
+        }
+    }
+
+
     private void EventSystem_MouseWheel(IEventSystem sender, WindowEventArgs<MouseWheelEventArgs> windowArgs)
     {
-        if (windowArgs.WindowId.Equals(_windowId))
+        if (ShouldPropagateEvent(windowArgs))
         {
             OnMouseWheel(windowArgs.Args);
         }
@@ -363,6 +477,15 @@ public class Window : UIRoot
         }
     }
 
+    private void FullScreen_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
+    {
+        X.Value = PixelUnit.Auto;
+        Y.Value = PixelUnit.Auto;
+        Width.Value = PixelUnit.Auto;
+        Height.Value = PixelUnit.Auto;
+    }
+
+
     private void UpdateWindowAppearance()
     {
         if (_scheduleVisibilityChange)
@@ -374,6 +497,39 @@ public class Window : UIRoot
         Application.WindowManager.SetTitle(_windowId, Title.Value);
         Application.WindowManager.SetOpacity(_windowId, BackgroundColor.Value.AlphaComponent);
         Application.WindowManager.SetResizable(_windowId, Resizable.Value);
+
+        if (Focus.Value)
+        {
+            Application.WindowManager.FocusWindow(_windowId);
+        }
+        else
+        {
+            // TODO: remove focus? Maybe use focus group to set another window focus (similar to tab).
+        }
+
+        switch (SizeStatus.Value)
+        {
+            case WindowSizeStatus.None:
+                Application.WindowManager.RestoreWindow(_windowId);
+                break;
+            case WindowSizeStatus.Maximized:
+                Application.WindowManager.Maximize(_windowId);
+                break;
+            case WindowSizeStatus.Minimized:
+                Application.WindowManager.Minimize(_windowId);
+                break;
+            default:
+                throw new InvalidOperationException($"Unrecognized enum type {SizeStatus.Value}");
+        }
+
+        if (FullScreen.Value)
+        {
+            Application.WindowManager.SetFullScreen(_windowId);
+        }
+        else
+        {
+            Application.WindowManager.RestoreFullScreen(_windowId);
+        }
     }
 
     private void UpdateCloseBehavior()
@@ -381,16 +537,22 @@ public class Window : UIRoot
         switch (CloseBehavior.Value)
         {
             case WindowCloseBehavior.None:
-                WindowClose -= Window_WindowClose;
+                WindowCloseRequest -= Window_WindowClose;
                 break;
             case WindowCloseBehavior.HideWindow:
-                WindowClose += Window_WindowClose;
+                WindowCloseRequest += Window_WindowClose;
                 break;
             case WindowCloseBehavior.QuitApplication:
-                WindowClose += Window_WindowClose;
+                WindowCloseRequest += Window_WindowClose;
                 break;
             default:
                 throw new InvalidOperationException($"Unhandled enum {CloseBehavior.Value}");
         }
     }
+
+    private bool ShouldPropagateEvent<TEventArgs>(WindowEventArgs<TEventArgs> windowArgs) where TEventArgs : EventArgs =>
+        windowArgs.WindowId.Equals(_windowId) && (_modalChild == null || _modalChild.Visibility.Value != ComponentVisibility.Visible);
+
+    private bool ShouldRedirectToModal<TEventArgs>(WindowEventArgs<TEventArgs> windowArgs) where TEventArgs : EventArgs =>
+        windowArgs.WindowId.Equals(_windowId) && _modalChild != null && _modalChild.Visibility.Value == ComponentVisibility.Visible;
 }

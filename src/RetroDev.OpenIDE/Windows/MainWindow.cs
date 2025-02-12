@@ -111,9 +111,7 @@ internal class MainWindow : Window
         LoadXml(_fileEditBox.Text.Value);
         _saveButton.Enabled.Value = true;
         _refreshButton.Enabled.Value = true;
-        Window w = new Window(Application);
-        w.AddComponent(new Label(Application, "This is a modal"));
-        w.Visibility.Value = ComponentVisibility.Visible;
+        FullScreen.Value = !FullScreen.Value;
     }
 
     private void SaveButton_Action(Button sender, EventArgs e)
@@ -128,7 +126,6 @@ internal class MainWindow : Window
         // TODO: remove refresh and use auto refresh. But that requires that attributes are not just edit boxes, but that there is input validation.
         CreateComponentInstance();
     }
-
 
     private void AddButton_Action(Button sender, EventArgs e)
     {

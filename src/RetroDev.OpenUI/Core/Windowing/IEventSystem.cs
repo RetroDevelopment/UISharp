@@ -65,7 +65,7 @@ public interface IEventSystem
     /// <summary>
     /// The window is closed by clicking on the close button or by shutting it down.
     /// </summary>
-    event TypeSafeEventHandler<IEventSystem, WindowEventArgs<EventArgs>> WindowClose;
+    event TypeSafeEventHandler<IEventSystem, WindowEventArgs<EventArgs>> WindowCloseRequest;
 
     /// <summary>
     /// The window is maximized.
@@ -76,6 +76,21 @@ public interface IEventSystem
     /// The window is minimized.
     /// </summary>
     event TypeSafeEventHandler<IEventSystem, WindowEventArgs<EventArgs>> WindowMinimized;
+
+    /// <summary>
+    /// The window maximize/minimzed status is removed.
+    /// </summary>
+    event TypeSafeEventHandler<IEventSystem, WindowEventArgs<EventArgs>> WindowRestored;
+
+    /// <summary>
+    /// The window gains focus.
+    /// </summary>
+    event TypeSafeEventHandler<IEventSystem, WindowEventArgs<EventArgs>> WindowFocusGain;
+
+    /// <summary>
+    /// The window looses focus.
+    /// </summary>
+    event TypeSafeEventHandler<IEventSystem, WindowEventArgs<EventArgs>> WindowFocusLost;
 
     /// <summary>
     /// The mouse wheel has been moved.
@@ -100,7 +115,8 @@ public interface IEventSystem
     /// <summary>
     /// Terminates the event queue processing.
     /// </summary>
-    void Quit();
+    /// <param name="emitQuitEvent">Whether to emit <see cref="ApplicationQuit"/>.</param>
+    void Quit(bool emitQuitEvent);
 
     // TODO: we will need a more sophysticated event queue for pushing custom events (dispatcher?)
     /// <summary>

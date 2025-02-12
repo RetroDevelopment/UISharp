@@ -28,7 +28,7 @@ public class Application : IDisposable
     /// <summary>
     /// Triggered when the application is started and ready to show windows and process events.
     /// </summary>
-    public event TypeSafeEventHandler<Application, EventArgs> ApplicationStarted = (_, _) => { };
+    public event TypeSafeEventHandler<Application, EventArgs>? ApplicationStarted;
 
     /// <summary>
     /// The window manager interacting with the OS to create and manage systems.
@@ -119,7 +119,7 @@ public class Application : IDisposable
 
         Logger.LogInfo("Application started");
         EventSystem.ApplicationQuit += (_, _) => _shoudQuit = true;
-        ApplicationStarted.Invoke(this, EventArgs.Empty);
+        ApplicationStarted?.Invoke(this, EventArgs.Empty);
         EventSystem.BeforeRender += EventSystem_BeforeRender;
         EventSystem.InvalidateRendering();
 
@@ -188,9 +188,9 @@ public class Application : IDisposable
     /// </summary>
     public void Quit()
     {
-        Logger.LogInfo("Application quit requested");
         LifeCycle.ThrowIfNotOnUIThread();
-        EventSystem.Quit();
+        Logger.LogInfo("Application quit requested");
+        EventSystem.Quit(emitQuitEvent: true);
     }
 
     /// <summary>

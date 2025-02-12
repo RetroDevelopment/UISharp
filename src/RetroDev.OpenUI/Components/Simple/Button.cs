@@ -18,7 +18,7 @@ public class Button : UIWidget
     /// <summary>
     /// Raised when clicking on the button.
     /// </summary>
-    public event TypeSafeEventHandler<Button, EventArgs> Action = (_, _) => { };
+    public event TypeSafeEventHandler<Button, EventArgs>? Action;
 
     /// <summary>
     /// The button text.
@@ -85,7 +85,7 @@ public class Button : UIWidget
         if (e.Button == MouseButton.Left)
         {
             Focus.Value = true;
-            Action.Invoke(this, EventArgs.Empty);
+            Action?.Invoke(this, EventArgs.Empty);
         }
     }
 
