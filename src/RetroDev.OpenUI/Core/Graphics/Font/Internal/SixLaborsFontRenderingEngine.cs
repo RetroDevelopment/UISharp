@@ -35,17 +35,18 @@ internal class SixLaborsFontRenderingEngine : IFontRenderingEngine
         };
 
         var textBounds = TextMeasurer.MeasureBounds(text, textOptions);
+        var advance = TextMeasurer.MeasureAdvance(text, textOptions);
 
-        var width = (int)Math.Ceiling(textBounds.Width);
-        var height = (int)Math.Ceiling(textBounds.Height);
+        var width = (int)Math.Floor(advance.Left + advance.Width);
+        var height = (int)Math.Floor(advance.Top + advance.Height);
 
         // Create the image with transparent background
         using var image = new Image<Rgba32>(width, height);
         var rgbaTextColor = new Rgba32(textColor.RedComponent, textColor.GreenComponent, textColor.BlueComponent, textColor.AlphaComponent);
 
         // Adjust the drawing origin to align the text at the top-left
-        var offsetX = -textBounds.Left;
-        var offsetY = -textBounds.Top;
+        var offsetX = 0;// -textBounds.Left;
+        var offsetY = 0;// -textBounds.Top;
 
         // Render the text
         image.Mutate(ctx =>

@@ -6,7 +6,6 @@ using RetroDev.OpenUI.Components.Base;
 using RetroDev.OpenUI.Components.Containers;
 using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Components.Simple;
-using RetroDev.OpenUI.Core.Graphics;
 using RetroDev.OpenUI.UI.Coordinates;
 using RetroDev.OpenUI.UI.Properties;
 using RetroDev.OpenUI.UIDefinition.Ast;
@@ -14,7 +13,6 @@ using Attribute = RetroDev.OpenUI.UIDefinition.Ast.Attribute;
 
 namespace RetroDev.OpenIDE.Windows;
 
-// TODO: GetComponent<T> should be recursive to avoid the hell of nested components lookup
 // TODO: check for unique ids
 
 [EditorSettings(allow: false)]
@@ -111,7 +109,6 @@ internal class MainWindow : Window
         LoadXml(_fileEditBox.Text.Value);
         _saveButton.Enabled.Value = true;
         _refreshButton.Enabled.Value = true;
-        FullScreen.Value = !FullScreen.Value;
     }
 
     private void SaveButton_Action(Button sender, EventArgs e)
