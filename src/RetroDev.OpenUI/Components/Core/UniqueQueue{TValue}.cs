@@ -1,6 +1,6 @@
 ﻿namespace RetroDev.OpenUI.Components.Core;
 
-internal class UniqueQueue<TValue>
+public class UniqueQueue<TValue>
 {
     private readonly Queue<TValue> _queue = [];
     private readonly HashSet<TValue> _set = [];

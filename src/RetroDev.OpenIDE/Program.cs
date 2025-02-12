@@ -1,16 +1,15 @@
-﻿using System.ComponentModel;
-using System.Diagnostics;
-using OpenTK.Graphics.ES11;
+﻿using System.Diagnostics;
 using RetroDev.OpenIDE.Windows;
 using RetroDev.OpenUI;
 using RetroDev.OpenUI.Components;
+using RetroDev.OpenUI.Components.Base;
 using RetroDev.OpenUI.Components.Containers;
 using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Components.Shapes;
 using RetroDev.OpenUI.Components.Simple;
-using RetroDev.OpenUI.Core.Coordinates;
-using RetroDev.OpenUI.Graphics;
-using RetroDev.OpenUI.Themes;
+using RetroDev.OpenUI.Core.Graphics;
+using RetroDev.OpenUI.Core.Windowing.Events;
+using RetroDev.OpenUI.UI.Coordinates;
 
 namespace RetroDev.OpenIDE;
 
@@ -53,7 +52,7 @@ namespace RetroDev.OpenIDE;
 // Dynamic and scalable interfaces.
 // Lightweight and efficient tools for medium-sized applications.
 
-class Ctr : UIComponent
+class Ctr : UIWidget
 {
     static int idx = 0;
     private Rectangle _rectangle;
@@ -81,19 +80,19 @@ class Ctr : UIComponent
         Focus.ValueChange += (_, _) => _rectangle.BorderColor.Value = Focus.Value ? Color.Red : Color.Transparent;
         KeyPress += (_, e) =>
         {
-            if (e.Button == OpenUI.Events.KeyButton.Q && Focus.Value) Width.Value += 10;
-            if (e.Button == OpenUI.Events.KeyButton.W && Focus.Value) Height.Value += 10;
-            if (e.Button == OpenUI.Events.KeyButton.A && Focus.Value) Width.Value -= 10;
-            if (e.Button == OpenUI.Events.KeyButton.S && Focus.Value) Height.Value -= 10;
-            if (e.Button == OpenUI.Events.KeyButton.R && Focus.Value) _rectangle.Rotation.Value += 0.01f;
+            if (e.Button == KeyButton.Q && Focus.Value) Width.Value += 10;
+            if (e.Button == KeyButton.W && Focus.Value) Height.Value += 10;
+            if (e.Button == KeyButton.A && Focus.Value) Width.Value -= 10;
+            if (e.Button == KeyButton.S && Focus.Value) Height.Value -= 10;
+            if (e.Button == KeyButton.R && Focus.Value) _rectangle.Rotation.Value += 0.01f;
         };
-        AddChild(_rectangle);
+        AddChildNode(_rectangle);
 
         var c = new Circle(application);
         c.Width.Value = 10;
         c.Height.Value = 10;
         c.BackgroundColor.Value = Color.Brown;
-        AddChild(c);
+        AddChildNode(c);
 
         var txt = new Text(application);
         txt.TextColor.Value = Color.Magenta;
@@ -105,7 +104,7 @@ class Ctr : UIComponent
         //AddChild(txt);
     }
 
-    public void Add(Ctr child) => AddChild(child);
+    public void Add(Ctr child) => AddChildNode(child);
 
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) => new(100, 100);
 }
@@ -138,20 +137,20 @@ internal class Program
         Window window = new Window(application);
         window.Width.Value = 800;
         window.Height.Value = 600;
-        window.Visibility.Value = ComponentVisibility.Visible;
+        window.Visibility.Value = UIComponent.ComponentVisibility.Visible;
         window.KeyPress += (_, e) =>
         {
-            if (e.Button == OpenUI.Events.KeyButton.Q) root.AutoWidth.Value = AutoSize.Stretch;
-            if (e.Button == OpenUI.Events.KeyButton.W) root.AutoWidth.Value = AutoSize.Wrap;
-            if (e.Button == OpenUI.Events.KeyButton.A) root.AutoHeight.Value = AutoSize.Stretch;
-            if (e.Button == OpenUI.Events.KeyButton.S) root.AutoHeight.Value = AutoSize.Wrap;
+            if (e.Button == KeyButton.Q) root.AutoWidth.Value = AutoSize.Stretch;
+            if (e.Button == KeyButton.W) root.AutoWidth.Value = AutoSize.Wrap;
+            if (e.Button == KeyButton.A) root.AutoHeight.Value = AutoSize.Stretch;
+            if (e.Button == KeyButton.S) root.AutoHeight.Value = AutoSize.Wrap;
 
-            if (e.Button == OpenUI.Events.KeyButton.E) root.HorizontalAlignment.Value = Alignment.Left;
-            if (e.Button == OpenUI.Events.KeyButton.R) root.HorizontalAlignment.Value = Alignment.Center;
-            if (e.Button == OpenUI.Events.KeyButton.T) root.HorizontalAlignment.Value = Alignment.Right;
-            if (e.Button == OpenUI.Events.KeyButton.D) root.VerticalAlignment.Value = Alignment.Top;
-            if (e.Button == OpenUI.Events.KeyButton.F) root.VerticalAlignment.Value = Alignment.Center;
-            if (e.Button == OpenUI.Events.KeyButton.G) root.VerticalAlignment.Value = Alignment.Bottom;
+            if (e.Button == KeyButton.E) root.HorizontalAlignment.Value = Alignment.Left;
+            if (e.Button == KeyButton.R) root.HorizontalAlignment.Value = Alignment.Center;
+            if (e.Button == KeyButton.T) root.HorizontalAlignment.Value = Alignment.Right;
+            if (e.Button == KeyButton.D) root.VerticalAlignment.Value = Alignment.Top;
+            if (e.Button == KeyButton.F) root.VerticalAlignment.Value = Alignment.Center;
+            if (e.Button == KeyButton.G) root.VerticalAlignment.Value = Alignment.Bottom;
         };
         root.MouseDrag += (_, e) =>
         {
@@ -174,7 +173,7 @@ internal class Program
 
         public Node(Application a, string l) : base(a) { label = l; }
 
-        public void Add(UIComponent c) => AddChild(c);
+        public void Add(UIWidget c) => AddChildNode(c);
         protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize)
         {
             return new(childrenSize.ToList().Sum(c => c.Width.Value) + Hint.Width,
@@ -215,7 +214,7 @@ internal class Program
         w.Y.Value = 0;
         w.Width.Value = 800;
         w.Height.Value = 600;
-        w.Visibility.Value = ComponentVisibility.Visible;
+        w.Visibility.Value = UIComponent.ComponentVisibility.Visible;
 
         var root = new Ctr(application, Color.Blue, null);
         w.AddComponent(root);
@@ -247,8 +246,8 @@ internal class Program
     static void Main(string[] _)
     {
         using var application = new Application();
-        // application.Logger.Verbosity = OpenUI.Logging.Verbosity.Verbose;
-        application.ShowWindow<MainWindow>();
+        application.Logger.Verbosity = OpenUI.Logging.Verbosity.Verbose;
+        application.ApplicationStarted += (_, _) => application.ShowWindow<MainWindow>();
         application.Run();
     }
 }

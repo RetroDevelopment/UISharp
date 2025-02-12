@@ -1,10 +1,7 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel;
-using System.Reflection;
+﻿using System.Reflection;
 using RetroDev.OpenUI.Components;
-using RetroDev.OpenUI.Core.Coordinates;
+using RetroDev.OpenUI.Components.Base;
 using RetroDev.OpenUI.Exceptions;
-using RetroDev.OpenUI.UIDefinition.Ast;
 using Component = RetroDev.OpenUI.UIDefinition.Ast.Component;
 
 namespace RetroDev.OpenUI.UIDefinition;
@@ -34,7 +31,7 @@ public class InstanceCreator(Application application, TypeMapper typeMapper, IEA
     {
         var componentType = _typeMapper.GetUIComponent(component.Name) ?? throw new UIDefinitionValidationException($"Component {component.Name} does not map to a known type.", component);
         var constructor = _typeMapper.GetConstructor(componentType);
-        var childComponentInstances = component.Components.Select(CreateUIComponent).ToList();
+        var childComponentInstances = component.Components.Select(CreateUIComponent).Cast<UIWidget>().ToList();
         var arguments = PrepareConstructorArguments(constructor.GetParameters(), childComponentInstances.SelectMany(c => c.GetComponentTreeNodesDepthFirstSearch()).Union(childComponentInstances), component);
         var componentInstance = (UIComponent)constructor.Invoke(arguments) ?? throw new UIDefinitionValidationException($"Failed to invoke constructor for {component.Name}", component);
         InitializeUIComponent(component, componentInstance, childComponentInstances);
@@ -86,7 +83,7 @@ public class InstanceCreator(Application application, TypeMapper typeMapper, IEA
         return type.IsValueType ? Activator.CreateInstance(type) : null;
     }
 
-    private void InitializeUIComponent(Component component, UIComponent instance, IEnumerable<UIComponent> childrenInstances)
+    private void InitializeUIComponent(Component component, UIComponent instance, IEnumerable<UIWidget> childrenInstances)
     {
         foreach (var attribute in component.Attributes)
         {
@@ -99,7 +96,7 @@ public class InstanceCreator(Application application, TypeMapper typeMapper, IEA
         foreach (var childInstance in childrenInstances)
         {
             var childComponent = component.Components[i];
-            if (instance is Components.IContainer multipleContainer)
+            if (instance is IContainer multipleContainer)
             {
                 multipleContainer.AddComponent(childInstance);
             }

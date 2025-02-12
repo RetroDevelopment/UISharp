@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
 using System.Security.Cryptography;
 using OpenTK.Graphics.OpenGL;
-using RetroDev.OpenUI.Events;
+using RetroDev.OpenUI.Core.Windowing.Events;
 using RetroDev.OpenUI.Exceptions;
 using RetroDev.OpenUI.Logging;
 using SDL2;
@@ -15,6 +15,28 @@ internal static class LoggingUtils
         var returnValue = InvokeAndLog(action, logger);
         if (returnValue != 0 && !warning) throw new RenderingException($"Error occurred when rendering: {SDL.SDL_GetError()}");
         if (returnValue != 0 && warning) logger.LogWarning($"Error occurred when rendering: {SDL.SDL_GetError()}. Operation was {action.Body}");
+    }
+
+    public static void OpenGLCheck(Action action, ILogger logger)
+    {
+        action.Invoke();
+        ErrorCode error;
+        while ((error = GL.GetError()) != ErrorCode.NoError)
+        {
+            logger.LogError($"OpenGL {error}: {GL.GetError()}");
+        }
+    }
+
+    public static TResult OpenGLCheck<TResult>(Func<TResult> action, ILogger logger)
+    {
+        var result = action.Invoke();
+        ErrorCode error;
+        while ((error = GL.GetError()) != ErrorCode.NoError)
+        {
+            logger.LogError($"OpenGL {error}: {GL.GetError()}");
+        }
+
+        return result;
     }
 
     /// <summary>
@@ -39,7 +61,7 @@ internal static class LoggingUtils
     /// <param name="logger">The logger.</param>
     public static void LogShaderStatus(string shaderOperation, int shaderId, ILogger logger)
     {
-        var shaderLogOutput = GL.GetProgramInfoLog(shaderId);
+        var shaderLogOutput = OpenGLCheck(() => GL.GetShaderInfoLog(shaderId), logger);
         if (string.IsNullOrEmpty(shaderLogOutput))
         {
             logger.LogDebug($"Operation {shaderOperation} succeeded!");
@@ -47,6 +69,25 @@ internal static class LoggingUtils
         else
         {
             logger.LogError($"Error {shaderOperation}: {shaderLogOutput}");
+        }
+    }
+
+    /// <summary>
+    /// Logs the status of shader program operations.
+    /// </summary>
+    /// <param name="programOpetaion">The shader program operation.</param>
+    /// <param name="programId">The id of the opengl shader.</param>
+    /// <param name="logger">The logger.</param>
+    public static void LogProgramStatus(string programOpetaion, int programId, ILogger logger)
+    {
+        var programLogOutput = OpenGLCheck(() => GL.GetProgramInfoLog(programId), logger);
+        if (string.IsNullOrEmpty(programLogOutput))
+        {
+            logger.LogDebug($"Operation {programOpetaion} succeeded!");
+        }
+        else
+        {
+            logger.LogError($"Error {programOpetaion}: {programLogOutput}");
         }
     }
 

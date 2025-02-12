@@ -1,18 +1,17 @@
-﻿using RetroDev.OpenUI.Components.Core.AutoArea;
+﻿using RetroDev.OpenUI.Components.Base;
+using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Components.Shapes;
-using RetroDev.OpenUI.Core.Coordinates;
-using RetroDev.OpenUI.Events;
+using RetroDev.OpenUI.Core.Graphics;
 using RetroDev.OpenUI.Exceptions;
-using RetroDev.OpenUI.Graphics;
-using RetroDev.OpenUI.Properties;
-using RetroDev.OpenUI.Themes;
+using RetroDev.OpenUI.UI.Coordinates;
+using RetroDev.OpenUI.UI.Properties;
 
 namespace RetroDev.OpenUI.Components.Simple;
 
 /// <summary>
 /// A bar displaying progress.
 /// </summary>
-public class ProgressBar : UIComponent
+public class ProgressBar : UIWidget
 {
     private readonly Rectangle _backgroundRectangle;
     private readonly Rectangle _progressRectangle;
@@ -56,12 +55,12 @@ public class ProgressBar : UIComponent
 
         _backgroundRectangle = new Rectangle(application);
         _backgroundRectangle.BackgroundColor.BindDestinationToSource(BackgroundColor);
-        AddChild(_backgroundRectangle);
+        AddChildNode(_backgroundRectangle);
 
         _progressRectangle = new Rectangle(application);
         _progressRectangle.BackgroundColor.BindDestinationToSource(ForegroundColor);
         _progressRectangle.HorizontalAlignment.Value = Alignment.Left;
-        AddChild(_progressRectangle);
+        AddChildNode(_progressRectangle);
     }
 
     /// <inheritdoc />

@@ -2,25 +2,25 @@
 using RetroDev.OpenIDE.Components;
 using RetroDev.OpenUI;
 using RetroDev.OpenUI.Components;
+using RetroDev.OpenUI.Components.Base;
 using RetroDev.OpenUI.Components.Containers;
 using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Components.Simple;
-using RetroDev.OpenUI.Core.Coordinates;
-using RetroDev.OpenUI.Properties;
+using RetroDev.OpenUI.UI.Coordinates;
+using RetroDev.OpenUI.UI.Properties;
 using RetroDev.OpenUI.UIDefinition.Ast;
 using Attribute = RetroDev.OpenUI.UIDefinition.Ast.Attribute;
 
 namespace RetroDev.OpenIDE.Windows;
 
-// TODO: GetComponent<T> should be recursive to avoid the hell of nested components lookup
 // TODO: check for unique ids
 
 [EditorSettings(allow: false)]
 internal class Container : UIComponent
 {
-    public Container(Application application, List<UIComponent> children) : base(application)
+    public Container(Application application, List<UIWidget> children) : base(application)
     {
-        children.ForEach(c => AddChild(c));
+        children.ForEach(c => AddChildNode(c));
     }
 
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) => new(100, 100);
@@ -123,7 +123,6 @@ internal class MainWindow : Window
         // TODO: remove refresh and use auto refresh. But that requires that attributes are not just edit boxes, but that there is input validation.
         CreateComponentInstance();
     }
-
 
     private void AddButton_Action(Button sender, EventArgs e)
     {
@@ -237,7 +236,7 @@ internal class MainWindow : Window
         UpdateAddRemoveButtonState();
     }
 
-    private void SelectedItem_ValueChange(BindableProperty<UIComponent?> sender, ValueChangeEventArgs<UIComponent?> e)
+    private void SelectedItem_ValueChange(BindableProperty<UIWidget?> sender, ValueChangeEventArgs<UIWidget?> e)
     {
         UpdateAddRemoveButtonState();
     }
@@ -275,7 +274,7 @@ internal class MainWindow : Window
 
     private void CreateComponentInstance()
     {
-        var components = _rootNode!.Components.Select(Application.UIDefinitionManager.InstanceCreator.CreateUIComponent).ToList();
+        var components = _rootNode!.Components.Select(Application.UIDefinitionManager.InstanceCreator.CreateUIComponent).Cast<UIWidget>().ToList();
         var container = new UIPreview(Application, components);
         _mainLayout.GetComponent<ScrollView>("preview").SetComponent(container);
     }

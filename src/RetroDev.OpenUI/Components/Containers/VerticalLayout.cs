@@ -1,13 +1,14 @@
-﻿using RetroDev.OpenUI.Components.Core.AutoArea;
-using RetroDev.OpenUI.Core.Coordinates;
-using RetroDev.OpenUI.Properties;
+﻿using RetroDev.OpenUI.Components.Base;
+using RetroDev.OpenUI.Components.Core.AutoArea;
+using RetroDev.OpenUI.Core.Windowing.Events;
+using RetroDev.OpenUI.UI.Coordinates;
 
 namespace RetroDev.OpenUI.Components.Containers;
 
 /// <summary>
 /// A layout displaying all elements vertically.
 /// </summary>
-public class VerticalLayout : Container, IContainer
+public class VerticalLayout : UIContainer, IContainer
 {
     private readonly List<Panel> _panels = [];
 
@@ -16,7 +17,7 @@ public class VerticalLayout : Container, IContainer
         new(childrenSize.Max(s => s.Width) ?? PixelUnit.Zero,
             childrenSize.Sum(s => s.Height));
 
-    public override IEnumerable<UIComponent> Children => _panels.Select(p => p.Children.ElementAt(0));
+    public override IEnumerable<UIWidget> Children => _panels.Select(p => p.Children.ElementAt(0));
 
     public IEnumerable<Panel> Panels => _panels;
 
@@ -29,12 +30,12 @@ public class VerticalLayout : Container, IContainer
         RenderFrame += VerticalLayout_RenderFrame;
     }
 
-    public void AddComponent(UIComponent component)
+    public void AddComponent(UIWidget component)
     {
         AddComponent(component, null);
     }
 
-    public void AddComponent(UIComponent component, UIComponent? after)
+    public void AddComponent(UIWidget component, UIComponent? after)
     {
         if (after != null)
         {
@@ -43,7 +44,7 @@ public class VerticalLayout : Container, IContainer
             var panel = new Panel(Application);
             panel.AutoHeight.Value = AutoSize.Wrap;
             panel.SetComponent(component);
-            AddChild(panel, precedingPanelIndex);
+            AddChildNode(panel, precedingPanelIndex);
             _panels.Insert(precedingPanelIndex + 1, panel);
         }
         else
@@ -52,7 +53,7 @@ public class VerticalLayout : Container, IContainer
             panel.AutoHeight.Value = AutoSize.Wrap;
             panel.SetComponent(component);
             _panels.Add(panel);
-            AddChild(panel);
+            AddChildNode(panel);
         }
     }
 
@@ -60,13 +61,13 @@ public class VerticalLayout : Container, IContainer
     {
         if (index >= _panels.Count) throw new ArgumentException($"Cannot remove vertical layout component with index {index}: the layout has only {_panels.Count} components");
         var panel = _panels[(int)index];
-        RemoveChild(panel);
+        RemoveChildNode(panel);
         _panels.Remove(panel);
     }
 
     public void Clear()
     {
-        _panels.ForEach(p => RemoveChild(p));
+        _panels.ForEach(p => RemoveChildNode(p));
         _panels.Clear();
     }
 
@@ -88,8 +89,8 @@ public class VerticalLayout : Container, IContainer
         return childrenFinalSize;
     }
 
-    private void VerticalLayout_RenderFrame(UIComponent sender, Events.RenderingEventArgs e)
+    private void VerticalLayout_RenderFrame(UIComponent sender, RenderingEventArgs e)
     {
-        e.Canvas.Render(new Graphics.Shapes.Rectangle(BackgroundColor.Value), ActualSize.Fill());
+        e.Canvas.Render(new OpenUI.Core.Graphics.Shapes.Rectangle(BackgroundColor.Value), ActualSize.Fill());
     }
 }

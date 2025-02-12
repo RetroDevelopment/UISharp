@@ -1,15 +1,17 @@
-﻿using RetroDev.OpenUI.Components.Core.AutoArea;
+﻿using RetroDev.OpenUI.Components.Base;
+using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Components.Shapes;
-using RetroDev.OpenUI.Core.Coordinates;
-using RetroDev.OpenUI.Graphics;
-using RetroDev.OpenUI.Properties;
+using RetroDev.OpenUI.Core.Graphics;
+using RetroDev.OpenUI.Core.Windowing.Events;
+using RetroDev.OpenUI.UI.Coordinates;
+using RetroDev.OpenUI.UI.Properties;
 
 namespace RetroDev.OpenUI.Components.Simple;
 
 /// <summary>
 /// A checkbox to mark with a tick if something is checked.
 /// </summary>
-public class CheckBox : UIComponent
+public class CheckBox : UIWidget
 {
     private readonly Rectangle _backgroundRectangle;
     private readonly Circle _selectionCircle;
@@ -61,12 +63,12 @@ public class CheckBox : UIComponent
         _backgroundRectangle.BorderColor.BindDestinationToSource(Application.Theme.BorderColor);
         UpdateBackgroundRectangleColorBindings();
         UpdateBackgroundRectangleBorder();
-        AddChild(_backgroundRectangle);
+        AddChildNode(_backgroundRectangle);
 
         _selectionCircle = new Circle(application);
         _selectionCircle.BackgroundColor.BindDestinationToSource(CircleColor);
         UpdateSelectionCirclePosition();
-        AddChild(_selectionCircle);
+        AddChildNode(_selectionCircle);
 
         Checked.ValueChange += Checked_ValueChange;
         Focus.ValueChange += Focus_ValueChange;
@@ -81,7 +83,7 @@ public class CheckBox : UIComponent
         return [null, new Area(location, size)];
     }
 
-    private void CheckBox_MousePress(UIComponent sender, Events.MouseEventArgs e)
+    private void CheckBox_MousePress(UIComponent sender, MouseEventArgs e)
     {
         Checked.Value = !Checked.Value;
         Focus.Value = true;

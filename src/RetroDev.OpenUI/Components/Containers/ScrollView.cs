@@ -1,18 +1,19 @@
-﻿using RetroDev.OpenUI.Core.Coordinates;
-using RetroDev.OpenUI.Events;
-using RetroDev.OpenUI.Graphics;
-using RetroDev.OpenUI.Graphics.Shapes;
-using RetroDev.OpenUI.Properties;
+﻿using RetroDev.OpenUI.Components.Base;
+using RetroDev.OpenUI.Core.Graphics;
+using RetroDev.OpenUI.Core.Graphics.Shapes;
+using RetroDev.OpenUI.Core.Windowing.Events;
+using RetroDev.OpenUI.UI.Coordinates;
+using RetroDev.OpenUI.UI.Properties;
 
 namespace RetroDev.OpenUI.Components.Containers;
 
 /// <summary>
 /// Allows to scroll the child component in case it is bigger than the scroll view size.
 /// </summary>
-public class ScrollView : Container, ISingleContainer
+public class ScrollView : UIContainer, ISingleContainer
 {
     private const int ScrollBarSize = 15;
-    private UIComponent? _child;
+    private UIWidget? _child;
     private bool _moveHorizontalBar = false;
     private bool _moveVerticalBar = false;
 
@@ -21,7 +22,7 @@ public class ScrollView : Container, ISingleContainer
         childrenSize.Any() ? childrenSize.First() : Size.Zero;
 
     /// <inheritdoc />
-    public override IEnumerable<UIComponent> Children => GetChildren();
+    public override IEnumerable<UIWidget> Children => GetChildrenNodes();
 
     /// <summary>
     /// The color of the horizontal and vertical scroll bars.
@@ -44,21 +45,22 @@ public class ScrollView : Container, ISingleContainer
         MouseDrag += ScrollView_MouseDrag;
         MouseDragBegin += ScrollView_MouseDragBegin;
         MouseDragEnd += ScrollView_MouseDragEnd;
+        MouseWheel += ScrollView_MouseWheel;
     }
 
     /// <summary>
     /// Sets the component to be inserted in <see langword="this" /> scroll view.
     /// </summary>
     /// <param name="component">The component to be inserted in <see langword="this" /> scroll view.</param>
-    public void SetComponent(UIComponent component)
+    public void SetComponent(UIWidget component)
     {
-        if (_child != null) RemoveChild(_child);
+        if (_child != null) RemoveChildNode(_child);
         _child = component;
 
         if (_child.X.Value == PixelUnit.Auto) _child.X.Value = 0;
         if (_child.Y.Value == PixelUnit.Auto) _child.Y.Value = 0;
 
-        AddChild(_child);
+        AddChildNode(_child);
     }
 
     private void ScrollView_ChildrenRendered(UIComponent sender, RenderingEventArgs e)
@@ -86,7 +88,7 @@ public class ScrollView : Container, ISingleContainer
         }
     }
 
-    private void ScrollView_MouseDragBegin(UIComponent sender, Events.MouseEventArgs e)
+    private void ScrollView_MouseDragBegin(UIComponent sender, MouseEventArgs e)
     {
         var horizontalScrollBarArea = GetHorizontalScrollBarArea();
         var verticalScrollBarArea = GetVerticalScrollBarArea();
@@ -106,6 +108,33 @@ public class ScrollView : Container, ISingleContainer
     {
         _moveHorizontalBar = false;
         _moveVerticalBar = false;
+    }
+
+    private void ScrollView_MouseWheel(UIComponent sender, MouseWheelEventArgs e)
+    {
+        // TODO: mouseDrag event and this event join in same method
+        if (_child == null) return;
+        var mouseWheelSpeed = 4.0f; // How fast scroll should go.
+
+        var horizontalScrollBarArea = GetHorizontalScrollBarArea();
+        var verticalScrollBarArea = GetVerticalScrollBarArea();
+        var maximumHorizontalScrollBarAreaWidth = GetMaximumHorizontalScrollBarAreaWidth();
+        var maximumVerticalScrollBarAreaHeight = GetMaximumVerticalScrollBarAreaHeight();
+
+        if (!_moveHorizontalBar && horizontalScrollBarArea != null)
+        {
+            var offsetXFactor = -(e.HorizontalMovement * mouseWheelSpeed) / (maximumHorizontalScrollBarAreaWidth - horizontalScrollBarArea.Size.Width);
+            var maximumChildHorizontalScroll = GetMaximumChildHorizontalScroll();
+            _child.X.Value = Math.Clamp(_child.X.Value - offsetXFactor * maximumChildHorizontalScroll, -maximumChildHorizontalScroll, 0.0f);
+        }
+
+        if (!_moveVerticalBar && verticalScrollBarArea != null)
+        {
+            var offsetYFactor = -(e.VerticalMovement * mouseWheelSpeed) / (maximumVerticalScrollBarAreaHeight - verticalScrollBarArea.Size.Height);
+            var maximumChildVerticalScroll = GetMaximumChildVerticalScroll();
+            _child.Y.Value = Math.Clamp(_child.Y.Value - offsetYFactor * maximumChildVerticalScroll, -maximumChildVerticalScroll, 0.0f);
+        }
+
     }
 
     private void ScrollView_MouseDrag(UIComponent sender, MouseDragEventArgs e)

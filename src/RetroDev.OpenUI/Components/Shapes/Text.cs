@@ -1,13 +1,15 @@
-﻿using RetroDev.OpenUI.Core.Coordinates;
-using RetroDev.OpenUI.Graphics;
-using RetroDev.OpenUI.Properties;
+﻿using RetroDev.OpenUI.Components.Base;
+using RetroDev.OpenUI.Core.Graphics;
+using RetroDev.OpenUI.Core.Windowing.Events;
+using RetroDev.OpenUI.UI.Coordinates;
+using RetroDev.OpenUI.UI.Properties;
 
 namespace RetroDev.OpenUI.Components.Shapes;
 
 /// <summary>
 /// Displays test in the UI.
 /// </summary>
-public class Text : UIComponent
+public class Text : UIWidget
 {
     /// <summary>
     /// The text color.
@@ -35,13 +37,13 @@ public class Text : UIComponent
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
         Application.FontServices.ComputeTextSize(DisplayText.Value);
 
-    private void Rectangle_RenderFrame(UIComponent sender, Events.RenderingEventArgs e)
+    private void Rectangle_RenderFrame(UIComponent sender, RenderingEventArgs e)
     {
-        var rectangleShape = new Graphics.Shapes.Text(BackgroundColor.Value,
-                                                      TextColor.Value,
-                                                      DisplayText.Value);
+        var textShape = new OpenUI.Core.Graphics.Shapes.Text(BackgroundColor.Value,
+                                                             TextColor.Value,
+                                                             DisplayText.Value);
         var canvas = e.Canvas;
 
-        canvas.Render(rectangleShape, ActualSize.Fill());
+        canvas.Render(textShape, ActualSize.Fill());
     }
 }

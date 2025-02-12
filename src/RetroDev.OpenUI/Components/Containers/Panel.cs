@@ -1,15 +1,16 @@
-﻿using RetroDev.OpenUI.Components.Shapes;
-using RetroDev.OpenUI.Core.Coordinates;
+﻿using RetroDev.OpenUI.Components.Base;
+using RetroDev.OpenUI.Components.Shapes;
+using RetroDev.OpenUI.UI.Coordinates;
 
 namespace RetroDev.OpenUI.Components.Containers;
 
 /// <summary>
 /// A basic container that contains one object.
 /// </summary>
-public class Panel : Container, ISingleContainer // TODO: ISingleContainer should have a property not SetComponent() and GetChildren does not apply
+public class Panel : UIContainer, ISingleContainer // TODO: ISingleContainer should have a property not SetComponent() and GetChildren does not apply
 {
     private readonly Rectangle _backgroundRectangle;
-    private UIComponent? _child;
+    private UIWidget? _child;
 
     /// <inheritdoc />
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
@@ -17,7 +18,7 @@ public class Panel : Container, ISingleContainer // TODO: ISingleContainer shoul
 
     /// <inheritdoc />
 
-    public override IEnumerable<UIComponent> Children => [GetChildren().ElementAt(1)];
+    public override IEnumerable<UIWidget> Children => [GetChildrenNodes().ElementAt(1)];
 
     /// <summary>
     /// Creates a new panel.
@@ -27,17 +28,17 @@ public class Panel : Container, ISingleContainer // TODO: ISingleContainer shoul
     {
         _backgroundRectangle = new Rectangle(application);
         _backgroundRectangle.BackgroundColor.BindDestinationToSource(BackgroundColor);
-        AddChild(_backgroundRectangle);
+        AddChildNode(_backgroundRectangle);
     }
 
     /// <summary>
     /// Sets the component to be inserted in <see langword="this" /> panel.
     /// </summary>
     /// <param name="component">The component to be inserted in <see langword="this" /> panel.</param>
-    public void SetComponent(UIComponent component)
+    public void SetComponent(UIWidget component)
     {
-        if (_child != null) RemoveChild(_child);
+        if (_child != null) RemoveChildNode(_child);
         _child = component;
-        AddChild(_child);
+        AddChildNode(_child);
     }
 }

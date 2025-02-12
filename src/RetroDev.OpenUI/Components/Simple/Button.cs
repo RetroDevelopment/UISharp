@@ -1,15 +1,16 @@
-﻿using RetroDev.OpenUI.Components.Shapes;
-using RetroDev.OpenUI.Core.Coordinates;
-using RetroDev.OpenUI.Events;
-using RetroDev.OpenUI.Graphics;
-using RetroDev.OpenUI.Properties;
+﻿using RetroDev.OpenUI.Components.Base;
+using RetroDev.OpenUI.Components.Shapes;
+using RetroDev.OpenUI.Core.Graphics;
+using RetroDev.OpenUI.Core.Windowing.Events;
+using RetroDev.OpenUI.UI.Coordinates;
+using RetroDev.OpenUI.UI.Properties;
 
 namespace RetroDev.OpenUI.Components.Simple;
 
 /// <summary>
 /// A clickable button.
 /// </summary>
-public class Button : UIComponent
+public class Button : UIWidget
 {
     private readonly Rectangle _backgroundRectangle;
     private readonly Label _buttonTextLabel;
@@ -17,7 +18,7 @@ public class Button : UIComponent
     /// <summary>
     /// Raised when clicking on the button.
     /// </summary>
-    public event TypeSafeEventHandler<Button, EventArgs> Action = (_, _) => { };
+    public event TypeSafeEventHandler<Button, EventArgs>? Action;
 
     /// <summary>
     /// The button text.
@@ -67,12 +68,12 @@ public class Button : UIComponent
         _backgroundRectangle.AutoCornerRadiusRatio.Value = 0.5f;
         UpdateBackgroundRectangleColorBinding();
         UpdateBackgroundRectangleBorder();
-        AddChild(_backgroundRectangle);
+        AddChildNode(_backgroundRectangle);
 
         _buttonTextLabel = new Label(application);
         _buttonTextLabel.Text.BindDestinationToSource(Text);
         UpdateTextColorBinding();
-        AddChild(_buttonTextLabel);
+        AddChildNode(_buttonTextLabel);
 
         MousePress += Button_MousePress; // TODO: managing button action is more complicated than intercepting key press events.
         Enabled.ValueChange += Enabled_ValueChange;
@@ -84,7 +85,7 @@ public class Button : UIComponent
         if (e.Button == MouseButton.Left)
         {
             Focus.Value = true;
-            Action.Invoke(this, EventArgs.Empty);
+            Action?.Invoke(this, EventArgs.Empty);
         }
     }
 

@@ -1,13 +1,15 @@
-﻿using RetroDev.OpenUI.Core.Coordinates;
-using RetroDev.OpenUI.Graphics;
-using RetroDev.OpenUI.Properties;
+﻿using RetroDev.OpenUI.Components.Base;
+using RetroDev.OpenUI.Core.Graphics;
+using RetroDev.OpenUI.Core.Windowing.Events;
+using RetroDev.OpenUI.UI.Coordinates;
+using RetroDev.OpenUI.UI.Properties;
 
 namespace RetroDev.OpenUI.Components.Shapes;
 
 /// <summary>
 /// A circle shape.
 /// </summary>
-public class Circle : UIComponent
+public class Circle : UIWidget
 {
     /// <summary>
     /// The circle border color.
@@ -70,14 +72,14 @@ public class Circle : UIComponent
         return new Size(minimumSize, minimumSize);
     }
 
-    private void Rectangle_RenderFrame(UIComponent sender, Events.RenderingEventArgs e)
+    private void Rectangle_RenderFrame(UIComponent sender, RenderingEventArgs e)
     {
-        var rectangleShape = new Graphics.Shapes.Circle(BackgroundColor.Value,
-                                                        BorderColor.Value,
-                                                        BorderThickness.Value,
-                                                        Rotation.Value);
+        var circleShape = new OpenUI.Core.Graphics.Shapes.Circle(BackgroundColor.Value,
+                                                                 BorderColor.Value,
+                                                                 BorderThickness.Value,
+                                                                 Rotation.Value);
         var canvas = e.Canvas;
 
-        canvas.Render(rectangleShape, ActualSize.Fill());
+        canvas.Render(circleShape, ActualSize.Fill());
     }
 }

@@ -1,9 +1,10 @@
 ﻿using OpenTK.Graphics.ES11;
 using OpenTK.Graphics.OpenGL;
+using RetroDev.OpenUI.Components.Base;
 
 namespace RetroDev.OpenUI.Components.Core;
 
-internal class Invalidator
+public class Invalidator
 {
     private SortedDictionary<int, HashSet<UIComponent>> _invalidatedItems = [];
 

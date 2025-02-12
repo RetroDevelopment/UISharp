@@ -1,6 +1,4 @@
-﻿using RetroDev.OpenUI.Components;
-using RetroDev.OpenUI.Core.Coordinates;
-using RetroDev.OpenUI.Properties;
+﻿using RetroDev.OpenUI.Components.Base;
 
 namespace RetroDev.OpenUI.Exceptions;
 

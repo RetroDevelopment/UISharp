@@ -1,4 +1,6 @@
-﻿namespace RetroDev.OpenUI.Components;
+﻿using RetroDev.OpenUI.Components.Base;
+
+namespace RetroDev.OpenUI.Components;
 
 /// <summary>
 /// Specify OpenIDE editor settings for a <see cref="UIComponent"/>.

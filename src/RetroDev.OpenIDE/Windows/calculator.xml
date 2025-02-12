@@ -18,7 +18,7 @@
             <button text="C" />
             <button text="0" />
             <button text="=" />
-            <button text="+" />
+            <label text="=" autowidth="wrap" autoheight="wrap" backgroundcolor="red" horizontalalignment="left" verticalalignment="top" />
         </gridlayout>
     </verticallayout>
 </window>
