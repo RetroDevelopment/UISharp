@@ -132,6 +132,12 @@ public class OpenGLRenderingEngine : IRenderingEngine
     public int CreateTexture(RgbaImage image)
     {
         _application.LifeCycle.ThrowIfNotOnUIThread(); // TODO: texture creation not on UI rendering
+        var expectedTextureDataSize = image.Width * image.Height * 4;
+        if (image.Data.Length != expectedTextureDataSize)
+        {
+            throw new InvalidOperationException($"Invalid RGBA image size {image.Data.Length}: expected {expectedTextureDataSize} bytes for a {image.Width} x {image.Height} pixels image");
+        }
+
         // TODO: now a new texture is created for each text. we will need to probably use a special model with vertices
         // for each character and map it to texture atlas with uv mapping. Text will be the most performance critical
         // issue since there will be a lot of text and that changes often. Plus implement texture garbage collection for text.

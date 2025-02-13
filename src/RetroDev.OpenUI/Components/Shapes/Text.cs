@@ -35,7 +35,7 @@ public class Text : UIWidget
     {
         TextColor = new UIProperty<Text, Color>(this, Color.Transparent);
         DisplayText = new UIProperty<Text, string>(this, string.Empty);
-        Font = new UIProperty<Text, Font>(this, new Font(application, "FreeSans", 20, FontType.Regular));
+        Font = new UIProperty<Text, Font>(this, new Font(application, "OpenSans", 20, FontType.Regular));
         RenderFrame += Rectangle_RenderFrame;
     }
 
