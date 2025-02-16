@@ -99,7 +99,7 @@ public class OpenGLRenderingEngine : IRenderingEngine
         _application = application;
         _application.LifeCycle.ThrowIfNotOnUIThread();
         _context = context;
-        _fontEngine = fontEngine ?? new SixLaborsFontRenderingEngine();
+        _fontEngine = fontEngine ?? new FreeTypeFontRenderingEngine();
 
         _application.Logger.LogInfo("Using OpenGL rendering");
         _application.Logger.LogDebug("OpenGL Loading shaders");

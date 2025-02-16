@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="FreeTypeSharp" Version="3.0.0" />
     <PackageReference Include="OpenTK.Graphics" Version="4.9.1" />
     <PackageReference Include="ppy.SDL2-CS" Version="1.0.82" />
     <PackageReference Include="SixLabors.Fonts" Version="2.1.2" />
