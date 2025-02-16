@@ -38,8 +38,8 @@ public class FreeTypeFontRenderingEngine : IFontRenderingEngine
         EnsureFontIsLoaded(font);
         var metrics = CalculateFontMetrics(font);
         var list = GetCharacters(text, font);
-        var height = metrics.height;
-        var width = list.Sum(g => g.Advance);
+        var height = metrics.height + 1;
+        var width = list.Sum(g => g.Advance) + 1;
         var image = CreateRgbaImageFromGliphs(list, width, height, metrics.ascender, textColor);
         return new RgbaImage(image, width, height);
     }
@@ -88,10 +88,13 @@ public class FreeTypeFontRenderingEngine : IFontRenderingEngine
         {
             if (!_fontCache.ContainsKey(font))
             {
-                FT_FaceRec_* newFace;
-                var error = FT_New_Face(_library, (byte*)Marshal.StringToHGlobalAnsi("C:\\Windows\\Fonts\\Arial.ttf"), 0, &newFace);
-                ThrowIfError(error, $"loading font {font}");
-                _fontCache.Add(font, (IntPtr)newFace);
+                fixed (byte* fontDataPtr = font.Data)
+                {
+                    FT_FaceRec_* newFace;
+                    var error = FT_New_Memory_Face(_library, fontDataPtr, font.Data.Length, 0, &newFace);
+                    ThrowIfError(error, $"loading font {font}");
+                    _fontCache.Add(font, (IntPtr)newFace);
+                }
             }
         }
     }
