@@ -34,8 +34,8 @@ public class Text : UIWidget
     public Text(Application application) : base(application, isFocusable: false)
     {
         TextColor = new UIProperty<Text, Color>(this, Color.Transparent);
-        DisplayText = new UIProperty<Text, string>(this, string.Empty);//OpenSans
-        Font = new UIProperty<Text, Font>(this, new Font(application, "OpenSans", 18, FontType.Regular));
+        DisplayText = new UIProperty<Text, string>(this, string.Empty);
+        Font = new UIProperty<Text, Font>(this, Application.DefaultFont, BindingType.DestinationToSource);
         RenderFrame += Rectangle_RenderFrame;
     }
 
@@ -48,12 +48,17 @@ public class Text : UIWidget
 
     private void Rectangle_RenderFrame(UIComponent sender, RenderingEventArgs e)
     {
-        var textShape = new OpenUI.Core.Graphics.Shapes.Text(BackgroundColor.Value,
+        var textShape = new OpenUI.Core.Graphics.Shapes.Text(Color.Transparent,
                                                              TextColor.Value,
                                                              DisplayText.Value,
                                                              Font.Value.ToGraphicsFont());
-        var canvas = e.Canvas;
+        var backgroundShape = new OpenUI.Core.Graphics.Shapes.Rectangle(BackgroundColor.Value);
 
-        canvas.Render(textShape, ActualSize.Fill());
+        var canvas = e.Canvas;
+        if (Root == null) throw new InvalidOperationException("Root must be set when rendering");
+        var textSize = Root.RenderingEngine.ComputeTextSize(DisplayText.Value, Font.Value.ToGraphicsFont());
+        var textTopLeft = textSize.Fill().CenterTopLeft(ActualSize.Fill());
+        canvas.Render(backgroundShape, ActualSize.Fill());
+        canvas.Render(textShape, new Area(textTopLeft, textSize));
     }
 }

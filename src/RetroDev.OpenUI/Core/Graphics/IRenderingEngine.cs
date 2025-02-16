@@ -2,7 +2,6 @@
 using RetroDev.OpenUI.Core.Contexts;
 using RetroDev.OpenUI.Core.Graphics.Fonts;
 using RetroDev.OpenUI.Core.Graphics.Shapes;
-using RetroDev.OpenUI.Exceptions;
 using RetroDev.OpenUI.UI.Coordinates;
 
 namespace RetroDev.OpenUI.Core.Graphics;
@@ -26,8 +25,9 @@ public interface IRenderingEngine
     /// Creates a texture with the given <paramref name="image"/> and stores it in memory.
     /// </summary>
     /// <param name="image">An RGBA image.</param>
+    /// <param name="interpolate">Whether to interpolate the image or render it as is.</param>
     /// <returns>The store texture unique identifier used when referencing this texture.</returns>
-    int CreateTexture(RgbaImage image);
+    int CreateTexture(RgbaImage image, bool interpolate);
 
     /// <summary>
     /// Renders a rectangle.
@@ -69,6 +69,13 @@ public interface IRenderingEngine
     /// <param name="font">The text font.</param>
     /// <returns>The size to correctly and fully display the given <paramref name="text"/>.</returns>
     Size ComputeTextSize(string text, Font font);
+
+    /// <summary>
+    /// Gets the maximum height occupied by a line of text using the given <paramref name="font"/>.
+    /// </summary>
+    /// <param name="font">The font for which to compute the height.</param>
+    /// <returns>The minimum height necessary to render any character using the given <paramref name="font"/>.</returns>
+    PixelUnit ComputeTextMaximumHeight(Font font);
 
     /// <summary>
     /// This method is invoked when starting the rendering of a frame.

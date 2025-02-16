@@ -23,4 +23,11 @@ public interface IFontRenderingEngine
     /// <param name="font">The text font.
     /// <returns>The text size.</returns>
     Size ComputeTextSize(string text, Font font);
+
+    /// <summary>
+    /// Gets the maximum height occupied by a line of text using the given <paramref name="font"/>.
+    /// </summary>
+    /// <param name="font">The font for which to compute the height.</param>
+    /// <returns>The minimum height necessary to render any character using the given <paramref name="font"/>.</returns>
+    PixelUnit ComputeTextMaximumHeight(Font font);
 }

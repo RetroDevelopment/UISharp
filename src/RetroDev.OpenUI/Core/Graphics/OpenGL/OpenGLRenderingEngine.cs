@@ -120,7 +120,7 @@ public class OpenGLRenderingEngine : IRenderingEngine
         LoggingUtils.OpenGLCheck(() => GL.Enable(EnableCap.Blend), _application.Logger);
         LoggingUtils.OpenGLCheck(() => GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha), _application.Logger);
 
-        _defaultTexture = CreateTexture(new RgbaImage([0, 0, 0, 0], 1, 1));
+        _defaultTexture = CreateTexture(new RgbaImage([0, 0, 0, 0], 1, 1), interpolate: false);
         _modelGenerator = new ProceduralModelGenerator();
     }
 
@@ -128,8 +128,9 @@ public class OpenGLRenderingEngine : IRenderingEngine
     /// Creates a texture with the given <paramref name="image"/> and stores it in memory.
     /// </summary>
     /// <param name="image">An RGBA image.</param>
+    /// <param name="interpolate">Whether to interpolate the image or render it as is.</param>
     /// <returns>The store texture unique identifier used when referencing this texture.</returns>
-    public int CreateTexture(RgbaImage image)
+    public int CreateTexture(RgbaImage image, bool interpolate)
     {
         _application.LifeCycle.ThrowIfNotOnUIThread(); // TODO: texture creation not on UI rendering
         var expectedTextureDataSize = image.Width * image.Height * 4;
@@ -150,10 +151,11 @@ public class OpenGLRenderingEngine : IRenderingEngine
         LoggingUtils.OpenGLCheck(() => GL.BindTexture(TextureTarget.Texture2D, textureID), _application.Logger);
 
         // Set texture parameters
+        var filterType = interpolate ? (int)TextureMinFilter.Linear : (int)TextureMinFilter.Nearest;
         LoggingUtils.OpenGLCheck(() => GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat), _application.Logger);
         LoggingUtils.OpenGLCheck(() => GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat), _application.Logger);
-        LoggingUtils.OpenGLCheck(() => GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear), _application.Logger);
-        LoggingUtils.OpenGLCheck(() => GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear), _application.Logger);
+        LoggingUtils.OpenGLCheck(() => GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, filterType), _application.Logger);
+        LoggingUtils.OpenGLCheck(() => GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, filterType), _application.Logger);
 
         // Upload the image data to the texture
         LoggingUtils.OpenGLCheck(() => GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, image.Data), _application.Logger);
@@ -214,7 +216,7 @@ public class OpenGLRenderingEngine : IRenderingEngine
         if (!_textCache.TryGetValue(textKey, out var textureId))
         {
             var textureImage = _fontEngine.ConvertTextToRgbaImage(text.Value, text.Font, text.ForegroundColor);
-            textureId = CreateTexture(textureImage);
+            textureId = CreateTexture(textureImage, interpolate: true);
             _textCache[textKey] = textureId;
         }
 
@@ -224,9 +226,10 @@ public class OpenGLRenderingEngine : IRenderingEngine
         _shader.SetTransform([area.GetTransformMatrix(ViewportSize, 0.0f, 0.0f),
                               area.GetTransformMatrix(ViewportSize, 0.0f, null)]);
         _shader.SetProjection(ViewportSize.GetPorjectionMatrix());
-        _shader.SetFillColor(text.BackgroundColor.ToOpenGLColor());
+        _shader.SetFillColor(Color.Transparent.ToOpenGLColor());
         _shader.SetClipArea((clippingArea ?? new Area(Point.Zero, ViewportSize)).ToVector4(ViewportSize));
         _shader.SetOffsetMultiplier(OpenTK.Mathematics.Vector2.Zero);
+        _shader.SetHasTexture(true);
         _modelGenerator.Rectangle.Render(text.TextureID.Value);
     }
 
@@ -238,6 +241,14 @@ public class OpenGLRenderingEngine : IRenderingEngine
     /// <returns>The size to correctly and fully display the given <paramref name="text"/>.</returns>
     public Size ComputeTextSize(string text, Font font) =>
         _fontEngine.ComputeTextSize(text, font);
+
+    /// <summary>
+    /// Gets the maximum height occupied by a line of text using the given <paramref name="font"/>.
+    /// </summary>
+    /// <param name="font">The font for which to compute the height.</param>
+    /// <returns>The minimum height necessary to render any character using the given <paramref name="font"/>.</returns>
+    public PixelUnit ComputeTextMaximumHeight(Font font) =>
+        _fontEngine.ComputeTextMaximumHeight(font);
 
     /// <summary>
     /// This method is invoked when starting the rendering of a frame.
@@ -321,6 +332,7 @@ public class OpenGLRenderingEngine : IRenderingEngine
         _shader.SetFillColor(color.ToOpenGLColor());
         _shader.SetClipArea((clippingArea ?? new Area(Point.Zero, ViewportSize)).ToVector4(ViewportSize));
         _shader.SetOffsetMultiplier(NormalizeRadius(xRadius, yRadius, area.Size));
+        _shader.SetHasTexture(textureId != null);
         openglShape.Render(textureId ?? _defaultTexture);
     }
 

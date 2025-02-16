@@ -40,7 +40,7 @@ public class Canvas
     {
         _lifeCycle.ThrowIfNotOnRenderingPhase();
         _statistics.Elements++;
-        return _renderingEngine.CreateTexture(image);
+        return _renderingEngine.CreateTexture(image, interpolate: false);
     }
 
     /// <summary>

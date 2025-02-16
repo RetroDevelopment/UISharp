@@ -6,7 +6,9 @@ using RetroDev.OpenUI.Core.Windowing.Events.Internal;
 using RetroDev.OpenUI.Core.Windowing.SDL;
 using RetroDev.OpenUI.Exceptions;
 using RetroDev.OpenUI.Logging;
+using RetroDev.OpenUI.UI;
 using RetroDev.OpenUI.UI.Coordinates;
+using RetroDev.OpenUI.UI.Properties;
 using RetroDev.OpenUI.UI.Resources;
 using RetroDev.OpenUI.UI.Themes;
 using RetroDev.OpenUI.UIDefinition;
@@ -64,6 +66,12 @@ public class Application : IDisposable
     public Size ScreenSize => WindowManager.ScreenSize;
 
     /// <summary>
+    /// The default font for this application.
+    /// </summary>
+    // TODO: Consider using styles for default properties
+    public BindableProperty<Font> DefaultFont { get; }
+
+    /// <summary>
     /// The list of all windows managed by <see langword="this" /> <see cref="Application"/>.
     /// </summary>
     public IEnumerable<Window> Windows => _windows;
@@ -93,6 +101,8 @@ public class Application : IDisposable
         Theme = createTheme != null ? createTheme(this) : new Theme(this);
         _themeParser = new ThemeParser(Theme);
         LifeCycle.CurrentState = LifeCycle.State.INIT;
+        var font = new Font(this, "OpenSans", 18, FontType.Regular);
+        DefaultFont = new BindableProperty<Font>(font, this, BindingType.SourceToDestination);
 
         LoadThemeResource("openui-dark");
         WindowManager.Initialize();

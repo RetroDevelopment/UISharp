@@ -3,6 +3,7 @@
 uniform vec4 color;
 uniform vec4 clipArea;
 uniform sampler2D mainTexture;
+uniform bool hasTexture;
 
 in vec2 FragmentCoorindates;
 in vec2 TextureCoordinates;
@@ -24,5 +25,15 @@ void main()
     float mask = includeInClippingArea(FragmentCoorindates);
     vec4 textureColor = texture(mainTexture, TextureCoordinates);
     //FragColor = textureColor * vec4(color.rgb, color.a * mask);
-    FragColor = mix(color, textureColor, textureColor.a) * mask;
+    //FragColor = mix(color, textureColor, textureColor.a) * mask;
+   
+    // TODO: remove the if then else and use step
+    if (hasTexture)
+    {
+        FragColor = textureColor * mask;
+    }
+    else
+    {
+        FragColor = color * mask;
+    }
 }

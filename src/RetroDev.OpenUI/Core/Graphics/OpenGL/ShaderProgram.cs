@@ -42,6 +42,9 @@ internal class ShaderProgram
     public void SetFillColor(Vector4 color) =>
         SetVec4("color", color);
 
+    public void SetHasTexture(bool hasTexture) =>
+        SetBool("hasTexture", hasTexture);
+
     public void SetClipArea(Vector4 clipArea) =>
         SetVec4("clipArea", clipArea);
 
@@ -84,6 +87,9 @@ internal class ShaderProgram
         // Pass the array of matrices to OpenGL
         GL.UniformMatrix3(location, matrices.Count, false, matrixData);
     }
+
+    private void SetBool(string name, bool value) =>
+        GL.Uniform1(GetUniformLocation(name), value ? 1 : 0);
 
     private void SetVec2(string name, Vector2 vec) =>
         GL.Uniform2(GetUniformLocation(name), vec);

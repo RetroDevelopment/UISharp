@@ -1,11 +1,15 @@
 ﻿using FreeTypeSharp;
 using RetroDev.OpenUI.UI.Coordinates;
 using System.Globalization;
-using System.Runtime.InteropServices;
 using static FreeTypeSharp.FT;
 
 namespace RetroDev.OpenUI.Core.Graphics.Fonts;
 
+/// <summary>
+/// Font rendering engine using FreeTypeSharp library.
+/// This allows for a fine graained control over font rendering and positioning and it is efficient as
+/// it uses a direct native FreeType library implementation.
+/// </summary>
 public class FreeTypeFontRenderingEngine : IFontRenderingEngine
 {
     private record struct GrayScaleImage(byte[] Data, int Width, int Height);
@@ -14,10 +18,15 @@ public class FreeTypeFontRenderingEngine : IFontRenderingEngine
     private readonly unsafe FT_LibraryRec_* _library = null;
     private readonly unsafe Dictionary<Font, IntPtr> _fontCache = [];
     private readonly Dictionary<Font, Dictionary<uint, Gliph>> _gliphCache = [];
+
+    /// <summary>
+    /// Creates a new rendering engine.
+    /// </summary>
     public FreeTypeFontRenderingEngine()
     {
         unsafe
         {
+            // TODO: implement destructors
             FT_LibraryRec_* library;
             var error = FT_Init_FreeType(&library);
             ThrowIfError(error, "loading font library");
@@ -25,12 +34,19 @@ public class FreeTypeFontRenderingEngine : IFontRenderingEngine
         }
     }
 
+    /// <inheritdoc />
     public Size ComputeTextSize(string text, Font font)
     {
-        var img = ConvertTextToRgbaImage(text, font, Color.Transparent);
-        return new Size(img.Width, img.Height);
+        if (string.IsNullOrEmpty(text)) return Size.Zero;
+        EnsureFontIsLoaded(font);
+        var metrics = CalculateFontMetrics(font);
+        var list = GetCharacters(text, font);
+        var height = metrics.height + 1;
+        var width = list.Sum(g => g.Advance) + 1;
+        return new Size(width, height);
     }
 
+    /// <inheritdoc />
     public RgbaImage ConvertTextToRgbaImage(string text, Font font, Color textColor)
     {
         if (string.IsNullOrEmpty(text)) return RgbaImage.Empty;
@@ -42,6 +58,14 @@ public class FreeTypeFontRenderingEngine : IFontRenderingEngine
         var width = list.Sum(g => g.Advance) + 1;
         var image = CreateRgbaImageFromGliphs(list, width, height, metrics.ascender, textColor);
         return new RgbaImage(image, width, height);
+    }
+
+    /// <inheritdoc />
+    public PixelUnit ComputeTextMaximumHeight(Font font)
+    {
+        EnsureFontIsLoaded(font);
+        var metrics = CalculateFontMetrics(font);
+        return metrics.height + 1;
     }
 
     private byte[] CreateRgbaImageFromGliphs(IEnumerable<Gliph> gliphs, int width, int height, int ascender, Color textColor)
