@@ -1,8 +1,8 @@
 ﻿using RetroDev.OpenUI.Components.Base;
 using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Core.Graphics;
+using RetroDev.OpenUI.Core.Graphics.Coordinates;
 using RetroDev.OpenUI.Core.Windowing.Events;
-using RetroDev.OpenUI.UI.Coordinates;
 using RetroDev.OpenUI.UI.Properties;
 
 namespace RetroDev.OpenUI.Components.Containers;

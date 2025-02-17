@@ -1,6 +1,6 @@
 ﻿using RetroDev.OpenUI.Core.Contexts;
+using RetroDev.OpenUI.Core.Graphics.Coordinates;
 using RetroDev.OpenUI.Exceptions;
-using RetroDev.OpenUI.UI.Coordinates;
 
 namespace RetroDev.OpenUI.Core.Windowing;
 

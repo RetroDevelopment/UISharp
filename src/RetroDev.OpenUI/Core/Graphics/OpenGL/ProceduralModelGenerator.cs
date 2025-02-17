@@ -1,4 +1,4 @@
-﻿using RetroDev.OpenUI.UI.Coordinates;
+﻿using RetroDev.OpenUI.Core.Graphics.Coordinates;
 using static RetroDev.OpenUI.Core.Graphics.OpenGL.Model2D;
 
 namespace RetroDev.OpenUI.Core.Graphics.OpenGL;

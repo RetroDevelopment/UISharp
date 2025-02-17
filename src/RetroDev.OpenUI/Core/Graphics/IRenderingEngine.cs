@@ -1,8 +1,9 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using RetroDev.OpenUI.Core.Contexts;
+using RetroDev.OpenUI.Core.Graphics.Coordinates;
 using RetroDev.OpenUI.Core.Graphics.Fonts;
+using RetroDev.OpenUI.Core.Graphics.Imaging;
 using RetroDev.OpenUI.Core.Graphics.Shapes;
-using RetroDev.OpenUI.UI.Coordinates;
 
 namespace RetroDev.OpenUI.Core.Graphics;
 
@@ -27,7 +28,7 @@ public interface IRenderingEngine
     /// <param name="image">An RGBA image.</param>
     /// <param name="interpolate">Whether to interpolate the image or render it as is.</param>
     /// <returns>The store texture unique identifier used when referencing this texture.</returns>
-    int CreateTexture(RgbaImage image, bool interpolate);
+    int CreateTexture(Image image, bool interpolate);
 
     /// <summary>
     /// Renders a rectangle.

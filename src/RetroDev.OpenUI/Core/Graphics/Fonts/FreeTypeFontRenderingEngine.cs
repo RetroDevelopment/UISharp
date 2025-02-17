@@ -1,5 +1,6 @@
 ﻿using FreeTypeSharp;
-using RetroDev.OpenUI.UI.Coordinates;
+using RetroDev.OpenUI.Core.Graphics.Coordinates;
+using RetroDev.OpenUI.Core.Graphics.Imaging;
 using System.Globalization;
 using static FreeTypeSharp.FT;
 
@@ -12,8 +13,7 @@ namespace RetroDev.OpenUI.Core.Graphics.Fonts;
 /// </summary>
 public class FreeTypeFontRenderingEngine : IFontRenderingEngine
 {
-    private record struct GrayScaleImage(byte[] Data, int Width, int Height);
-    private record struct Gliph(GrayScaleImage Image, int Advance, int BearingX, int BearingY);
+    private record struct Gliph(GrayscaleImage Image, int Advance, int BearingX, int BearingY);
 
     private readonly unsafe FT_LibraryRec_* _library = null;
     private readonly unsafe Dictionary<Font, IntPtr> _fontCache = [];
@@ -47,17 +47,17 @@ public class FreeTypeFontRenderingEngine : IFontRenderingEngine
     }
 
     /// <inheritdoc />
-    public RgbaImage ConvertTextToRgbaImage(string text, Font font, Color textColor)
+    public GrayscaleImage ConvertTextToGrayscaleImage(string text, Font font, Color textColor)
     {
-        if (string.IsNullOrEmpty(text)) return RgbaImage.Empty;
+        if (string.IsNullOrEmpty(text)) return GrayscaleImage.Empty;
 
         EnsureFontIsLoaded(font);
         var metrics = CalculateFontMetrics(font);
         var list = GetCharacters(text, font);
         var height = metrics.height + 1;
-        var width = list.Sum(g => g.Advance) + 1;
+        var width = (int)Math.Floor(list.Sum(g => Math.Max(g.Image.Size.Width, g.Advance)) + 1);
         var image = CreateRgbaImageFromGliphs(list, width, height, metrics.ascender, textColor);
-        return new RgbaImage(image, width, height);
+        return image;
     }
 
     /// <inheritdoc />
@@ -68,42 +68,24 @@ public class FreeTypeFontRenderingEngine : IFontRenderingEngine
         return metrics.height + 1;
     }
 
-    private byte[] CreateRgbaImageFromGliphs(IEnumerable<Gliph> gliphs, int width, int height, int ascender, Color textColor)
+    private GrayscaleImage CreateRgbaImageFromGliphs(IEnumerable<Gliph> gliphs, int width, int height, int ascender, Color textColor)
     {
-        var rgbaImageBuffer = new byte[width * height * 4];
+        var image = new GrayscaleImage(new Size(width, height));
         var xPosition = 0;
         var baseline = ascender;
 
         foreach (var gliph in gliphs)
         {
-            var x = xPosition + gliph.BearingX;
+            // Do not allow negative X bearings as this complicates image construction to avoid index out of bounds
+            // TODO: handle special case where bearing is negative and it is first character in text.
+            var x = xPosition + Math.Max(gliph.BearingX, 0);
             var y = baseline - gliph.BearingY;
-            RenderGliph(ref rgbaImageBuffer, gliph.Image.Data, x, y, gliph.Image.Width, gliph.Image.Height, width, textColor);
+            var offset = new Point(x, y);
+            image.CopyFrom(gliph.Image, offset);
             xPosition += gliph.Advance;
         }
 
-        return rgbaImageBuffer;
-    }
-
-    private void RenderGliph(ref byte[] rgbaImage, byte[] grayScaleImage, int left, int top, int width, int height, int fullWidth, Color textColor)
-    {
-        var baseAlpha = textColor.AlphaComponent / 255.0f;
-
-        for (var y = top; y < top + height; y++)
-        {
-            for (var x = left; x < left + width; x++)
-            {
-                var index = ((y * fullWidth) + x) * 4;
-                var greyScaleX = x - left;
-                var greyScaleY = y - top;
-                var greyScaleArrayIndex = (greyScaleY * width) + greyScaleX;
-                var fontAlfa = grayScaleImage[greyScaleArrayIndex] / 255.0f;
-                rgbaImage[index] = textColor.RedComponent;
-                rgbaImage[index + 1] = textColor.GreenComponent;
-                rgbaImage[index + 2] = textColor.BlueComponent;
-                rgbaImage[index + 3] = (byte)(baseAlpha * fontAlfa * 255.0f);
-            }
-        }
+        return image;
     }
 
     private void EnsureFontIsLoaded(Font font)
@@ -174,10 +156,10 @@ public class FreeTypeFontRenderingEngine : IFontRenderingEngine
             var width = bitmap.width;
             var height = bitmap.rows;
             var pitch = bitmap.pitch; // Number of bytes per row
-            GrayScaleImage image;
+            GrayscaleImage image;
             if (bitmap.buffer == null || width == 0 || height == 0)
             {
-                image = new GrayScaleImage([], 0, 0);
+                image = GrayscaleImage.Empty;
             }
             else
             {
@@ -191,7 +173,7 @@ public class FreeTypeFontRenderingEngine : IFontRenderingEngine
                     }
                 }
 
-                image = new GrayScaleImage(grayscaleBitmap, (int)width, (int)height);
+                image = new GrayscaleImage(grayscaleBitmap, new Size(width, height));
             }
 
             var advance = glyph->advance.x >> 6;  // Convert from 26.6 fixed point to integer pixels

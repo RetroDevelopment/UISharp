@@ -1,7 +1,7 @@
 ﻿using RetroDev.OpenUI.Core.Contexts;
+using RetroDev.OpenUI.Core.Graphics.Coordinates;
 using RetroDev.OpenUI.Exceptions;
 using RetroDev.OpenUI.Logging;
-using RetroDev.OpenUI.UI.Coordinates;
 using RetroDev.OpenUI.Utils;
 using static SDL2.SDL;
 

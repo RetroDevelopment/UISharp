@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Numerics;
 
-namespace RetroDev.OpenUI.UI.Coordinates;
+namespace RetroDev.OpenUI.Core.Graphics.Coordinates;
 
 /// <summary>
 /// Represents a 2D-Area.

@@ -1,8 +1,9 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using RetroDev.OpenUI.Core.Contexts;
+using RetroDev.OpenUI.Core.Graphics.Coordinates;
 using RetroDev.OpenUI.Core.Graphics.Fonts;
+using RetroDev.OpenUI.Core.Graphics.Imaging;
 using RetroDev.OpenUI.Core.Graphics.Shapes;
-using RetroDev.OpenUI.UI.Coordinates;
 using RetroDev.OpenUI.UI.Resources;
 using RetroDev.OpenUI.Utils;
 
@@ -110,7 +111,7 @@ public class OpenGLRenderingEngine : IRenderingEngine
         LoggingUtils.OpenGLCheck(() => GL.Enable(EnableCap.Blend), _application.Logger);
         LoggingUtils.OpenGLCheck(() => GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha), _application.Logger);
 
-        _defaultTexture = CreateTexture(new RgbaImage([0, 0, 0, 0], 1, 1), interpolate: false);
+        _defaultTexture = CreateTexture(new RgbaImage([0, 0, 0, 0], new Size(1, 1)), interpolate: false);
         _modelGenerator = new ProceduralModelGenerator();
     }
 
@@ -120,14 +121,9 @@ public class OpenGLRenderingEngine : IRenderingEngine
     /// <param name="image">An RGBA image.</param>
     /// <param name="interpolate">Whether to interpolate the image or render it as is.</param>
     /// <returns>The store texture unique identifier used when referencing this texture.</returns>
-    public int CreateTexture(RgbaImage image, bool interpolate)
+    public int CreateTexture(Image image, bool interpolate)
     {
-        _application.LifeCycle.ThrowIfNotOnUIThread(); // TODO: texture creation not on UI rendering
-        var expectedTextureDataSize = image.Width * image.Height * 4;
-        if (image.Data.Length != expectedTextureDataSize)
-        {
-            throw new InvalidOperationException($"Invalid RGBA image size {image.Data.Length}: expected {expectedTextureDataSize} bytes for a {image.Width} x {image.Height} pixels image");
-        }
+        _application.LifeCycle.ThrowIfNotOnUIThread();
 
         // TODO: now a new texture is created for each text. we will need to probably use a special model with vertices
         // for each character and map it to texture atlas with uv mapping. Text will be the most performance critical
@@ -147,8 +143,10 @@ public class OpenGLRenderingEngine : IRenderingEngine
         LoggingUtils.OpenGLCheck(() => GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, filterType), _application.Logger);
         LoggingUtils.OpenGLCheck(() => GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, filterType), _application.Logger);
 
+        // Ensure tight packing.
+        LoggingUtils.OpenGLCheck(() => GL.PixelStore(PixelStoreParameter.UnpackAlignment, (int)image.BytesPerPixel), _application.Logger);
         // Upload the image data to the texture
-        LoggingUtils.OpenGLCheck(() => GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, image.Data), _application.Logger);
+        LoggingUtils.OpenGLCheck(() => GL.TexImage2D(TextureTarget.Texture2D, 0, image.InternalFormat, (int)image.Size.Width, (int)image.Size.Height, 0, image.PixelFormat, image.PixelType, image.Data), _application.Logger);
 
         // Generate mipmaps for the texture
         LoggingUtils.OpenGLCheck(() => GL.GenerateMipmap(GenerateMipmapTarget.Texture2D), _application.Logger);
@@ -205,7 +203,7 @@ public class OpenGLRenderingEngine : IRenderingEngine
 
         if (!_textCache.TryGetValue(textKey, out var textureId))
         {
-            var textureImage = _fontEngine.ConvertTextToRgbaImage(text.Value, text.Font, text.ForegroundColor);
+            var textureImage = _fontEngine.ConvertTextToGrayscaleImage(text.Value, text.Font, text.ForegroundColor);
             textureId = CreateTexture(textureImage, interpolate: true);
             _textCache[textKey] = textureId;
         }
@@ -216,10 +214,10 @@ public class OpenGLRenderingEngine : IRenderingEngine
         _shader.SetTransform([area.GetTransformMatrix(ViewportSize, 0.0f, 0.0f),
                               area.GetTransformMatrix(ViewportSize, 0.0f, null)]);
         _shader.SetProjection(ViewportSize.GetPorjectionMatrix());
-        _shader.SetFillColor(Color.Transparent.ToOpenGLColor());
+        _shader.SetFillColor(text.ForegroundColor.ToOpenGLColor());
         _shader.SetClipArea((clippingArea ?? new Area(Point.Zero, ViewportSize)).ToVector4(ViewportSize));
         _shader.SetOffsetMultiplier(OpenTK.Mathematics.Vector2.Zero);
-        _shader.SetHasTexture(true);
+        _shader.SetTextureMode(ShaderProgram.TextureMode.GrayScale);
         _modelGenerator.Rectangle.Render(text.TextureID.Value);
     }
 
@@ -322,7 +320,8 @@ public class OpenGLRenderingEngine : IRenderingEngine
         _shader.SetFillColor(color.ToOpenGLColor());
         _shader.SetClipArea((clippingArea ?? new Area(Point.Zero, ViewportSize)).ToVector4(ViewportSize));
         _shader.SetOffsetMultiplier(NormalizeRadius(xRadius, yRadius, area.Size));
-        _shader.SetHasTexture(textureId != null);
+        // TODO: When implementing Texture class, handle the texture format there so we support also gray scale here depending on how the texture was created.
+        _shader.SetTextureMode(textureId != null ? ShaderProgram.TextureMode.Color : ShaderProgram.TextureMode.None);
         openglShape.Render(textureId ?? _defaultTexture);
     }
 

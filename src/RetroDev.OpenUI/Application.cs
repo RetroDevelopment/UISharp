@@ -1,5 +1,6 @@
 ﻿using RetroDev.OpenUI.Components;
 using RetroDev.OpenUI.Components.Base;
+using RetroDev.OpenUI.Core.Graphics.Coordinates;
 using RetroDev.OpenUI.Core.Windowing;
 using RetroDev.OpenUI.Core.Windowing.Events;
 using RetroDev.OpenUI.Core.Windowing.Events.Internal;
@@ -7,7 +8,6 @@ using RetroDev.OpenUI.Core.Windowing.SDL;
 using RetroDev.OpenUI.Exceptions;
 using RetroDev.OpenUI.Logging;
 using RetroDev.OpenUI.UI;
-using RetroDev.OpenUI.UI.Coordinates;
 using RetroDev.OpenUI.UI.Properties;
 using RetroDev.OpenUI.UI.Resources;
 using RetroDev.OpenUI.UI.Themes;
@@ -101,7 +101,7 @@ public class Application : IDisposable
         Theme = createTheme != null ? createTheme(this) : new Theme(this);
         _themeParser = new ThemeParser(Theme);
         LifeCycle.CurrentState = LifeCycle.State.INIT;
-        var font = new Font(this, "OpenSans", 18, FontType.Regular);
+        var font = new Font(this, "LiberationSans", 16, FontType.Regular);
         DefaultFont = new BindableProperty<Font>(font, this, BindingType.SourceToDestination);
 
         LoadThemeResource("openui-dark");

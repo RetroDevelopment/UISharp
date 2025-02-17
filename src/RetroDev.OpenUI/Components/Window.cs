@@ -4,12 +4,12 @@ using RetroDev.OpenUI.Core.Graphics;
 using RetroDev.OpenUI.Core.Graphics.OpenGL;
 using RetroDev.OpenUI.Core.Windowing;
 using RetroDev.OpenUI.Core.Windowing.Events;
-using RetroDev.OpenUI.UI.Coordinates;
 using RetroDev.OpenUI.UI.Properties;
 using RetroDev.OpenUI.Core.Windowing.SDL;
 using RetroDev.OpenUI.UI;
 using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Components.Base;
+using RetroDev.OpenUI.Core.Graphics.Coordinates;
 
 namespace RetroDev.OpenUI.Components;
 

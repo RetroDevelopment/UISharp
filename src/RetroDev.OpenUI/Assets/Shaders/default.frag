@@ -3,7 +3,7 @@
 uniform vec4 color;
 uniform vec4 clipArea;
 uniform sampler2D mainTexture;
-uniform bool hasTexture;
+uniform int textureMode;
 
 in vec2 FragmentCoorindates;
 in vec2 TextureCoordinates;
@@ -23,17 +23,27 @@ float includeInClippingArea(vec2 coord)
 void main()
 {
     float mask = includeInClippingArea(FragmentCoorindates);
-    vec4 textureColor = texture(mainTexture, TextureCoordinates);
-    //FragColor = textureColor * vec4(color.rgb, color.a * mask);
-    //FragColor = mix(color, textureColor, textureColor.a) * mask;
-   
-    // TODO: remove the if then else and use step
-    if (hasTexture)
-    {
-        FragColor = textureColor * mask;
-    }
-    else
+
+    // Using branching here because condition only use uniform, so fragment shader will be recompiled
+    // removing the condition. This avoids for example texture sampling or other unnecessary calculations.
+    // With instanced rendering these recompilation will not be frequent.
+
+    // No tetxure
+    if (textureMode == 0)
     {
         FragColor = color * mask;
+    }
+    // RGBA texture
+    else if (textureMode == 1)
+    {
+        vec4 textureColor = texture(mainTexture, TextureCoordinates);
+        FragColor = textureColor * mask;
+    }
+    // Gray scale texture    
+    else 
+    {
+        vec4 textureColor = texture(mainTexture, TextureCoordinates);
+        vec4 colorizedGrayImageColor = vec4(color.r, color.g, color.b, textureColor.r * color.a);
+        FragColor = colorizedGrayImageColor * mask;
     }
 }
