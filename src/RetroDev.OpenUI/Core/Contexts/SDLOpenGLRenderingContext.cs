@@ -1,6 +1,9 @@
-﻿using RetroDev.OpenUI.Core.Windowing.SDL;
+﻿using OpenTK;
+using OpenTK.Graphics.OpenGL;
+using RetroDev.OpenUI.Core.Windowing.SDL;
 using RetroDev.OpenUI.Exceptions;
 using RetroDev.OpenUI.Utils;
+using SDL2;
 using static SDL2.SDL;
 
 namespace RetroDev.OpenUI.Core.Contexts;
@@ -10,6 +13,14 @@ namespace RetroDev.OpenUI.Core.Contexts;
 /// </summary>
 public class SDLOpenGLRenderingContext : ISDLRenderingContext, IOpenGLRenderingContext
 {
+    private class SDL2OpenGLBindings : IBindingsContext
+    {
+        public nint GetProcAddress(string procName)
+        {
+            return SDL.SDL_GL_GetProcAddress(procName);
+        }
+    }
+
     private readonly Application _application;
     private readonly nint _openGlContext;
 
@@ -68,5 +79,13 @@ public class SDLOpenGLRenderingContext : ISDLRenderingContext, IOpenGLRenderingC
     public void RenderFrame()
     {
         SDL_GL_SwapWindow(WindowId.Handle);
+    }
+
+    /// <summary>
+    /// Loads OpenGL library using SDL.
+    /// </summary>
+    public void LoadBinding()
+    {
+        LoggingUtils.OpenGLCheck(() => GL.LoadBindings(new SDL2OpenGLBindings()), _application.Logger);
     }
 }

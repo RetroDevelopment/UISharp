@@ -1,12 +1,10 @@
-﻿using OpenTK;
-using OpenTK.Graphics.OpenGL;
+﻿using OpenTK.Graphics.OpenGL;
 using RetroDev.OpenUI.Core.Contexts;
 using RetroDev.OpenUI.Core.Graphics.Fonts;
 using RetroDev.OpenUI.Core.Graphics.Shapes;
 using RetroDev.OpenUI.UI.Coordinates;
 using RetroDev.OpenUI.UI.Resources;
 using RetroDev.OpenUI.Utils;
-using SDL2;
 
 namespace RetroDev.OpenUI.Core.Graphics.OpenGL;
 
@@ -51,14 +49,6 @@ namespace RetroDev.OpenUI.Core.Graphics.OpenGL;
 /// </summary>
 public class OpenGLRenderingEngine : IRenderingEngine
 {
-    private class SDL2OpenGLBindings : IBindingsContext
-    {
-        public nint GetProcAddress(string procName)
-        {
-            return SDL.SDL_GL_GetProcAddress(procName);
-        }
-    }
-
     private readonly Application _application;
     private readonly IFontRenderingEngine _fontEngine;
     private readonly IOpenGLRenderingContext _context;
@@ -107,7 +97,7 @@ public class OpenGLRenderingEngine : IRenderingEngine
         var shaderResources = new EmbeddedShaderResources();
 
         // Load OpenGL.NET bindings
-        LoggingUtils.OpenGLCheck(() => GL.LoadBindings(new SDL2OpenGLBindings()), _application.Logger);
+        context.LoadBinding();
 
         _shader = new ShaderProgram([new Shader(ShaderType.VertexShader, shaderResources["default.vert"], _application.Logger),
                                      new Shader(ShaderType.FragmentShader, shaderResources["default.frag"], _application.Logger)],
