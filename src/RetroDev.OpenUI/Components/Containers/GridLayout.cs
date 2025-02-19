@@ -16,77 +16,6 @@ public class GridLayout : UIContainer, IContainer
     public record RelateiveSize(float Size) : IGridSize;
     public record AutoSize : IGridSize;
 
-    // TODO: Smart auto size that fits exactly all children
-    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize)
-    {
-        // TODO: refactor and take into account relative width and height
-        var childrenSizeList = childrenSize.ToList();
-        var columnSizeDefinitions = Parse(ColumnSizes.Value, Columns.Value);
-        var rowSizeDefinitions = Parse(RowSizes.Value, Rows.Value);
-        var autoColumnCells = 0;
-        var maximumColumnWidth = PixelUnit.Zero;
-        var cumulativeFixedWidth = PixelUnit.Zero;
-        var autoRowCells = 0;
-        var maximumRowHeight = PixelUnit.Zero;
-        var cumulativeFixedHeight = PixelUnit.Zero;
-        int index = 0;
-
-        foreach (var column in columnSizeDefinitions)
-        {
-            if (column is AutoSize || column is RelateiveSize)
-            {
-                for (int rowIndex = 0; rowIndex < Rows.Value; rowIndex++)
-                {
-                    var childIndex = rowIndex * (int)Columns.Value + index;
-                    if (childIndex >= childrenSizeList.Count) break;
-                    maximumColumnWidth = Math.Max(maximumColumnWidth, childrenSizeList[childIndex].Width);
-                }
-
-                autoColumnCells++;
-            }
-            else if (column is AbsoluteSize size)
-            {
-                cumulativeFixedWidth += size.Size;
-            }
-
-            index++;
-        }
-
-        index = 0;
-
-        foreach (var row in rowSizeDefinitions)
-        {
-            if (row is AutoSize || row is RelateiveSize)
-            {
-                for (int columnIndex = 0; columnIndex < Columns.Value; columnIndex++)
-                {
-                    var childIndex = index * (int)Columns.Value + columnIndex;
-                    if (childIndex >= childrenSizeList.Count) break;
-                    maximumRowHeight = Math.Max(maximumRowHeight, childrenSizeList[childIndex].Height);
-                }
-
-                autoRowCells++;
-            }
-            else if (row is AbsoluteSize size)
-            {
-                cumulativeFixedHeight += size.Size;
-            }
-
-            index++;
-        }
-
-        //var rowSizes = Parse(RowSizes, Rows.Value);
-        //var columnSizes = Parse(ColumnSizes, Columns.Value);
-        //var maxChildWidth = childrenSize.Max(s => s.Width);
-        //var maxChildHeight = childrenSize.Max(s => s.Height);
-        //var maxFixedWidth = columnSizes.Where(c => c is AbsoluteSize).Cast<AbsoluteSize>().Max(s => s.Size);
-        //var maxFixedHeight = rowSizes.Where(c => c is AbsoluteSize).Cast<AbsoluteSize>().Max(s => s.Size);
-        //
-        var optimalCellWidth = maximumColumnWidth * autoColumnCells + cumulativeFixedWidth;
-        var optimalCellHeight = maximumRowHeight * autoRowCells + cumulativeFixedHeight;
-        return new Size(optimalCellWidth, optimalCellHeight);
-    }
-
     /// <summary>
     /// The number of layout rows.
     /// </summary>
@@ -223,6 +152,70 @@ public class GridLayout : UIContainer, IContainer
         }
 
         return areas;
+    }
+
+    // TODO: Smart auto size that fits exactly all children
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize)
+    {
+        // TODO: refactor and take into account relative width and height
+        var childrenSizeList = childrenSize.ToList();
+        var columnSizeDefinitions = Parse(ColumnSizes.Value, Columns.Value);
+        var rowSizeDefinitions = Parse(RowSizes.Value, Rows.Value);
+        var autoColumnCells = 0;
+        var maximumColumnWidth = PixelUnit.Zero;
+        var cumulativeFixedWidth = PixelUnit.Zero;
+        var autoRowCells = 0;
+        var maximumRowHeight = PixelUnit.Zero;
+        var cumulativeFixedHeight = PixelUnit.Zero;
+        int index = 0;
+
+        foreach (var column in columnSizeDefinitions)
+        {
+            if (column is AutoSize || column is RelateiveSize)
+            {
+                for (int rowIndex = 0; rowIndex < Rows.Value; rowIndex++)
+                {
+                    var childIndex = rowIndex * (int)Columns.Value + index;
+                    if (childIndex >= childrenSizeList.Count) break;
+                    maximumColumnWidth = Math.Max(maximumColumnWidth, childrenSizeList[childIndex].Width);
+                }
+
+                autoColumnCells++;
+            }
+            else if (column is AbsoluteSize size)
+            {
+                cumulativeFixedWidth += size.Size;
+            }
+
+            index++;
+        }
+
+        index = 0;
+
+        foreach (var row in rowSizeDefinitions)
+        {
+            if (row is AutoSize || row is RelateiveSize)
+            {
+                for (int columnIndex = 0; columnIndex < Columns.Value; columnIndex++)
+                {
+                    var childIndex = index * (int)Columns.Value + columnIndex;
+                    if (childIndex >= childrenSizeList.Count) break;
+                    maximumRowHeight = Math.Max(maximumRowHeight, childrenSizeList[childIndex].Height);
+                }
+
+                autoRowCells++;
+            }
+            else if (row is AbsoluteSize size)
+            {
+                cumulativeFixedHeight += size.Size;
+            }
+
+            index++;
+        }
+
+        var optimalCellWidth = maximumColumnWidth * autoColumnCells + cumulativeFixedWidth;
+        var optimalCellHeight = maximumRowHeight * autoRowCells + cumulativeFixedHeight;
+        return new Size(optimalCellWidth, optimalCellHeight);
     }
 
     private void EnsureRowsColumnFitNumberOfChildren()
