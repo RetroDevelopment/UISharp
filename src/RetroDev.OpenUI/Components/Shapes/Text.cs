@@ -36,7 +36,7 @@ public class Text : UIWidget
         TextColor = new UIProperty<Text, Color>(this, Color.Transparent);
         DisplayText = new UIProperty<Text, string>(this, string.Empty);
         Font = new UIProperty<Text, Font>(this, Application.DefaultFont, BindingType.DestinationToSource);
-        RenderFrame += Rectangle_RenderFrame;
+        RenderFrame += Text_RenderFrame;
     }
 
     /// <inheritdoc />
@@ -46,7 +46,7 @@ public class Text : UIWidget
         return Root.RenderingEngine.ComputeTextSize(DisplayText.Value, Font.Value.ToGraphicsFont());
     }
 
-    private void Rectangle_RenderFrame(UIComponent sender, RenderingEventArgs e)
+    private void Text_RenderFrame(UIComponent sender, RenderingEventArgs e)
     {
         var textShape = new OpenUI.Core.Graphics.Shapes.Text(Color.Transparent,
                                                              TextColor.Value,

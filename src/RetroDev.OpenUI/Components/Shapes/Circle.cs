@@ -47,7 +47,7 @@ public class Circle : UIWidget
 
         Radius.ValueChange += Radius_ValueChange;
 
-        RenderFrame += Rectangle_RenderFrame;
+        RenderFrame += Circle_RenderFrame;
     }
 
     private void Radius_ValueChange(BindableProperty<PixelUnit> sender, ValueChangeEventArgs<PixelUnit> e)
@@ -72,7 +72,7 @@ public class Circle : UIWidget
         return new Size(minimumSize, minimumSize);
     }
 
-    private void Rectangle_RenderFrame(UIComponent sender, RenderingEventArgs e)
+    private void Circle_RenderFrame(UIComponent sender, RenderingEventArgs e)
     {
         var circleShape = new OpenUI.Core.Graphics.Shapes.Circle(BackgroundColor.Value,
                                                                  BorderColor.Value,

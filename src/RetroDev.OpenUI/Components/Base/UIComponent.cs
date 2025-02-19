@@ -329,6 +329,22 @@ public abstract class UIComponent
     protected virtual List<Area?> RepositionChildren(Size availableSpace, IEnumerable<Size> sizeHints) => [];
 
     /// <summary>
+    /// Override this method to estabilsh second pass to decide final rendering area for <see langword="this" /> component children.
+    /// This is useful to re-calculate children sizes after already knowing the updated size.
+    /// </summary>
+    /// <param name="availableSpace"><see langword="this" /> container full available size to render.</param>
+    /// <param name="childrenAreas">The children estimate rendering areas.</param>
+    /// <returns>
+    /// The rendering areas of all children of <see langword="this" /> component.
+    /// If the list is empty, the default area calculation will be used, otherwise the list must have the same size
+    /// of <paramref name="childrenAreas"/>, that is, the same number of element of children.
+    /// If an element of the list is <see langword="null" /> the respective child drawing area will be calculated automatically.
+    /// If on element of a <see cref="Area"/> in the list (e.g. <see cref="Area.Size"/>.<see cref="Size.Width"/> is set to
+    /// <see cref="PixelUnit.Auto"/>, default area calculation will be used.
+    /// </returns>
+    protected virtual List<Area?> RepositionChildrenSecondPass(Size availableSpace, IEnumerable<Area> childrenAreas) => [];
+
+    /// <summary>
     /// The size of <see langword="this" /> component at the latest frame rendering.
     /// </summary>
     /// TODO: remove
@@ -463,38 +479,80 @@ public abstract class UIComponent
     /// </exception>
     internal void ComputeDrawingAreas(Area? relativeDrawingArea = null, bool rootCall = false)
     {
+        var changed = false;
         if (!rootCall) _relativeDrawingAreaOverride = relativeDrawingArea;
-        _relativeDrawingArea = ComputeRelativeDrawingArea(_relativeDrawingAreaOverride);
-        _absoluteDrawingArea = ComputeAbsoluteDrawingArea();
-        _clipArea = ComputeClipArea();
+        _relativeDrawingArea = ComputeRelativeDrawingArea(ref changed, _relativeDrawingAreaOverride);
+        _absoluteDrawingArea = ComputeAbsoluteDrawingArea(ref changed);
+        _clipArea = ComputeClipArea(ref changed);
 
         var childrenAreas = RepositionChildren(_relativeDrawingArea.Size, _childNodes.Select(c => c._wrapSize));
+
+        // If rendering area has not changed and children area has not changed, no need to proceed.
+        if (childrenAreas.Count == 0 && !changed)
+        {
+            Validate();
+            return;
+        }
 
         if (childrenAreas.Count != 0 && childrenAreas.Count != _childNodes.Count)
         {
             throw new InvalidOperationException($"{nameof(RepositionChildren)} must return the same number of elements as the number of children or be empty: {childrenAreas.Count()} provided but {_childNodes.Count} exist");
         }
 
-        // TODO: no need to go recursively if nothing has changed
+        // If rendering area has changed, ensure the component is invalidated.
+        Invalidate();
+
+        if (childrenAreas.Count != 0)
+        {
+            for (var i = 0; i < _childNodes.Count; i++)
+            {
+                var child = _childNodes[i];
+                var childArea = childrenAreas[i];
+                child.ComputeDrawingAreas(childArea);
+            }
+        }
+        else
+        {
+            foreach (var child in _childNodes)
+            {
+                child.ComputeDrawingAreas();
+            }
+        }
+
+        Validate();
+        RenderingAreaChange?.Invoke(this, new RenderingAreaEventArgs(_relativeDrawingArea));
+    }
+
+    /// <summary>
+    /// Computed the final component rendering area.
+    /// </summary>
+    /// <param name="relativeDrawingArea">A way to override the rendering area calculated values.</param>
+    /// <param name="rootCall">Whether this is called from <see cref="MeasureProvider"/> and it requires to perform the invalidated subtree area re-calculation.</param>
+    /// <exception cref="InvalidOperationException">
+    /// If <see cref="RepositionChildren(Size, IEnumerable{Size})"/> return list is not empty and it has not the same size as <see cref="_childNodes"/>.
+    /// </exception>
+    internal void ComputeDrawingAreasSecondPass()
+    {
+        var childrenAreas = RepositionChildrenSecondPass(_relativeDrawingArea.Size, _childNodes.Select(c => c._relativeDrawingArea));
+
+        // If rendering area has not changed and children area has not changed, no need to proceed.
+        if (childrenAreas.Count == 0)
+        {
+            return;
+        }
+
+        if (childrenAreas.Count != 0 && childrenAreas.Count != _childNodes.Count)
+        {
+            throw new InvalidOperationException($"{nameof(RepositionChildren)} must return the same number of elements as the number of children or be empty: {childrenAreas.Count()} provided but {_childNodes.Count} exist");
+        }
+
         for (var i = 0; i < _childNodes.Count; i++)
         {
             var child = _childNodes[i];
-            // The parent is already invalidated, so no need to invalidate this component. This ensures that if a component is invalidated already, the children won't
-            // TODO: if using rendering instancing, make sure to invalidate each component that has changed.
-            // then we will go through each and update the instance buffer portion accordingly.
-            // As opposed to now, this will ensure that each invalidated component is in the invalidated list so it is possible to update instances.
-            child.CancelInvalidation();
-            var childArea = childrenAreas.Count != 0 ? childrenAreas[i] : null;
-            child.ComputeDrawingAreas(childArea);
+            var childArea = childrenAreas[i];
+            if (childArea != null) child.ComputeDrawingAreas(childArea);
         }
 
-        // TODO: Add PostRepositionChildren(relativeArea, childrenDrawingAreaList) to allow re-repositioning children after knowing their size.
-        // This second pass layout is very useful for scoll view, so you can re-implement it better.
-        // The implementation would be
-        // - Make sure X and Y are not negative but (0, 0) if the element fits the scroll view (it happens when treebox click on unfold button and the size of the box reduces so much that scroll bars disappear)
-        // - Make scroll bars as rectangles and decide their size based on child size.
-        // And finally remove ActualSize property which is dangerous.
-        // Also make sure all drawing areas of children are re calculated recursively in the sub tree.
         Validate();
         RenderingAreaChange?.Invoke(this, new RenderingAreaEventArgs(_relativeDrawingArea));
     }
@@ -650,7 +708,7 @@ public abstract class UIComponent
         _focusedComponent = component;
     }
 
-    private Area ComputeRelativeDrawingArea(Area? areaOverride = null)
+    private Area ComputeRelativeDrawingArea(ref bool changed, Area? areaOverride = null)
     {
         if (Visibility.Value == ComponentVisibility.Collapsed) return Area.Empty;
         var sizeOverride = areaOverride?.Size ?? new Size(PixelUnit.Auto, PixelUnit.Auto);
@@ -670,11 +728,32 @@ public abstract class UIComponent
         var actualTopLeft = new Point(actualX, actualY);
 
         // Windows X and Y position will be relative to the screen, but the relative area location is Point.Zero, because it is relative to the viewport (i.e. the window itslef).
-        return new Area(actualTopLeft, actualSize);
+        var result = new Area(actualTopLeft, actualSize);
+        changed |= result != _relativeDrawingArea;
+        return result;
     }
 
-    private Area ComputeAbsoluteDrawingArea() => Parent != null ? _relativeDrawingArea.ToAbsolute(Parent._absoluteDrawingArea) : _relativeDrawingArea.Fill();
-    private Area ComputeClipArea() => _absoluteDrawingArea.Clip(Parent?._clipArea);
+    private Area ComputeAbsoluteDrawingArea(ref bool changed)
+    {
+        Area result;
+        if (Parent != null)
+        {
+            result = _relativeDrawingArea.ToAbsolute(Parent._absoluteDrawingArea);
+        }
+        else
+        {
+            result = _relativeDrawingArea.Fill();
+        }
+        changed |= result != _absoluteDrawingArea;
+        return result;
+    }
+
+    private Area ComputeClipArea(ref bool changed)
+    {
+        var result = _absoluteDrawingArea.Clip(Parent?._clipArea);
+        changed |= result != _clipArea;
+        return result;
+    }
 
     // Recompute the level of this component in the UI hierarchy tree.
     private void RecomputeLevel()
