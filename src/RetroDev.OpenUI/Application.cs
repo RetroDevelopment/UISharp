@@ -1,14 +1,14 @@
 ﻿using RetroDev.OpenUI.Components;
 using RetroDev.OpenUI.Components.Base;
-using RetroDev.OpenUI.Core.Graphics.Font;
-using RetroDev.OpenUI.Core.Graphics.Font.Internal;
+using RetroDev.OpenUI.Core.Graphics.Coordinates;
 using RetroDev.OpenUI.Core.Windowing;
 using RetroDev.OpenUI.Core.Windowing.Events;
 using RetroDev.OpenUI.Core.Windowing.Events.Internal;
 using RetroDev.OpenUI.Core.Windowing.SDL;
 using RetroDev.OpenUI.Exceptions;
 using RetroDev.OpenUI.Logging;
-using RetroDev.OpenUI.UI.Coordinates;
+using RetroDev.OpenUI.UI;
+using RetroDev.OpenUI.UI.Properties;
 using RetroDev.OpenUI.UI.Resources;
 using RetroDev.OpenUI.UI.Themes;
 using RetroDev.OpenUI.UIDefinition;
@@ -46,11 +46,6 @@ public class Application : IDisposable
     public ILogger Logger { get; set; }
 
     /// <summary>
-    /// A set of services to manage font.
-    /// </summary>
-    public IFontServices FontServices => new FontServices();
-
-    /// <summary>
     /// Manages all resources.
     /// </summary>
     public IResourceManager ResourceManager { get; }
@@ -58,7 +53,7 @@ public class Application : IDisposable
     /// <summary>
     /// The UIDefinition language manager, loading and generating xml UIDefinition files.
     /// </summary>
-    public UIDefinitionManager UIDefinitionManager => new UIDefinitionManager(this);
+    public UIDefinitionManager UIDefinitionManager => new(this);
 
     /// <summary>
     /// The main theme used in the application.
@@ -69,6 +64,12 @@ public class Application : IDisposable
     /// The primary screen size.
     /// </summary>
     public Size ScreenSize => WindowManager.ScreenSize;
+
+    /// <summary>
+    /// The default font for this application.
+    /// </summary>
+    // TODO: Consider using styles for default properties
+    public BindableProperty<Font> DefaultFont { get; }
 
     /// <summary>
     /// The list of all windows managed by <see langword="this" /> <see cref="Application"/>.
@@ -100,6 +101,8 @@ public class Application : IDisposable
         Theme = createTheme != null ? createTheme(this) : new Theme(this);
         _themeParser = new ThemeParser(Theme);
         LifeCycle.CurrentState = LifeCycle.State.INIT;
+        var font = new Font(this, "LiberationSans", 16, FontType.Regular);
+        DefaultFont = new BindableProperty<Font>(font, this, BindingType.SourceToDestination);
 
         LoadThemeResource("openui-dark");
         WindowManager.Initialize();

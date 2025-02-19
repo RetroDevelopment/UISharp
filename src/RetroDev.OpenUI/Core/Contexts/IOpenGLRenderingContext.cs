@@ -14,4 +14,10 @@ public interface IOpenGLRenderingContext : IRenderingContext
     /// Renders the current frame into the window.
     /// </summary>
     void RenderFrame();
+
+    /// <summary>
+    /// Loads OpenGL library.
+    /// This depends on the specific windows management library used by <see langword="this" /> context.
+    /// </summary>
+    void LoadBinding();
 }

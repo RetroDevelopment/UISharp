@@ -2,8 +2,9 @@
 using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Components.Shapes;
 using RetroDev.OpenUI.Core.Graphics;
+using RetroDev.OpenUI.Core.Graphics.Coordinates;
 using RetroDev.OpenUI.Core.Windowing.Events;
-using RetroDev.OpenUI.UI.Coordinates;
+using RetroDev.OpenUI.UI;
 using RetroDev.OpenUI.UI.Properties;
 
 namespace RetroDev.OpenUI.Components.Simple;
@@ -41,16 +42,27 @@ public class EditBox : UIWidget
     /// </summary>
     public UIProperty<EditBox, Color> DisabledBackgroundColor { get; }
 
+    /// <summary>
+    /// The font of the edited text.
+    /// </summary>
+    public UIProperty<EditBox, Font> Font { get; }
+
     /// <inheritdoc />
-    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) => new(20 * 10, 20); // 20 is font size and 10 the characters (estimate)
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize)
+    {
+        if (Root == null) return Size.Zero;
+        var height = Root.RenderingEngine.ComputeTextMaximumHeight(Font.Value.ToGraphicsFont());
+        return new Size(height * 10, height);
+    }
 
     /// <summary>
     /// Creates a new edit box to insert text.
     /// </summary>
     /// <param name="application">The application that contains this button.</param>
-    public EditBox(Application application) : base(application, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap, horizontalAlignment: Alignment.Left, verticalAlignment: Alignment.Center)
+    public EditBox(Application application) : base(application, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
     {
         Text = new UIProperty<EditBox, string>(this, string.Empty);
+        Font = new UIProperty<EditBox, Font>(this, application.DefaultFont, BindingType.DestinationToSource);
         TextColor = new UIProperty<EditBox, Color>(this, Application.Theme.TextColor, BindingType.DestinationToSource);
         DisabledTextColor = new UIProperty<EditBox, Color>(this, Application.Theme.TextColorDisabled, BindingType.DestinationToSource);
         FocusColor = new UIProperty<EditBox, Color>(this, Application.Theme.BorderColor, BindingType.DestinationToSource);
@@ -67,6 +79,7 @@ public class EditBox : UIWidget
 
         _inputTextLabel = new Label(application);
         _inputTextLabel.Text.BindDestinationToSource(Text);
+        _inputTextLabel.Font.BindDestinationToSource(Font);
         _inputTextLabel.AutoWidth.Value = AutoSize.Wrap;
         _inputTextLabel.AutoHeight.Value = AutoSize.Wrap;
         _inputTextLabel.HorizontalAlignment.Value = Alignment.Left;

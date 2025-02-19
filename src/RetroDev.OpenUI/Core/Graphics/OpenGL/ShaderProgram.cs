@@ -11,6 +11,8 @@ internal class ShaderProgram
     private readonly int _id;
     private Dictionary<string, int> _uniformLocationCache = [];
 
+    internal enum TextureMode : int { None, Color, GrayScale }
+
     public ShaderProgram(IEnumerable<Shader> shaders, ILogger logger)
     {
         _id = GL.CreateProgram();
@@ -41,6 +43,9 @@ internal class ShaderProgram
 
     public void SetFillColor(Vector4 color) =>
         SetVec4("color", color);
+
+    public void SetTextureMode(TextureMode mode) =>
+        SetInt("textureMode", (int)mode);
 
     public void SetClipArea(Vector4 clipArea) =>
         SetVec4("clipArea", clipArea);
@@ -84,6 +89,9 @@ internal class ShaderProgram
         // Pass the array of matrices to OpenGL
         GL.UniformMatrix3(location, matrices.Count, false, matrixData);
     }
+
+    private void SetInt(string name, int value) =>
+        GL.Uniform1(GetUniformLocation(name), value);
 
     private void SetVec2(string name, Vector2 vec) =>
         GL.Uniform2(GetUniformLocation(name), vec);

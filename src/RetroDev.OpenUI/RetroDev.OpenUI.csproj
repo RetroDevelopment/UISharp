@@ -10,23 +10,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Assets\Shaders\default.frag" />
-    <None Remove="Assets\Shaders\default.vert" />
+    <None Remove="Assets\Shaders\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Assets\Shaders\default.frag" />
-    <EmbeddedResource Include="Assets\Shaders\default.vert" />
-    <EmbeddedResource Include="Assets\Themes\openui-dark.xml" />
-    <EmbeddedResource Include="Assets\Themes\openui-light.xml" />
+    <EmbeddedResource Include="Assets\**" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="FreeTypeSharp" Version="3.0.0" />
     <PackageReference Include="OpenTK.Graphics" Version="4.9.1" />
     <PackageReference Include="ppy.SDL2-CS" Version="1.0.82" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.6" />
-    <PackageReference Include="SixLabors.Fonts" Version="2.0.6" />
-    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.4" />
   </ItemGroup>
 
 </Project>

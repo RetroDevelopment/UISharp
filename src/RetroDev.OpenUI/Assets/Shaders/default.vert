@@ -24,4 +24,6 @@ void main()
     gl_Position = vec4(projectedPos.xy, 0.0, 1.0);
     FragmentCoorindates = transformedPos.xy;
     TextureCoordinates = transformMatrixIndex == 0.0f ? vec2(position.x + 0.5, -position.y + 0.5) : vec2(0.5, 0.5);
+    // Small imprecision to avoid rounding errors to make coordinate fall between textels causing text artifacts
+    TextureCoordinates += 0.001;
 }

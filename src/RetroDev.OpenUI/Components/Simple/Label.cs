@@ -2,7 +2,8 @@
 using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Components.Shapes;
 using RetroDev.OpenUI.Core.Graphics;
-using RetroDev.OpenUI.UI.Coordinates;
+using RetroDev.OpenUI.Core.Graphics.Coordinates;
+using RetroDev.OpenUI.UI;
 using RetroDev.OpenUI.UI.Properties;
 
 namespace RetroDev.OpenUI.Components.Simple;
@@ -24,6 +25,11 @@ public class Label : UIWidget
     /// </summary>
     public UIProperty<Label, Color> TextColor { get; }
 
+    /// <summary>
+    /// The label font.
+    /// </summary>
+    public UIProperty<Label, Font> Font { get; }
+
     /// <inheritdoc/>
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
         childrenSize.ElementAt(0);
@@ -35,12 +41,14 @@ public class Label : UIWidget
     public Label(Application application) : base(application, isFocusable: false, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
     {
         Text = new UIProperty<Label, string>(this, string.Empty);
+        Font = new UIProperty<Label, Font>(this, Application.DefaultFont, BindingType.DestinationToSource);
         TextColor = new UIProperty<Label, Color>(this, Application.Theme.TextColor, BindingType.DestinationToSource);
 
         _text = new Text(application);
         _text.BackgroundColor.BindDestinationToSource(BackgroundColor);
         _text.TextColor.BindDestinationToSource(TextColor);
         _text.DisplayText.BindDestinationToSource(Text);
+        _text.Font.BindDestinationToSource(Font);
 
         AddChildNode(_text);
     }

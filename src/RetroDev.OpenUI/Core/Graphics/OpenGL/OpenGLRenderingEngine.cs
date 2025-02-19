@@ -1,12 +1,11 @@
-﻿using OpenTK;
-using OpenTK.Graphics.OpenGL;
+﻿using OpenTK.Graphics.OpenGL;
 using RetroDev.OpenUI.Core.Contexts;
-using RetroDev.OpenUI.Core.Graphics.Font.Internal;
+using RetroDev.OpenUI.Core.Graphics.Coordinates;
+using RetroDev.OpenUI.Core.Graphics.Fonts;
+using RetroDev.OpenUI.Core.Graphics.Imaging;
 using RetroDev.OpenUI.Core.Graphics.Shapes;
-using RetroDev.OpenUI.UI.Coordinates;
 using RetroDev.OpenUI.UI.Resources;
 using RetroDev.OpenUI.Utils;
-using SDL2;
 
 namespace RetroDev.OpenUI.Core.Graphics.OpenGL;
 
@@ -51,15 +50,8 @@ namespace RetroDev.OpenUI.Core.Graphics.OpenGL;
 /// </summary>
 public class OpenGLRenderingEngine : IRenderingEngine
 {
-    private class SDL2OpenGLBindings : IBindingsContext
-    {
-        public nint GetProcAddress(string procName)
-        {
-            return SDL.SDL_GL_GetProcAddress(procName);
-        }
-    }
-
     private readonly Application _application;
+    private readonly IFontRenderingEngine _fontEngine;
     private readonly IOpenGLRenderingContext _context;
     private readonly ShaderProgram _shader;
     private readonly Dictionary<string, int> _textCache = [];
@@ -93,11 +85,12 @@ public class OpenGLRenderingEngine : IRenderingEngine
     /// </summary>
     public IRenderingContext RenderingContext => _context;
 
-    public OpenGLRenderingEngine(Application application, IOpenGLRenderingContext context)
+    public OpenGLRenderingEngine(Application application, IOpenGLRenderingContext context, IFontRenderingEngine? fontEngine = null)
     {
         _application = application;
         _application.LifeCycle.ThrowIfNotOnUIThread();
         _context = context;
+        _fontEngine = fontEngine ?? new FreeTypeFontRenderingEngine();
 
         _application.Logger.LogInfo("Using OpenGL rendering");
         _application.Logger.LogDebug("OpenGL Loading shaders");
@@ -105,7 +98,7 @@ public class OpenGLRenderingEngine : IRenderingEngine
         var shaderResources = new EmbeddedShaderResources();
 
         // Load OpenGL.NET bindings
-        LoggingUtils.OpenGLCheck(() => GL.LoadBindings(new SDL2OpenGLBindings()), _application.Logger);
+        context.LoadBinding();
 
         _shader = new ShaderProgram([new Shader(ShaderType.VertexShader, shaderResources["default.vert"], _application.Logger),
                                      new Shader(ShaderType.FragmentShader, shaderResources["default.frag"], _application.Logger)],
@@ -118,7 +111,7 @@ public class OpenGLRenderingEngine : IRenderingEngine
         LoggingUtils.OpenGLCheck(() => GL.Enable(EnableCap.Blend), _application.Logger);
         LoggingUtils.OpenGLCheck(() => GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha), _application.Logger);
 
-        _defaultTexture = CreateTexture(new RgbaImage([0, 0, 0, 0], 1, 1));
+        _defaultTexture = CreateTexture(new RgbaImage([0, 0, 0, 0], new Size(1, 1)), interpolate: false);
         _modelGenerator = new ProceduralModelGenerator();
     }
 
@@ -126,10 +119,12 @@ public class OpenGLRenderingEngine : IRenderingEngine
     /// Creates a texture with the given <paramref name="image"/> and stores it in memory.
     /// </summary>
     /// <param name="image">An RGBA image.</param>
+    /// <param name="interpolate">Whether to interpolate the image or render it as is.</param>
     /// <returns>The store texture unique identifier used when referencing this texture.</returns>
-    public int CreateTexture(RgbaImage image)
+    public int CreateTexture(Image image, bool interpolate)
     {
-        _application.LifeCycle.ThrowIfNotOnUIThread(); // TODO: texture creation not on UI rendering
+        _application.LifeCycle.ThrowIfNotOnUIThread();
+
         // TODO: now a new texture is created for each text. we will need to probably use a special model with vertices
         // for each character and map it to texture atlas with uv mapping. Text will be the most performance critical
         // issue since there will be a lot of text and that changes often. Plus implement texture garbage collection for text.
@@ -142,13 +137,16 @@ public class OpenGLRenderingEngine : IRenderingEngine
         LoggingUtils.OpenGLCheck(() => GL.BindTexture(TextureTarget.Texture2D, textureID), _application.Logger);
 
         // Set texture parameters
-        LoggingUtils.OpenGLCheck(() => GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat), _application.Logger);
-        LoggingUtils.OpenGLCheck(() => GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat), _application.Logger);
-        LoggingUtils.OpenGLCheck(() => GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear), _application.Logger);
-        LoggingUtils.OpenGLCheck(() => GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear), _application.Logger);
+        var filterType = interpolate ? (int)TextureMinFilter.Linear : (int)TextureMinFilter.Nearest;
+        LoggingUtils.OpenGLCheck(() => GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge), _application.Logger);
+        LoggingUtils.OpenGLCheck(() => GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge), _application.Logger);
+        LoggingUtils.OpenGLCheck(() => GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, filterType), _application.Logger);
+        LoggingUtils.OpenGLCheck(() => GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, filterType), _application.Logger);
 
+        // Ensure tight packing.
+        LoggingUtils.OpenGLCheck(() => GL.PixelStore(PixelStoreParameter.UnpackAlignment, (int)image.BytesPerPixel), _application.Logger);
         // Upload the image data to the texture
-        LoggingUtils.OpenGLCheck(() => GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, image.Data), _application.Logger);
+        LoggingUtils.OpenGLCheck(() => GL.TexImage2D(TextureTarget.Texture2D, 0, image.InternalFormat, (int)image.Size.Width, (int)image.Size.Height, 0, image.PixelFormat, image.PixelType, image.Data), _application.Logger);
 
         // Generate mipmaps for the texture
         LoggingUtils.OpenGLCheck(() => GL.GenerateMipmap(GenerateMipmapTarget.Texture2D), _application.Logger);
@@ -205,8 +203,9 @@ public class OpenGLRenderingEngine : IRenderingEngine
 
         if (!_textCache.TryGetValue(textKey, out var textureId))
         {
-            var textureImage = new SixLaborsFontRenderingEngine().ConvertTextToRgbaImage(text.Value, 20, text.ForegroundColor);
-            textureId = CreateTexture(textureImage);
+            var textureImage = _fontEngine.ConvertTextToGrayscaleImage(text.Value, text.Font, text.ForegroundColor);
+            // Do not interpolate (linear filtering) but use narest neighbor for text, to prevent blurry text.
+            textureId = CreateTexture(textureImage, interpolate: false);
             _textCache[textKey] = textureId;
         }
 
@@ -216,11 +215,29 @@ public class OpenGLRenderingEngine : IRenderingEngine
         _shader.SetTransform([area.GetTransformMatrix(ViewportSize, 0.0f, 0.0f),
                               area.GetTransformMatrix(ViewportSize, 0.0f, null)]);
         _shader.SetProjection(ViewportSize.GetPorjectionMatrix());
-        _shader.SetFillColor(text.BackgroundColor.ToOpenGLColor());
+        _shader.SetFillColor(text.ForegroundColor.ToOpenGLColor());
         _shader.SetClipArea((clippingArea ?? new Area(Point.Zero, ViewportSize)).ToVector4(ViewportSize));
         _shader.SetOffsetMultiplier(OpenTK.Mathematics.Vector2.Zero);
+        _shader.SetTextureMode(ShaderProgram.TextureMode.GrayScale);
         _modelGenerator.Rectangle.Render(text.TextureID.Value);
     }
+
+    /// <summary>
+    /// Calculates the size to display the given <paramref name="text"/>.
+    /// </summary>
+    /// <param name="text">The text to display.</param>
+    /// <param name="font">The text font.</param>
+    /// <returns>The size to correctly and fully display the given <paramref name="text"/>.</returns>
+    public Size ComputeTextSize(string text, Font font) =>
+        _fontEngine.ComputeTextSize(text, font);
+
+    /// <summary>
+    /// Gets the maximum height occupied by a line of text using the given <paramref name="font"/>.
+    /// </summary>
+    /// <param name="font">The font for which to compute the height.</param>
+    /// <returns>The minimum height necessary to render any character using the given <paramref name="font"/>.</returns>
+    public PixelUnit ComputeTextMaximumHeight(Font font) =>
+        _fontEngine.ComputeTextMaximumHeight(font);
 
     /// <summary>
     /// This method is invoked when starting the rendering of a frame.
@@ -304,6 +321,8 @@ public class OpenGLRenderingEngine : IRenderingEngine
         _shader.SetFillColor(color.ToOpenGLColor());
         _shader.SetClipArea((clippingArea ?? new Area(Point.Zero, ViewportSize)).ToVector4(ViewportSize));
         _shader.SetOffsetMultiplier(NormalizeRadius(xRadius, yRadius, area.Size));
+        // TODO: When implementing Texture class, handle the texture format there so we support also gray scale here depending on how the texture was created.
+        _shader.SetTextureMode(textureId != null ? ShaderProgram.TextureMode.Color : ShaderProgram.TextureMode.None);
         openglShape.Render(textureId ?? _defaultTexture);
     }
 

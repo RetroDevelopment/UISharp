@@ -1,8 +1,9 @@
 ﻿using RetroDev.OpenUI.Core.Graphics;
+using RetroDev.OpenUI.Core.Graphics.Coordinates;
+using RetroDev.OpenUI.Core.Graphics.Imaging;
 using RetroDev.OpenUI.Core.Graphics.Shapes;
 using RetroDev.OpenUI.Core.Windowing.Events.Internal;
 using RetroDev.OpenUI.Logging;
-using RetroDev.OpenUI.UI.Coordinates;
 
 namespace RetroDev.OpenUI.UI;
 
@@ -36,11 +37,11 @@ public class Canvas
     /// </summary>
     /// <param name="image">An RGBA image.</param>
     /// <returns>The store texture unique identifier used when referencing this texture.</returns>
-    public int CreateTexture(RgbaImage image)
+    public int CreateTexture(Image image)
     {
         _lifeCycle.ThrowIfNotOnRenderingPhase();
         _statistics.Elements++;
-        return _renderingEngine.CreateTexture(image);
+        return _renderingEngine.CreateTexture(image, interpolate: false);
     }
 
     /// <summary>

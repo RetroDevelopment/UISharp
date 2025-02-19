@@ -1,4 +1,4 @@
-﻿using RetroDev.OpenUI.UI.Coordinates;
+﻿using RetroDev.OpenUI.Core.Graphics.Coordinates;
 
 namespace RetroDev.OpenUI.Core.Windowing.Events;
 

@@ -1,6 +1,8 @@
-﻿namespace RetroDev.OpenUI.Core.Graphics.Shapes;
+﻿using RetroDev.OpenUI.Core.Graphics.Fonts;
 
-public record Text(Color BackgroundColor, Color ForegroundColor, string Value)
+namespace RetroDev.OpenUI.Core.Graphics.Shapes;
+
+public record Text(Color BackgroundColor, Color ForegroundColor, string Value, Font Font)
 {
     public int? TextureID { get; internal set; } = null;
 }

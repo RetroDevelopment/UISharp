@@ -1,8 +1,8 @@
 ﻿using System.Diagnostics;
 using System.Text;
+using RetroDev.OpenUI.Core.Graphics.Coordinates;
 using RetroDev.OpenUI.Core.Windowing.Events;
 using RetroDev.OpenUI.Core.Windowing.Events.Internal;
-using RetroDev.OpenUI.UI.Coordinates;
 using RetroDev.OpenUI.Utils;
 using static SDL2.SDL;
 
