@@ -52,7 +52,7 @@ public class SDLOpenGLRenderingContext : ISDLRenderingContext, IOpenGLRenderingC
                                       SDL_WINDOWPOS_CENTERED,
                                       SDL_WINDOWPOS_CENTERED,
                                       800, 600,
-                                      SDL_WindowFlags.SDL_WINDOW_HIDDEN | SDL_WindowFlags.SDL_WINDOW_OPENGL | SDL_WindowFlags.SDL_WINDOW_RESIZABLE);
+                                      SDL_WindowFlags.SDL_WINDOW_HIDDEN | SDL_WindowFlags.SDL_WINDOW_OPENGL | SDL_WindowFlags.SDL_WINDOW_ALLOW_HIGHDPI);
 
         if (handle == nint.Zero) throw new UIInitializationException($"Error creating window: {SDL_GetError()}");
         WindowId = new SDLWindowId(handle);

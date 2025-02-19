@@ -138,8 +138,8 @@ public class OpenGLRenderingEngine : IRenderingEngine
 
         // Set texture parameters
         var filterType = interpolate ? (int)TextureMinFilter.Linear : (int)TextureMinFilter.Nearest;
-        LoggingUtils.OpenGLCheck(() => GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat), _application.Logger);
-        LoggingUtils.OpenGLCheck(() => GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat), _application.Logger);
+        LoggingUtils.OpenGLCheck(() => GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge), _application.Logger);
+        LoggingUtils.OpenGLCheck(() => GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge), _application.Logger);
         LoggingUtils.OpenGLCheck(() => GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, filterType), _application.Logger);
         LoggingUtils.OpenGLCheck(() => GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, filterType), _application.Logger);
 
@@ -204,7 +204,8 @@ public class OpenGLRenderingEngine : IRenderingEngine
         if (!_textCache.TryGetValue(textKey, out var textureId))
         {
             var textureImage = _fontEngine.ConvertTextToGrayscaleImage(text.Value, text.Font, text.ForegroundColor);
-            textureId = CreateTexture(textureImage, interpolate: true);
+            // Do not interpolate (linear filtering) but use narest neighbor for text, to prevent blurry text.
+            textureId = CreateTexture(textureImage, interpolate: false);
             _textCache[textKey] = textureId;
         }
 

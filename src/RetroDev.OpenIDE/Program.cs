@@ -10,6 +10,7 @@ using RetroDev.OpenUI.Components.Simple;
 using RetroDev.OpenUI.Core.Graphics;
 using RetroDev.OpenUI.Core.Graphics.Coordinates;
 using RetroDev.OpenUI.Core.Windowing.Events;
+using RetroDev.OpenUI.UI;
 
 namespace RetroDev.OpenIDE;
 
@@ -111,55 +112,18 @@ class Ctr : UIWidget
 
 internal class Program
 {
-    static void Makin(string[] _)
+    static void Mainm(string[] _)
     {
         using var application = new Application();
         application.Logger.Verbosity = OpenUI.Logging.Verbosity.Verbose;
 
-        var root = new TreeBox(application);
-        root.Width.Value = 80;
-        root.Height.Value = 80;
-        root.HorizontalAlignment.Value = Alignment.Center;
-        root.VerticalAlignment.Value = Alignment.Center;
-        root.AutoWidth.Value = AutoSize.Stretch;
-        var lbl = new Label(application);
-        lbl.Text.Value = "First label";
-        var btn = new Button(application);
-        btn.Text.Value = "Click";
-        btn.Action += (_, _) => btn.Height.Value = 300;
-        var n = new TreeNode(btn);
-        root.AddTreeNode(new TreeNode(lbl));
-        root.AddTreeNode(n);
-        n.AddChild(new TreeNode(new Label(application, "Node 1")));
-        n.AddChild(new TreeNode(new Label(application, "Node 2")));
-        n.AddChild(new TreeNode(new Label(application, "Node 3")));
+        var root = new EditBox(application);
+        root.Font.Value = new Font(application, application.DefaultFont.Value.Name, 16, FontType.Regular);
 
         Window window = new Window(application);
         window.Width.Value = 800;
         window.Height.Value = 600;
         window.Visibility.Value = UIComponent.ComponentVisibility.Visible;
-        window.KeyPress += (_, e) =>
-        {
-            if (e.Button == KeyButton.Q) root.AutoWidth.Value = AutoSize.Stretch;
-            if (e.Button == KeyButton.W) root.AutoWidth.Value = AutoSize.Wrap;
-            if (e.Button == KeyButton.A) root.AutoHeight.Value = AutoSize.Stretch;
-            if (e.Button == KeyButton.S) root.AutoHeight.Value = AutoSize.Wrap;
-
-            if (e.Button == KeyButton.E) root.HorizontalAlignment.Value = Alignment.Left;
-            if (e.Button == KeyButton.R) root.HorizontalAlignment.Value = Alignment.Center;
-            if (e.Button == KeyButton.T) root.HorizontalAlignment.Value = Alignment.Right;
-            if (e.Button == KeyButton.D) root.VerticalAlignment.Value = Alignment.Top;
-            if (e.Button == KeyButton.F) root.VerticalAlignment.Value = Alignment.Center;
-            if (e.Button == KeyButton.G) root.VerticalAlignment.Value = Alignment.Bottom;
-        };
-        root.MouseDrag += (_, e) =>
-        {
-            if (root.X.Value.IsAuto) root.X.Value = 0;
-            if (root.Y.Value.IsAuto) root.Y.Value = 0;
-            root.X.Value += e.Offset.X;
-            root.Y.Value += e.Offset.Y;
-        };
-
         window.AddComponent(root);
 
         application.Run();

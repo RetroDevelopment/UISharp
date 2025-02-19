@@ -59,7 +59,7 @@ public class EditBox : UIWidget
     /// Creates a new edit box to insert text.
     /// </summary>
     /// <param name="application">The application that contains this button.</param>
-    public EditBox(Application application) : base(application, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap, horizontalAlignment: Alignment.Left, verticalAlignment: Alignment.Center)
+    public EditBox(Application application) : base(application, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
     {
         Text = new UIProperty<EditBox, string>(this, string.Empty);
         Font = new UIProperty<EditBox, Font>(this, application.DefaultFont, BindingType.DestinationToSource);
