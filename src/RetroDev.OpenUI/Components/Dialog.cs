@@ -18,12 +18,12 @@ public class Dialog<TResult> : Window
     {
         get
         {
-            Application.LifeCycle.ThrowIfNotOnUIThread();
+            Application.Dispatcher.ThrowIfNotOnUIThread();
             return _result;
         }
         protected set
         {
-            Application.LifeCycle.ThrowIfNotOnUIThread();
+            Application.Dispatcher.ThrowIfNotOnUIThread();
             _result = value;
         }
     }
@@ -90,7 +90,7 @@ public class Dialog<TResult> : Window
     /// <param name="result">The dialog result.</param>
     protected void Close(TResult? result)
     {
-        Application.LifeCycle.ThrowIfNotOnUIThread();
+        Application.Dispatcher.ThrowIfNotOnUIThread();
         Result = result;
         Close();
     }

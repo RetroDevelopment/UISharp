@@ -436,6 +436,7 @@ public abstract class UIComponent
 
     internal void OnRenderFrame(RenderingEventArgs renderingArgs)
     {
+        Application.Dispatcher.ThrowIfNotOnUIThread();
         Application.LifeCycle.ThrowIfNotOnRenderingPhase();
 
         if (Visibility.Value == ComponentVisibility.Visible)

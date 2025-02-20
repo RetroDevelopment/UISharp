@@ -141,12 +141,12 @@ public class Window : UIRoot
     {
         get
         {
-            Application.LifeCycle.ThrowIfNotOnUIThread();
+            Application.Dispatcher.ThrowIfNotOnUIThread();
             return _modalChild;
         }
         set
         {
-            Application.LifeCycle.ThrowIfNotOnUIThread();
+            Application.Dispatcher.ThrowIfNotOnUIThread();
             _modalChild = value;
         }
     }

@@ -5,6 +5,7 @@ using RetroDev.OpenUI.Core.Graphics.Fonts;
 using RetroDev.OpenUI.Core.Graphics.Imaging;
 using RetroDev.OpenUI.Core.Graphics.Shapes;
 using RetroDev.OpenUI.Core.Logging;
+using RetroDev.OpenUI.Core.Windowing;
 using RetroDev.OpenUI.UI.Resources;
 
 namespace RetroDev.OpenUI.Core.Graphics.OpenGL;
@@ -50,7 +51,8 @@ namespace RetroDev.OpenUI.Core.Graphics.OpenGL;
 /// </summary>
 public class OpenGLRenderingEngine : IRenderingEngine
 {
-    private readonly Application _application;
+    private readonly ThreadDispatcher _dispatcher;
+    private readonly ILogger _logger;
     private readonly IFontRenderingEngine _fontEngine;
     private readonly IOpenGLRenderingContext _context;
     private readonly ShaderProgram _shader;
@@ -68,15 +70,15 @@ public class OpenGLRenderingEngine : IRenderingEngine
     {
         get
         {
-            _application.LifeCycle.ThrowIfNotOnUIThread();
+            _dispatcher.ThrowIfNotOnUIThread();
             return _viewportSize;
         }
         set
         {
-            _application.LifeCycle.ThrowIfNotOnUIThread();
+            _dispatcher.ThrowIfNotOnUIThread();
             _viewportSize = value;
             _context.MakeCurrent();
-            LoggingUtils.OpenGLCheck(() => GL.Viewport(0, 0, (int)value.Width, (int)value.Height), _application.Logger);
+            LoggingUtils.OpenGLCheck(() => GL.Viewport(0, 0, (int)value.Width, (int)value.Height), _logger);
         }
     }
 
@@ -85,15 +87,17 @@ public class OpenGLRenderingEngine : IRenderingEngine
     /// </summary>
     public IRenderingContext RenderingContext => _context;
 
-    public OpenGLRenderingEngine(Application application, IOpenGLRenderingContext context, IFontRenderingEngine? fontEngine = null)
+    public OpenGLRenderingEngine(ThreadDispatcher dispatcher, ILogger logger, IOpenGLRenderingContext context, IFontRenderingEngine? fontEngine = null)
     {
-        _application = application;
-        _application.LifeCycle.ThrowIfNotOnUIThread();
+        dispatcher.ThrowIfNotOnUIThread();
+
+        _dispatcher = dispatcher;
+        _logger = logger;
         _context = context;
         _fontEngine = fontEngine ?? new FreeTypeFontRenderingEngine();
 
-        _application.Logger.LogInfo("Using OpenGL rendering");
-        _application.Logger.LogDebug("OpenGL Loading shaders");
+        _logger.LogInfo("Using OpenGL rendering");
+        _logger.LogDebug("OpenGL Loading shaders");
 
         // Usually core components like rendering engine should not depend on resources, which are high level components using core. However, it is convenient here
         // in order to locate the shaders from assets.
@@ -102,16 +106,16 @@ public class OpenGLRenderingEngine : IRenderingEngine
         // Load OpenGL.NET bindings
         context.LoadBinding();
 
-        _shader = new ShaderProgram([new Shader(ShaderType.VertexShader, shaderResources["default.vert"], _application.Logger),
-                                     new Shader(ShaderType.FragmentShader, shaderResources["default.frag"], _application.Logger)],
-                                     _application.Logger);
+        _shader = new ShaderProgram([new Shader(ShaderType.VertexShader, shaderResources["default.vert"], _logger),
+                                     new Shader(ShaderType.FragmentShader, shaderResources["default.frag"], _logger)],
+                                     _logger);
 
-        _application.Logger.LogDebug("OpenGL Shaders loaded");
+        _logger.LogDebug("OpenGL Shaders loaded");
 
         // SDLCheck(() => SDL.SDL_GL_SetSwapInterval(0)); // This will run the CPU and GPU at 100%
         // GL.Enable(EnableCap.Multisample); // TODO: should enable anti aliasing
-        LoggingUtils.OpenGLCheck(() => GL.Enable(EnableCap.Blend), _application.Logger);
-        LoggingUtils.OpenGLCheck(() => GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha), _application.Logger);
+        LoggingUtils.OpenGLCheck(() => GL.Enable(EnableCap.Blend), _logger);
+        LoggingUtils.OpenGLCheck(() => GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha), _logger);
 
         _defaultTexture = CreateTexture(new RgbaImage([0, 0, 0, 0], new Size(1, 1)), interpolate: false);
         _modelGenerator = new ProceduralModelGenerator();
@@ -125,7 +129,7 @@ public class OpenGLRenderingEngine : IRenderingEngine
     /// <returns>The store texture unique identifier used when referencing this texture.</returns>
     public int CreateTexture(Image image, bool interpolate)
     {
-        _application.LifeCycle.ThrowIfNotOnUIThread();
+        _dispatcher.ThrowIfNotOnUIThread();
 
         // TODO: now a new texture is created for each text. we will need to probably use a special model with vertices
         // for each character and map it to texture atlas with uv mapping. Text will be the most performance critical
@@ -135,26 +139,26 @@ public class OpenGLRenderingEngine : IRenderingEngine
 
         // Texture is RGBA, so [R1, G1, B1, A1, R2, G2, etc.]
         var textureID = 0;
-        LoggingUtils.OpenGLCheck(() => GL.GenTextures(1, out textureID), _application.Logger);
-        LoggingUtils.OpenGLCheck(() => GL.BindTexture(TextureTarget.Texture2D, textureID), _application.Logger);
+        LoggingUtils.OpenGLCheck(() => GL.GenTextures(1, out textureID), _logger);
+        LoggingUtils.OpenGLCheck(() => GL.BindTexture(TextureTarget.Texture2D, textureID), _logger);
 
         // Set texture parameters
         var filterType = interpolate ? (int)TextureMinFilter.Linear : (int)TextureMinFilter.Nearest;
-        LoggingUtils.OpenGLCheck(() => GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge), _application.Logger);
-        LoggingUtils.OpenGLCheck(() => GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge), _application.Logger);
-        LoggingUtils.OpenGLCheck(() => GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, filterType), _application.Logger);
-        LoggingUtils.OpenGLCheck(() => GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, filterType), _application.Logger);
+        LoggingUtils.OpenGLCheck(() => GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge), _logger);
+        LoggingUtils.OpenGLCheck(() => GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge), _logger);
+        LoggingUtils.OpenGLCheck(() => GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, filterType), _logger);
+        LoggingUtils.OpenGLCheck(() => GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, filterType), _logger);
 
         // Ensure tight packing.
-        LoggingUtils.OpenGLCheck(() => GL.PixelStore(PixelStoreParameter.UnpackAlignment, (int)image.BytesPerPixel), _application.Logger);
+        LoggingUtils.OpenGLCheck(() => GL.PixelStore(PixelStoreParameter.UnpackAlignment, (int)image.BytesPerPixel), _logger);
         // Upload the image data to the texture
-        LoggingUtils.OpenGLCheck(() => GL.TexImage2D(TextureTarget.Texture2D, 0, image.InternalFormat, (int)image.Size.Width, (int)image.Size.Height, 0, image.PixelFormat, image.PixelType, image.Data), _application.Logger);
+        LoggingUtils.OpenGLCheck(() => GL.TexImage2D(TextureTarget.Texture2D, 0, image.InternalFormat, (int)image.Size.Width, (int)image.Size.Height, 0, image.PixelFormat, image.PixelType, image.Data), _logger);
 
         // Generate mipmaps for the texture
-        LoggingUtils.OpenGLCheck(() => GL.GenerateMipmap(GenerateMipmapTarget.Texture2D), _application.Logger);
+        LoggingUtils.OpenGLCheck(() => GL.GenerateMipmap(GenerateMipmapTarget.Texture2D), _logger);
 
         // Unbind the texture
-        LoggingUtils.OpenGLCheck(() => GL.BindTexture(TextureTarget.Texture2D, 0), _application.Logger);
+        LoggingUtils.OpenGLCheck(() => GL.BindTexture(TextureTarget.Texture2D, 0), _logger);
 
         // Return the texture ID
         return textureID;
@@ -199,7 +203,7 @@ public class OpenGLRenderingEngine : IRenderingEngine
     /// </param>
     public void Render(Text text, Area area, Area? clippingArea)
     {
-        _application.LifeCycle.ThrowIfNotOnRenderingPhase();
+        _dispatcher.ThrowIfNotOnUIThread();
         if (string.IsNullOrEmpty(text.Value)) return;
         var textKey = $"{text.Value}{text.ForegroundColor}";
 
@@ -254,11 +258,11 @@ public class OpenGLRenderingEngine : IRenderingEngine
     /// </param>
     public void InitializeFrame(Color backroundColor)
     {
-        _application.LifeCycle.ThrowIfNotOnRenderingPhase();
+        _dispatcher.ThrowIfNotOnUIThread();
         _context.MakeCurrent();
         var openGlBackgroundColor = backroundColor.ToOpenGLColor();
-        LoggingUtils.OpenGLCheck(() => GL.ClearColor(openGlBackgroundColor.X, openGlBackgroundColor.Y, openGlBackgroundColor.Z, openGlBackgroundColor.W), _application.Logger);
-        LoggingUtils.OpenGLCheck(() => GL.Clear(ClearBufferMask.ColorBufferBit), _application.Logger);
+        LoggingUtils.OpenGLCheck(() => GL.ClearColor(openGlBackgroundColor.X, openGlBackgroundColor.Y, openGlBackgroundColor.Z, openGlBackgroundColor.W), _logger);
+        LoggingUtils.OpenGLCheck(() => GL.Clear(ClearBufferMask.ColorBufferBit), _logger);
         _modelGenerator.ResetDrawCallsCount();
     }
 
@@ -267,9 +271,9 @@ public class OpenGLRenderingEngine : IRenderingEngine
     /// </summary>
     public void FinalizeFrame()
     {
-        _application.LifeCycle.ThrowIfNotOnRenderingPhase();
+        _dispatcher.ThrowIfNotOnUIThread();
         _context.RenderFrame();
-        _application.Logger.LogVerbose($"OpenGL performed {_modelGenerator.DrawCalls} draw calls in the latest frame");
+        _logger.LogVerbose($"OpenGL performed {_modelGenerator.DrawCalls} draw calls in the latest frame");
     }
 
     /// <summary>
@@ -277,14 +281,14 @@ public class OpenGLRenderingEngine : IRenderingEngine
     /// </summary>
     public void Shutdown()
     {
-        _application.LifeCycle.ThrowIfNotOnUIThread();
+        _dispatcher.ThrowIfNotOnUIThread();
         _shader.Close();
     }
 
     private void RenderShape(IShape shape, Area area, Area? clippingArea, Model2D openglShape)
     {
         // TODO: use barycentric coordinates
-        _application.LifeCycle.ThrowIfNotOnRenderingPhase();
+        _dispatcher.ThrowIfNotOnUIThread();
         Validate(shape, area);
 
         var radiusX = 0.0f;
@@ -311,7 +315,7 @@ public class OpenGLRenderingEngine : IRenderingEngine
                                int? textureId)
     {
         // TODO: use barycentric coordinates
-        _application.LifeCycle.ThrowIfNotOnRenderingPhase();
+        _dispatcher.ThrowIfNotOnUIThread();
 
         if (color.IsTransparent) return;
 

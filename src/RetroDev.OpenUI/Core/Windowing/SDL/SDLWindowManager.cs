@@ -14,7 +14,7 @@ public class SDLWindowManager : IWindowManager
     private static bool s_isInitialized = false;
     private static object s_lock = new();
 
-    private readonly Action _ensureOnUIThread;
+    private readonly ThreadDispatcher _dispatcher;
     private readonly ILogger _logger;
 
     /// <summary>
@@ -24,7 +24,7 @@ public class SDLWindowManager : IWindowManager
     {
         get
         {
-            _ensureOnUIThread();
+            _dispatcher.ThrowIfNotOnUIThread();
             SDL_GetCurrentDisplayMode(0, out var displayMode);
             return new Size(displayMode.w, displayMode.h);
         }
@@ -38,12 +38,13 @@ public class SDLWindowManager : IWindowManager
     /// <summary>
     /// Creates a new window manager using SDL2.
     /// </summary>
-    /// <param name="application">The owner application.</param>
-    public SDLWindowManager(Application application)
+    /// <param name="dispatcher">Manages the UI thread and dispatches UI operations from other thread to the UI thread.</param>
+    /// <param name="logger">The logger used to log SDL events.</param>
+    public SDLWindowManager(ThreadDispatcher dispatcher, ILogger logger)
     {
-        _ensureOnUIThread = () => application.LifeCycle.ThrowIfNotOnUIThread();
-        _logger = application.Logger;
-        EventSystem = new SDLEventSystem(application);
+        _dispatcher = dispatcher;
+        _logger = logger;
+        EventSystem = new SDLEventSystem(logger);
     }
 
     /// <summary>
@@ -195,7 +196,7 @@ public class SDLWindowManager : IWindowManager
     /// </summary>
     public void Shutdown()
     {
-        _ensureOnUIThread();
+        _dispatcher.ThrowIfNotOnUIThread();
         // TODO: dispose all rendering engines
         // if (_window != nint.Zero) SDL2.SDL.SDL_DestroyWindow(_window);
         SDL_Quit();
@@ -203,7 +204,7 @@ public class SDLWindowManager : IWindowManager
 
     private void ExecuteOnWindow(IWindowId windowId, Action<SDLWindowId> action)
     {
-        _ensureOnUIThread();
+        _dispatcher.ThrowIfNotOnUIThread();
         if (windowId is SDLWindowId sdlWindowId)
         {
             action(sdlWindowId);
@@ -216,7 +217,7 @@ public class SDLWindowManager : IWindowManager
 
     private TResult ExecuteOnWindow<TResult>(IWindowId windowId, Func<SDLWindowId, TResult> callback)
     {
-        _ensureOnUIThread();
+        _dispatcher.ThrowIfNotOnUIThread();
         if (windowId is SDLWindowId sdlWindowId)
         {
             return callback(sdlWindowId);

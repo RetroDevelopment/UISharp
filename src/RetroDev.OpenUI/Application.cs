@@ -75,7 +75,15 @@ public class Application : IDisposable
     /// </summary>
     public IEnumerable<Window> Windows => _windows;
 
-    internal LifeCycle LifeCycle { get; } = new();
+    /// <summary>
+    /// Manages the application life cycle.
+    /// </summary>
+    public LifeCycle LifeCycle { get; } = new();
+
+    /// <summary>
+    /// Manages the UI thread and dispatches UI operations from other thread to the UI thread.
+    /// </summary>
+    public ThreadDispatcher Dispatcher { get; } = new();
 
     /// <summary>
     /// Creates a new application.
@@ -93,9 +101,8 @@ public class Application : IDisposable
                        ILogger? logger = null,
                        Func<Application, Theme>? createTheme = null)
     {
-        LifeCycle.RegisterUIThread();
         Logger = logger ?? new ConsoleLogger();
-        WindowManager = windowManager ?? new SDLWindowManager(this);
+        WindowManager = windowManager ?? new SDLWindowManager(Dispatcher, Logger);
         ResourceManager = resourceManager ?? new EmbeddedResourceManager();
         Theme = createTheme != null ? createTheme(this) : new Theme(this);
         _themeParser = new ThemeParser(Theme);
@@ -117,7 +124,7 @@ public class Application : IDisposable
     /// <exception cref="UIInitializationException">If the UI initialization fails.</exception>
     public void Run()
     {
-        LifeCycle.ThrowIfNotOnUIThread();
+        Dispatcher.ThrowIfNotOnUIThread();
 
         Logger.LogInfo("Application started");
         EventSystem.ApplicationQuit += (_, _) => _shoudQuit = true;
@@ -190,7 +197,7 @@ public class Application : IDisposable
     /// </summary>
     public void Quit()
     {
-        LifeCycle.ThrowIfNotOnUIThread();
+        Dispatcher.ThrowIfNotOnUIThread();
         Logger.LogInfo("Application quit requested");
         EventSystem.Quit(emitQuitEvent: true);
     }
@@ -227,7 +234,7 @@ public class Application : IDisposable
     /// <param name="window"></param>
     internal void AddWindow(Window window)
     {
-        LifeCycle.ThrowIfNotOnUIThread();
+        Dispatcher.ThrowIfNotOnUIThread();
         LifeCycle.ThrowIfPropertyCannotBeSet();
         _windows.Add(window);
     }

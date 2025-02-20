@@ -54,7 +54,7 @@ public class BindableProperty<TValue>(TValue value, Application? application = n
         }
         get
         {
-            _application?.LifeCycle?.ThrowIfNotOnUIThread();
+            _application?.Dispatcher?.ThrowIfNotOnUIThread();
             return _value;
         }
     }

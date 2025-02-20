@@ -66,7 +66,7 @@ public abstract class UIRoot : UIComponent, IContainer
         Invalidator = new Invalidator();
         MeasureProvider = new MeasureProvider(Invalidator);
         RenderProvider = new RenderProvider(Invalidator);
-        RenderingEngine = renderingEngine ?? new OpenGLRenderingEngine(application, new SDLOpenGLRenderingContext(application));
+        RenderingEngine = renderingEngine ?? new OpenGLRenderingEngine(application.Dispatcher, application.Logger, new SDLOpenGLRenderingContext(application));
     }
 
     /// <summary>
