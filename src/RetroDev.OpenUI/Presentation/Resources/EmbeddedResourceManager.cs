@@ -1,4 +1,4 @@
-﻿namespace RetroDev.OpenUI.UI.Resources;
+﻿namespace RetroDev.OpenUI.Presentation.Resources;
 
 /// <summary>
 /// Manages resources in the application.

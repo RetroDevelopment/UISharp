@@ -1,6 +1,6 @@
-﻿namespace RetroDev.OpenUI.UI;
+﻿namespace RetroDev.OpenUI.Presentation;
 
-using RetroDev.OpenUI.UI.Resources;
+using RetroDev.OpenUI.Presentation.Resources;
 
 /// <summary>
 /// The font type.

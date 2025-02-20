@@ -2,9 +2,9 @@
 using System.Xml;
 using System.Diagnostics.Contracts;
 using RetroDev.OpenUI.Core.Graphics;
-using RetroDev.OpenUI.UI.Themes.Exceptions;
+using RetroDev.OpenUI.Presentation.Themes.Exceptions;
 
-namespace RetroDev.OpenUI.UI.Themes;
+namespace RetroDev.OpenUI.Presentation.Themes;
 
 /// <summary>
 /// Parses the xml theme definition.

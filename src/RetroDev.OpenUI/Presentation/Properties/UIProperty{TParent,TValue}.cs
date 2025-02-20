@@ -1,7 +1,8 @@
-﻿using System.Diagnostics;
+﻿using System.ComponentModel;
+using System.Diagnostics;
 using RetroDev.OpenUI.Components.Base;
 
-namespace RetroDev.OpenUI.UI.Properties;
+namespace RetroDev.OpenUI.Presentation.Properties;
 
 /// <summary>
 /// Describes a property used in this UI framework. It allows for flexible binding.
@@ -23,6 +24,7 @@ public class UIProperty<TComponent, TValue> : BindableProperty<TValue> where TCo
     {
         set
         {
+            Component.Application.LifeCycle.ThrowIfPropertyCannotBeSet();
             base.Value = value;
         }
         get => base.Value;

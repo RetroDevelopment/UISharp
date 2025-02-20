@@ -1,4 +1,4 @@
-﻿namespace RetroDev.OpenUI.UI.Properties;
+﻿namespace RetroDev.OpenUI.Presentation.Properties;
 
 /// <summary>
 /// Specifies how a binding occurs between a source property to a destination binder.

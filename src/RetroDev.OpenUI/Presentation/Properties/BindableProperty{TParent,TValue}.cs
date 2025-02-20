@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using RetroDev.OpenUI.Core.Windowing.Events;
 
-namespace RetroDev.OpenUI.UI.Properties;
+namespace RetroDev.OpenUI.Presentation.Properties;
 
 /// <summary>
 /// A property wrapper that allows for dynamic one or two way binding.

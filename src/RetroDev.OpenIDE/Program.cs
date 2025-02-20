@@ -11,7 +11,7 @@ using RetroDev.OpenUI.Core.Graphics;
 using RetroDev.OpenUI.Core.Graphics.Coordinates;
 using RetroDev.OpenUI.Core.Logging;
 using RetroDev.OpenUI.Core.Windowing.Events;
-using RetroDev.OpenUI.UI;
+using RetroDev.OpenUI.Presentation;
 
 namespace RetroDev.OpenIDE;
 

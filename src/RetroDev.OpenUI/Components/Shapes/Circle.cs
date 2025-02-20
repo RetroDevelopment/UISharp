@@ -2,7 +2,7 @@
 using RetroDev.OpenUI.Core.Graphics;
 using RetroDev.OpenUI.Core.Graphics.Coordinates;
 using RetroDev.OpenUI.Core.Windowing.Events;
-using RetroDev.OpenUI.UI.Properties;
+using RetroDev.OpenUI.Presentation.Properties;
 
 namespace RetroDev.OpenUI.Components.Shapes;
 

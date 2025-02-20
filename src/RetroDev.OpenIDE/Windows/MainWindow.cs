@@ -7,7 +7,7 @@ using RetroDev.OpenUI.Components.Containers;
 using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Components.Simple;
 using RetroDev.OpenUI.Core.Graphics.Coordinates;
-using RetroDev.OpenUI.UI.Properties;
+using RetroDev.OpenUI.Presentation.Properties;
 using RetroDev.OpenUI.UIDefinition.Ast;
 using Attribute = RetroDev.OpenUI.UIDefinition.Ast.Attribute;
 

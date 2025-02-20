@@ -6,7 +6,7 @@ using RetroDev.OpenUI.Core.Graphics.Imaging;
 using RetroDev.OpenUI.Core.Graphics.Shapes;
 using RetroDev.OpenUI.Core.Logging;
 using RetroDev.OpenUI.Core.Windowing;
-using RetroDev.OpenUI.UI.Resources;
+using RetroDev.OpenUI.Presentation.Resources;
 
 namespace RetroDev.OpenUI.Core.Graphics.OpenGL;
 

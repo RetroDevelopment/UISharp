@@ -1,4 +1,4 @@
-﻿namespace RetroDev.OpenUI.UI.Properties;
+﻿namespace RetroDev.OpenUI.Presentation.Properties;
 
 /// <summary>
 /// Argument that notifies when a property value changes.

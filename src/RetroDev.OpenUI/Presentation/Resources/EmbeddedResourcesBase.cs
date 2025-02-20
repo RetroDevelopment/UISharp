@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace RetroDev.OpenUI.UI.Resources;
+namespace RetroDev.OpenUI.Presentation.Resources;
 
 /// <summary>
 /// The base class to load and manage resources embedded in the assemblies.

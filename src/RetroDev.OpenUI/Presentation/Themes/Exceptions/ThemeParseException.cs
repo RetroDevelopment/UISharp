@@ -1,4 +1,4 @@
-﻿namespace RetroDev.OpenUI.UI.Themes.Exceptions;
+﻿namespace RetroDev.OpenUI.Presentation.Themes.Exceptions;
 
 /// <summary>
 /// An exception that occurs when parting of a theme file fails.

@@ -1,7 +1,7 @@
 ﻿using System.Xml.Linq;
 using RetroDev.OpenUI.Core.Graphics;
 
-namespace RetroDev.OpenUI.UI.Themes;
+namespace RetroDev.OpenUI.Presentation.Themes;
 
 /// <summary>
 /// The base class for themes.

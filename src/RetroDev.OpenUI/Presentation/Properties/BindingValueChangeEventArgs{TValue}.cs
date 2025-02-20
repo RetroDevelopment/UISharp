@@ -1,4 +1,4 @@
-﻿namespace RetroDev.OpenUI.UI.Properties;
+﻿namespace RetroDev.OpenUI.Presentation.Properties;
 
 /// <summary>
 /// Argument for <see cref="IBinder{TValue}"/> value change event.

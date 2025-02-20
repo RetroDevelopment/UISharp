@@ -1,4 +1,4 @@
-﻿namespace RetroDev.OpenUI.UI.Resources;
+﻿namespace RetroDev.OpenUI.Presentation.Resources;
 
 internal class EmbeddedShaderResources : EmbeddedResourcesBase, ITextResources
 {

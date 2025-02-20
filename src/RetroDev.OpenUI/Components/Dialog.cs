@@ -95,7 +95,7 @@ public class Dialog<TResult> : Window
         Close();
     }
 
-    private void Visibility_ValueChange(UI.Properties.BindableProperty<ComponentVisibility> sender, UI.Properties.ValueChangeEventArgs<ComponentVisibility> e)
+    private void Visibility_ValueChange(Presentation.Properties.BindableProperty<ComponentVisibility> sender, Presentation.Properties.ValueChangeEventArgs<ComponentVisibility> e)
     {
         if (Visibility.Value != ComponentVisibility.Visible)
         {

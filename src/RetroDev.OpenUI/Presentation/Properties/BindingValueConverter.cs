@@ -1,4 +1,4 @@
-﻿namespace RetroDev.OpenUI.UI.Properties;
+﻿namespace RetroDev.OpenUI.Presentation.Properties;
 
 /// <summary>
 /// This class converts values of type <typeparamref name="TValue1"/> into values of type <typeparamref name="TValue2"/>

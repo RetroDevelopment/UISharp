@@ -1,4 +1,4 @@
-﻿namespace RetroDev.OpenUI.UI.Properties;
+﻿namespace RetroDev.OpenUI.Presentation.Properties;
 
 internal class PropertyBinder<TSourceValue, TDestinationValue> : IBinder
 {

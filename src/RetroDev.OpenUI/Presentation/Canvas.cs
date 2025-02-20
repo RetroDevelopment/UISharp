@@ -4,7 +4,7 @@ using RetroDev.OpenUI.Core.Graphics.Imaging;
 using RetroDev.OpenUI.Core.Graphics.Shapes;
 using RetroDev.OpenUI.Core.Logging;
 
-namespace RetroDev.OpenUI.UI;
+namespace RetroDev.OpenUI.Presentation;
 
 /// <summary>
 /// Allows to draw on a UI component surface.

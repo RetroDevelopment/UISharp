@@ -6,10 +6,10 @@ using RetroDev.OpenUI.Core.Logging;
 using RetroDev.OpenUI.Core.Windowing;
 using RetroDev.OpenUI.Core.Windowing.Events;
 using RetroDev.OpenUI.Core.Windowing.SDL;
-using RetroDev.OpenUI.UI;
-using RetroDev.OpenUI.UI.Properties;
-using RetroDev.OpenUI.UI.Resources;
-using RetroDev.OpenUI.UI.Themes;
+using RetroDev.OpenUI.Presentation;
+using RetroDev.OpenUI.Presentation.Properties;
+using RetroDev.OpenUI.Presentation.Resources;
+using RetroDev.OpenUI.Presentation.Themes;
 using RetroDev.OpenUI.UIDefinition;
 
 namespace RetroDev.OpenUI;
@@ -93,7 +93,7 @@ public class Application : IDisposable
     /// <param name="logger">The logging implementation.</param>
     /// <param name="createTheme">
     /// The function that creates a <see cref="Theme"/>. The theme will be automatically created, so pass this function if you want to inject <see cref="Theme"/>
-    /// with an instance of a class derived from <see cref="UI.Themes.Theme"/>.
+    /// with an instance of a class derived from <see cref="Presentation.Themes.Theme"/>.
     /// </param>
     /// <remarks>The application, as well as all the UI related operations, must run in the same thread as this constructor is invoked.</remarks>
     public Application(IWindowManager? windowManager = null,

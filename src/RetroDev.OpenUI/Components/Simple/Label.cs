@@ -3,8 +3,8 @@ using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Components.Shapes;
 using RetroDev.OpenUI.Core.Graphics;
 using RetroDev.OpenUI.Core.Graphics.Coordinates;
-using RetroDev.OpenUI.UI;
-using RetroDev.OpenUI.UI.Properties;
+using RetroDev.OpenUI.Presentation;
+using RetroDev.OpenUI.Presentation.Properties;
 
 namespace RetroDev.OpenUI.Components.Simple;
 

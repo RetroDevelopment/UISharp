@@ -1,7 +1,7 @@
 ﻿using RetroDev.OpenUI.Core.Graphics;
-using RetroDev.OpenUI.UI.Properties;
+using RetroDev.OpenUI.Presentation.Properties;
 
-namespace RetroDev.OpenUI.UI.Themes;
+namespace RetroDev.OpenUI.Presentation.Themes;
 
 /// <summary>
 /// The base class represnting a OpenUI theme. It contains all fields needed by OpenUI default components.
