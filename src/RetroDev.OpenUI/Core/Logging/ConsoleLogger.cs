@@ -1,4 +1,4 @@
-﻿namespace RetroDev.OpenUI.Logging;
+﻿namespace RetroDev.OpenUI.Core.Logging;
 
 /// <summary>
 /// A logger implementation that writes log messages to the console.
@@ -61,7 +61,7 @@ public class ConsoleLogger : ILogger
 
     private bool ShouldLog(Verbosity verbosity)
     {
-        var maximumVerbosity = this.Verbosity == Verbosity.Default ? Verbosity.Info : this.Verbosity;
+        var maximumVerbosity = Verbosity == Verbosity.Default ? Verbosity.Info : Verbosity;
         return verbosity <= maximumVerbosity;
     }
 }

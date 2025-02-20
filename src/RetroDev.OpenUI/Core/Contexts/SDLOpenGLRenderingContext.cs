@@ -1,8 +1,8 @@
 ﻿using OpenTK;
 using OpenTK.Graphics.OpenGL;
+using RetroDev.OpenUI.Core.Exceptions;
+using RetroDev.OpenUI.Core.Logging;
 using RetroDev.OpenUI.Core.Windowing.SDL;
-using RetroDev.OpenUI.Exceptions;
-using RetroDev.OpenUI.Utils;
 using SDL2;
 using static SDL2.SDL;
 

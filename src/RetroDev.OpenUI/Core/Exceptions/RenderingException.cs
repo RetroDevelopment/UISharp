@@ -1,4 +1,4 @@
-﻿namespace RetroDev.OpenUI.Exceptions;
+﻿namespace RetroDev.OpenUI.Core.Exceptions;
 
 /// <summary>
 /// An exception that occurs when UI rendering fails.

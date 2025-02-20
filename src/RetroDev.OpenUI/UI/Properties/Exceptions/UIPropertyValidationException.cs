@@ -1,6 +1,7 @@
 ﻿using RetroDev.OpenUI.Components.Base;
+using RetroDev.OpenUI.Core.Exceptions;
 
-namespace RetroDev.OpenUI.Exceptions;
+namespace RetroDev.OpenUI.UI.Properties.Exceptions;
 
 /// <summary>
 /// An exception that occurs when the validation of a UI property fails.

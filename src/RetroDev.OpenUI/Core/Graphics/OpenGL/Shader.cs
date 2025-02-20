@@ -1,6 +1,5 @@
 ﻿using OpenTK.Graphics.OpenGL;
-using RetroDev.OpenUI.Logging;
-using RetroDev.OpenUI.Utils;
+using RetroDev.OpenUI.Core.Logging;
 
 namespace RetroDev.OpenUI.Core.Graphics.OpenGL;
 

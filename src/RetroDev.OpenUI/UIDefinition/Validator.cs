@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using RetroDev.OpenUI.Components;
-using RetroDev.OpenUI.Exceptions;
 using RetroDev.OpenUI.UIDefinition.Ast;
+using RetroDev.OpenUI.UIDefinition.Exceptions;
 using Attribute = RetroDev.OpenUI.UIDefinition.Ast.Attribute;
 using Component = RetroDev.OpenUI.UIDefinition.Ast.Component;
 

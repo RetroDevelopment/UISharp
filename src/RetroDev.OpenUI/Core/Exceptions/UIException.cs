@@ -1,4 +1,4 @@
-﻿namespace RetroDev.OpenUI.Exceptions;
+﻿namespace RetroDev.OpenUI.Core.Exceptions;
 
 /// <summary>
 /// The common class for exceptions thrown by the OpenUI framework.

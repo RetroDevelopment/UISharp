@@ -1,4 +1,4 @@
-﻿namespace RetroDev.OpenUI.Logging;
+﻿namespace RetroDev.OpenUI.Core.Logging;
 
 /// <summary>
 /// Defines a logging interface for capturing and handling log messages at various levels.

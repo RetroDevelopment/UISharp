@@ -1,5 +1,4 @@
 ﻿using RetroDev.OpenUI.Core.Graphics;
-using RetroDev.OpenUI.Core.Windowing.Events.Internal;
 
 namespace RetroDev.OpenUI.Components;
 

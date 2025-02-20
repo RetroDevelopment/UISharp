@@ -1,4 +1,4 @@
-﻿namespace RetroDev.OpenUI.Logging;
+﻿namespace RetroDev.OpenUI.Core.Logging;
 
 /// <summary>
 /// A logger implementation that suppresses all log messages.

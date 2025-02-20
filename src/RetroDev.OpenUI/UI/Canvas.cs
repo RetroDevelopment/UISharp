@@ -2,8 +2,7 @@
 using RetroDev.OpenUI.Core.Graphics.Coordinates;
 using RetroDev.OpenUI.Core.Graphics.Imaging;
 using RetroDev.OpenUI.Core.Graphics.Shapes;
-using RetroDev.OpenUI.Core.Windowing.Events.Internal;
-using RetroDev.OpenUI.Logging;
+using RetroDev.OpenUI.Core.Logging;
 
 namespace RetroDev.OpenUI.UI;
 

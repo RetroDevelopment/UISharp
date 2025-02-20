@@ -1,9 +1,9 @@
 ﻿using System.Diagnostics;
 using System.Text;
 using RetroDev.OpenUI.Core.Graphics.Coordinates;
+using RetroDev.OpenUI.Core.Logging;
 using RetroDev.OpenUI.Core.Windowing.Events;
 using RetroDev.OpenUI.Core.Windowing.Events.Internal;
-using RetroDev.OpenUI.Utils;
 using static SDL2.SDL;
 
 namespace RetroDev.OpenUI.Core.Windowing.SDL;

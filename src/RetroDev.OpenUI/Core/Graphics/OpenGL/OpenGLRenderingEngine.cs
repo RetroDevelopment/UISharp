@@ -4,8 +4,8 @@ using RetroDev.OpenUI.Core.Graphics.Coordinates;
 using RetroDev.OpenUI.Core.Graphics.Fonts;
 using RetroDev.OpenUI.Core.Graphics.Imaging;
 using RetroDev.OpenUI.Core.Graphics.Shapes;
+using RetroDev.OpenUI.Core.Logging;
 using RetroDev.OpenUI.UI.Resources;
-using RetroDev.OpenUI.Utils;
 
 namespace RetroDev.OpenUI.Core.Graphics.OpenGL;
 
@@ -95,6 +95,8 @@ public class OpenGLRenderingEngine : IRenderingEngine
         _application.Logger.LogInfo("Using OpenGL rendering");
         _application.Logger.LogDebug("OpenGL Loading shaders");
 
+        // Usually core components like rendering engine should not depend on resources, which are high level components using core. However, it is convenient here
+        // in order to locate the shaders from assets.
         var shaderResources = new EmbeddedShaderResources();
 
         // Load OpenGL.NET bindings

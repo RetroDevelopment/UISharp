@@ -1,4 +1,4 @@
-﻿namespace RetroDev.OpenUI.Logging;
+﻿namespace RetroDev.OpenUI.Core.Logging;
 
 /// <summary>
 /// Specifies the verbosity levels for logging.

@@ -1,12 +1,11 @@
 ﻿using RetroDev.OpenUI.Components;
 using RetroDev.OpenUI.Components.Base;
+using RetroDev.OpenUI.Core.Exceptions;
 using RetroDev.OpenUI.Core.Graphics.Coordinates;
+using RetroDev.OpenUI.Core.Logging;
 using RetroDev.OpenUI.Core.Windowing;
 using RetroDev.OpenUI.Core.Windowing.Events;
-using RetroDev.OpenUI.Core.Windowing.Events.Internal;
 using RetroDev.OpenUI.Core.Windowing.SDL;
-using RetroDev.OpenUI.Exceptions;
-using RetroDev.OpenUI.Logging;
 using RetroDev.OpenUI.UI;
 using RetroDev.OpenUI.UI.Properties;
 using RetroDev.OpenUI.UI.Resources;

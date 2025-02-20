@@ -9,6 +9,7 @@ using RetroDev.OpenUI.Components.Shapes;
 using RetroDev.OpenUI.Components.Simple;
 using RetroDev.OpenUI.Core.Graphics;
 using RetroDev.OpenUI.Core.Graphics.Coordinates;
+using RetroDev.OpenUI.Core.Logging;
 using RetroDev.OpenUI.Core.Windowing.Events;
 using RetroDev.OpenUI.UI;
 
@@ -115,7 +116,7 @@ internal class Program
     static void Mainm(string[] _)
     {
         using var application = new Application();
-        application.Logger.Verbosity = OpenUI.Logging.Verbosity.Verbose;
+        application.Logger.Verbosity = Verbosity.Verbose;
 
         var root = new EditBox(application);
         root.Font.Value = new Font(application, application.DefaultFont.Value.Name, 16, FontType.Regular);
@@ -148,7 +149,7 @@ internal class Program
     static void Mainj(string[] _)
     {
         using var application = new Application();
-        application.Logger.Verbosity = OpenUI.Logging.Verbosity.Verbose;
+        application.Logger.Verbosity = Verbosity.Verbose;
         //Window w2 = new Window(application);
         //w2.X.Value = 0;
         //w2.Y.Value = 0;
@@ -210,7 +211,7 @@ internal class Program
     static void Main(string[] _)
     {
         using var application = new Application();
-        application.Logger.Verbosity = OpenUI.Logging.Verbosity.Verbose;
+        application.Logger.Verbosity = Verbosity.Verbose;
         application.ApplicationStarted += (_, _) => application.ShowWindow<MainWindow>();
         application.Run();
     }

@@ -1,4 +1,6 @@
-﻿namespace RetroDev.OpenUI.Exceptions;
+﻿using RetroDev.OpenUI.Core.Exceptions;
+
+namespace RetroDev.OpenUI.UIDefinition.Exceptions;
 
 /// <summary>
 /// A list of <see cref="UIDefinitionValidationException"/> containing multiple causes of UIDefinition xml validation failure.

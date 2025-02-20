@@ -1,6 +1,6 @@
-﻿using RetroDev.OpenUI.Exceptions;
+﻿using RetroDev.OpenUI.Core.Exceptions;
 
-namespace RetroDev.OpenUI.Core.Windowing.Events.Internal;
+namespace RetroDev.OpenUI;
 
 internal class LifeCycle
 {

@@ -1,8 +1,7 @@
 ﻿using RetroDev.OpenUI.Core.Contexts;
+using RetroDev.OpenUI.Core.Exceptions;
 using RetroDev.OpenUI.Core.Graphics.Coordinates;
-using RetroDev.OpenUI.Exceptions;
-using RetroDev.OpenUI.Logging;
-using RetroDev.OpenUI.Utils;
+using RetroDev.OpenUI.Core.Logging;
 using static SDL2.SDL;
 
 namespace RetroDev.OpenUI.Core.Windowing.SDL;

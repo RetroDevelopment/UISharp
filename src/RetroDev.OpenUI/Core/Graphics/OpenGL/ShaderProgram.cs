@@ -1,8 +1,7 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
-using RetroDev.OpenUI.Exceptions;
-using RetroDev.OpenUI.Logging;
-using RetroDev.OpenUI.Utils;
+using RetroDev.OpenUI.Core.Exceptions;
+using RetroDev.OpenUI.Core.Logging;
 
 namespace RetroDev.OpenUI.Core.Graphics.OpenGL;
 

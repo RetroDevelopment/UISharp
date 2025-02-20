@@ -1,6 +1,7 @@
-﻿using RetroDev.OpenUI.UIDefinition.Ast;
+﻿using RetroDev.OpenUI.Core.Exceptions;
+using RetroDev.OpenUI.UIDefinition.Ast;
 
-namespace RetroDev.OpenUI.Exceptions;
+namespace RetroDev.OpenUI.UIDefinition.Exceptions;
 
 /// <summary>
 /// An exception that occurs when the UI definition parse fails.

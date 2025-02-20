@@ -1,4 +1,4 @@
-﻿namespace RetroDev.OpenUI.Exceptions;
+﻿namespace RetroDev.OpenUI.Core.Exceptions;
 
 /// <summary>
 /// Indicates that a UI operation has been performed on a thread that is not the UI thread.

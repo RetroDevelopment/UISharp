@@ -1,12 +1,10 @@
 ﻿using System.Linq.Expressions;
-using System.Security.Cryptography;
 using OpenTK.Graphics.OpenGL;
+using RetroDev.OpenUI.Core.Exceptions;
 using RetroDev.OpenUI.Core.Windowing.Events;
-using RetroDev.OpenUI.Exceptions;
-using RetroDev.OpenUI.Logging;
 using SDL2;
 
-namespace RetroDev.OpenUI.Utils;
+namespace RetroDev.OpenUI.Core.Logging;
 
 internal static class LoggingUtils
 {

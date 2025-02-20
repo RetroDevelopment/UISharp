@@ -1,7 +1,7 @@
 ﻿using System.Xml;
 using System.Xml.Linq;
-using RetroDev.OpenUI.Exceptions;
 using RetroDev.OpenUI.UIDefinition.Ast;
+using RetroDev.OpenUI.UIDefinition.Exceptions;
 using Attribute = RetroDev.OpenUI.UIDefinition.Ast.Attribute;
 
 namespace RetroDev.OpenUI.UIDefinition;
