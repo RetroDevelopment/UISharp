@@ -79,7 +79,7 @@ class Ctr : UIWidget
         _rectangle.CornerRadiusY.Value = 10;
 
         MousePress += (_, _) => Focus.Value = Focusable.Value;
-        MouseDrag += (_, e) => { if (Focus.Value) { X.Value += e.Offset.X; Y.Value += e.Offset.Y; } };
+        //MouseDrag += (_, e) => { if (Focus.Value) { X.Value += e.Offset.X; Y.Value += e.Offset.Y; } };
         Focus.ValueChange += (_, _) => _rectangle.BorderColor.Value = Focus.Value ? Color.Red : Color.Transparent;
         KeyPress += (_, e) =>
         {
@@ -110,7 +110,7 @@ class Ctr : UIWidget
 
 internal class Program
 {
-    static void Mainp(string[] _)
+    static void Mainl(string[] _)
     {
         using var application = new Application();
         application.Logger.Verbosity = Verbosity.Verbose;
@@ -133,13 +133,34 @@ internal class Program
         window.Height.Value = 600;
         window.Title.Value = "Hello World!";
         window.Visibility.Value = UIComponent.ComponentVisibility.Visible;
-        window.AddComponent(btn1);
-        window.AddComponent(btn2);
+        var gl = new GridLayout(application);
+        var gll = new GridLayout(application);
+        gll.Rows.Value = 1;
+        gll.Columns.Value = 1;
 
-        btn1.Action += (_, _) => application.Logger.LogError("Button 1 Click");
-        btn2.Action += (_, _) => application.Logger.LogError("Button 2 Click");
-        btn1.MouseDrag += (_, _) => application.Logger.LogError("Button 1 Drag");
-        btn2.MouseDrag += (_, _) => application.Logger.LogError("Button 2 Drag");
+        gl.Rows.Value = 2;
+        gl.Columns.Value = 1;
+        gl.AddComponent(btn1);
+        gl.AddComponent(btn2);
+
+        void Register(Button btn)
+        {
+            btn.Action += (_, e) => application.Logger.LogError($"{btn.Text.Value} action {e}");
+            btn.MousePress += (_, e) => application.Logger.LogError($"{btn.Text.Value} mouse press {e}");
+            btn.MouseRelease += (_, e) => application.Logger.LogError($"{btn.Text.Value} mouse release {e}");
+            btn.TextInput += (_, e) => application.Logger.LogError($"{btn.Text.Value} text input {e}");
+            btn.MouseEnter += (_, e) => application.Logger.LogError($"{btn.Text.Value} mouse enter {e}");
+            btn.MouseLeave += (_, e) => application.Logger.LogError($"{btn.Text.Value} mouse leave {e}");
+            btn.MouseWheel += (_, e) => application.Logger.LogError($"{btn.Text.Value} wheel {e}");
+            btn.MouseDragBegin += (_, e) => application.Logger.LogError($"{btn.Text.Value} drag start {e}");
+            btn.MouseDrag += (_, e) => application.Logger.LogError($"{btn.Text.Value} drag {e}");
+            btn.MouseDragEnd += (_, e) => application.Logger.LogError($"{btn.Text.Value} drag end {e}");
+        }
+
+        Register(btn1);
+        Register(btn2);
+        gll.AddComponent(gl);
+        window.AddComponent(gll);
 
         application.Run();
     }

@@ -43,22 +43,25 @@ public abstract class UIComponent
     internal readonly List<UIWidget> _childNodes = [];
     internal int _level = 0;
     private UIComponent? _focusedComponent;
-    private Point? _mouseAbsoluteLocation = null;
-    private Point? _mouseDragPointAbsolute = null;
-    private Point? _mouseLastDragPointAbsolute = null;
+
+    // Event information
+    private bool _hasMouse = false;
+
+    // Sizes
+
     private Size _wrapSize; // The size with auto size to wrap.
     private Area? _relativeDrawingAreaOverride = null; // Memorizes the latest parameter used in RecomputeDrawingArea()
     private Area _relativeDrawingArea; // Area relative to the parent. So (0, 0) is top left of parent.
     private Area _absoluteDrawingArea; // Area relative to the window. So (0, 0) is top left of window.
     private Area _clipArea; // Absolute clipping area. Each pixel with absolute cooridnates outside of the area are clipped.
-    private bool _renderingAreaChanged = false; // Whether the rendering area has changed since the last frame rendering.
+
     /// <summary>
-    /// Mouse button press inside <see cref="this"/> window.
+    /// Mouse button press inside <<see langword="this" /> <see cref="UIComponent"/>.
     /// </summary>
     public event TypeSafeEventHandler<UIComponent, MouseEventArgs>? MousePress;
 
     /// <summary>
-    /// Mouse button release inside <see cref="this"/> window.
+    /// Mouse button release inside <see langword="this" /> <see cref="UIComponent"/>.
     /// </summary>
     public event TypeSafeEventHandler<UIComponent, MouseEventArgs>? MouseRelease;
 
@@ -68,20 +71,34 @@ public abstract class UIComponent
     public event TypeSafeEventHandler<UIComponent, MouseEventArgs>? MouseMove;
 
     /// <summary>
-    /// Mouse dragging. This means that a left click has happend whithin <see cref="this"/> compnent <see cref="AbsoluteDrawingArea"/>
-    /// and the mouse is moving while still pressed.
+    /// Mouse has entered <see langword="this" /> <see cref="UIComponent"/>.
     /// </summary>
-    public event TypeSafeEventHandler<UIComponent, MouseDragEventArgs>? MouseDrag;
+    public event TypeSafeEventHandler<UIComponent, EventArgs>? MouseEnter;
 
     /// <summary>
-    /// Mouse dragging start.
+    /// Mouse has left <see langword="this" /> <see cref="UIComponent"/>.
     /// </summary>
-    public event TypeSafeEventHandler<UIComponent, MouseEventArgs>? MouseDragBegin;
+    public event TypeSafeEventHandler<UIComponent, EventArgs>? MouseLeave;
 
     /// <summary>
-    /// Mouse dragging ends.
+    /// The mouse drag has started because the left click button has been pressed on
+    /// <see langword="this" /> <see cref="UIComponent"/>.
     /// </summary>
-    public event TypeSafeEventHandler<UIComponent, MouseEventArgs>? MouseDragEnd;
+    /// <seealso cref="MouseDrag"/>.
+    public event TypeSafeEventHandler<UIComponent, EventArgs>? MouseDragBegin;
+
+    /// <summary>
+    /// The mouse is moving while the left button is being hold.
+    /// Unlike the <see cref="MouseMove"/> event, this event is triggered even when the
+    /// mouse is outside <see langword="this" /> <see cref="UIComponent"/>.
+    /// </summary>
+    public event TypeSafeEventHandler<UIComponent, MouseEventArgs>? MouseDrag;
+
+    /// <summary>
+    /// The mouse drag is over because the left mouse button has been released.
+    /// </summary>
+    /// <seealso cref="MouseDrag"/>.
+    public event TypeSafeEventHandler<UIComponent, EventArgs>? MouseDragEnd;
 
     /// <summary>
     /// Key is pressed inside <see cref="this"/> <see cref="UIComponent"/>.
@@ -255,7 +272,6 @@ public abstract class UIComponent
 
         Focus.ValueChange += Focus_ValueChange;
         Enabled.ValueChange += Enabled_ValueChange;
-        MousePress += UIComponent_MousePress;
 
         UpdateVisibility();
         Visibility.ValueChange += (_, _) => UpdateVisibility();
@@ -371,7 +387,6 @@ public abstract class UIComponent
         Application.LifeCycle.ThrowIfPropertyCannotBeSet();
         component.Parent?.RemoveChildNode(component);
         component.Parent = this;
-        component.AttachEventsFromParent();
         component.RecomputeLevel();
         component.InvalidateAll();
         component.AttachCanvas();
@@ -399,7 +414,6 @@ public abstract class UIComponent
     {
         Application.LifeCycle.ThrowIfPropertyCannotBeSet();
         Invalidate();
-        component.DetachEventsFromParent();
 
         if (component.Parent == this)
         {
@@ -410,39 +424,137 @@ public abstract class UIComponent
         return _childNodes.Remove(component);
     }
 
-    protected void OnMousePress(MouseEventArgs e)
+    protected void OnMousePress(MouseEventArgs mouseEventArgs)
     {
-        MousePress?.Invoke(this, e);
+        MousePress?.Invoke(this, mouseEventArgs);
+        if (mouseEventArgs.Button == MouseButton.Left)
+        {
+            MouseDragBegin?.Invoke(this, EventArgs.Empty);
+            Root?.GlobalEventInformation.MarkComponentAsDragged(this);
+        }
+
+        foreach (var child in _childNodes.Reverse<UIWidget>())
+        {
+            if (child.ShouldPropagateMouseEvent(mouseEventArgs.AbsoluteLocation))
+            {
+                child.OnMousePress(child.CreateEventWithRelativeLocation(mouseEventArgs));
+                // The first child where to propagate this event will end the loop. This avoid event propagation on multiple overlapping children.
+                // The first child where the event is propagated is also the latest in the list, meaning the one rendered on top.
+                break;
+            }
+        }
     }
 
-    protected void OnMouseRelease(MouseEventArgs e)
+    protected void OnMouseRelease(MouseEventArgs mouseEventArgs)
     {
-        MouseRelease?.Invoke(this, e);
+        MouseRelease?.Invoke(this, mouseEventArgs);
+
+        foreach (var child in _childNodes.Reverse<UIWidget>())
+        {
+            if (child.ShouldPropagateMouseEvent(mouseEventArgs.AbsoluteLocation))
+            {
+                child.OnMouseRelease(child.CreateEventWithRelativeLocation(mouseEventArgs));
+                // The first child where to propagate this event will end the loop. This avoid event propagation on multiple overlapping children.
+                // The first child where the event is propagated is also the latest in the list, meaning the one rendered on top.
+                break;
+            }
+        }
     }
 
-    protected void OnMouseMove(MouseEventArgs e)
+    protected void OnMouseMove(MouseEventArgs mouseEventArgs)
     {
-        MouseMove?.Invoke(this, e);
+        MouseMove?.Invoke(this, mouseEventArgs);
+
+        var childHit = false;
+
+        foreach (var child in _childNodes.Reverse<UIWidget>())
+        {
+            if (child.ShouldPropagateMouseEvent(mouseEventArgs.AbsoluteLocation) && !childHit)
+            {
+                child.NotifyMouseInside();
+                child.OnMouseMove(child.CreateEventWithRelativeLocation(mouseEventArgs));
+                // The first child where to propagate this event will end the loop. This avoid event propagation on multiple overlapping children.
+                // The first child where the event is propagated is also the latest in the list, meaning the one rendered on top.
+                childHit = true;
+            }
+            else
+            {
+                child.NotifyMouseOutside();
+            }
+        }
     }
 
-    protected void OnKeyPress(KeyEventArgs e)
+    protected internal void OnMouseDrag(MouseEventArgs mouseEventArgs)
     {
-        KeyPress?.Invoke(this, e);
+        MouseDrag?.Invoke(this, mouseEventArgs);
     }
 
-    protected void OnKeyRelease(KeyEventArgs e)
+    protected internal void OnMouseDragEnd()
     {
-        KeyRelease?.Invoke(this, e);
+        MouseDragEnd?.Invoke(this, EventArgs.Empty);
     }
 
-    protected void OnTextInput(TextInputEventArgs e)
+    protected void OnKeyPress(KeyEventArgs keyEventArgs)
     {
-        TextInput?.Invoke(this, e);
+        // TODO: looping through all the tree is unnecessary. Just detect the focused elements in the list and trigger events for that
+        KeyPress?.Invoke(this, keyEventArgs);
+
+        foreach (var child in _childNodes)
+        {
+            if (child.Visibility.Value == ComponentVisibility.Visible && (child.Focus.Value || !child.Focusable.Value))
+            {
+                child.OnKeyPress(keyEventArgs);
+            }
+        }
     }
 
-    protected void OnMouseWheel(MouseWheelEventArgs e)
+    protected void OnKeyRelease(KeyEventArgs keyEventArgs)
     {
-        MouseWheel?.Invoke(this, e);
+        // TODO: looping through all the tree is unnecessary. Just detect the focused elements in the list and trigger events for that
+        KeyRelease?.Invoke(this, keyEventArgs);
+
+        foreach (var child in _childNodes)
+        {
+            if (child.Visibility.Value == ComponentVisibility.Visible && (child.Focus.Value || child is UIContainer))
+            {
+                child.OnKeyRelease(keyEventArgs);
+            }
+        }
+    }
+
+    protected void OnTextInput(TextInputEventArgs textInputEventArgs)
+    {
+        // TODO: looping through all the tree is unnecessary. Just detect the focused elements in the list and trigger events for that
+        TextInput?.Invoke(this, textInputEventArgs);
+
+        foreach (var child in _childNodes)
+        {
+            if (child.Visibility.Value == ComponentVisibility.Visible && (child.Focus.Value || child is UIContainer))
+            {
+                child.OnTextInput(textInputEventArgs);
+            }
+        }
+    }
+
+    protected void OnMouseWheel(MouseWheelEventArgs mouseWheelEventArgs)
+    {
+        MouseWheel?.Invoke(this, mouseWheelEventArgs);
+
+        foreach (var child in _childNodes.Reverse<UIWidget>())
+        {
+            if (child.ShouldPropagateMouseEvent(mouseWheelEventArgs.AbsoluteLocation))
+            {
+                var childEventArgs = new MouseWheelEventArgs(mouseWheelEventArgs.HorizontalMovement,
+                                                             mouseWheelEventArgs.VerticalMovement,
+                                                             mouseWheelEventArgs.AbsoluteLocation,
+                                                             mouseWheelEventArgs.AbsoluteLocation - child._absoluteDrawingArea.TopLeft);
+
+                // The first child where to propagate this event will end the loop. This avoid event propagation on multiple overlapping children.
+                // The first child where the event is propagated is also the latest in the list, meaning the one rendered on top.
+                child.OnMouseWheel(childEventArgs);
+                break;
+            }
+        }
     }
 
     internal IEnumerable<UIComponent> GetComponentTreeNodesDepthFirstSearch() =>
@@ -456,7 +568,6 @@ public abstract class UIComponent
         RenderFrame?.Invoke(this, new RenderingEventArgs(_relativeDrawingArea.Size));
         Canvas.ContainerAbsoluteDrawingArea = _absoluteDrawingArea;
         Canvas.Render(_clipArea);
-        _renderingAreaChanged = false;
     }
 
     /// <summary>
@@ -488,15 +599,16 @@ public abstract class UIComponent
     /// </exception>
     internal void ComputeDrawingAreas(Area? relativeDrawingArea = null, bool rootCall = false)
     {
+        bool renderingAreaChanged = false;
         if (!rootCall) _relativeDrawingAreaOverride = relativeDrawingArea;
-        _relativeDrawingArea = ComputeRelativeDrawingArea(ref _renderingAreaChanged, _relativeDrawingAreaOverride);
-        _absoluteDrawingArea = ComputeAbsoluteDrawingArea(ref _renderingAreaChanged);
-        _clipArea = ComputeClipArea(ref _renderingAreaChanged);
+        _relativeDrawingArea = ComputeRelativeDrawingArea(ref renderingAreaChanged, _relativeDrawingAreaOverride);
+        _absoluteDrawingArea = ComputeAbsoluteDrawingArea(ref renderingAreaChanged);
+        _clipArea = ComputeClipArea(ref renderingAreaChanged);
 
         var childrenAreas = RepositionChildren(_relativeDrawingArea.Size, _childNodes.Select(c => c._wrapSize));
 
         // If rendering area has not changed and children area has not changed, no need to proceed.
-        if (childrenAreas.Count == 0 && !_renderingAreaChanged)
+        if (childrenAreas.Count == 0 && !renderingAreaChanged)
         {
             Validate();
             return;
@@ -565,119 +677,11 @@ public abstract class UIComponent
         RenderingAreaChange?.Invoke(this, new RenderingAreaEventArgs(_relativeDrawingArea));
     }
 
-    private void UIComponent_MousePress(UIComponent sender, MouseEventArgs e)
-    {
-        if (e.Button == MouseButton.Left)
-        {
-            MouseDragBegin?.Invoke(this, e);
-            _mouseDragPointAbsolute = e.AbsoluteLocation;
-            _mouseLastDragPointAbsolute = e.AbsoluteLocation;
-        }
-    }
+    internal MouseEventArgs CreateEventWithRelativeLocation(MouseEventArgs mouseEventArgs) =>
+        new(mouseEventArgs.AbsoluteLocation,
+            mouseEventArgs.AbsoluteLocation - _absoluteDrawingArea.TopLeft,
+            mouseEventArgs.Button);
 
-    private void AttachEventsFromParent()
-    {
-        if (Parent == null) return;
-        Parent.MousePress += _parent_MousePress;
-        Parent.MouseRelease += _parent_MouseRelease;
-        Parent.MouseMove += _parent_MouseMove;
-        Parent.KeyPress += _parent_KeyPress;
-        Parent.KeyRelease += _parent_KeyRelease;
-        Parent.TextInput += _parent_TextInput;
-        Parent.MouseWheel += _parent_MouseWheel;
-    }
-
-    private void DetachEventsFromParent()
-    {
-        if (Parent == null) return;
-        Parent.MousePress -= _parent_MousePress;
-        Parent.MouseRelease -= _parent_MouseRelease;
-        Parent.MouseMove -= _parent_MouseMove;
-        Parent.KeyPress -= _parent_KeyPress;
-        Parent.KeyRelease -= _parent_KeyRelease;
-        Parent.TextInput -= _parent_TextInput;
-        Parent.MouseWheel -= _parent_MouseWheel;
-    }
-
-    private void _parent_MouseMove(UIComponent sender, MouseEventArgs mouseEventArgs)
-    {
-        _mouseAbsoluteLocation = mouseEventArgs.AbsoluteLocation;
-        if (mouseEventArgs.AbsoluteLocation.IsWithin(_absoluteDrawingArea) && Visibility.Value == ComponentVisibility.Visible && Enabled.Value)
-        {
-            MouseMove?.Invoke(this, new MouseEventArgs(mouseEventArgs.AbsoluteLocation,
-                                                      mouseEventArgs.AbsoluteLocation - _absoluteDrawingArea.TopLeft,
-                                                      mouseEventArgs.Button));
-        }
-
-        if (_mouseDragPointAbsolute != null && _mouseLastDragPointAbsolute != null)
-        {
-            var offset = mouseEventArgs.AbsoluteLocation - _mouseLastDragPointAbsolute;
-            _mouseLastDragPointAbsolute = mouseEventArgs.AbsoluteLocation;
-            MouseDrag?.Invoke(this, new MouseDragEventArgs(_mouseDragPointAbsolute, _mouseLastDragPointAbsolute, offset));
-        }
-    }
-
-    private void _parent_MouseRelease(UIComponent sender, MouseEventArgs mouseEventArgs)
-    {
-        var e = new MouseEventArgs(mouseEventArgs.AbsoluteLocation,
-                                   mouseEventArgs.AbsoluteLocation - _absoluteDrawingArea.TopLeft,
-                                   mouseEventArgs.Button);
-
-        if (mouseEventArgs.AbsoluteLocation.IsWithin(_absoluteDrawingArea) && Visibility.Value == ComponentVisibility.Visible && Enabled.Value)
-        {
-            MouseRelease?.Invoke(this, e);
-        }
-
-        if (_mouseDragPointAbsolute != null)
-        {
-            MouseDragEnd?.Invoke(this, e);
-        }
-
-        _mouseDragPointAbsolute = null;
-        _mouseLastDragPointAbsolute = null;
-    }
-
-    private void _parent_MousePress(UIComponent sender, MouseEventArgs mouseEventArgs)
-    {
-        if (mouseEventArgs.AbsoluteLocation.IsWithin(_absoluteDrawingArea) && Visibility.Value == ComponentVisibility.Visible && Enabled.Value)
-        {
-            MousePress?.Invoke(this, new MouseEventArgs(mouseEventArgs.AbsoluteLocation,
-                                                       mouseEventArgs.AbsoluteLocation - _absoluteDrawingArea.TopLeft,
-                                                       mouseEventArgs.Button));
-        }
-    }
-
-    private void _parent_KeyPress(UIComponent sender, KeyEventArgs keyEventArgs)
-    {
-        if (Visibility.Value == ComponentVisibility.Visible && (Focus.Value || !Focusable.Value))
-        {
-            KeyPress?.Invoke(this, keyEventArgs);
-        }
-    }
-
-    private void _parent_KeyRelease(UIComponent sender, KeyEventArgs keyEventArgs)
-    {
-        if (Visibility.Value == ComponentVisibility.Visible && (Focus.Value || this is UIContainer))
-        {
-            KeyRelease?.Invoke(this, keyEventArgs);
-        }
-    }
-
-    private void _parent_TextInput(UIComponent sender, TextInputEventArgs textInputEventArgs)
-    {
-        if (Visibility.Value == ComponentVisibility.Visible && (Focus.Value || this is UIContainer))
-        {
-            TextInput?.Invoke(this, textInputEventArgs);
-        }
-    }
-
-    private void _parent_MouseWheel(UIComponent sender, MouseWheelEventArgs mouseWheelEventArgs)
-    {
-        if (Visibility.Value == ComponentVisibility.Visible && _mouseAbsoluteLocation != null && _mouseAbsoluteLocation.IsWithin(_absoluteDrawingArea))
-        {
-            MouseWheel?.Invoke(this, mouseWheelEventArgs);
-        }
-    }
 
     private void Focus_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
     {
@@ -829,4 +833,29 @@ public abstract class UIComponent
             child.UpdateVisibility(canRender);
         }
     }
+
+    private void NotifyMouseInside()
+    {
+        if (!_hasMouse)
+        {
+            _hasMouse = true;
+            MouseEnter?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    private void NotifyMouseOutside()
+    {
+        if (_hasMouse)
+        {
+            _hasMouse = false;
+            MouseLeave?.Invoke(this, EventArgs.Empty);
+            foreach (var child in _childNodes)
+            {
+                child.NotifyMouseOutside();
+            }
+        }
+    }
+
+    private bool ShouldPropagateMouseEvent(Point mouseAbsoluteLocation) =>
+        mouseAbsoluteLocation.IsWithin(_absoluteDrawingArea) && Visibility.Value == ComponentVisibility.Visible && Enabled.Value;
 }

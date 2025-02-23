@@ -53,9 +53,9 @@ public class ScrollView : UIContainer, ISingleContainer
         _horizontalScrollBar.BackgroundColor.BindDestinationToSource(ScrollBarColor, c => c.WithAlpha(ScrollBarAlpha));
         Canvas.Add(_horizontalScrollBar);
 
-        MouseDrag += ScrollView_MouseDrag;
-        MouseDragBegin += ScrollView_MouseDragBegin;
-        MouseDragEnd += ScrollView_MouseDragEnd;
+        // MouseDrag += ScrollView_MouseDrag;
+        // MouseDragBegin += ScrollView_MouseDragBegin;
+        // MouseDragEnd += ScrollView_MouseDragEnd;
         MouseWheel += ScrollView_MouseWheel;
         RenderFrame += ScrollView_RenderFrame;
     }
@@ -153,10 +153,9 @@ public class ScrollView : UIContainer, ISingleContainer
             var maximumChildVerticalScroll = GetMaximumChildVerticalScroll();
             _child.Y.Value = Math.Clamp(_child.Y.Value - offsetYFactor * maximumChildVerticalScroll, -maximumChildVerticalScroll, 0.0f);
         }
-
     }
 
-    private void ScrollView_MouseDrag(UIComponent sender, MouseDragEventArgs e)
+    /*private void ScrollView_MouseDrag(UIComponent sender, MouseDragEventArgs e)
     {
         if (_child == null) return;
 
@@ -178,7 +177,7 @@ public class ScrollView : UIContainer, ISingleContainer
             var maximumChildVerticalScroll = GetMaximumChildVerticalScroll();
             _child.Y.Value = Math.Clamp(_child.Y.Value - offsetYFactor * maximumChildVerticalScroll, -maximumChildVerticalScroll, 0.0f);
         }
-    }
+    }*/
 
     private Area? GetHorizontalScrollBarArea()
     {

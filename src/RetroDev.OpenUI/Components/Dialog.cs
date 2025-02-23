@@ -77,8 +77,7 @@ public class Dialog<TResult> : Window
 
         while (Visibility.Value == ComponentVisibility.Visible)
         {
-            Application.LifeCycle.CurrentState = LifeCycle.State.EVENT_POLL;
-            Application.EventSystem.ProcessEvents();
+            Application.RunUIEventPollLoop();
         }
 
         return Result;

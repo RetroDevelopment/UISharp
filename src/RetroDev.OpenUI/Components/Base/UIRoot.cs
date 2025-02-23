@@ -1,10 +1,11 @@
 ﻿using RetroDev.OpenUI.Components.Core;
 using RetroDev.OpenUI.Components.Core.AutoArea;
-using RetroDev.OpenUI.Components.Shapes;
 using RetroDev.OpenUI.Core.Contexts;
 using RetroDev.OpenUI.Core.Graphics;
 using RetroDev.OpenUI.Core.Graphics.OpenGL;
+using RetroDev.OpenUI.Core.Windowing.Events;
 using RetroDev.OpenUI.Core.Windowing.SDL;
+using RetroDev.OpenUI.UIDefinition.Ast;
 
 namespace RetroDev.OpenUI.Components.Base;
 
@@ -36,7 +37,12 @@ public abstract class UIRoot : UIComponent, IContainer
     /// <summary>
     /// The engine that render into <see langword="this" /> root component.
     /// </summary>
-    protected internal IRenderingEngine RenderingEngine { get; }
+    internal IRenderingEngine RenderingEngine { get; }
+
+    /// <summary>
+    /// Useful informations for event handling.
+    /// </summary>
+    internal GlobalEventInformation GlobalEventInformation { get; } = new GlobalEventInformation();
 
     public abstract IEnumerable<UIWidget> Children { get; }
 
@@ -67,6 +73,9 @@ public abstract class UIRoot : UIComponent, IContainer
         MeasureProvider = new MeasureProvider(Invalidator);
         RenderProvider = new RenderProvider(Invalidator);
         RenderingEngine = renderingEngine ?? new OpenGLRenderingEngine(application.Dispatcher, application.Logger, new SDLOpenGLRenderingContext(application));
+
+        MouseMove += UIRoot_MouseMove;
+        MouseRelease += UIRoot_MouseRelease;
     }
 
     /// <summary>
@@ -90,5 +99,26 @@ public abstract class UIRoot : UIComponent, IContainer
         var children = GetChildrenNodes().Where(c => c.ID.Value == id);
         if (!children.Any()) throw new ArgumentException($"Child with ID {id} not found in component with id {ID.Value}");
         return (TComponent)children.First();
+    }
+
+    private void UIRoot_MouseMove(UIComponent sender, OpenUI.Core.Windowing.Events.MouseEventArgs e)
+    {
+        foreach (var node in GlobalEventInformation.DraggingComponents)
+        {
+            node.OnMouseDrag(node.CreateEventWithRelativeLocation(e));
+        }
+    }
+
+    private void UIRoot_MouseRelease(UIComponent sender, OpenUI.Core.Windowing.Events.MouseEventArgs e)
+    {
+        if (e.Button == MouseButton.Left)
+        {
+            foreach (var node in GlobalEventInformation.DraggingComponents)
+            {
+                node.OnMouseDragEnd();
+            }
+
+            GlobalEventInformation.ClearDraggedComponents();
+        }
     }
 }

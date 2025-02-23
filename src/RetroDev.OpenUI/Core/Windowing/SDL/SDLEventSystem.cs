@@ -255,7 +255,9 @@ internal class SDLEventSystem(ILogger logger) : IEventSystem
                 case SDL_EventType.SDL_MOUSEWHEEL:
                     var wheelEvent = currentEvent.wheel;
                     var mouseWheelWindowId = GetWidnowIdFromWeelEvent(wheelEvent);
-                    var mouseWheelArgs = new WindowEventArgs<MouseWheelEventArgs>(mouseWheelWindowId, new MouseWheelEventArgs(wheelEvent.x, wheelEvent.y));
+                    SDL_GetMouseState(out var mouseX, out var mouseY);
+                    var mousePosition = new Point(mouseX, mouseY);
+                    var mouseWheelArgs = new WindowEventArgs<MouseWheelEventArgs>(mouseWheelWindowId, new MouseWheelEventArgs(wheelEvent.x, wheelEvent.y, mousePosition, mousePosition));
                     mouseWheelArgs.Log("mouseWheel", _logger);
                     MouseWheel?.Invoke(this, mouseWheelArgs);
                     break;

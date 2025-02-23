@@ -134,8 +134,7 @@ public class Application : IDisposable
 
         while (!_shoudQuit)
         {
-            LifeCycle.CurrentState = LifeCycle.State.EVENT_POLL;
-            EventSystem.ProcessEvents();
+            RunUIEventPollLoop();
         }
 
         LifeCycle.CurrentState = LifeCycle.State.QUIT;
@@ -237,6 +236,13 @@ public class Application : IDisposable
         Dispatcher.ThrowIfNotOnUIThread();
         LifeCycle.ThrowIfPropertyCannotBeSet();
         _windows.Add(window);
+    }
+
+
+    internal void RunUIEventPollLoop()
+    {
+        LifeCycle.CurrentState = LifeCycle.State.EVENT_POLL;
+        EventSystem.ProcessEvents();
     }
 
     private void EventSystem_BeforeRender(IEventSystem sender, EventArgs e)
