@@ -400,9 +400,10 @@ public abstract class UIComponent
         Application.LifeCycle.ThrowIfPropertyCannotBeSet();
         Invalidate();
         component.DetachEventsFromParent();
+
         if (component.Parent == this)
         {
-            component.DetachCanvas();
+            component.Cleanup();
             component.Parent = null;
         }
 
@@ -806,12 +807,14 @@ public abstract class UIComponent
         }
     }
 
-    private void DetachCanvas()
+    private void Cleanup()
     {
         Canvas.Detach();
+        CancelInvalidation();
+
         foreach (var child in _childNodes)
         {
-            child.DetachCanvas();
+            child.Cleanup();
         }
     }
 
