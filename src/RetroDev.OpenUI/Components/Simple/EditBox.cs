@@ -51,8 +51,9 @@ public class EditBox : UIWidget
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize)
     {
         if (Root == null) return Size.Zero;
-        var height = Root.RenderingEngine.ComputeTextMaximumHeight(Font.Value.ToGraphicsFont());
-        return new Size(height * 10, height);
+        var height = _inputTextLabel.ComputeTextMaximumHeight();
+        var estimatedNumberOfCharacters = 10;
+        return new Size(height * estimatedNumberOfCharacters, height);
     }
 
     /// <summary>
@@ -70,12 +71,8 @@ public class EditBox : UIWidget
         BackgroundColor.BindDestinationToSource(Application.Theme.PrimaryBackground);
 
         _backgroundRectangle = new Rectangle(application);
-        _backgroundRectangle.BackgroundColor.BindDestinationToSource(BackgroundColor);
-        _backgroundRectangle.BorderColor.BindDestinationToSource(Application.Theme.BorderColor);
-        _backgroundRectangle.AutoCornerRadiusRatio.Value = 0.5f;
-        UpdateBackgroundRectangleColorBinding();
-        UpdateBackgroundRectangleBorder();
-        AddChildNode(_backgroundRectangle);
+        _backgroundRectangle.BorderColor.BindDestinationToSource(FocusColor);
+        Canvas.Add(_backgroundRectangle);
 
         _inputTextLabel = new Label(application);
         _inputTextLabel.Text.BindDestinationToSource(Text);
@@ -84,7 +81,6 @@ public class EditBox : UIWidget
         _inputTextLabel.AutoHeight.Value = AutoSize.Wrap;
         _inputTextLabel.HorizontalAlignment.Value = Alignment.Left;
         _inputTextLabel.VerticalAlignment.Value = Alignment.Center;
-        UpdateTextColorBinding();
         AddChildNode(_inputTextLabel);
 
         MousePress += EditBox_MousePress;
@@ -92,6 +88,7 @@ public class EditBox : UIWidget
         TextInput += EditBox_TextInput;
         Enabled.ValueChange += Enabled_ValueChange;
         Focus.ValueChange += Focus_ValueChange;
+        RenderFrame += EditBox_RenderFrame;
     }
 
     private void EditBox_KeyPress(UIComponent sender, KeyEventArgs e)
@@ -118,25 +115,12 @@ public class EditBox : UIWidget
 
     private void Enabled_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
     {
-        UpdateBackgroundRectangleColorBinding();
         UpdateTextColorBinding();
     }
 
     private void Focus_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
     {
         UpdateBackgroundRectangleBorder();
-    }
-
-    private void UpdateBackgroundRectangleColorBinding()
-    {
-        if (Enabled.Value)
-        {
-            _backgroundRectangle.BackgroundColor.BindDestinationToSource(BackgroundColor);
-        }
-        else
-        {
-            _backgroundRectangle.BackgroundColor.BindDestinationToSource(DisabledBackgroundColor);
-        }
     }
 
     private void UpdateTextColorBinding()
@@ -148,6 +132,28 @@ public class EditBox : UIWidget
         else
         {
             _inputTextLabel.TextColor.BindDestinationToSource(DisabledTextColor);
+        }
+    }
+
+    private void EditBox_RenderFrame(UIComponent sender, RenderingEventArgs e)
+    {
+        _backgroundRectangle.RelativeRenderingArea.Value = e.RenderingAreaSize.Fill();
+        var cornerRadius = _backgroundRectangle.ComputeCornerRadius(0.5f, e.RenderingAreaSize);
+        _backgroundRectangle.CornerRadiusX.Value = cornerRadius;
+        _backgroundRectangle.CornerRadiusY.Value = cornerRadius;
+        UpdateBackgroundRectangleColor();
+        UpdateBackgroundRectangleBorder();
+    }
+
+    private void UpdateBackgroundRectangleColor()
+    {
+        if (Enabled.Value)
+        {
+            _backgroundRectangle.BackgroundColor.Value = BackgroundColor.Value;
+        }
+        else
+        {
+            _backgroundRectangle.BackgroundColor.Value = DisabledBackgroundColor.Value;
         }
     }
 

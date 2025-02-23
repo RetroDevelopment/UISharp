@@ -6,7 +6,6 @@ using RetroDev.OpenUI.Core.Windowing;
 using RetroDev.OpenUI.Core.Windowing.Events;
 using RetroDev.OpenUI.Presentation.Properties;
 using RetroDev.OpenUI.Core.Windowing.SDL;
-using RetroDev.OpenUI.Presentation;
 using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Components.Base;
 using RetroDev.OpenUI.Core.Graphics.Coordinates;
@@ -164,6 +163,8 @@ public class Window : UIRoot
     public Window(Application application, IRenderingEngine? renderingEngine = null) :
         base(application, visibility: ComponentVisibility.Collapsed, renderingEngine: renderingEngine, isFocusable: true, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
     {
+        application.Dispatcher.ThrowIfNotOnUIThread();
+
         application.AddWindow(this);
         _windowId = Application.WindowManager.CreateWindow(RenderingEngine.RenderingContext);
 
@@ -295,10 +296,7 @@ public class Window : UIRoot
     {
         UpdateWindowAppearance();
         var renderingEngine = RenderingEngine;
-        var canvas = new Canvas(renderingEngine, Application.LifeCycle);
-        RenderProvider.Render(this, canvas, renderingEngine);
-        renderingEngine.FinalizeFrame();
-        canvas.LogStatistics(Application.Logger);
+        RenderProvider.Render(this, renderingEngine);
     }
 
     public void Shutdown()

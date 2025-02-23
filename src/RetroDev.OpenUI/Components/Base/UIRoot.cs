@@ -1,5 +1,6 @@
 ﻿using RetroDev.OpenUI.Components.Core;
 using RetroDev.OpenUI.Components.Core.AutoArea;
+using RetroDev.OpenUI.Components.Shapes;
 using RetroDev.OpenUI.Core.Contexts;
 using RetroDev.OpenUI.Core.Graphics;
 using RetroDev.OpenUI.Core.Graphics.OpenGL;
@@ -33,10 +34,9 @@ public abstract class UIRoot : UIComponent, IContainer
     protected RenderProvider RenderProvider { get; }
 
     /// <summary>
-    /// The rendering engine responsible of drawing graphics in the viewport.
+    /// The engine that render into <see langword="this" /> root component.
     /// </summary>
-    // TODO: remove Canvas and implement retained mode rendering engine
-    public IRenderingEngine RenderingEngine { get; }
+    protected internal IRenderingEngine RenderingEngine { get; }
 
     public abstract IEnumerable<UIWidget> Children { get; }
 

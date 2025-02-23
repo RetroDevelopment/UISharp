@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using OpenTK.Graphics.ES11;
 using RetroDev.OpenIDE.Windows;
 using RetroDev.OpenUI;
 using RetroDev.OpenUI.Components;
@@ -88,21 +89,17 @@ class Ctr : UIWidget
             if (e.Button == KeyButton.S && Focus.Value) Height.Value -= 10;
             if (e.Button == KeyButton.R && Focus.Value) _rectangle.Rotation.Value += 0.01f;
         };
-        AddChildNode(_rectangle);
+        Canvas.Add(_rectangle);
 
         var c = new Circle(application);
-        c.Width.Value = 10;
-        c.Height.Value = 10;
+        c.RelativeRenderingArea.Value = new(Point.Zero, new Size(10, 10));
         c.BackgroundColor.Value = Color.Brown;
-        AddChildNode(c);
+        Canvas.Add(c);
 
         var txt = new Text(application);
         txt.TextColor.Value = Color.Magenta;
         txt.DisplayText.Value = $"CTX {idx++}";
-        txt.HorizontalAlignment.Value = Alignment.Center;
-        txt.VerticalAlignment.Value = Alignment.Top;
-        txt.Width.Value = 30;
-        txt.Height.Value = 10;
+        txt.RelativeRenderingArea.Value = new(Point.Zero, new Size(30, 10));
         //AddChild(txt);
     }
 
@@ -113,19 +110,36 @@ class Ctr : UIWidget
 
 internal class Program
 {
-    static void Mainm(string[] _)
+    static void Mainp(string[] _)
     {
         using var application = new Application();
         application.Logger.Verbosity = Verbosity.Verbose;
 
-        var root = new EditBox(application);
-        root.Font.Value = new Font(application, application.DefaultFont.Value.Name, 16, FontType.Regular);
+        var btn1 = new Button(application);
+        var btn2 = new Button(application);
+        btn1.Text.Value = "Button1";
+        btn2.Text.Value = "Button2";
+        btn1.X.Value = 0;
+        btn1.Y.Value = 0;
+        btn1.Width.Value = 80;
+        btn1.Height.Value = 50;
+        btn2.X.Value = 10;
+        btn2.Y.Value = 30;
+        btn2.Width.Value = 80;
+        btn2.Height.Value = 40;
 
         Window window = new Window(application);
         window.Width.Value = 800;
         window.Height.Value = 600;
+        window.Title.Value = "Hello World!";
         window.Visibility.Value = UIComponent.ComponentVisibility.Visible;
-        window.AddComponent(root);
+        window.AddComponent(btn1);
+        window.AddComponent(btn2);
+
+        btn1.Action += (_, _) => application.Logger.LogError("Button 1 Click");
+        btn2.Action += (_, _) => application.Logger.LogError("Button 2 Click");
+        btn1.MouseDrag += (_, _) => application.Logger.LogError("Button 1 Drag");
+        btn2.MouseDrag += (_, _) => application.Logger.LogError("Button 2 Drag");
 
         application.Run();
     }
@@ -146,7 +160,7 @@ internal class Program
         }
     }
 
-    static void Mainj(string[] _)
+    static void MainPerformanceTest(string[] _)
     {
         using var application = new Application();
         application.Logger.Verbosity = Verbosity.Verbose;

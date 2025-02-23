@@ -1,7 +1,7 @@
 ﻿using RetroDev.OpenUI.Components.Base;
+using RetroDev.OpenUI.Components.Shapes;
 using RetroDev.OpenUI.Core.Graphics;
 using RetroDev.OpenUI.Core.Graphics.Coordinates;
-using RetroDev.OpenUI.Core.Graphics.Shapes;
 using RetroDev.OpenUI.Core.Windowing.Events;
 using RetroDev.OpenUI.Presentation.Properties;
 
@@ -12,14 +12,18 @@ namespace RetroDev.OpenUI.Components.Containers;
 /// </summary>
 public class ScrollView : UIContainer, ISingleContainer
 {
+    private readonly Rectangle _verticalScrollBar;
+    private readonly Rectangle _horizontalScrollBar;
+
     private const int ScrollBarSize = 15;
+    private const int ScrollBarAlpha = 100;
     private UIWidget? _child;
     private bool _moveHorizontalBar = false;
     private bool _moveVerticalBar = false;
 
     /// <inheritdoc />
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
-        childrenSize.Any() ? childrenSize.First() : Size.Zero;
+        childrenSize.FirstOrDefault() ?? Size.Zero;
 
     /// <inheritdoc />
     public override IEnumerable<UIWidget> Children => GetChildrenNodes();
@@ -36,16 +40,24 @@ public class ScrollView : UIContainer, ISingleContainer
     /// <summary>
     /// Creates a new scroll view.
     /// </summary>
-    /// <param name="parent">The application that contain this scroll view.</param>
-    public ScrollView(Application parent) : base(parent)
+    /// <param name="application">The application that contain this scroll view.</param>
+    public ScrollView(Application application) : base(application)
     {
         ScrollBarColor = new UIProperty<ScrollView, Color>(this, Application.Theme.PrimaryColorContrast, bindingType: BindingType.DestinationToSource);
 
-        ChildrenRendered += ScrollView_ChildrenRendered;
+        _verticalScrollBar = new Rectangle(application);
+        _verticalScrollBar.BackgroundColor.BindDestinationToSource(ScrollBarColor, c => c.WithAlpha(ScrollBarAlpha));
+        Canvas.Add(_verticalScrollBar);
+
+        _horizontalScrollBar = new Rectangle(application);
+        _horizontalScrollBar.BackgroundColor.BindDestinationToSource(ScrollBarColor, c => c.WithAlpha(ScrollBarAlpha));
+        Canvas.Add(_horizontalScrollBar);
+
         MouseDrag += ScrollView_MouseDrag;
         MouseDragBegin += ScrollView_MouseDragBegin;
         MouseDragEnd += ScrollView_MouseDragEnd;
         MouseWheel += ScrollView_MouseWheel;
+        RenderFrame += ScrollView_RenderFrame;
     }
 
     /// <summary>
@@ -63,28 +75,35 @@ public class ScrollView : UIContainer, ISingleContainer
         AddChildNode(_child);
     }
 
-    private void ScrollView_ChildrenRendered(UIComponent sender, RenderingEventArgs e)
+    private void ScrollView_RenderFrame(UIComponent sender, RenderingEventArgs e)
     {
-        var canvas = e.Canvas;
         var horizontalScrollBarArea = GetHorizontalScrollBarArea();
         var verticalScrollBarArea = GetVerticalScrollBarArea();
 
         if (horizontalScrollBarArea != null)
         {
             var radius = Math.Min(Math.Min(horizontalScrollBarArea.Size.Width / 2.0f, horizontalScrollBarArea.Size.Height / 2.0f), ScrollBarSize / 2.0f);
-            var scrollBarShape = new Rectangle(BackgroundColor: ScrollBarColor.Value.WithAlpha(100),
-                                               CornerRadiusX: radius,
-                                               CornerRadiusY: radius);
-            canvas.Render(scrollBarShape, horizontalScrollBarArea);
+            _horizontalScrollBar.RelativeRenderingArea.Value = horizontalScrollBarArea;
+            _horizontalScrollBar.CornerRadiusX.Value = radius;
+            _horizontalScrollBar.CornerRadiusY.Value = radius;
+            _horizontalScrollBar.Visible.Value = true;
+        }
+        else
+        {
+            _horizontalScrollBar.Visible.Value = false;
         }
 
         if (verticalScrollBarArea != null)
         {
             var radius = Math.Min(Math.Min(verticalScrollBarArea.Size.Width / 2.0f, verticalScrollBarArea.Size.Height / 2.0f), ScrollBarSize / 2.0f);
-            var scrollBarShape = new Rectangle(BackgroundColor: ScrollBarColor.Value.WithAlpha(100),
-                                               CornerRadiusX: radius,
-                                               CornerRadiusY: radius);
-            canvas.Render(scrollBarShape, verticalScrollBarArea);
+            _verticalScrollBar.RelativeRenderingArea.Value = verticalScrollBarArea;
+            _verticalScrollBar.CornerRadiusX.Value = radius;
+            _verticalScrollBar.CornerRadiusY.Value = radius;
+            _verticalScrollBar.Visible.Value = true;
+        }
+        else
+        {
+            _verticalScrollBar.Visible.Value = false;
         }
     }
 

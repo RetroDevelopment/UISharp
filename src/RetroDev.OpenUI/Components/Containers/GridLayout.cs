@@ -50,8 +50,6 @@ public class GridLayout : UIContainer, IContainer
         Columns = new UIProperty<GridLayout, uint>(this, 0);
         RowSizes = new UIProperty<GridLayout, string>(this, string.Empty);
         ColumnSizes = new UIProperty<GridLayout, string>(this, string.Empty);
-
-        RenderFrame += GridLayout_RenderFrame;
     }
 
     /// <summary>
@@ -300,10 +298,5 @@ public class GridLayout : UIContainer, IContainer
         }
 
         return cumulativeKnownSize;
-    }
-
-    private void GridLayout_RenderFrame(UIComponent sender, RenderingEventArgs e)
-    {
-        e.Canvas.Render(new Rectangle(BackgroundColor.Value), ActualSize.Fill());
     }
 }

@@ -61,6 +61,12 @@ public class OpenGLRenderingEngine : IRenderingEngine
     private readonly int _defaultTexture;
 
     private readonly ProceduralModelGenerator _modelGenerator;
+
+    // TODO: use instanced rendering to batch all recatngles, circles, etc. in 3 draw call (+/- groups for e.g. list boxes which use sparate instances)
+    private readonly List<Rectangle> _recangles = [];
+    private readonly List<Circle> _circles = [];
+    private readonly List<Text> _texts = [];
+
     private Size _viewportSize = Size.Zero;
 
     /// <summary>
@@ -165,6 +171,62 @@ public class OpenGLRenderingEngine : IRenderingEngine
     }
 
     /// <summary>
+    /// Adds the given <paramref name="rectangle"/> to the rendering canvas.
+    /// </summary>
+    /// <param name="rectangle">The rectangle to add.</param>
+    public void Add(Rectangle rectangle)
+    {
+        _recangles.Add(rectangle);
+    }
+
+    /// <summary>
+    /// Adds the given <paramref name="circle"/> to the rendering canvas.
+    /// </summary>
+    /// <param name="circle">The circle to add.</param>
+    public void Add(Circle circle)
+    {
+        _circles.Add(circle);
+    }
+
+    /// <summary>
+    /// Adds the given <paramref name="text"/> to the rendering canvas.
+    /// </summary>
+    /// <param name="text">The text to add.</param>
+    public void Add(Text text)
+    {
+        _texts.Add(text);
+    }
+
+    /// <summary>
+    /// Removes the given <paramref name="rectangle"/> from the rendering canvas.
+    /// </summary>
+    /// <param name="rectangle">The rectangle to add.</param>
+    public void Remove(Rectangle rectangle)
+    {
+        _recangles.Remove(rectangle);
+    }
+
+    /// <summary>
+    /// Removes the given <paramref name="circle"/> from the rendering canvas.
+    /// </summary>
+    /// <param name="circle">The circle to add.</param>
+    public void Remove(Circle circle)
+    {
+        _circles.Remove(circle);
+    }
+
+    /// <summary>
+    /// Removes the given <paramref name="text"/> from the rendering canvas.
+    /// </summary>
+    /// <param name="text">The text to add.</param>
+    public void Remove(Text text)
+    {
+        _texts.Remove(text);
+    }
+
+    // TODO: remove the Render() methods once we will have instance rendering!
+
+    /// <summary>
     /// Renders a rectangle.
     /// </summary>
     /// <param name="rectangle">The rectangle shape attributes.</param>
@@ -173,9 +235,9 @@ public class OpenGLRenderingEngine : IRenderingEngine
     /// The area outside of which, pixel shapes won't be rendered.
     /// If <see langword="null" /> no clipping area will be specified.
     /// </param>
-    public void Render(Rectangle rectangle, Area area, Area? clippingArea)
+    public void Render(Rectangle rectangle)
     {
-        RenderShape(rectangle, area, clippingArea, _modelGenerator.Rectangle);
+        RenderShape(rectangle, rectangle.RenderingArea, rectangle.ClipArea, _modelGenerator.Rectangle);
     }
 
     /// <summary>
@@ -187,9 +249,9 @@ public class OpenGLRenderingEngine : IRenderingEngine
     /// The area outside of which, pixel shapes won't be rendered.
     /// If <see langword="null" /> no clipping area will be specified.
     /// </param>
-    public void Render(Circle circle, Area area, Area? clippingArea)
+    public void Render(Circle circle)
     {
-        RenderShape(circle, area, clippingArea, _modelGenerator.Circle);
+        RenderShape(circle, circle.RenderingArea, circle.ClipArea, _modelGenerator.Circle);
     }
 
     /// <summary>
@@ -201,9 +263,12 @@ public class OpenGLRenderingEngine : IRenderingEngine
     /// The area outside of which, pixel shapes won't be rendered.
     /// If <see langword="null" /> no clipping area will be specified.
     /// </param>
-    public void Render(Text text, Area area, Area? clippingArea)
+    public void Render(Text text)
     {
         _dispatcher.ThrowIfNotOnUIThread();
+        var area = text.RenderingArea;
+        var clippingArea = text.ClipArea;
+
         if (string.IsNullOrEmpty(text.Value)) return;
         var textKey = $"{text.Value}{text.ForegroundColor}";
 
@@ -215,8 +280,6 @@ public class OpenGLRenderingEngine : IRenderingEngine
             _textCache[textKey] = textureId;
         }
 
-        text.TextureID = textureId;
-
         _shader.Use();
         _shader.SetTransform([area.GetTransformMatrix(ViewportSize, 0.0f, 0.0f),
                               area.GetTransformMatrix(ViewportSize, 0.0f, null)]);
@@ -225,7 +288,7 @@ public class OpenGLRenderingEngine : IRenderingEngine
         _shader.SetClipArea((clippingArea ?? new Area(Point.Zero, ViewportSize)).ToVector4(ViewportSize));
         _shader.SetOffsetMultiplier(OpenTK.Mathematics.Vector2.Zero);
         _shader.SetTextureMode(ShaderProgram.TextureMode.GrayScale);
-        _modelGenerator.Rectangle.Render(text.TextureID.Value);
+        _modelGenerator.Rectangle.Render(textureId);
     }
 
     /// <summary>
@@ -272,6 +335,7 @@ public class OpenGLRenderingEngine : IRenderingEngine
     public void FinalizeFrame()
     {
         _dispatcher.ThrowIfNotOnUIThread();
+        RenderAllElements(); // TODO: this will be instance rendering
         _context.RenderFrame();
         _logger.LogVerbose($"OpenGL performed {_modelGenerator.DrawCalls} draw calls in the latest frame");
     }
@@ -285,7 +349,7 @@ public class OpenGLRenderingEngine : IRenderingEngine
         _shader.Close();
     }
 
-    private void RenderShape(IShape shape, Area area, Area? clippingArea, Model2D openglShape)
+    private void RenderShape(Shape shape, Area area, Area? clippingArea, Model2D openglShape)
     {
         // TODO: use barycentric coordinates
         _dispatcher.ThrowIfNotOnUIThread();
@@ -328,11 +392,11 @@ public class OpenGLRenderingEngine : IRenderingEngine
         _shader.SetClipArea((clippingArea ?? new Area(Point.Zero, ViewportSize)).ToVector4(ViewportSize));
         _shader.SetOffsetMultiplier(NormalizeRadius(xRadius, yRadius, area.Size));
         // TODO: When implementing Texture class, handle the texture format there so we support also gray scale here depending on how the texture was created.
-        _shader.SetTextureMode(textureId != null ? ShaderProgram.TextureMode.Color : ShaderProgram.TextureMode.None);
+        _shader.SetTextureMode(ShaderProgram.TextureMode.None);
         openglShape.Render(textureId ?? _defaultTexture);
     }
 
-    private void Validate(IShape shape, Area area)
+    private void Validate(Shape shape, Area area)
     {
         var maximumBorderThickness = Math.Min(area.Size.Width, area.Size.Height);
         if (shape.BorderThickness != null && shape.BorderThickness.Value > maximumBorderThickness)
@@ -358,4 +422,22 @@ public class OpenGLRenderingEngine : IRenderingEngine
 
     private OpenTK.Mathematics.Vector2 NormalizeRadius(PixelUnit xRadius, PixelUnit yRadius, Size size) =>
         new OpenTK.Mathematics.Vector2(xRadius / size.Width, yRadius / size.Height);
+
+    private void RenderAllElements()
+    {
+        foreach (var rectangle in _recangles)
+        {
+            if (rectangle.Visible) Render(rectangle);
+        }
+
+        foreach (var circle in _circles)
+        {
+            if (circle.Visible) Render(circle);
+        }
+
+        foreach (var text in _texts)
+        {
+            if (text.Visible) Render(text);
+        }
+    }
 }

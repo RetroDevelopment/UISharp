@@ -43,8 +43,6 @@ public class BindableProperty<TValue>(TValue value, Application? application = n
     {
         set
         {
-            _application?.LifeCycle?.ThrowIfPropertyCannotBeSet();
-
             if (!EqualityComparer<TValue>.Default.Equals(_value, value))
             {
                 var previousValue = _value;

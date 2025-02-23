@@ -57,7 +57,7 @@ public class FreeTypeFontRenderingEngine : IFontRenderingEngine
         var height = metrics.height + 1;
         var info = ComputeTextMaximumWidth(gliphs);
         var width = info.Width;
-        var image = CreateRgbaImageFromGliphs(gliphs, width, height, metrics.ascender, info.XOffset);
+        var image = CreateTextImageFromGliphs(gliphs, width, height, metrics.ascender, info.XOffset);
         return image;
     }
 
@@ -94,7 +94,7 @@ public class FreeTypeFontRenderingEngine : IFontRenderingEngine
         return (width + 1, xOffset);
     }
 
-    private GrayscaleImage CreateRgbaImageFromGliphs(IEnumerable<Gliph> gliphs, int width, int height, int ascender, int xOffset)
+    private GrayscaleImage CreateTextImageFromGliphs(IEnumerable<Gliph> gliphs, int width, int height, int ascender, int xOffset)
     {
         var image = new GrayscaleImage(new Size(width, height));
         var xPosition = 0;
@@ -102,8 +102,6 @@ public class FreeTypeFontRenderingEngine : IFontRenderingEngine
 
         foreach (var gliph in gliphs)
         {
-            // Do not allow negative X bearings as this complicates image construction to avoid index out of bounds
-            // TODO: handle special case where bearing is negative and it is first character in text.
             var x = xPosition + gliph.BearingX;
             var y = baseline - gliph.BearingY;
             var offset = new Point(x + xOffset, y);

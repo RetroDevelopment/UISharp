@@ -1,17 +1,20 @@
-﻿using RetroDev.OpenUI.Components.Simple;
-using RetroDev.OpenUI.Presentation;
+﻿using RetroDev.OpenUI.Components.Shapes;
+using RetroDev.OpenUI.Core.Graphics.Coordinates;
 
 namespace RetroDev.OpenUI.Core.Windowing.Events;
 
 public class RenderingEventArgs : EventArgs
 {
-    public Canvas Canvas { get; }
+    /// <summary>
+    /// The size of the area where to render a component.
+    /// </summary>
+    public Size RenderingAreaSize { get; }
 
-    public RenderingEventArgs(Canvas canvas)
+    public RenderingEventArgs(Size renderingAreaSize)
     {
-        Canvas = canvas;
+        RenderingAreaSize = renderingAreaSize;
     }
 
     /// <inheritdoc />
-    public override string ToString() => string.Empty;
+    public override string ToString() => $"{RenderingAreaSize}";
 }

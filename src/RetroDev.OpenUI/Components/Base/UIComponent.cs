@@ -1,5 +1,6 @@
 ﻿using RetroDev.OpenUI.Components.Core;
 using RetroDev.OpenUI.Components.Core.AutoArea;
+using RetroDev.OpenUI.Components.Shapes;
 using RetroDev.OpenUI.Core.Graphics;
 using RetroDev.OpenUI.Core.Graphics.Coordinates;
 using RetroDev.OpenUI.Core.Windowing.Events;
@@ -50,7 +51,7 @@ public abstract class UIComponent
     private Area _relativeDrawingArea; // Area relative to the parent. So (0, 0) is top left of parent.
     private Area _absoluteDrawingArea; // Area relative to the window. So (0, 0) is top left of window.
     private Area _clipArea; // Absolute clipping area. Each pixel with absolute cooridnates outside of the area are clipped.
-
+    private bool _renderingAreaChanged = false; // Whether the rendering area has changed since the last frame rendering.
     /// <summary>
     /// Mouse button press inside <see cref="this"/> window.
     /// </summary>
@@ -113,11 +114,6 @@ public abstract class UIComponent
     public event TypeSafeEventHandler<UIComponent, RenderingEventArgs>? RenderFrame;
 
     /// <summary>
-    /// The children components have been rendered. Use this event handler to render on top of the children.
-    /// </summary>
-    public event TypeSafeEventHandler<UIComponent, RenderingEventArgs>? ChildrenRendered;
-
-    /// <summary>
     /// The application in which <see langword="this"/> <see cref="UIComponent"/> runs.
     /// </summary>
     public Application Application { get; }
@@ -126,6 +122,11 @@ public abstract class UIComponent
     /// The parent <see cref="UIComponent"/> containing <see langword="this" /> <see cref="UIComponent"/>.
     /// </summary>
     public UIComponent? Parent { get; private set; }
+
+    /// <summary>
+    /// The drawing area of <see langword="this" /> <see cref="UIComponent"/>.
+    /// </summary>
+    public Canvas Canvas { get; }
 
     /// <summary>
     /// Gets the <see cref="UIRoot"/> that contain <see langword="this" /> <see cref="UIComponent"/>.
@@ -245,6 +246,8 @@ public abstract class UIComponent
         Enabled = new UIProperty<UIComponent, bool>(this, true);
         BackgroundColor = new UIProperty<UIComponent, Color>(this, Color.Transparent);
 
+        Canvas = new Canvas(this);
+
         _wrapSize = Size.Zero;
         _relativeDrawingArea = Area.Empty;
         _absoluteDrawingArea = Area.Empty;
@@ -253,6 +256,9 @@ public abstract class UIComponent
         Focus.ValueChange += Focus_ValueChange;
         Enabled.ValueChange += Enabled_ValueChange;
         MousePress += UIComponent_MousePress;
+
+        UpdateVisibility();
+        Visibility.ValueChange += (_, _) => UpdateVisibility();
     }
 
     /// <summary>
@@ -368,11 +374,13 @@ public abstract class UIComponent
         component.AttachEventsFromParent();
         component.RecomputeLevel();
         component.InvalidateAll();
+        component.AttachCanvas();
         Invalidate();
         Application.EventSystem.InvalidateRendering();
         if (index == null) _childNodes.Add(component);
         else if (index + 1 < _childNodes.Count) _childNodes.Insert((int)index + 1, component);
         else _childNodes.Add(component);
+        UpdateVisibility();
     }
 
     /// <summary>
@@ -392,7 +400,12 @@ public abstract class UIComponent
         Application.LifeCycle.ThrowIfPropertyCannotBeSet();
         Invalidate();
         component.DetachEventsFromParent();
-        if (component.Parent == this) component.Parent = null;
+        if (component.Parent == this)
+        {
+            component.DetachCanvas();
+            component.Parent = null;
+        }
+
         return _childNodes.Remove(component);
     }
 
@@ -434,21 +447,15 @@ public abstract class UIComponent
     internal IEnumerable<UIComponent> GetComponentTreeNodesDepthFirstSearch() =>
         _childNodes.Union(_childNodes.SelectMany(c => c.GetComponentTreeNodesDepthFirstSearch()));
 
-    internal void OnRenderFrame(RenderingEventArgs renderingArgs)
+    internal void OnRenderFrame()
     {
         Application.Dispatcher.ThrowIfNotOnUIThread();
         Application.LifeCycle.ThrowIfNotOnRenderingPhase();
 
-        if (Visibility.Value == ComponentVisibility.Visible)
-        {
-            renderingArgs.Canvas.ContainerAbsoluteDrawingArea = _absoluteDrawingArea;
-            renderingArgs.Canvas.ClippingArea = _clipArea;
-            RenderFrame?.Invoke(this, renderingArgs);
-            _childNodes.ForEach(c => c.OnRenderFrame(renderingArgs));
-            renderingArgs.Canvas.ContainerAbsoluteDrawingArea = _absoluteDrawingArea;
-            renderingArgs.Canvas.ClippingArea = _clipArea;
-            ChildrenRendered?.Invoke(this, renderingArgs);
-        }
+        RenderFrame?.Invoke(this, new RenderingEventArgs(_relativeDrawingArea.Size));
+        Canvas.ContainerAbsoluteDrawingArea = _absoluteDrawingArea;
+        Canvas.Render(_clipArea);
+        _renderingAreaChanged = false;
     }
 
     /// <summary>
@@ -480,22 +487,21 @@ public abstract class UIComponent
     /// </exception>
     internal void ComputeDrawingAreas(Area? relativeDrawingArea = null, bool rootCall = false)
     {
-        var changed = false;
         if (!rootCall) _relativeDrawingAreaOverride = relativeDrawingArea;
-        _relativeDrawingArea = ComputeRelativeDrawingArea(ref changed, _relativeDrawingAreaOverride);
-        _absoluteDrawingArea = ComputeAbsoluteDrawingArea(ref changed);
-        _clipArea = ComputeClipArea(ref changed);
+        _relativeDrawingArea = ComputeRelativeDrawingArea(ref _renderingAreaChanged, _relativeDrawingAreaOverride);
+        _absoluteDrawingArea = ComputeAbsoluteDrawingArea(ref _renderingAreaChanged);
+        _clipArea = ComputeClipArea(ref _renderingAreaChanged);
 
         var childrenAreas = RepositionChildren(_relativeDrawingArea.Size, _childNodes.Select(c => c._wrapSize));
 
         // If rendering area has not changed and children area has not changed, no need to proceed.
-        if (childrenAreas.Count == 0 && !changed)
+        if (childrenAreas.Count == 0 && !_renderingAreaChanged)
         {
             Validate();
             return;
         }
 
-        if (childrenAreas.Count != 0 && childrenAreas.Count != _childNodes.Count)
+        if (childrenAreas.Count != 0 && _childNodes.Count != 0 && childrenAreas.Count != _childNodes.Count)
         {
             throw new InvalidOperationException($"{nameof(RepositionChildren)} must return the same number of elements as the number of children or be empty: {childrenAreas.Count()} provided but {_childNodes.Count} exist");
         }
@@ -785,5 +791,39 @@ public abstract class UIComponent
         if (Root == null) return;
         CancelInvalidation();
         _childNodes.ForEach(c => c.CancelInvalidation());
+    }
+
+    private void AttachCanvas()
+    {
+        var renderingEngine = Root?.RenderingEngine;
+        if (renderingEngine != null)
+        {
+            Canvas.Attach(renderingEngine);
+            foreach (var child in _childNodes)
+            {
+                child.AttachCanvas();
+            }
+        }
+    }
+
+    private void DetachCanvas()
+    {
+        Canvas.Detach();
+        foreach (var child in _childNodes)
+        {
+            child.DetachCanvas();
+        }
+    }
+
+    private void UpdateVisibility(bool? canInvalidatedParentRender = null)
+    {
+        var canRender = Visibility.Value == ComponentVisibility.Visible;
+        if (canInvalidatedParentRender != null) canRender &= canInvalidatedParentRender.Value;
+        Invalidate();
+        Canvas.UpdateVisibility(canRender);
+        foreach (var child in _childNodes)
+        {
+            child.UpdateVisibility(canRender);
+        }
     }
 }

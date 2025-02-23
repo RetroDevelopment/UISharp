@@ -38,16 +38,83 @@ public record Size
     }
 
     /// <summary>
-    /// Creates a <see cref="Area"/> from (0, 0) with <see langword="this" /> size.
+    /// Creates an <see cref="Area"/> from (0,0) with the same size as this instance.
     /// </summary>
-    /// <remarks>
-    /// This method is very useful when creating a drawing area relative to a container drawing area that fills it completely.
-    /// For example, given a size <c>s</c> 300 x 300, <c>s.Fill()</c> will return
-    /// the area with location (0, 0) and size 300 x 300.
-    /// </remarks>
-    /// <returns>The area with <see cref="Point.Zero"/> coordinate and the same <see cref="Size"/> as <see langword="this" /> area.</returns>
+    /// <returns>An <see cref="Area"/> that fills the entire container.</returns>
     public Area Fill() =>
         new(Point.Zero, this);
+
+    /// <summary>
+    /// Creates an <see cref="Area"/> positioned at the top-left corner of a given container.
+    /// </summary>
+    /// <param name="containerSize">The size of the container.</param>
+    /// <returns>An <see cref="Area"/> positioned at (0,0) with the same size as this instance.</returns>
+    public Area FillTopLeftOf(Size containerSize) =>
+        new(Point.Zero, this);
+
+    /// <summary>
+    /// Creates an <see cref="Area"/> positioned at the center of the top edge of a given container.
+    /// </summary>
+    /// <param name="containerSize">The size of the container.</param>
+    /// <returns>An <see cref="Area"/> centered horizontally at the top of the container.</returns>
+    public Area FillTopCenterOf(Size containerSize) =>
+        new(new Point((containerSize.Width - Width) / 2.0f, PixelUnit.Zero), this);
+
+    /// <summary>
+    /// Creates an <see cref="Area"/> positioned at the top-right corner of a given container.
+    /// </summary>
+    /// <param name="containerSize">The size of the container.</param>
+    /// <returns>An <see cref="Area"/> aligned to the top-right of the container.</returns>
+    public Area FillTopRightOf(Size containerSize) =>
+        new(new Point(containerSize.Width - Width, PixelUnit.Zero), this);
+
+    /// <summary>
+    /// Creates an <see cref="Area"/> positioned at the center-left of a given container.
+    /// </summary>
+    /// <param name="containerSize">The size of the container.</param>
+    /// <returns>An <see cref="Area"/> aligned to the center-left of the container.</returns>
+    public Area FillCenterLeftOf(Size containerSize) =>
+        new(new Point(PixelUnit.Zero, (containerSize.Height - Height) / 2.0f), this);
+
+    /// <summary>
+    /// Creates an <see cref="Area"/> positioned at the exact center of a given container.
+    /// </summary>
+    /// <param name="containerSize">The size of the container.</param>
+    /// <returns>An <see cref="Area"/> centered within the container.</returns>
+    public Area FillCenterOf(Size containerSize) =>
+        new(new Point((containerSize.Width - Width) / 2.0f, (containerSize.Height - Height) / 2.0f), this);
+
+    /// <summary>
+    /// Creates an <see cref="Area"/> positioned at the center-right of a given container.
+    /// </summary>
+    /// <param name="containerSize">The size of the container.</param>
+    /// <returns>An <see cref="Area"/> aligned to the center-right of the container.</returns>
+    public Area FillCenterRightOf(Size containerSize) =>
+        new(new Point(containerSize.Width - Width, (containerSize.Height - Height) / 2.0f), this);
+
+    /// <summary>
+    /// Creates an <see cref="Area"/> positioned at the bottom-left corner of a given container.
+    /// </summary>
+    /// <param name="containerSize">The size of the container.</param>
+    /// <returns>An <see cref="Area"/> aligned to the bottom-left of the container.</returns>
+    public Area FillBottomLeftOf(Size containerSize) =>
+        new(new Point(PixelUnit.Zero, containerSize.Height - Height), this);
+
+    /// <summary>
+    /// Creates an <see cref="Area"/> positioned at the center of the bottom edge of a given container.
+    /// </summary>
+    /// <param name="containerSize">The size of the container.</param>
+    /// <returns>An <see cref="Area"/> centered horizontally at the bottom of the container.</returns>
+    public Area FillBottomCenterOf(Size containerSize) =>
+        new(new Point((containerSize.Width - Width) / 2.0f, containerSize.Height - Height), this);
+
+    /// <summary>
+    /// Creates an <see cref="Area"/> positioned at the bottom-right corner of a given container.
+    /// </summary>
+    /// <param name="containerSize">The size of the container.</param>
+    /// <returns>An <see cref="Area"/> aligned to the bottom-right of the container.</returns>
+    public Area FillBottomRightOf(Size containerSize) =>
+        new(new Point(containerSize.Width - Width, containerSize.Height - Height), this);
 
     public static Size operator +(Size s1, Size s2) => new(s1.Width + s2.Width, s1.Height + s2.Height);
     public static Size operator -(Size s1, Size s2) => new(s1.Width - s2.Width, s1.Height - s2.Height);

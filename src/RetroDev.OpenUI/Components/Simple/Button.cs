@@ -47,7 +47,7 @@ public class Button : UIWidget
 
     /// <inheritdoc/>
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
-        childrenSize.ElementAt(1);
+        childrenSize.First();
 
     /// <summary>
     /// Creates a new button.
@@ -63,21 +63,19 @@ public class Button : UIWidget
         BackgroundColor.BindDestinationToSource(Application.Theme.SecondaryColor);
 
         _backgroundRectangle = new Rectangle(application);
-        _backgroundRectangle.BackgroundColor.BindDestinationToSource(BackgroundColor);
-        _backgroundRectangle.BorderColor.BindDestinationToSource(Application.Theme.BorderColor);
-        _backgroundRectangle.AutoCornerRadiusRatio.Value = 0.5f;
-        UpdateBackgroundRectangleColorBinding();
-        UpdateBackgroundRectangleBorder();
-        AddChildNode(_backgroundRectangle);
+        _backgroundRectangle.BorderColor.BindDestinationToSource(FocusColor);
+        Canvas.Add(_backgroundRectangle);
 
         _buttonTextLabel = new Label(application);
+        _buttonTextLabel.TextColor.BindDestinationToSource(TextColor);
+
         _buttonTextLabel.Text.BindDestinationToSource(Text);
-        UpdateTextColorBinding();
+        UpdateTextColor();
         AddChildNode(_buttonTextLabel);
 
         MousePress += Button_MousePress; // TODO: managing button action is more complicated than intercepting key press events.
-        Enabled.ValueChange += Enabled_ValueChange;
-        Focus.ValueChange += Focus_ValueChange;
+        RenderFrame += Button_RenderFrame;
+        Enabled.ValueChange += (_, _) => UpdateTextColor();
     }
 
     private void Button_MousePress(UIComponent sender, MouseEventArgs e)
@@ -89,38 +87,37 @@ public class Button : UIWidget
         }
     }
 
-    private void Enabled_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
+    private void Button_RenderFrame(UIComponent sender, RenderingEventArgs e)
     {
-        UpdateBackgroundRectangleColorBinding();
-        UpdateTextColorBinding();
-    }
-
-    private void Focus_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
-    {
+        _backgroundRectangle.RelativeRenderingArea.Value = e.RenderingAreaSize.Fill();
+        var cornerRadius = _backgroundRectangle.ComputeCornerRadius(0.5f, e.RenderingAreaSize);
+        _backgroundRectangle.CornerRadiusX.Value = cornerRadius;
+        _backgroundRectangle.CornerRadiusY.Value = cornerRadius;
+        UpdateBackgroundRectangleColor();
         UpdateBackgroundRectangleBorder();
     }
 
-    private void UpdateBackgroundRectangleColorBinding()
+    private void UpdateBackgroundRectangleColor()
     {
         if (Enabled.Value)
         {
-            _backgroundRectangle.BackgroundColor.BindDestinationToSource(BackgroundColor);
+            _backgroundRectangle.BackgroundColor.Value = BackgroundColor.Value;
         }
         else
         {
-            _backgroundRectangle.BackgroundColor.BindDestinationToSource(DisabledBackgroundColor);
+            _backgroundRectangle.BackgroundColor.Value = DisabledBackgroundColor.Value;
         }
     }
 
-    private void UpdateTextColorBinding()
+    private void UpdateTextColor()
     {
         if (Enabled.Value)
         {
-            _buttonTextLabel.TextColor.BindDestinationToSource(TextColor);
+            _buttonTextLabel.TextColor.Value = TextColor.Value;
         }
         else
         {
-            _buttonTextLabel.TextColor.BindDestinationToSource(DisabledTextColor);
+            _buttonTextLabel.TextColor.Value = DisabledTextColor.Value;
         }
     }
 

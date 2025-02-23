@@ -7,6 +7,10 @@ namespace RetroDev.OpenUI.Core.Windowing;
 /// </summary>
 public class ThreadDispatcher
 {
+    // TODO: Add RunOnUIThread() to defer execution of UI operation from non UI thread into UI thread
+    // TODO: Add a DispatchUIThread() to consume the derefferd events
+    // TODO: Add a Finalize() method to properly run finalization of disposable resources on UIThread at the righht moment?.
+
     private readonly Thread _uiThread;
 
     /// <summary>

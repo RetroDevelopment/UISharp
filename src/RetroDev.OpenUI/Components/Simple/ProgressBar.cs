@@ -1,5 +1,4 @@
 ﻿using RetroDev.OpenUI.Components.Base;
-using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Components.Shapes;
 using RetroDev.OpenUI.Core.Graphics;
 using RetroDev.OpenUI.Core.Graphics.Coordinates;
@@ -55,12 +54,13 @@ public class ProgressBar : UIWidget
 
         _backgroundRectangle = new Rectangle(application);
         _backgroundRectangle.BackgroundColor.BindDestinationToSource(BackgroundColor);
-        AddChildNode(_backgroundRectangle);
+        Canvas.Add(_backgroundRectangle);
 
         _progressRectangle = new Rectangle(application);
         _progressRectangle.BackgroundColor.BindDestinationToSource(ForegroundColor);
-        _progressRectangle.HorizontalAlignment.Value = Alignment.Left;
-        AddChildNode(_progressRectangle);
+        Canvas.Add(_progressRectangle);
+
+        RenderFrame += ProgressBar_RenderFrame;
     }
 
     /// <inheritdoc />
@@ -78,5 +78,15 @@ public class ProgressBar : UIWidget
         var percentage = (value - MinimumValue.Value) / (float)(MaximumValue.Value - MinimumValue.Value);
         var progressRectangleWidth = availableSpace.Width * percentage;
         return [null, new Area(Point.Zero, new Size(progressRectangleWidth, availableSpace.Height))];
+    }
+
+    private void ProgressBar_RenderFrame(UIComponent sender, OpenUI.Core.Windowing.Events.RenderingEventArgs e)
+    {
+        _backgroundRectangle.RelativeRenderingArea.Value = e.RenderingAreaSize.Fill();
+        var value = Math.Clamp(Value.Value, MinimumValue.Value, MaximumValue.Value);
+        var percentage = (value - MinimumValue.Value) / (float)(MaximumValue.Value - MinimumValue.Value);
+        var progressRectangleWidth = e.RenderingAreaSize.Width * percentage;
+        var progressRecangleSize = new Size(progressRectangleWidth, e.RenderingAreaSize.Height);
+        _progressRectangle.RelativeRenderingArea.Value = progressRecangleSize.FillCenterLeftOf(e.RenderingAreaSize);
     }
 }
