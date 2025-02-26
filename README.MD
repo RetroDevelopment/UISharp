@@ -1,4 +1,4 @@
-# Open UI
+# UISharp
 This is a new cross-platform project written in C#.
 The project has just started so expect a lot of updates to the readme file and to the framework in the future!
 The active branch will be "mvp", which will be further merged into main.
