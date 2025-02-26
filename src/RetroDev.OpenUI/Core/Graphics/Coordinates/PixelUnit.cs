@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Numerics;
 
 namespace RetroDev.OpenUI.Core.Graphics.Coordinates;
 

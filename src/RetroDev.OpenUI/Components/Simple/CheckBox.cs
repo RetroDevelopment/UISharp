@@ -4,7 +4,7 @@ using RetroDev.OpenUI.Components.Shapes;
 using RetroDev.OpenUI.Core.Graphics;
 using RetroDev.OpenUI.Core.Graphics.Coordinates;
 using RetroDev.OpenUI.Core.Windowing.Events;
-using RetroDev.OpenUI.UI.Properties;
+using RetroDev.OpenUI.Presentation.Properties;
 
 namespace RetroDev.OpenUI.Components.Simple;
 
@@ -59,28 +59,15 @@ public class CheckBox : UIWidget
         BackgroundColor.BindDestinationToSource(Application.Theme.SecondaryColor);
 
         _backgroundRectangle = new Rectangle(application);
-        _backgroundRectangle.AutoCornerRadiusRatio.Value = 1.0f;
-        _backgroundRectangle.BorderColor.BindDestinationToSource(Application.Theme.BorderColor);
-        UpdateBackgroundRectangleColorBindings();
-        UpdateBackgroundRectangleBorder();
-        AddChildNode(_backgroundRectangle);
+        _backgroundRectangle.BorderColor.BindDestinationToSource(FocusColor);
+        Canvas.Add(_backgroundRectangle);
 
         _selectionCircle = new Circle(application);
         _selectionCircle.BackgroundColor.BindDestinationToSource(CircleColor);
-        UpdateSelectionCirclePosition();
-        AddChildNode(_selectionCircle);
+        Canvas.Add(_selectionCircle);
 
-        Checked.ValueChange += Checked_ValueChange;
-        Focus.ValueChange += Focus_ValueChange;
-        Enabled.ValueChange += Enabled_ValueChange;
         MousePress += CheckBox_MousePress;
-    }
-
-    protected override List<Area?> RepositionChildren(Size availableSpace, IEnumerable<Size> childrenSize)
-    {
-        var location = new Point(PixelUnit.Auto, PixelUnit.Auto);
-        var size = new Size(availableSpace.Height, availableSpace.Height);
-        return [null, new Area(location, size)];
+        RenderFrame += CheckBox_RenderFrame;
     }
 
     private void CheckBox_MousePress(UIComponent sender, MouseEventArgs e)
@@ -89,36 +76,31 @@ public class CheckBox : UIWidget
         Focus.Value = true;
     }
 
-    private void Checked_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
+    private void CheckBox_RenderFrame(UIComponent sender, RenderingEventArgs e)
     {
-        UpdateBackgroundRectangleColorBindings();
-        UpdateSelectionCirclePosition();
+        var cornerRadius = _backgroundRectangle.ComputeCornerRadius(1.0f, e.RenderingAreaSize);
+
+        _backgroundRectangle.RelativeRenderingArea.Value = e.RenderingAreaSize.Fill();
+        _backgroundRectangle.CornerRadiusX.Value = cornerRadius;
+        _backgroundRectangle.CornerRadiusY.Value = cornerRadius;
         UpdateBackgroundRectangleBorder();
+        UpdateBackgroundRectangleColor();
+        UpdateSelectionCirclePosition(e);
     }
 
-    private void Focus_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
-    {
-        UpdateBackgroundRectangleBorder();
-    }
-
-    private void Enabled_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
-    {
-        UpdateBackgroundRectangleColorBindings();
-    }
-
-    private void UpdateBackgroundRectangleColorBindings()
+    private void UpdateBackgroundRectangleColor()
     {
         if (!Enabled.Value)
         {
-            _backgroundRectangle.BackgroundColor.BindDestinationToSource(DisabledBackgroundColor);
+            _backgroundRectangle.BackgroundColor.Value = DisabledBackgroundColor.Value;
         }
         else if (Checked.Value)
         {
-            _backgroundRectangle.BackgroundColor.BindDestinationToSource(BackgroundColor);
+            _backgroundRectangle.BackgroundColor.Value = BackgroundColor.Value;
         }
         else
         {
-            _backgroundRectangle.BackgroundColor.BindDestinationToSource(UncheckedBackgroundColor);
+            _backgroundRectangle.BackgroundColor.Value = UncheckedBackgroundColor.Value;
         }
     }
 
@@ -134,16 +116,19 @@ public class CheckBox : UIWidget
         }
     }
 
-    private void UpdateSelectionCirclePosition()
+    private void UpdateSelectionCirclePosition(RenderingEventArgs args)
     {
+        var height = args.RenderingAreaSize.Height;
+        var width = height;
+        var size = new Size(width, height);
+
         if (Checked.Value)
         {
-            _selectionCircle.HorizontalAlignment.Value = Alignment.Right;
+            _selectionCircle.RelativeRenderingArea.Value = size.FillCenterRightOf(args.RenderingAreaSize);
         }
         else
         {
-            _selectionCircle.HorizontalAlignment.Value = Alignment.Left;
+            _selectionCircle.RelativeRenderingArea.Value = size.FillCenterLeftOf(args.RenderingAreaSize);
         }
     }
-
 }

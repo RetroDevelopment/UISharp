@@ -3,8 +3,8 @@ using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Components.Shapes;
 using RetroDev.OpenUI.Core.Graphics;
 using RetroDev.OpenUI.Core.Graphics.Coordinates;
-using RetroDev.OpenUI.UI;
-using RetroDev.OpenUI.UI.Properties;
+using RetroDev.OpenUI.Presentation;
+using RetroDev.OpenUI.Presentation.Properties;
 
 namespace RetroDev.OpenUI.Components.Simple;
 
@@ -31,8 +31,7 @@ public class Label : UIWidget
     public UIProperty<Label, Font> Font { get; }
 
     /// <inheritdoc/>
-    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
-        childrenSize.ElementAt(0);
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) => _text.ComputeTextSize();
 
     /// <summary>
     /// Creates a new label.
@@ -50,7 +49,8 @@ public class Label : UIWidget
         _text.DisplayText.BindDestinationToSource(Text);
         _text.Font.BindDestinationToSource(Font);
 
-        AddChildNode(_text);
+        RenderFrame += Label_RenderFrame;
+        Canvas.Add(_text);
     }
 
     /// <summary>
@@ -61,5 +61,22 @@ public class Label : UIWidget
     public Label(Application parent, string text) : this(parent)
     {
         Text.Value = text;
+    }
+
+    /// <summary>
+    /// Computes the minimum size needed to display exactly the full text.
+    /// </summary>
+    /// <returns>The minimum size to display <see langword="this" /> <see cref="Label"/> <see cref="Text"/>.</returns>
+    public Size ComputeTextSize() => _text.ComputeTextSize();
+
+    /// <summary>
+    /// Computes the height necessary to display any character of text using the given <see cref="Font"/>.
+    /// </summary>
+    /// <returns>The height necessary to display any character of text using the given <see cref="Font"/>.</returns>
+    public PixelUnit ComputeTextMaximumHeight() => _text.ComputeTextMaximumHeight();
+
+    private void Label_RenderFrame(UIComponent sender, OpenUI.Core.Windowing.Events.RenderingEventArgs e)
+    {
+        _text.RelativeRenderingArea.Value = e.RenderingAreaSize.Fill();
     }
 }

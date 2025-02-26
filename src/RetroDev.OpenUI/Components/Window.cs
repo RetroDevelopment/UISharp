@@ -4,9 +4,8 @@ using RetroDev.OpenUI.Core.Graphics;
 using RetroDev.OpenUI.Core.Graphics.OpenGL;
 using RetroDev.OpenUI.Core.Windowing;
 using RetroDev.OpenUI.Core.Windowing.Events;
-using RetroDev.OpenUI.UI.Properties;
+using RetroDev.OpenUI.Presentation.Properties;
 using RetroDev.OpenUI.Core.Windowing.SDL;
-using RetroDev.OpenUI.UI;
 using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Components.Base;
 using RetroDev.OpenUI.Core.Graphics.Coordinates;
@@ -141,12 +140,12 @@ public class Window : UIRoot
     {
         get
         {
-            Application.LifeCycle.ThrowIfNotOnUIThread();
+            Application.Dispatcher.ThrowIfNotOnUIThread();
             return _modalChild;
         }
         set
         {
-            Application.LifeCycle.ThrowIfNotOnUIThread();
+            Application.Dispatcher.ThrowIfNotOnUIThread();
             _modalChild = value;
         }
     }
@@ -164,6 +163,8 @@ public class Window : UIRoot
     public Window(Application application, IRenderingEngine? renderingEngine = null) :
         base(application, visibility: ComponentVisibility.Collapsed, renderingEngine: renderingEngine, isFocusable: true, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
     {
+        application.Dispatcher.ThrowIfNotOnUIThread();
+
         application.AddWindow(this);
         _windowId = Application.WindowManager.CreateWindow(RenderingEngine.RenderingContext);
 
@@ -175,8 +176,6 @@ public class Window : UIRoot
         UpdateCloseBehavior();
 
         FullScreen.ValueChange += FullScreen_ValueChange;
-
-        Application.EventSystem.Render += EventSystem_Render;
         Invalidate();
 
         BackgroundColor.BindDestinationToSource(Application.Theme.MainBackground);
@@ -228,6 +227,11 @@ public class Window : UIRoot
     /// Measures all drawing areas necessary to render the window components.
     /// </summary>
     public void Measure() => MeasureProvider.Measure();
+
+    /// <summary>
+    /// Prepares the window for the second pass layout.
+    /// </summary>
+    public void PrepareSecondPass() => MeasureProvider.PrepareSecondPass();
 
     /// <summary>
     /// Shows <see langword="this" /> <see cref="Window"/>.
@@ -291,14 +295,12 @@ public class Window : UIRoot
         return new Size(maxRight, maxBottom);
     }
 
-    private void EventSystem_Render(IEventSystem sender, EventArgs e)
+    internal void Render()
     {
+        Invalidator.Swap();
         UpdateWindowAppearance();
         var renderingEngine = RenderingEngine;
-        var canvas = new Canvas(renderingEngine, Application.LifeCycle);
-        RenderProvider.Render(this, canvas, renderingEngine);
-        renderingEngine.FinalizeFrame();
-        canvas.LogStatistics(Application.Logger);
+        RenderProvider.Render(this, renderingEngine);
     }
 
     public void Shutdown()

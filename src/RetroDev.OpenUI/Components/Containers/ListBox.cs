@@ -3,7 +3,7 @@ using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Core.Graphics;
 using RetroDev.OpenUI.Core.Graphics.Coordinates;
 using RetroDev.OpenUI.Core.Windowing.Events;
-using RetroDev.OpenUI.UI.Properties;
+using RetroDev.OpenUI.Presentation.Properties;
 
 namespace RetroDev.OpenUI.Components.Containers;
 
@@ -56,6 +56,8 @@ public class ListBox : UIContainer, IContainer
         // What about adding a new auto size like "MaxWrapStretch" that takes maximum size between wrap and stretch?
         // That is how many list box look like: they occupy at least the layout plus some more.
         _verticalLayout.AutoWidth.Value = AutoSize.Stretch;
+        _verticalLayout.HorizontalAlignment.Value = Alignment.Left;
+        _verticalLayout.VerticalAlignment.Value = Alignment.Top;
 
         SelectedIndex = new UIProperty<ListBox, uint?>(this, (uint?)null);
         SelectedIndex.ValueChange += SelectedIndex_ValueChange;

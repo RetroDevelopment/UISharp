@@ -12,6 +12,15 @@ public class MeasureProvider(Invalidator invalidator)
     private readonly Invalidator _invalidator = invalidator;
 
     /// <summary>
+    /// Prepares for the second pass layout.
+    /// </summary>
+    public void PrepareSecondPass()
+    {
+        _invalidator.Reset(secondPass: true);
+        _invalidator.Swap();
+    }
+
+    /// <summary>
     /// Measures component sizes before rendering.
     /// </summary>
     public void Measure()

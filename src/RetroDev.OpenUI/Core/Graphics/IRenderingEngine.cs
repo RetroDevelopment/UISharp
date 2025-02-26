@@ -1,5 +1,4 @@
-﻿using OpenTK.Graphics.OpenGL;
-using RetroDev.OpenUI.Core.Contexts;
+﻿using RetroDev.OpenUI.Core.Contexts;
 using RetroDev.OpenUI.Core.Graphics.Coordinates;
 using RetroDev.OpenUI.Core.Graphics.Fonts;
 using RetroDev.OpenUI.Core.Graphics.Imaging;
@@ -31,37 +30,40 @@ public interface IRenderingEngine
     int CreateTexture(Image image, bool interpolate);
 
     /// <summary>
-    /// Renders a rectangle.
+    /// Adds the given <paramref name="rectangle"/> to the rendering canvas.
     /// </summary>
-    /// <param name="rectangle">The triangle shape attributes.</param>
-    /// <param name="area">The rectangle rectangular area.</param>
-    /// <param name="clippingArea">
-    /// The area outside of which, pixel shapes won't be rendered.
-    /// If <see langword="null" /> no clipping area will be specified.
-    /// </param>
-    void Render(Rectangle rectangle, Area area, Area? clippingArea);
+    /// <param name="rectangle">The rectangle to add.</param>
+    void Add(Rectangle rectangle);
 
     /// <summary>
-    /// Renders a circle.
+    /// Adds the given <paramref name="circle"/> to the rendering canvas.
     /// </summary>
-    /// <param name="circle">The circle shape attributes.</param>
-    /// <param name="area">The drawing rectangular area.</param>
-    /// <param name="clippingArea">
-    /// The area outside of which, pixel shapes won't be rendered.
-    /// If <see langword="null" /> no clipping area will be specified.
-    /// </param>
-    void Render(Circle circle, Area area, Area? clippingArea);
+    /// <param name="circle">The circle to add.</param>
+    void Add(Circle circle);
 
     /// <summary>
-    /// Renders text.
+    /// Adds the given <paramref name="text"/> to the rendering canvas.
     /// </summary>
-    /// <param name="text">The text attributes.</param>
-    /// <param name="area">The drawing rectangular area.</param>
-    /// <param name="clippingArea">
-    /// The area outside of which, pixel shapes won't be rendered.
-    /// If <see langword="null" /> no clipping area will be specified.
-    /// </param>
-    void Render(Text text, Area area, Area? clippingArea);
+    /// <param name="text">The text to add.</param>
+    void Add(Text text);
+
+    /// <summary>
+    /// Removes the given <paramref name="rectangle"/> from the rendering canvas.
+    /// </summary>
+    /// <param name="rectangle">The rectangle to add.</param>
+    void Remove(Rectangle rectangle);
+
+    /// <summary>
+    /// Removes the given <paramref name="circle"/> from the rendering canvas.
+    /// </summary>
+    /// <param name="circle">The circle to add.</param>
+    void Remove(Circle circle);
+
+    /// <summary>
+    /// Removes the given <paramref name="text"/> from the rendering canvas.
+    /// </summary>
+    /// <param name="text">The text to add.</param>
+    void Remove(Text text);
 
     /// <summary>
     /// Calculates the size to display the given <paramref name="text"/>.
@@ -89,6 +91,11 @@ public interface IRenderingEngine
     /// <summary>
     /// This method is called when the frame rendering is complete.
     /// </summary>
+    /// <remarks>
+    /// This is where all the <see cref="RenderingElement"/> added are actually rendered.
+    /// For performance reason the modified elements need to be re-processed for redrwaing.
+    /// This is what enables retained mode in the UI.
+    /// </remarks>
     void FinalizeFrame();
 
     /// <summary>

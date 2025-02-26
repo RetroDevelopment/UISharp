@@ -1,64 +1,87 @@
 ﻿using RetroDev.OpenUI.Components.Base;
 using RetroDev.OpenUI.Core.Graphics;
 using RetroDev.OpenUI.Core.Graphics.Coordinates;
-using RetroDev.OpenUI.Core.Windowing.Events;
-using RetroDev.OpenUI.UI;
-using RetroDev.OpenUI.UI.Properties;
+using RetroDev.OpenUI.Core.Graphics.Shapes;
+using RetroDev.OpenUI.Presentation;
+using RetroDev.OpenUI.Presentation.Properties;
 
 namespace RetroDev.OpenUI.Components.Shapes;
 
 /// <summary>
 /// Displays test in the UI.
 /// </summary>
-public class Text : UIWidget
+public class Text : UIShape
 {
+    private readonly OpenUI.Core.Graphics.Shapes.Text _text;
+
     /// <summary>
     /// The text color.
     /// </summary>
-    public UIProperty<Text, Color> TextColor { get; }
+    public ShapeProperty<Text, Color> TextColor { get; }
 
     /// <summary>
     /// The text to display.
     /// </summary>
-    public UIProperty<Text, string> DisplayText { get; }
+    public ShapeProperty<Text, string> DisplayText { get; }
 
     /// <summary>
     /// The <see cref="DisplayText"/> <see cref="Font"/>.
     /// </summary>
-    public UIProperty<Text, Font> Font { get; }
+    public ShapeProperty<Text, Font> Font { get; }
+
+    /// <inheritdoc />
+    protected override RenderingElement RenderingElement => _text;
 
     /// <summary>
     /// Creates a new text.
     /// </summary>
     /// <param name="application">The parent application.</param>
-    public Text(Application application) : base(application, isFocusable: false)
+    public Text(Application application) : base(application)
     {
-        TextColor = new UIProperty<Text, Color>(this, Color.Transparent);
-        DisplayText = new UIProperty<Text, string>(this, string.Empty);
-        Font = new UIProperty<Text, Font>(this, Application.DefaultFont, BindingType.DestinationToSource);
-        RenderFrame += Rectangle_RenderFrame;
+        application.Dispatcher.ThrowIfNotOnUIThread();
+
+        _text = new(application.Dispatcher, application.DefaultFont.Value.ToGraphicsFont());
+
+        TextColor = new ShapeProperty<Text, Color>(this, application, Color.Transparent);
+        DisplayText = new ShapeProperty<Text, string>(this, application, string.Empty);
+        Font = new ShapeProperty<Text, Font>(this, application, application.DefaultFont, BindingType.DestinationToSource);
     }
 
-    /// <inheritdoc />
-    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize)
+    /// <summary>
+    /// The minimum size required to render the text correctly.
+    /// </summary>
+    /// <returns>
+    /// The text size, which is <see cref="Size.Zero"/> if the text has not yet been attached to a <see cref="Canvas"/> or
+    /// the <see cref="UIComponent"/> owning <see langword="this" /> text is not yet assigned to a window or a component with a rendering viewport.
+    /// </returns>
+    public Size ComputeTextSize() =>
+        RenderingEngine?.ComputeTextSize(DisplayText.Value, Font.Value.ToGraphicsFont()) ?? Size.Zero;
+
+    /// <summary>
+    /// Gets the maximum height occupied in a line of text with the given <see cref="Font"/>.
+    /// </summary>
+    /// <returns>
+    /// The text height, which is <see cref="PixelUnit.Zero"/> if the text has not yet been attached to a <see cref="Canvas"/> or
+    /// the <see cref="UIComponent"/> owning <see langword="this" /> text is not yet assigned to a window or a component with a rendering viewport.
+    /// </returns>
+    public PixelUnit ComputeTextMaximumHeight() =>
+        RenderingEngine?.ComputeTextMaximumHeight(Font.Value.ToGraphicsFont()) ?? PixelUnit.Zero;
+
+    protected internal override void AddShapeToRenderingEngine()
     {
-        if (Root == null) return Size.Zero;
-        return Root.RenderingEngine.ComputeTextSize(DisplayText.Value, Font.Value.ToGraphicsFont());
+        RenderingEngine?.Add(_text);
     }
 
-    private void Rectangle_RenderFrame(UIComponent sender, RenderingEventArgs e)
+    protected internal override void RemoveShapeFromRenderingEngine()
     {
-        var textShape = new OpenUI.Core.Graphics.Shapes.Text(Color.Transparent,
-                                                             TextColor.Value,
-                                                             DisplayText.Value,
-                                                             Font.Value.ToGraphicsFont());
-        var backgroundShape = new OpenUI.Core.Graphics.Shapes.Rectangle(BackgroundColor.Value);
+        RenderingEngine?.Remove(_text);
+    }
 
-        var canvas = e.Canvas;
-        if (Root == null) throw new InvalidOperationException("Root must be set when rendering");
-        var textSize = Root.RenderingEngine.ComputeTextSize(DisplayText.Value, Font.Value.ToGraphicsFont());
-        var textTopLeft = textSize.Fill().CenterTopLeft(ActualSize.Fill());
-        canvas.Render(backgroundShape, ActualSize.Fill());
-        canvas.Render(textShape, new Area(textTopLeft, textSize));
+    protected internal override void Render()
+    {
+        _text.RenderingArea = ComputeTextSize().FillCenterOf(RelativeRenderingArea.Value.Size).ToAbsolute(Canvas.ContainerAbsoluteDrawingArea);
+        _text.ForegroundColor = TextColor.Value;
+        _text.Value = DisplayText.Value;
+        _text.Font = Font.Value.ToGraphicsFont();
     }
 }

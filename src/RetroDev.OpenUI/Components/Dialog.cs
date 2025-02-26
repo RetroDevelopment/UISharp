@@ -1,5 +1,4 @@
 ﻿using RetroDev.OpenUI.Core.Graphics;
-using RetroDev.OpenUI.Core.Windowing.Events.Internal;
 
 namespace RetroDev.OpenUI.Components;
 
@@ -19,12 +18,12 @@ public class Dialog<TResult> : Window
     {
         get
         {
-            Application.LifeCycle.ThrowIfNotOnUIThread();
+            Application.Dispatcher.ThrowIfNotOnUIThread();
             return _result;
         }
         protected set
         {
-            Application.LifeCycle.ThrowIfNotOnUIThread();
+            Application.Dispatcher.ThrowIfNotOnUIThread();
             _result = value;
         }
     }
@@ -78,8 +77,7 @@ public class Dialog<TResult> : Window
 
         while (Visibility.Value == ComponentVisibility.Visible)
         {
-            Application.LifeCycle.CurrentState = LifeCycle.State.EVENT_POLL;
-            Application.EventSystem.ProcessEvents();
+            Application.RunUIEventPollLoop();
         }
 
         return Result;
@@ -91,12 +89,12 @@ public class Dialog<TResult> : Window
     /// <param name="result">The dialog result.</param>
     protected void Close(TResult? result)
     {
-        Application.LifeCycle.ThrowIfNotOnUIThread();
+        Application.Dispatcher.ThrowIfNotOnUIThread();
         Result = result;
         Close();
     }
 
-    private void Visibility_ValueChange(UI.Properties.BindableProperty<ComponentVisibility> sender, UI.Properties.ValueChangeEventArgs<ComponentVisibility> e)
+    private void Visibility_ValueChange(Presentation.Properties.BindableProperty<ComponentVisibility> sender, Presentation.Properties.ValueChangeEventArgs<ComponentVisibility> e)
     {
         if (Visibility.Value != ComponentVisibility.Visible)
         {

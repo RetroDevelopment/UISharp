@@ -1,9 +1,8 @@
 ﻿using OpenTK;
 using OpenTK.Graphics.OpenGL;
+using RetroDev.OpenUI.Core.Exceptions;
+using RetroDev.OpenUI.Core.Logging;
 using RetroDev.OpenUI.Core.Windowing.SDL;
-using RetroDev.OpenUI.Exceptions;
-using RetroDev.OpenUI.Utils;
-using SDL2;
 using static SDL2.SDL;
 
 namespace RetroDev.OpenUI.Core.Contexts;
@@ -17,11 +16,11 @@ public class SDLOpenGLRenderingContext : ISDLRenderingContext, IOpenGLRenderingC
     {
         public nint GetProcAddress(string procName)
         {
-            return SDL.SDL_GL_GetProcAddress(procName);
+            return SDL_GL_GetProcAddress(procName);
         }
     }
 
-    private readonly Application _application;
+    private readonly ILogger _logger;
     private readonly nint _openGlContext;
 
     /// <summary>
@@ -32,27 +31,27 @@ public class SDLOpenGLRenderingContext : ISDLRenderingContext, IOpenGLRenderingC
     /// <summary>
     /// Creates a new rendering context.
     /// </summary>
-    /// <param name="application">The application that owns this context.</param>
+    /// <param name="logger">The logger used to log in this class.</param>
     /// <param name="openGlVersion">The OpenGL verison. If <see langword="null" /> the defulat version will be used.</param>
     /// <exception cref="UIInitializationException">If an error occurs during window creation.</exception>
-    internal SDLOpenGLRenderingContext(Application application, Version? openGlVersion = null)
+    internal SDLOpenGLRenderingContext(ILogger logger, Version? openGlVersion = null)
     {
-        _application = application;
+        _logger = logger;
         var openglActionVersion = openGlVersion ?? new Version(3, 3);
-        _application.Logger.LogInfo($"Using OpenGL version {openglActionVersion}");
-        LoggingUtils.SDLCheck(() => SDL_GL_SetAttribute(SDL_GLattr.SDL_GL_CONTEXT_MAJOR_VERSION, openglActionVersion.Major), _application.Logger);
-        LoggingUtils.SDLCheck(() => SDL_GL_SetAttribute(SDL_GLattr.SDL_GL_CONTEXT_MINOR_VERSION, openglActionVersion.Minor), _application.Logger);
-        LoggingUtils.SDLCheck(() => SDL_GL_SetAttribute(SDL_GLattr.SDL_GL_CONTEXT_PROFILE_MASK, SDL_GLprofile.SDL_GL_CONTEXT_PROFILE_CORE), _application.Logger);
+        LoggingUtils.SDLCheck(() => SDL_GL_SetAttribute(SDL_GLattr.SDL_GL_CONTEXT_MAJOR_VERSION, openglActionVersion.Major), _logger);
+        LoggingUtils.SDLCheck(() => SDL_GL_SetAttribute(SDL_GLattr.SDL_GL_CONTEXT_MINOR_VERSION, openglActionVersion.Minor), _logger);
+        LoggingUtils.SDLCheck(() => SDL_GL_SetAttribute(SDL_GLattr.SDL_GL_CONTEXT_PROFILE_MASK, SDL_GLprofile.SDL_GL_CONTEXT_PROFILE_CORE), _logger);
 
         // Enable multisampling and set the number of samples
-        LoggingUtils.SDLCheck(() => SDL_GL_SetAttribute(SDL_GLattr.SDL_GL_MULTISAMPLEBUFFERS, 1), _application.Logger); // Enable multisampling
-        LoggingUtils.SDLCheck(() => SDL_GL_SetAttribute(SDL_GLattr.SDL_GL_MULTISAMPLESAMPLES, 16), _application.Logger);  // Number of samples (e.g., 4 for 4x MSAA)
+        LoggingUtils.SDLCheck(() => SDL_GL_SetAttribute(SDL_GLattr.SDL_GL_MULTISAMPLEBUFFERS, 1), _logger); // Enable multisampling
+        LoggingUtils.SDLCheck(() => SDL_GL_SetAttribute(SDL_GLattr.SDL_GL_MULTISAMPLESAMPLES, 16), _logger);  // Number of samples (e.g., 4 for 4x MSAA)
+        LoggingUtils.SDLCheck(() => SDL_GL_SetAttribute(SDL_GLattr.SDL_GL_DEPTH_SIZE, 24), _logger);
 
         var handle = SDL_CreateWindow(string.Empty,
                                       SDL_WINDOWPOS_CENTERED,
                                       SDL_WINDOWPOS_CENTERED,
                                       800, 600,
-                                      SDL_WindowFlags.SDL_WINDOW_HIDDEN | SDL_WindowFlags.SDL_WINDOW_OPENGL | SDL_WindowFlags.SDL_WINDOW_ALLOW_HIGHDPI);
+                                      SDL_WindowFlags.SDL_WINDOW_HIDDEN | SDL_WindowFlags.SDL_WINDOW_OPENGL);
 
         if (handle == nint.Zero) throw new UIInitializationException($"Error creating window: {SDL_GetError()}");
         WindowId = new SDLWindowId(handle);
@@ -63,15 +62,16 @@ public class SDLOpenGLRenderingContext : ISDLRenderingContext, IOpenGLRenderingC
         }
 
         MakeCurrent();
+        CheckDepthBufferSize();
         // Enable VSync
-        LoggingUtils.SDLCheck(() => SDL_GL_SetSwapInterval(1), application.Logger, warning: true);
+        LoggingUtils.SDLCheck(() => SDL_GL_SetSwapInterval(1), _logger, warning: true);
     }
 
     /// <summary>
     /// Sets the OpenGL state machine to use the SDL window created by this context.
     /// </summary>
     public void MakeCurrent() =>
-        LoggingUtils.SDLCheck(() => SDL_GL_MakeCurrent(WindowId.Handle, _openGlContext), _application.Logger);
+        LoggingUtils.SDLCheck(() => SDL_GL_MakeCurrent(WindowId.Handle, _openGlContext), _logger);
 
     /// <summary>
     /// Render the curent frame into the window.
@@ -86,6 +86,16 @@ public class SDLOpenGLRenderingContext : ISDLRenderingContext, IOpenGLRenderingC
     /// </summary>
     public void LoadBinding()
     {
-        LoggingUtils.OpenGLCheck(() => GL.LoadBindings(new SDL2OpenGLBindings()), _application.Logger);
+        LoggingUtils.OpenGLCheck(() => GL.LoadBindings(new SDL2OpenGLBindings()), _logger);
+    }
+
+    private void CheckDepthBufferSize()
+    {
+        var sdlDepthSize = 0;
+        LoggingUtils.SDLCheck(() => SDL_GL_GetAttribute(SDL_GLattr.SDL_GL_DEPTH_SIZE, out sdlDepthSize), _logger);
+        if (sdlDepthSize < 24)
+        {
+            _logger.LogError($"SDL depth buffer has {sdlDepthSize} bits: it must have at least 24 bits to render correctly!");
+        }
     }
 }

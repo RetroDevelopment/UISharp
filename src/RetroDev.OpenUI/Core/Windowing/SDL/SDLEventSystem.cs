@@ -1,9 +1,9 @@
 ﻿using System.Diagnostics;
 using System.Text;
 using RetroDev.OpenUI.Core.Graphics.Coordinates;
+using RetroDev.OpenUI.Core.Logging;
 using RetroDev.OpenUI.Core.Windowing.Events;
 using RetroDev.OpenUI.Core.Windowing.Events.Internal;
-using RetroDev.OpenUI.Utils;
 using static SDL2.SDL;
 
 namespace RetroDev.OpenUI.Core.Windowing.SDL;
@@ -11,17 +11,17 @@ namespace RetroDev.OpenUI.Core.Windowing.SDL;
 /// <summary>
 /// Manages UI events using SDL.
 /// </summary>
-/// <param name="application">The sapplication using this event system.</param>
-internal class SDLEventSystem(Application application) : IEventSystem
+internal class SDLEventSystem : IEventSystem
 {
     private enum SDL_CustomEventType : uint
     {
-        SDL_INVALIDATE_RENDERING = SDL_EventType.SDL_USEREVENT + 1, // Custom event type, starting from SDL_USEREVENT
-        SDL_QUIT = SDL_EventType.SDL_USEREVENT + 2,
+        SDL_QUIT = SDL_EventType.SDL_USEREVENT + 1,
+        SDL_SIGNAL = SDL_EventType.SDL_USEREVENT + 2
     }
 
-    private Application _application = application;
-    private bool _invalidated = false; // TODO: add invalidation logic per component. And maybe glScissor for retained mode. Or detect actual UI property change. If not do not invalidate.
+    private readonly ThreadDispatcher _dispatcher;
+    private readonly ILogger _logger;
+    private bool _signaled = false;
 
     /// <summary>
     /// An event that indicates to quit the application.
@@ -111,21 +111,33 @@ internal class SDLEventSystem(Application application) : IEventSystem
     public event TypeSafeEventHandler<IEventSystem, WindowEventArgs<MouseWheelEventArgs>>? MouseWheel;
 
     /// <summary>
-    /// Before rendering.
-    /// </summary>
-    public event TypeSafeEventHandler<IEventSystem, EventArgs>? BeforeRender;
-
-    /// <summary>
     /// Rendering is needed.
     /// </summary>
     public event TypeSafeEventHandler<IEventSystem, EventArgs>? Render;
 
     /// <summary>
-    /// Process all the events in the event queue.
+    /// Creates a new event system based on SDL.
     /// </summary>
-    public void ProcessEvents()
+    /// <param name="dispatcher">Manages the UI thread and dispatches UI operations from other thread to the UI thread.</param>
+    /// <param name="logger">The logger used to log events.</param>
+    public SDLEventSystem(ThreadDispatcher dispatcher, ILogger logger)
     {
+        _dispatcher = dispatcher;
+        _logger = logger;
         SDL_StartTextInput();
+    }
+
+    /// <summary>
+    /// Processes all the pending events.
+    /// This method must be blocking the calling thread waiting for events, then process all the events and exit.
+    /// </summary>
+    /// <param name="timeoutMs">
+    /// The time in milliseconds after which this method must exit even if there are still events to process.
+    /// This guarantee that a frame is rendered even when the queue is pumped with too many events.
+    /// </param>
+    public void ProcessEvents(long timeoutMs)
+    {
+        _dispatcher.ThrowIfNotOnUIThread();
         SDL_WaitEvent(out var currentEvent);
 
         var stopwatch = Stopwatch.StartNew();
@@ -134,6 +146,7 @@ internal class SDLEventSystem(Application application) : IEventSystem
         do
         {
             if ((int)currentEvent.type == (int)SDL_CustomEventType.SDL_QUIT) break;
+            if ((int)currentEvent.type == (int)SDL_CustomEventType.SDL_SIGNAL) _signaled = false;
             switch (currentEvent.type)
             {
                 case SDL_EventType.SDL_MOUSEBUTTONDOWN:
@@ -141,7 +154,7 @@ internal class SDLEventSystem(Application application) : IEventSystem
                     var mouseButtonDownWindowId = GetWidnowIdFromButtonEvent(buttonDownEvent);
                     var mouseButtonDownButton = GetMouseButton(buttonDownEvent);
                     var mouseButtonDownArgs = new WindowEventArgs<MouseEventArgs>(mouseButtonDownWindowId, new(new(buttonDownEvent.x, buttonDownEvent.y), new(buttonDownEvent.x, buttonDownEvent.y), mouseButtonDownButton));
-                    mouseButtonDownArgs.Log("mouseDown", _application.Logger);
+                    mouseButtonDownArgs.Log("mouseDown", _logger);
                     MousePress?.Invoke(this, mouseButtonDownArgs);
                     break;
 
@@ -153,7 +166,7 @@ internal class SDLEventSystem(Application application) : IEventSystem
                                                                                 new MouseEventArgs(new Point(buttonUpEvent.x, buttonUpEvent.y),
                                                                                                    new Point(buttonUpEvent.x, buttonUpEvent.y),
                                                                                 mouseButtonUpButton));
-                    mouseButtonUpArgs.Log("mouseDown", _application.Logger);
+                    mouseButtonUpArgs.Log("mouseDown", _logger);
                     MouseRelease?.Invoke(this, mouseButtonUpArgs);
                     break;
 
@@ -164,7 +177,7 @@ internal class SDLEventSystem(Application application) : IEventSystem
                     var mouseMotionMoveArgs = new WindowEventArgs<MouseEventArgs>(mouseButtonMoveWindowId,
                                                                                   new MouseEventArgs(new Point(motionEvent.x, motionEvent.y),
                                                                                                      new Point(motionEvent.x, motionEvent.y), mouseButtonMoveButton));
-                    mouseMotionMoveArgs.Log("mouseMove", _application.Logger);
+                    mouseMotionMoveArgs.Log("mouseMove", _logger);
                     MouseMove?.Invoke(this, mouseMotionMoveArgs);
                     break;
 
@@ -173,7 +186,7 @@ internal class SDLEventSystem(Application application) : IEventSystem
                     var keyDownWindowId = GetWidnowIdFromKeyboardEvent(keyDownEvent);
                     var keyDownKey = KeyMapping.ToKeyButton(keyDownEvent.keysym.sym);
                     var keyDownArgs = new WindowEventArgs<KeyEventArgs>(keyDownWindowId, new KeyEventArgs(keyDownKey));
-                    keyDownArgs.Log("keyDown", _application.Logger);
+                    keyDownArgs.Log("keyDown", _logger);
                     KeyPress?.Invoke(this, keyDownArgs);
                     break;
 
@@ -182,7 +195,7 @@ internal class SDLEventSystem(Application application) : IEventSystem
                     var keyUpWindowId = GetWidnowIdFromKeyboardEvent(keyUpEvent);
                     var keyUpKey = KeyMapping.ToKeyButton(keyUpEvent.keysym.sym);
                     var keyUpArgs = new WindowEventArgs<KeyEventArgs>(keyUpWindowId, new KeyEventArgs(keyUpKey));
-                    keyUpArgs.Log("keyUp", _application.Logger);
+                    keyUpArgs.Log("keyUp", _logger);
                     KeyRelease?.Invoke(this, keyUpArgs);
                     break;
                 case SDL_EventType.SDL_TEXTINPUT:
@@ -191,7 +204,7 @@ internal class SDLEventSystem(Application application) : IEventSystem
                     var inputTextWindowId = GetWindowIdFromTextInputEvent(textInputEvent);
                     var textInputArgs = new WindowEventArgs<TextInputEventArgs>(inputTextWindowId, new TextInputEventArgs(inputText));
                     TextInput?.Invoke(this, textInputArgs);
-                    textInputArgs.Log("textInput", _application.Logger);
+                    textInputArgs.Log("textInput", _logger);
                     break;
                 case SDL_EventType.SDL_WINDOWEVENT:
                     // TODO: fix issue that UI thread freezes while resizing window. Either use a thread to constantly
@@ -205,49 +218,49 @@ internal class SDLEventSystem(Application application) : IEventSystem
                             var windowPtr = SDL_GetWindowFromID(windowEvent.windowID);
                             SDL_GetWindowBordersSize(windowPtr, out var top, out var left, out var bottom, out var right);
                             var movedArgs = new WindowEventArgs<WindowMoveEventArgs>(windowId, new WindowMoveEventArgs(new Point(windowEvent.data1 - left, windowEvent.data2 - top)));
-                            movedArgs.Log("windowMove", _application.Logger);
+                            movedArgs.Log("windowMove", _logger);
                             WindowMove?.Invoke(this, movedArgs);
                             break;
 
                         case SDL_WindowEventID.SDL_WINDOWEVENT_RESIZED:
                         case SDL_WindowEventID.SDL_WINDOWEVENT_SIZE_CHANGED:
                             var resizedArgs = new WindowEventArgs<WindowResizeEventArgs>(windowId, new WindowResizeEventArgs(new Size(windowEvent.data1, windowEvent.data2)));
-                            resizedArgs.Log("windowResize", _application.Logger);
+                            resizedArgs.Log("windowResize", _logger);
                             WindowResize?.Invoke(this, resizedArgs);
                             break;
                         case SDL_WindowEventID.SDL_WINDOWEVENT_CLOSE:
                             var closeArgs = new WindowEventArgs<EventArgs>(windowId, EventArgs.Empty);
-                            closeArgs.Log("windowClose", _application.Logger);
+                            closeArgs.Log("windowClose", _logger);
                             WindowCloseRequest?.Invoke(this, closeArgs);
                             break;
                         case SDL_WindowEventID.SDL_WINDOWEVENT_SHOWN:
                             var showArgs = new WindowEventArgs<EventArgs>(windowId, EventArgs.Empty);
-                            showArgs.Log("windowOpen", _application.Logger);
+                            showArgs.Log("windowOpen", _logger);
                             WindowOpen?.Invoke(this, showArgs);
                             break;
                         case SDL_WindowEventID.SDL_WINDOWEVENT_MAXIMIZED:
                             var maximizedArgs = new WindowEventArgs<EventArgs>(windowId, EventArgs.Empty);
-                            maximizedArgs.Log("windowMaximize", _application.Logger);
+                            maximizedArgs.Log("windowMaximize", _logger);
                             WindowMaximized?.Invoke(this, maximizedArgs);
                             break;
                         case SDL_WindowEventID.SDL_WINDOWEVENT_MINIMIZED:
                             var minimzeArgs = new WindowEventArgs<EventArgs>(windowId, EventArgs.Empty);
-                            minimzeArgs.Log("windowMinimize", _application.Logger);
+                            minimzeArgs.Log("windowMinimize", _logger);
                             WindowMinimized?.Invoke(this, minimzeArgs);
                             break;
                         case SDL_WindowEventID.SDL_WINDOWEVENT_RESTORED:
                             var restoreArgs = new WindowEventArgs<EventArgs>(windowId, EventArgs.Empty);
-                            restoreArgs.Log("windowRestore", _application.Logger);
+                            restoreArgs.Log("windowRestore", _logger);
                             WindowRestored?.Invoke(this, restoreArgs);
                             break;
                         case SDL_WindowEventID.SDL_WINDOWEVENT_FOCUS_GAINED:
                             var focusGainArgs = new WindowEventArgs<EventArgs>(windowId, EventArgs.Empty);
-                            focusGainArgs.Log("windowFocusGain", _application.Logger);
+                            focusGainArgs.Log("windowFocusGain", _logger);
                             WindowFocusGain?.Invoke(this, focusGainArgs);
                             break;
                         case SDL_WindowEventID.SDL_WINDOWEVENT_FOCUS_LOST:
                             var focusLostArgs = new WindowEventArgs<EventArgs>(windowId, EventArgs.Empty);
-                            focusLostArgs.Log("windowFocusGain", _application.Logger);
+                            focusLostArgs.Log("windowFocusGain", _logger);
                             WindowFocusLost?.Invoke(this, focusLostArgs);
                             break;
                     }
@@ -255,29 +268,28 @@ internal class SDLEventSystem(Application application) : IEventSystem
                 case SDL_EventType.SDL_MOUSEWHEEL:
                     var wheelEvent = currentEvent.wheel;
                     var mouseWheelWindowId = GetWidnowIdFromWeelEvent(wheelEvent);
-                    var mouseWheelArgs = new WindowEventArgs<MouseWheelEventArgs>(mouseWheelWindowId, new MouseWheelEventArgs(wheelEvent.x, wheelEvent.y));
-                    mouseWheelArgs.Log("mouseWheel", _application.Logger);
+                    SDL_GetMouseState(out var mouseX, out var mouseY);
+                    var mousePosition = new Point(mouseX, mouseY);
+                    var mouseWheelArgs = new WindowEventArgs<MouseWheelEventArgs>(mouseWheelWindowId, new MouseWheelEventArgs(wheelEvent.x, wheelEvent.y, mousePosition, mousePosition));
+                    mouseWheelArgs.Log("mouseWheel", _logger);
                     MouseWheel?.Invoke(this, mouseWheelArgs);
                     break;
             }
             // Exit the loop if more than 10 milliseconds have passed to render frame (otherwise the loop can last too long skipping frames)
-            if (stopwatch.ElapsedMilliseconds > 10) break;
+            if (stopwatch.ElapsedMilliseconds > timeoutMs) break;
         } while (SDL_PollEvent(out currentEvent) != 0);
-
-        SDL_StopTextInput();
-        if (_invalidated) EmitRenderingEvents();
     }
 
     /// <summary>
-    /// Push the invalidate rendering event.
+    /// Awakes the current thread if it is blocked by <see cref="ProcessEvents(long)"/>.
     /// </summary>
-    public void InvalidateRendering()
+    public void Signal()
     {
-        if (_invalidated) return;
-        var invalidateEvent = new SDL_Event();
-        invalidateEvent.type = (SDL_EventType)SDL_CustomEventType.SDL_INVALIDATE_RENDERING; // Set the event type
-        SDL_PushEvent(ref invalidateEvent);
-        _invalidated = true;
+        _dispatcher.ThrowIfNotOnUIThread(); // TODO: this should probably be thread safe as called from non UI thread to actually wake up the event queue?
+        var signalEvent = new SDL_Event();
+        signalEvent.type = (SDL_EventType)SDL_CustomEventType.SDL_SIGNAL;
+        SDL_PushEvent(ref signalEvent);
+        _signaled = true;
     }
 
     /// <summary>
@@ -286,10 +298,12 @@ internal class SDLEventSystem(Application application) : IEventSystem
     /// <param name="emitQuitEvent">Whether to emit <see cref="ApplicationQuit"/>.</param>
     public void Quit(bool emitQuitEvent)
     {
+        _dispatcher?.ThrowIfNotOnUIThread();
         var quitEvent = new SDL_Event();
-        quitEvent.type = (SDL_EventType)SDL_CustomEventType.SDL_QUIT; // Set the event type
+        quitEvent.type = (SDL_EventType)SDL_CustomEventType.SDL_QUIT;
         SDL_PushEvent(ref quitEvent);
         if (emitQuitEvent) ApplicationQuit?.Invoke(this, EventArgs.Empty);
+        SDL_StopTextInput(); // TODO: move this into a dispose method
     }
 
     private static string GetString(SDL_TextInputEvent textInputEvent)
@@ -349,11 +363,4 @@ internal class SDLEventSystem(Application application) : IEventSystem
         _ => MouseButton.Unknown,
         //TODO: add more buttons
     };
-
-    private void EmitRenderingEvents()
-    {
-        BeforeRender?.Invoke(this, EventArgs.Empty);
-        Render?.Invoke(this, EventArgs.Empty);
-        _invalidated = false; // TODO: invalidated maybe won't be needed? In general we will have a more uniform custom event dispatcher
-    }
 }

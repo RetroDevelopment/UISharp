@@ -1,7 +1,7 @@
 ﻿using RetroDev.OpenUI.Components.Base;
+using RetroDev.OpenUI.Components.Shapes;
 using RetroDev.OpenUI.Core.Graphics;
 using RetroDev.OpenUI.Core.Windowing.Events;
-using RetroDev.OpenUI.UI;
 
 namespace RetroDev.OpenUI.Components.Core;
 
@@ -19,22 +19,20 @@ public class RenderProvider(Invalidator invalidator)
     /// renders components that need a redraw.
     /// </summary>
     /// <param name="root">The root component to render, usually a <see cref="Window"/>.</param>
-    public void Render(UIComponent root, Canvas canvas, IRenderingEngine renderingEngine)
+    public void Render(UIComponent root, IRenderingEngine renderingEngine)
     {
         renderingEngine.InitializeFrame(root.BackgroundColor.Value);
 
-        // TODO: when implementing retain mode via opengl render instancing (the following is pseudocode)
-        // var component = _invalidator.GetNextInvalidatedComponent();
-        // while (component != null)
-        // {
-        //     renderingEngine.UpdateShapes(component.Shapes); // Updates shapes instance attributes
-        //     component.CancelInvalidation();
-        //     component = _invalidator.GetNextInvalidatedComponent();
-        // }
-        // renderingEngine.Flush(); // 1 instanced draw call for each VBO (3 now, rectangles, circles, and text)
+        var component = _invalidator.GetNextInvalidatedComponent();
+        while (component != null)
+        {
+            component.OnRenderFrame();
+            component.CancelInvalidation();
+            component = _invalidator.GetNextInvalidatedComponent();
+        }
 
-        var renderingEventArgs = new RenderingEventArgs(canvas);
-        root.OnRenderFrame(renderingEventArgs);
+        renderingEngine.FinalizeFrame();
+
         _invalidator.Reset();
     }
 }

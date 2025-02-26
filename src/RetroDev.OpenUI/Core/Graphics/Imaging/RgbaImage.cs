@@ -1,5 +1,4 @@
-﻿using System;
-using OpenTK.Graphics.OpenGL;
+﻿using OpenTK.Graphics.OpenGL;
 using RetroDev.OpenUI.Core.Graphics.Coordinates;
 
 namespace RetroDev.OpenUI.Core.Graphics.Imaging;

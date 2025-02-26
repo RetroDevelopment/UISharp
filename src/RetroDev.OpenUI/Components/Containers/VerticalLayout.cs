@@ -12,7 +12,6 @@ public class VerticalLayout : UIContainer, IContainer
 {
     private readonly List<Panel> _panels = [];
 
-    // TODO: once implementing the more complex SizeHint in gridLayout, just do _gridLayout.SizeHint;
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
         new(childrenSize.Max(s => s.Width) ?? PixelUnit.Zero,
             childrenSize.Sum(s => s.Height));
@@ -27,7 +26,6 @@ public class VerticalLayout : UIContainer, IContainer
     /// <param name="application">The application owning this component.</param>
     public VerticalLayout(Application application) : base(application, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
     {
-        RenderFrame += VerticalLayout_RenderFrame;
     }
 
     public void AddComponent(UIWidget component)
@@ -87,10 +85,5 @@ public class VerticalLayout : UIContainer, IContainer
         }
 
         return childrenFinalSize;
-    }
-
-    private void VerticalLayout_RenderFrame(UIComponent sender, RenderingEventArgs e)
-    {
-        e.Canvas.Render(new OpenUI.Core.Graphics.Shapes.Rectangle(BackgroundColor.Value), ActualSize.Fill());
     }
 }

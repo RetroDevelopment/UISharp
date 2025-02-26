@@ -1,4 +1,6 @@
 ﻿using System.Diagnostics;
+using OpenTK.Graphics.ES11;
+using OpenTK.Graphics.OpenGL;
 using RetroDev.OpenIDE.Windows;
 using RetroDev.OpenUI;
 using RetroDev.OpenUI.Components;
@@ -9,8 +11,9 @@ using RetroDev.OpenUI.Components.Shapes;
 using RetroDev.OpenUI.Components.Simple;
 using RetroDev.OpenUI.Core.Graphics;
 using RetroDev.OpenUI.Core.Graphics.Coordinates;
+using RetroDev.OpenUI.Core.Logging;
 using RetroDev.OpenUI.Core.Windowing.Events;
-using RetroDev.OpenUI.UI;
+using RetroDev.OpenUI.Presentation;
 
 namespace RetroDev.OpenIDE;
 
@@ -77,7 +80,7 @@ class Ctr : UIWidget
         _rectangle.CornerRadiusY.Value = 10;
 
         MousePress += (_, _) => Focus.Value = Focusable.Value;
-        MouseDrag += (_, e) => { if (Focus.Value) { X.Value += e.Offset.X; Y.Value += e.Offset.Y; } };
+        //MouseDrag += (_, e) => { if (Focus.Value) { X.Value += e.Offset.X; Y.Value += e.Offset.Y; } };
         Focus.ValueChange += (_, _) => _rectangle.BorderColor.Value = Focus.Value ? Color.Red : Color.Transparent;
         KeyPress += (_, e) =>
         {
@@ -87,21 +90,17 @@ class Ctr : UIWidget
             if (e.Button == KeyButton.S && Focus.Value) Height.Value -= 10;
             if (e.Button == KeyButton.R && Focus.Value) _rectangle.Rotation.Value += 0.01f;
         };
-        AddChildNode(_rectangle);
+        Canvas.Add(_rectangle);
 
         var c = new Circle(application);
-        c.Width.Value = 10;
-        c.Height.Value = 10;
+        c.RelativeRenderingArea.Value = new(Point.Zero, new Size(10, 10));
         c.BackgroundColor.Value = Color.Brown;
-        AddChildNode(c);
+        Canvas.Add(c);
 
         var txt = new Text(application);
         txt.TextColor.Value = Color.Magenta;
         txt.DisplayText.Value = $"CTX {idx++}";
-        txt.HorizontalAlignment.Value = Alignment.Center;
-        txt.VerticalAlignment.Value = Alignment.Top;
-        txt.Width.Value = 30;
-        txt.Height.Value = 10;
+        txt.RelativeRenderingArea.Value = new(Point.Zero, new Size(30, 10));
         //AddChild(txt);
     }
 
@@ -112,20 +111,71 @@ class Ctr : UIWidget
 
 internal class Program
 {
-    static void Mainm(string[] _)
+    static void Maijn(string[] _)
     {
         using var application = new Application();
-        application.Logger.Verbosity = OpenUI.Logging.Verbosity.Verbose;
+        application.Logger.Verbosity = Verbosity.Verbose;
 
-        var root = new EditBox(application);
-        root.Font.Value = new Font(application, application.DefaultFont.Value.Name, 16, FontType.Regular);
+        var scrollView = new ScrollView(application);
+        var label = new Label(application, "Hello World!");
+        label.Font.Value = application.DefaultFont.Value.WithSize(90);
+        label.BackgroundColor.Value = Color.Gold;
+        Point position = null;
+        label.MouseDragBegin += (_, _) => position = null;
+        label.MouseDrag += (_, e) =>
+        {
+            label.CaptureActualPosition();
+            var p = e.AbsoluteLocation;
+            if (position == null) { position = p; return; }
+            var delta = position - p;
+            position = e.AbsoluteLocation;
+            label.X.Value -= delta.X;
+            label.Y.Value -= delta.Y;
+        };
+        label.MouseWheel += (_, e) => label.Font.Value = label.Font.Value.WithSize(label.Font.Value.Size + e.HorizontalMovement);
 
-        Window window = new Window(application);
+        scrollView.BackgroundColor.Value = Color.Red;
+        scrollView.Width.Value = 250;
+        scrollView.Height.Value = 100;
+
+        scrollView.SetComponent(label);
+
+        var window = new Window(application);
         window.Width.Value = 800;
         window.Height.Value = 600;
+        window.Title.Value = "Hello World!";
         window.Visibility.Value = UIComponent.ComponentVisibility.Visible;
-        window.AddComponent(root);
+        window.AddComponent(scrollView);
 
+        var layout = new GridLayout(application);
+        layout.Rows.Value = 2;
+        layout.Columns.Value = 1;
+        var btn1 = new Button(application);
+        btn1.Text.Value = "Button 1";
+        btn1.BackgroundColor.Value = Color.Red.WithAlpha(100);
+        var btn2 = new Button(application);
+        btn2.Text.Value = "Button 2";
+        btn2.BackgroundColor.Value = Color.Blue.WithAlpha(50);
+        layout.AddComponent(btn1);
+        layout.AddComponent(btn2);
+        Point? position2 = null;
+        layout.MouseDragBegin += (_, _) => position2 = null;
+        layout.MouseDrag += (_, e) =>
+        {
+            label.CaptureActualPosition();
+            var p = e.AbsoluteLocation;
+            if (position2 == null) { position2 = p; return; }
+            var delta = position2 - p;
+            position2 = e.AbsoluteLocation;
+            layout.X.Value -= delta.X;
+            layout.Y.Value -= delta.Y;
+        };
+        layout.X.Value = 0;
+        layout.Y.Value = 0;
+        layout.Width.Value = 100;
+        layout.Height.Value = 100;
+
+        window.AddComponent(layout);
         application.Run();
     }
 
@@ -145,10 +195,10 @@ internal class Program
         }
     }
 
-    static void Mainj(string[] _)
+    static void MainPerformanceTest(string[] _)
     {
         using var application = new Application();
-        application.Logger.Verbosity = OpenUI.Logging.Verbosity.Verbose;
+        application.Logger.Verbosity = Verbosity.Verbose;
         //Window w2 = new Window(application);
         //w2.X.Value = 0;
         //w2.Y.Value = 0;
@@ -210,7 +260,7 @@ internal class Program
     static void Main(string[] _)
     {
         using var application = new Application();
-        application.Logger.Verbosity = OpenUI.Logging.Verbosity.Verbose;
+        application.Logger.Verbosity = Verbosity.Verbose;
         application.ApplicationStarted += (_, _) => application.ShowWindow<MainWindow>();
         application.Run();
     }

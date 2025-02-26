@@ -1,5 +1,5 @@
 ﻿using RetroDev.OpenUI.Components.Base;
-using RetroDev.OpenUI.UI.Properties;
+using RetroDev.OpenUI.Presentation.Properties;
 using System.Reflection;
 
 namespace RetroDev.OpenUI.UIDefinition;

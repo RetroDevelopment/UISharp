@@ -1,16 +1,15 @@
 ﻿using RetroDev.OpenUI.Components;
 using RetroDev.OpenUI.Components.Base;
+using RetroDev.OpenUI.Core.Exceptions;
 using RetroDev.OpenUI.Core.Graphics.Coordinates;
+using RetroDev.OpenUI.Core.Logging;
 using RetroDev.OpenUI.Core.Windowing;
 using RetroDev.OpenUI.Core.Windowing.Events;
-using RetroDev.OpenUI.Core.Windowing.Events.Internal;
 using RetroDev.OpenUI.Core.Windowing.SDL;
-using RetroDev.OpenUI.Exceptions;
-using RetroDev.OpenUI.Logging;
-using RetroDev.OpenUI.UI;
-using RetroDev.OpenUI.UI.Properties;
-using RetroDev.OpenUI.UI.Resources;
-using RetroDev.OpenUI.UI.Themes;
+using RetroDev.OpenUI.Presentation;
+using RetroDev.OpenUI.Presentation.Properties;
+using RetroDev.OpenUI.Presentation.Resources;
+using RetroDev.OpenUI.Presentation.Themes;
 using RetroDev.OpenUI.UIDefinition;
 
 namespace RetroDev.OpenUI;
@@ -29,6 +28,17 @@ public class Application : IDisposable
     /// Triggered when the application is started and ready to show windows and process events.
     /// </summary>
     public event TypeSafeEventHandler<Application, EventArgs>? ApplicationStarted;
+
+    /// <summary>
+    /// Triggered when the application is terminating.
+    /// </summary>
+    public event TypeSafeEventHandler<Application, EventArgs>? ApplicationQuit;
+
+    /// <summary>
+    /// Triggered before calling <see cref="Window.Measure()"/> for the second time.
+    /// This is an opportunity to change <see cref="UIComponent"/> properties when all sizes are known and before rendering (using <see cref="UIComponent.ActualSize"/>).
+    /// </summary>
+    public event TypeSafeEventHandler<Application, EventArgs>? SecondPassMeasure;
 
     /// <summary>
     /// The window manager interacting with the OS to create and manage systems.
@@ -76,7 +86,20 @@ public class Application : IDisposable
     /// </summary>
     public IEnumerable<Window> Windows => _windows;
 
-    internal LifeCycle LifeCycle { get; } = new();
+    /// <summary>
+    /// Manages the application life cycle.
+    /// </summary>
+    public LifeCycle LifeCycle { get; } = new();
+
+    /// <summary>
+    /// Manages the UI thread and dispatches UI operations from other thread to the UI thread.
+    /// </summary>
+    public ThreadDispatcher Dispatcher { get; } = new();
+
+    /// <summary>
+    /// Whether <see langword="this" /> <see cref="Application"/> is ready to run and receive events.
+    /// </summary>
+    public bool Started { get; private set; } = false;
 
     /// <summary>
     /// Creates a new application.
@@ -86,7 +109,7 @@ public class Application : IDisposable
     /// <param name="logger">The logging implementation.</param>
     /// <param name="createTheme">
     /// The function that creates a <see cref="Theme"/>. The theme will be automatically created, so pass this function if you want to inject <see cref="Theme"/>
-    /// with an instance of a class derived from <see cref="UI.Themes.Theme"/>.
+    /// with an instance of a class derived from <see cref="Presentation.Themes.Theme"/>.
     /// </param>
     /// <remarks>The application, as well as all the UI related operations, must run in the same thread as this constructor is invoked.</remarks>
     public Application(IWindowManager? windowManager = null,
@@ -94,9 +117,8 @@ public class Application : IDisposable
                        ILogger? logger = null,
                        Func<Application, Theme>? createTheme = null)
     {
-        LifeCycle.RegisterUIThread();
         Logger = logger ?? new ConsoleLogger();
-        WindowManager = windowManager ?? new SDLWindowManager(this);
+        WindowManager = windowManager ?? new SDLWindowManager(Dispatcher, Logger);
         ResourceManager = resourceManager ?? new EmbeddedResourceManager();
         Theme = createTheme != null ? createTheme(this) : new Theme(this);
         _themeParser = new ThemeParser(Theme);
@@ -118,21 +140,21 @@ public class Application : IDisposable
     /// <exception cref="UIInitializationException">If the UI initialization fails.</exception>
     public void Run()
     {
-        LifeCycle.ThrowIfNotOnUIThread();
+        Dispatcher.ThrowIfNotOnUIThread();
 
         Logger.LogInfo("Application started");
         EventSystem.ApplicationQuit += (_, _) => _shoudQuit = true;
+        Started = true;
         ApplicationStarted?.Invoke(this, EventArgs.Empty);
-        EventSystem.BeforeRender += EventSystem_BeforeRender;
-        EventSystem.InvalidateRendering();
+        EventSystem.Signal();
 
         while (!_shoudQuit)
         {
-            LifeCycle.CurrentState = LifeCycle.State.EVENT_POLL;
-            EventSystem.ProcessEvents();
+            RunUIEventPollLoop();
         }
 
         LifeCycle.CurrentState = LifeCycle.State.QUIT;
+        ApplicationQuit?.Invoke(this, EventArgs.Empty);
         // TODO: run disposing here!
         Logger.LogInfo("Application terminated");
     }
@@ -191,7 +213,7 @@ public class Application : IDisposable
     /// </summary>
     public void Quit()
     {
-        LifeCycle.ThrowIfNotOnUIThread();
+        Dispatcher.ThrowIfNotOnUIThread();
         Logger.LogInfo("Application quit requested");
         EventSystem.Quit(emitQuitEvent: true);
     }
@@ -228,16 +250,25 @@ public class Application : IDisposable
     /// <param name="window"></param>
     internal void AddWindow(Window window)
     {
-        LifeCycle.ThrowIfNotOnUIThread();
+        Dispatcher.ThrowIfNotOnUIThread();
         LifeCycle.ThrowIfPropertyCannotBeSet();
         _windows.Add(window);
     }
 
-    private void EventSystem_BeforeRender(IEventSystem sender, EventArgs e)
+    internal void RunUIEventPollLoop()
     {
+        LifeCycle.CurrentState = LifeCycle.State.EVENT_POLL;
+        EventSystem.ProcessEvents(timeoutMs: 10); // TODO: probably set this according to frame rate
+        LifeCycle.CurrentState = LifeCycle.State.MEASURE;
+        _windows.ForEach(w => w.Measure());
+        LifeCycle.CurrentState = LifeCycle.State.EVENT_POLL;
+        _windows.ForEach(w => w.PrepareSecondPass());
+        SecondPassMeasure?.Invoke(this, EventArgs.Empty);
         LifeCycle.CurrentState = LifeCycle.State.MEASURE;
         _windows.ForEach(w => w.Measure());
         LifeCycle.CurrentState = LifeCycle.State.RENDERING;
+        _windows.ForEach(w => w.EnsureZIndicesUpdated());
+        _windows.ForEach(w => w.Render());
     }
 
     private void DisposeManagedResources() { }
