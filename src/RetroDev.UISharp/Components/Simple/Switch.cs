@@ -9,52 +9,52 @@ using RetroDev.UISharp.Presentation.Properties;
 namespace RetroDev.UISharp.Components.Simple;
 
 /// <summary>
-/// A checkbox to mark with a tick if something is checked.
+/// A toogle button switch to mark with a tick if something is checked.
 /// </summary>
-public class CheckBox : UIWidget
+public class Switch : UIWidget
 {
     private readonly Rectangle _backgroundRectangle;
     private readonly Circle _selectionCircle;
 
     /// <summary>
-    /// Whether the checkbox is checked.
+    /// Whether the switch is checked.
     /// </summary>
-    public UIProperty<CheckBox, bool> Checked { get; }
+    public UIProperty<Switch, bool> Checked { get; }
 
     /// <summary>
     /// The color of the check box circle.
     /// </summary>
-    public UIProperty<CheckBox, Color> CircleColor { get; }
+    public UIProperty<Switch, Color> CircleColor { get; }
 
     /// <summary>
-    /// The background color of the checkbox when it <see cref="CheckBox"/> is <see langword="false" />.
+    /// The background color of the switch when it <see cref="Switch"/> is <see langword="false" />.
     /// </summary>
-    public UIProperty<CheckBox, Color> UncheckedBackgroundColor { get; }
+    public UIProperty<Switch, Color> UncheckedBackgroundColor { get; }
 
     /// <summary>
-    /// The background color when the checkbox is disabled.
+    /// The background color when the switch is disabled.
     /// </summary>
-    public UIProperty<CheckBox, Color> DisabledBackgroundColor { get; }
+    public UIProperty<Switch, Color> DisabledBackgroundColor { get; }
 
     /// <summary>
-    /// The color indicating that the checkbox is focused.
+    /// The color indicating that the switch is focused.
     /// </summary>
-    public UIProperty<CheckBox, Color> FocusColor { get; }
+    public UIProperty<Switch, Color> FocusColor { get; }
 
     /// <inheritdoc/>
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) => new(80, 30); // TODO: Maybe same size as default label text size (which is 20).
 
     /// <summary>
-    /// Creates a new checkbox.
+    /// Creates a new switch toggle button.
     /// </summary>
-    /// <param name="application">The application that contain this checkbox.</param>
-    public CheckBox(Application application) : base(application, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
+    /// <param name="application">The application that contain <see langword="this" /> <see cref="Switch"/>.</param>
+    public Switch(Application application) : base(application, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
     {
-        Checked = new UIProperty<CheckBox, bool>(this, false);
-        CircleColor = new UIProperty<CheckBox, Color>(this, Application.Theme.TextColor, BindingType.DestinationToSource);
-        UncheckedBackgroundColor = new UIProperty<CheckBox, Color>(this, Application.Theme.PrimaryColor, BindingType.DestinationToSource);
-        DisabledBackgroundColor = new UIProperty<CheckBox, Color>(this, Application.Theme.PrimaryColorDisabled, BindingType.DestinationToSource);
-        FocusColor = new UIProperty<CheckBox, Color>(this, Application.Theme.BorderColor, BindingType.DestinationToSource);
+        Checked = new UIProperty<Switch, bool>(this, false);
+        CircleColor = new UIProperty<Switch, Color>(this, Application.Theme.TextColor, BindingType.DestinationToSource);
+        UncheckedBackgroundColor = new UIProperty<Switch, Color>(this, Application.Theme.PrimaryColor, BindingType.DestinationToSource);
+        DisabledBackgroundColor = new UIProperty<Switch, Color>(this, Application.Theme.PrimaryColorDisabled, BindingType.DestinationToSource);
+        FocusColor = new UIProperty<Switch, Color>(this, Application.Theme.BorderColor, BindingType.DestinationToSource);
 
         BackgroundColor.BindDestinationToSource(Application.Theme.SecondaryColor);
 
@@ -66,17 +66,17 @@ public class CheckBox : UIWidget
         _selectionCircle.BackgroundColor.BindDestinationToSource(CircleColor);
         Canvas.Add(_selectionCircle);
 
-        MousePress += CheckBox_MousePress;
-        RenderFrame += CheckBox_RenderFrame;
+        MousePress += Switch_MousePress;
+        RenderFrame += Switch_RenderFrame;
     }
 
-    private void CheckBox_MousePress(UIComponent sender, MouseEventArgs e)
+    private void Switch_MousePress(UIComponent sender, MouseEventArgs e)
     {
         Checked.Value = !Checked.Value;
         Focus.Value = true;
     }
 
-    private void CheckBox_RenderFrame(UIComponent sender, RenderingEventArgs e)
+    private void Switch_RenderFrame(UIComponent sender, RenderingEventArgs e)
     {
         var cornerRadius = _backgroundRectangle.ComputeCornerRadius(1.0f, e.RenderingAreaSize);
 
@@ -124,11 +124,11 @@ public class CheckBox : UIWidget
 
         if (Checked.Value)
         {
-            _selectionCircle.RelativeRenderingArea.Value = size.FillCenterRightOf(args.RenderingAreaSize);
+            _selectionCircle.RelativeRenderingArea.Value = size.PositionCenterRightOf(args.RenderingAreaSize);
         }
         else
         {
-            _selectionCircle.RelativeRenderingArea.Value = size.FillCenterLeftOf(args.RenderingAreaSize);
+            _selectionCircle.RelativeRenderingArea.Value = size.PositionCenterLeftOf(args.RenderingAreaSize);
         }
     }
 }

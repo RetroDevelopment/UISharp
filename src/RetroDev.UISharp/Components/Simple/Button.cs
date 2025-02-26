@@ -3,6 +3,7 @@ using RetroDev.UISharp.Components.Shapes;
 using RetroDev.UISharp.Core.Graphics;
 using RetroDev.UISharp.Core.Graphics.Coordinates;
 using RetroDev.UISharp.Core.Windowing.Events;
+using RetroDev.UISharp.Presentation;
 using RetroDev.UISharp.Presentation.Properties;
 
 namespace RetroDev.UISharp.Components.Simple;
@@ -24,6 +25,11 @@ public class Button : UIWidget
     /// The button text.
     /// </summary>
     public UIProperty<Button, string> Text { get; }
+
+    /// <summary>
+    /// The button text font.
+    /// </summary>
+    public UIProperty<Button, Font> Font { get; }
 
     /// <summary>
     /// The text color.
@@ -53,13 +59,37 @@ public class Button : UIWidget
     /// Creates a new button.
     /// </summary>
     /// <param name="application">The application that contains this button.</param>
-    public Button(Application application) : base(application)
+    /// <param name="text">The button text.</param>
+    /// <param name="font">The button text font.</param>
+    /// <param name="textColor">The text color.</param>
+    /// <param name="disableTextColor">The text color when the button is disabled.</param>
+    /// <param name="focusColor">The color indicating that the button is focused.</param>
+    /// <param name="disableBackgroundColor">The background color when the button is disabled.</param>
+    public Button(Application application,
+                  string? text = null,
+                  Font? font = null,
+                  Color? textColor = null,
+                  Color? disableTextColor = null,
+                  Color? focusColor = null,
+                  Color? disableBackgroundColor = null) : base(application)
     {
-        Text = new UIProperty<Button, string>(this, string.Empty);
-        TextColor = new UIProperty<Button, Color>(this, Application.Theme.TextColor, BindingType.DestinationToSource);
-        DisabledTextColor = new UIProperty<Button, Color>(this, Application.Theme.TextColorDisabled, BindingType.DestinationToSource);
-        FocusColor = new UIProperty<Button, Color>(this, Application.Theme.BorderColor, BindingType.DestinationToSource);
-        DisabledBackgroundColor = new UIProperty<Button, Color>(this, Application.Theme.PrimaryColorDisabled, BindingType.DestinationToSource);
+        Text = new UIProperty<Button, string>(this, text ?? string.Empty);
+        Font = font != null ?
+            new UIProperty<Button, Font>(this, font.Value) :
+            new UIProperty<Button, Font>(this, Application.DefaultFont, BindingType.DestinationToSource);
+        TextColor = textColor != null ?
+            new UIProperty<Button, Color>(this, textColor.Value) :
+            new UIProperty<Button, Color>(this, Application.Theme.TextColor, BindingType.DestinationToSource);
+        DisabledTextColor = disableTextColor != null ?
+            new UIProperty<Button, Color>(this, disableTextColor.Value) :
+            new UIProperty<Button, Color>(this, Application.Theme.TextColorDisabled, BindingType.DestinationToSource);
+        FocusColor = focusColor != null ?
+            new UIProperty<Button, Color>(this, focusColor.Value) :
+            new UIProperty<Button, Color>(this, Application.Theme.BorderColor, BindingType.DestinationToSource);
+        DisabledBackgroundColor = disableBackgroundColor != null ?
+            new UIProperty<Button, Color>(this, disableBackgroundColor.Value) :
+            new UIProperty<Button, Color>(this, Application.Theme.PrimaryColorDisabled, BindingType.DestinationToSource);
+
         BackgroundColor.BindDestinationToSource(Application.Theme.SecondaryColor);
 
         _backgroundRectangle = new Rectangle(application);
@@ -70,6 +100,7 @@ public class Button : UIWidget
         _buttonTextLabel.TextColor.BindDestinationToSource(TextColor);
 
         _buttonTextLabel.Text.BindDestinationToSource(Text);
+        _buttonTextLabel.Font.BindDestinationToSource(Font);
         UpdateTextColor();
         AddChildNode(_buttonTextLabel);
 

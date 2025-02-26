@@ -37,11 +37,21 @@ public class Label : UIWidget
     /// Creates a new label.
     /// </summary>
     /// <param name="application">The application that contain this label.</param>
-    public Label(Application application) : base(application, isFocusable: false, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
+    /// <param name="text">The label display text.</param>
+    /// <param name="font">The label font.</param>
+    /// <param name="textColor">The label text color.</param>
+    public Label(Application application,
+                 string? text = null,
+                 Font? font = null,
+                 Color? textColor = null) : base(application, isFocusable: false, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
     {
-        Text = new UIProperty<Label, string>(this, string.Empty);
-        Font = new UIProperty<Label, Font>(this, Application.DefaultFont, BindingType.DestinationToSource);
-        TextColor = new UIProperty<Label, Color>(this, Application.Theme.TextColor, BindingType.DestinationToSource);
+        Text = new UIProperty<Label, string>(this, text ?? string.Empty);
+        Font = font != null ?
+           new UIProperty<Label, Font>(this, font.Value) :
+           new UIProperty<Label, Font>(this, Application.DefaultFont, BindingType.DestinationToSource);
+        TextColor = textColor != null ?
+           new UIProperty<Label, Color>(this, textColor.Value) :
+           new UIProperty<Label, Color>(this, Application.Theme.TextColor, BindingType.DestinationToSource);
 
         _text = new Text(application);
         _text.BackgroundColor.BindDestinationToSource(BackgroundColor);
@@ -51,16 +61,6 @@ public class Label : UIWidget
 
         RenderFrame += Label_RenderFrame;
         Canvas.Add(_text);
-    }
-
-    /// <summary>
-    /// Creates a new label.
-    /// </summary>
-    /// <param name="parent">The application that contain this label.</param>
-    /// <param name="text">The label text.</param>
-    public Label(Application parent, string text) : this(parent)
-    {
-        Text.Value = text;
     }
 
     /// <summary>

@@ -79,7 +79,7 @@ public class Text : UIShape
 
     protected internal override void Render()
     {
-        _text.RenderingArea = ComputeTextSize().FillCenterOf(RelativeRenderingArea.Value.Size).ToAbsolute(Canvas.ContainerAbsoluteDrawingArea);
+        _text.RenderingArea = ComputeTextSize().PositionCenterOf(RelativeRenderingArea.Value.Size).ToAbsolute(Canvas.ContainerAbsoluteDrawingArea);
         _text.ForegroundColor = TextColor.Value;
         _text.Value = DisplayText.Value;
         _text.Font = Font.Value.ToGraphicsFont();

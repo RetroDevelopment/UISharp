@@ -8,7 +8,7 @@
             </gridLayout>
             <gridLayout id="theme" rows="1" columns="2" columnSizes="120px;*">
                 <label id="darkModeText" text="Dark mode:" />
-                <checkBox id="darkMode" checked="true" />
+                <switch id="darkMode" checked="true" />
             </gridLayout>
 
             <button id="load" text="Load" autoWidth="stretch" autoHeight="stretch" />

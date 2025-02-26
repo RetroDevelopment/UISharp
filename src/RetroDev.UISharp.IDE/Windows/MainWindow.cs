@@ -40,7 +40,7 @@ internal class MainWindow : Window
     private readonly Button _refreshButton;
     private readonly Button _addButton;
     private readonly Button _removeButton;
-    private readonly CheckBox _darkMode;
+    private readonly Switch _darkMode;
     private readonly ListBox _propertyList;
 
     public MainWindow(Application parent,
@@ -53,7 +53,7 @@ internal class MainWindow : Window
                       Button refresh,
                       Button add,
                       Button remove,
-                      CheckBox darkMode,
+                      Switch darkMode,
                       ListBox propertyList) : base(parent)
     {
         Initialized += MainWindow_Initialized;

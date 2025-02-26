@@ -87,6 +87,6 @@ public class ProgressBar : UIWidget
         var percentage = (value - MinimumValue.Value) / (float)(MaximumValue.Value - MinimumValue.Value);
         var progressRectangleWidth = e.RenderingAreaSize.Width * percentage;
         var progressRecangleSize = new Size(progressRectangleWidth, e.RenderingAreaSize.Height);
-        _progressRectangle.RelativeRenderingArea.Value = progressRecangleSize.FillCenterLeftOf(e.RenderingAreaSize);
+        _progressRectangle.RelativeRenderingArea.Value = progressRecangleSize.PositionCenterLeftOf(e.RenderingAreaSize);
     }
 }

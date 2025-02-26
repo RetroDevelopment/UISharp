@@ -57,7 +57,7 @@ public record Size
     /// </summary>
     /// <param name="containerSize">The size of the container.</param>
     /// <returns>An <see cref="Area"/> centered horizontally at the top of the container.</returns>
-    public Area FillTopCenterOf(Size containerSize) =>
+    public Area PositionTopCenterOf(Size containerSize) =>
         new(new Point((containerSize.Width - Width) / 2.0f, PixelUnit.Zero), this);
 
     /// <summary>
@@ -65,7 +65,7 @@ public record Size
     /// </summary>
     /// <param name="containerSize">The size of the container.</param>
     /// <returns>An <see cref="Area"/> aligned to the top-right of the container.</returns>
-    public Area FillTopRightOf(Size containerSize) =>
+    public Area PositionTopRightOf(Size containerSize) =>
         new(new Point(containerSize.Width - Width, PixelUnit.Zero), this);
 
     /// <summary>
@@ -73,7 +73,7 @@ public record Size
     /// </summary>
     /// <param name="containerSize">The size of the container.</param>
     /// <returns>An <see cref="Area"/> aligned to the center-left of the container.</returns>
-    public Area FillCenterLeftOf(Size containerSize) =>
+    public Area PositionCenterLeftOf(Size containerSize) =>
         new(new Point(PixelUnit.Zero, (containerSize.Height - Height) / 2.0f), this);
 
     /// <summary>
@@ -81,7 +81,7 @@ public record Size
     /// </summary>
     /// <param name="containerSize">The size of the container.</param>
     /// <returns>An <see cref="Area"/> centered within the container.</returns>
-    public Area FillCenterOf(Size containerSize) =>
+    public Area PositionCenterOf(Size containerSize) =>
         new(new Point((containerSize.Width - Width) / 2.0f, (containerSize.Height - Height) / 2.0f), this);
 
     /// <summary>
@@ -89,7 +89,7 @@ public record Size
     /// </summary>
     /// <param name="containerSize">The size of the container.</param>
     /// <returns>An <see cref="Area"/> aligned to the center-right of the container.</returns>
-    public Area FillCenterRightOf(Size containerSize) =>
+    public Area PositionCenterRightOf(Size containerSize) =>
         new(new Point(containerSize.Width - Width, (containerSize.Height - Height) / 2.0f), this);
 
     /// <summary>
@@ -97,7 +97,7 @@ public record Size
     /// </summary>
     /// <param name="containerSize">The size of the container.</param>
     /// <returns>An <see cref="Area"/> aligned to the bottom-left of the container.</returns>
-    public Area FillBottomLeftOf(Size containerSize) =>
+    public Area PositionBottomLeftOf(Size containerSize) =>
         new(new Point(PixelUnit.Zero, containerSize.Height - Height), this);
 
     /// <summary>
@@ -105,7 +105,7 @@ public record Size
     /// </summary>
     /// <param name="containerSize">The size of the container.</param>
     /// <returns>An <see cref="Area"/> centered horizontally at the bottom of the container.</returns>
-    public Area FillBottomCenterOf(Size containerSize) =>
+    public Area PositionBottomCenterOf(Size containerSize) =>
         new(new Point((containerSize.Width - Width) / 2.0f, containerSize.Height - Height), this);
 
     /// <summary>
@@ -113,7 +113,7 @@ public record Size
     /// </summary>
     /// <param name="containerSize">The size of the container.</param>
     /// <returns>An <see cref="Area"/> aligned to the bottom-right of the container.</returns>
-    public Area FillBottomRightOf(Size containerSize) =>
+    public Area PositionBottomRightOf(Size containerSize) =>
         new(new Point(containerSize.Width - Width, containerSize.Height - Height), this);
 
     public static Size operator +(Size s1, Size s2) => new(s1.Width + s2.Width, s1.Height + s2.Height);
