@@ -111,7 +111,7 @@ class Ctr : UIWidget
 
 internal class Program
 {
-    static void Maink(string[] _)
+    static void Maijn(string[] _)
     {
         using var application = new Application();
         application.Logger.Verbosity = Verbosity.Verbose;
@@ -140,13 +140,42 @@ internal class Program
 
         scrollView.SetComponent(label);
 
-        Window window = new Window(application);
+        var window = new Window(application);
         window.Width.Value = 800;
         window.Height.Value = 600;
         window.Title.Value = "Hello World!";
         window.Visibility.Value = UIComponent.ComponentVisibility.Visible;
         window.AddComponent(scrollView);
 
+        var layout = new GridLayout(application);
+        layout.Rows.Value = 2;
+        layout.Columns.Value = 1;
+        var btn1 = new Button(application);
+        btn1.Text.Value = "Button 1";
+        btn1.BackgroundColor.Value = Color.Red.WithAlpha(100);
+        var btn2 = new Button(application);
+        btn2.Text.Value = "Button 2";
+        btn2.BackgroundColor.Value = Color.Blue.WithAlpha(50);
+        layout.AddComponent(btn1);
+        layout.AddComponent(btn2);
+        Point? position2 = null;
+        layout.MouseDragBegin += (_, _) => position2 = null;
+        layout.MouseDrag += (_, e) =>
+        {
+            label.CaptureActualPosition();
+            var p = e.AbsoluteLocation;
+            if (position2 == null) { position2 = p; return; }
+            var delta = position2 - p;
+            position2 = e.AbsoluteLocation;
+            layout.X.Value -= delta.X;
+            layout.Y.Value -= delta.Y;
+        };
+        layout.X.Value = 0;
+        layout.Y.Value = 0;
+        layout.Width.Value = 100;
+        layout.Height.Value = 100;
+
+        window.AddComponent(layout);
         application.Run();
     }
 

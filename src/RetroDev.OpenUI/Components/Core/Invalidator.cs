@@ -6,32 +6,32 @@ namespace RetroDev.OpenUI.Components.Core;
 
 public class Invalidator
 {
-    private SortedDictionary<int, HashSet<UIComponent>> _invalidatedItems = [];
+    private readonly SortedDictionary<int, HashSet<UIComponent>> _firstPassInvalidatedItems = [];
+    private readonly SortedDictionary<int, HashSet<UIComponent>> _secondPassInvalidatedItems = [];
+    private SortedDictionary<int, HashSet<UIComponent>> _invalidatedItems;
 
     internal bool NeedZIndexUpdate { get; set; } = true;
     public int TreeDepth => _invalidatedItems.Keys.LastOrDefault(-1) + 1;
 
+    public Invalidator()
+    {
+        _invalidatedItems = _firstPassInvalidatedItems;
+    }
+
     public void Invalidate(UIComponent component)
     {
-        var level = component._level;
-        _invalidatedItems.TryAdd(level, []);
-        _invalidatedItems[level].Add(component);
+        Invalidate(component, _firstPassInvalidatedItems);
+        Invalidate(component, _secondPassInvalidatedItems);
     }
 
     public void CancelInvalidation(UIComponent component)
     {
-        var level = component._level;
-        // No need to cancel invalidation if the componet has not been invalidated
-        if (!_invalidatedItems.ContainsKey(level) || !_invalidatedItems[level].Contains(component)) return;
-        _invalidatedItems[level].Remove(component);
-        if (_invalidatedItems[level].Count == 0)
-        {
-            _invalidatedItems.Remove(level);
-        }
+        CancelInvalidation(component, _firstPassInvalidatedItems);
+        CancelInvalidation(component, _secondPassInvalidatedItems);
     }
 
     public int GetUpperInvalidatedLevel(int level) =>
-            _invalidatedItems.Keys.Reverse().FirstOrDefault(k => k < level, -1);
+        _invalidatedItems.Keys.Reverse().FirstOrDefault(k => k < level, -1);
 
     public int GetLowerInvalidatedLevel(int level) =>
         _invalidatedItems.Keys.FirstOrDefault(k => k > level, -1);
@@ -55,8 +55,40 @@ public class Invalidator
     }
 
     // TODO: remove this once implementing instancing
-    public void Reset()
+    public void Reset(bool secondPass = false)
     {
-        _invalidatedItems.Clear();
+        _secondPassInvalidatedItems.Clear();
+        if (!secondPass) _firstPassInvalidatedItems.Clear();
+    }
+
+    public void Swap()
+    {
+        if (_invalidatedItems == _firstPassInvalidatedItems)
+        {
+            _invalidatedItems = _secondPassInvalidatedItems;
+        }
+        else
+        {
+            _invalidatedItems = _firstPassInvalidatedItems;
+        }
+    }
+
+    private void Invalidate(UIComponent component, SortedDictionary<int, HashSet<UIComponent>> invalidatedItems)
+    {
+        var level = component._level;
+        invalidatedItems.TryAdd(level, []);
+        invalidatedItems[level].Add(component);
+    }
+
+    private void CancelInvalidation(UIComponent component, SortedDictionary<int, HashSet<UIComponent>> invalidatedItems)
+    {
+        var level = component._level;
+        // No need to cancel invalidation if the componet has not been invalidated
+        if (!invalidatedItems.ContainsKey(level) || !invalidatedItems[level].Contains(component)) return;
+        invalidatedItems[level].Remove(component);
+        if (invalidatedItems[level].Count == 0)
+        {
+            invalidatedItems.Remove(level);
+        }
     }
 }

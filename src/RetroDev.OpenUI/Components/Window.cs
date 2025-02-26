@@ -229,6 +229,11 @@ public class Window : UIRoot
     public void Measure() => MeasureProvider.Measure();
 
     /// <summary>
+    /// Prepares the window for the second pass layout.
+    /// </summary>
+    public void PrepareSecondPass() => MeasureProvider.PrepareSecondPass();
+
+    /// <summary>
     /// Shows <see langword="this" /> <see cref="Window"/>.
     /// </summary>
     public void Show()
@@ -292,6 +297,7 @@ public class Window : UIRoot
 
     internal void Render()
     {
+        Invalidator.Swap();
         UpdateWindowAppearance();
         var renderingEngine = RenderingEngine;
         RenderProvider.Render(this, renderingEngine);

@@ -1,6 +1,7 @@
 ﻿using RetroDev.OpenUI.Components.Core;
 using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Components.Shapes;
+using RetroDev.OpenUI.Core.Exceptions;
 using RetroDev.OpenUI.Core.Graphics;
 using RetroDev.OpenUI.Core.Graphics.Coordinates;
 using RetroDev.OpenUI.Core.Windowing.Events;
@@ -254,6 +255,11 @@ public abstract class UIComponent
         Application = application;
         Application.LifeCycle.ThrowIfPropertyCannotBeSet();
 
+        if (!Application.Started)
+        {
+            throw new UIInitializationException($"Cannot create UI element {this}: application must be started. Make sure all UI initializtion is within the {nameof(Application.ApplicationStarted)} event");
+        }
+
         ID = new UIProperty<UIComponent, string>(this, string.Empty);
         X = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Auto);
         Y = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Auto);
@@ -371,22 +377,6 @@ public abstract class UIComponent
     /// <see cref="PixelUnit.Auto"/>, default area calculation will be used.
     /// </returns>
     protected virtual List<Area?> RepositionChildren(Size availableSpace, IEnumerable<Size> sizeHints) => [];
-
-    /// <summary>
-    /// Override this method to estabilsh second pass to decide final rendering area for <see langword="this" /> component children.
-    /// This is useful to re-calculate children sizes after already knowing the updated size.
-    /// </summary>
-    /// <param name="availableSpace"><see langword="this" /> container full available size to render.</param>
-    /// <param name="childrenAreas">The children estimate rendering areas.</param>
-    /// <returns>
-    /// The rendering areas of all children of <see langword="this" /> component.
-    /// If the list is empty, the default area calculation will be used, otherwise the list must have the same size
-    /// of <paramref name="childrenAreas"/>, that is, the same number of element of children.
-    /// If an element of the list is <see langword="null" /> the respective child drawing area will be calculated automatically.
-    /// If on element of a <see cref="Area"/> in the list (e.g. <see cref="Area.Size"/>.<see cref="Size.Width"/> is set to
-    /// <see cref="PixelUnit.Auto"/>, default area calculation will be used.
-    /// </returns>
-    protected virtual List<Area?> RepositionChildrenSecondPass(Size availableSpace, IEnumerable<Area> childrenAreas) => [];
 
     /// <summary>
     /// Adds a child to <see langword="this" /> component.

@@ -51,6 +51,7 @@ public class ScrollView : UIContainer, ISingleContainer
         _verticalScrollBar.Width.BindDestinationToSource(ScrollBarThickness);
         _verticalScrollBar.HorizontalAlignment.Value = Alignment.Right;
         _verticalScrollBar.MouseDrag += VerticalScrollBar_MouseDrag;
+        AddChildNode(_verticalScrollBar);
 
         _horizontalScrollBar = new ScrollBar(application);
         _horizontalScrollBar.BackgroundColor.BindDestinationToSource(ScrollBarColor);
@@ -58,7 +59,6 @@ public class ScrollView : UIContainer, ISingleContainer
         _horizontalScrollBar.VerticalAlignment.Value = Alignment.Bottom;
         _horizontalScrollBar.MouseDrag += HorizontalScrollBar_MouseDrag;
 
-        AddChildNode(_verticalScrollBar);
         AddChildNode(_horizontalScrollBar);
 
         MouseWheel += ScrollView_MouseWheel;
@@ -184,16 +184,10 @@ public class ScrollView : UIContainer, ISingleContainer
 
         // If the child can fit all in the scroll view, it has to be fully visible inside the view
         // because no scroll bar will be available.
+        // So fall back to auto coordinates will be performed.
         if (scrollViewSize > childSize)
         {
-            if (childPosition < 0.0f || childPosition > scrollViewSize - childSize)
-            {
-                return PixelUnit.Auto;
-            }
-            else
-            {
-                return childPosition;
-            }
+            return PixelUnit.Auto;
         }
         // Otherwise if the child is bigger than the scroll view and it is positioned with a positive
         // offset, it is reset to position zero, because the scroll bar can only scroll children with a negative offset.

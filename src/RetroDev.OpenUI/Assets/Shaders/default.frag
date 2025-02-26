@@ -48,5 +48,9 @@ void main()
         FragColor = colorizedGrayImageColor * mask;
     }
 
-    gl_FragDepth = zIndex * mask + (1.0 - mask);
+    // If mask is 0 gl_FragDept = 1.0, that is, the fragment will be clipped and it will not overwrite the buffer to avoid transparency artifacts
+    // If the fragment is fully transparetn (FragColor.a == 0) same thing, because otherwise the depth buffer value would prevent from rendering solid colors below this fragment
+    // Note the complexity in this formula is introduced because fully transparent vbos are batched together with fully opaque vbos, therefore not rendered in back to front order like semi-transparent vbos.
+    // This is because there are many fully transparent objects (e.g. label background) and it would kill performance to run them in back to front order, since this would require a draw call per object.
+    gl_FragDepth = mix(zIndex * mask + (1.0 - mask), 1.0, step(FragColor.a, 0.0));
 }

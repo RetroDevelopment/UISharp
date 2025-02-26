@@ -97,6 +97,11 @@ public class Application : IDisposable
     public ThreadDispatcher Dispatcher { get; } = new();
 
     /// <summary>
+    /// Whether <see langword="this" /> <see cref="Application"/> is ready to run and receive events.
+    /// </summary>
+    public bool Started { get; private set; } = false;
+
+    /// <summary>
     /// Creates a new application.
     /// </summary>
     /// <param name="windowManager">The low-level implementation of window manager interacting with the OS to create and manage windows.</param>
@@ -139,6 +144,7 @@ public class Application : IDisposable
 
         Logger.LogInfo("Application started");
         EventSystem.ApplicationQuit += (_, _) => _shoudQuit = true;
+        Started = true;
         ApplicationStarted?.Invoke(this, EventArgs.Empty);
         EventSystem.Signal();
 
@@ -256,6 +262,7 @@ public class Application : IDisposable
         LifeCycle.CurrentState = LifeCycle.State.MEASURE;
         _windows.ForEach(w => w.Measure());
         LifeCycle.CurrentState = LifeCycle.State.EVENT_POLL;
+        _windows.ForEach(w => w.PrepareSecondPass());
         SecondPassMeasure?.Invoke(this, EventArgs.Empty);
         LifeCycle.CurrentState = LifeCycle.State.MEASURE;
         _windows.ForEach(w => w.Measure());
