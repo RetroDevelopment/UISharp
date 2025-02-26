@@ -17,6 +17,12 @@ public abstract class Shape(ThreadDispatcher dispatcher) : RenderingElement(disp
     private int? _textureId = 0;
 
     /// <summary>
+    /// Whether the shape is not opaque but not transparent either.
+    /// </summary>
+    public override bool IsSemiTransparent =>
+        base.IsSemiTransparent || BorderColor.IsSemiTransparent;
+
+    /// <summary>
     /// The shape border color.
     /// </summary>
     public Color BorderColor

@@ -116,4 +116,17 @@ public class Canvas
             shape.CanRender = canRender;
         }
     }
+
+    internal uint UpdateZIndices(uint baseZIndex)
+    {
+        var currentZIndex = baseZIndex;
+
+        foreach (var shape in _shapes)
+        {
+            shape.ZIndex.Value = currentZIndex;
+            currentZIndex++;
+        }
+
+        return currentZIndex;
+    }
 }

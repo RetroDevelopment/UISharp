@@ -4,6 +4,7 @@ uniform vec4 color;
 uniform vec4 clipArea;
 uniform sampler2D mainTexture;
 uniform int textureMode;
+uniform float zIndex;
 
 in vec2 FragmentCoorindates;
 in vec2 TextureCoordinates;
@@ -46,4 +47,6 @@ void main()
         vec4 colorizedGrayImageColor = vec4(color.r, color.g, color.b, textureColor.r * color.a);
         FragColor = colorizedGrayImageColor * mask;
     }
+
+    gl_FragDepth = zIndex * mask + (1.0 - mask);
 }

@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using OpenTK.Graphics.ES11;
+using OpenTK.Graphics.OpenGL;
 using RetroDev.OpenIDE.Windows;
 using RetroDev.OpenUI;
 using RetroDev.OpenUI.Components;
@@ -110,57 +111,41 @@ class Ctr : UIWidget
 
 internal class Program
 {
-    static void Mainl(string[] _)
+    static void Maink(string[] _)
     {
         using var application = new Application();
         application.Logger.Verbosity = Verbosity.Verbose;
 
-        var btn1 = new Button(application);
-        var btn2 = new Button(application);
-        btn1.Text.Value = "Button1";
-        btn2.Text.Value = "Button2";
-        btn1.X.Value = 0;
-        btn1.Y.Value = 0;
-        btn1.Width.Value = 80;
-        btn1.Height.Value = 50;
-        btn2.X.Value = 10;
-        btn2.Y.Value = 30;
-        btn2.Width.Value = 80;
-        btn2.Height.Value = 40;
+        var scrollView = new ScrollView(application);
+        var label = new Label(application, "Hello World!");
+        label.Font.Value = application.DefaultFont.Value.WithSize(90);
+        label.BackgroundColor.Value = Color.Gold;
+        Point position = null;
+        label.MouseDragBegin += (_, _) => position = null;
+        label.MouseDrag += (_, e) =>
+        {
+            label.CaptureActualPosition();
+            var p = e.AbsoluteLocation;
+            if (position == null) { position = p; return; }
+            var delta = position - p;
+            position = e.AbsoluteLocation;
+            label.X.Value -= delta.X;
+            label.Y.Value -= delta.Y;
+        };
+        label.MouseWheel += (_, e) => label.Font.Value = label.Font.Value.WithSize(label.Font.Value.Size + e.HorizontalMovement);
+
+        scrollView.BackgroundColor.Value = Color.Red;
+        scrollView.Width.Value = 250;
+        scrollView.Height.Value = 100;
+
+        scrollView.SetComponent(label);
 
         Window window = new Window(application);
         window.Width.Value = 800;
         window.Height.Value = 600;
         window.Title.Value = "Hello World!";
         window.Visibility.Value = UIComponent.ComponentVisibility.Visible;
-        var gl = new GridLayout(application);
-        var gll = new GridLayout(application);
-        gll.Rows.Value = 1;
-        gll.Columns.Value = 1;
-
-        gl.Rows.Value = 2;
-        gl.Columns.Value = 1;
-        gl.AddComponent(btn1);
-        gl.AddComponent(btn2);
-
-        void Register(Button btn)
-        {
-            btn.Action += (_, e) => application.Logger.LogError($"{btn.Text.Value} action {e}");
-            btn.MousePress += (_, e) => application.Logger.LogError($"{btn.Text.Value} mouse press {e}");
-            btn.MouseRelease += (_, e) => application.Logger.LogError($"{btn.Text.Value} mouse release {e}");
-            btn.TextInput += (_, e) => application.Logger.LogError($"{btn.Text.Value} text input {e}");
-            btn.MouseEnter += (_, e) => application.Logger.LogError($"{btn.Text.Value} mouse enter {e}");
-            btn.MouseLeave += (_, e) => application.Logger.LogError($"{btn.Text.Value} mouse leave {e}");
-            btn.MouseWheel += (_, e) => application.Logger.LogError($"{btn.Text.Value} wheel {e}");
-            btn.MouseDragBegin += (_, e) => application.Logger.LogError($"{btn.Text.Value} drag start {e}");
-            btn.MouseDrag += (_, e) => application.Logger.LogError($"{btn.Text.Value} drag {e}");
-            btn.MouseDragEnd += (_, e) => application.Logger.LogError($"{btn.Text.Value} drag end {e}");
-        }
-
-        Register(btn1);
-        Register(btn2);
-        gll.AddComponent(gl);
-        window.AddComponent(gll);
+        window.AddComponent(scrollView);
 
         application.Run();
     }

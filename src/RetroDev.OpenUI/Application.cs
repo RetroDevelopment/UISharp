@@ -30,6 +30,17 @@ public class Application : IDisposable
     public event TypeSafeEventHandler<Application, EventArgs>? ApplicationStarted;
 
     /// <summary>
+    /// Triggered when the application is terminating.
+    /// </summary>
+    public event TypeSafeEventHandler<Application, EventArgs>? ApplicationQuit;
+
+    /// <summary>
+    /// Triggered before calling <see cref="Window.Measure()"/> for the second time.
+    /// This is an opportunity to change <see cref="UIComponent"/> properties when all sizes are known and before rendering (using <see cref="UIComponent.ActualSize"/>).
+    /// </summary>
+    public event TypeSafeEventHandler<Application, EventArgs>? SecondPassMeasure;
+
+    /// <summary>
     /// The window manager interacting with the OS to create and manage systems.
     /// </summary>
     public IWindowManager WindowManager { get; }
@@ -129,8 +140,7 @@ public class Application : IDisposable
         Logger.LogInfo("Application started");
         EventSystem.ApplicationQuit += (_, _) => _shoudQuit = true;
         ApplicationStarted?.Invoke(this, EventArgs.Empty);
-        EventSystem.BeforeRender += EventSystem_BeforeRender;
-        EventSystem.InvalidateRendering();
+        EventSystem.Signal();
 
         while (!_shoudQuit)
         {
@@ -138,6 +148,7 @@ public class Application : IDisposable
         }
 
         LifeCycle.CurrentState = LifeCycle.State.QUIT;
+        ApplicationQuit?.Invoke(this, EventArgs.Empty);
         // TODO: run disposing here!
         Logger.LogInfo("Application terminated");
     }
@@ -238,18 +249,19 @@ public class Application : IDisposable
         _windows.Add(window);
     }
 
-
     internal void RunUIEventPollLoop()
     {
         LifeCycle.CurrentState = LifeCycle.State.EVENT_POLL;
-        EventSystem.ProcessEvents();
-    }
-
-    private void EventSystem_BeforeRender(IEventSystem sender, EventArgs e)
-    {
+        EventSystem.ProcessEvents(timeoutMs: 10); // TODO: probably set this according to frame rate
+        LifeCycle.CurrentState = LifeCycle.State.MEASURE;
+        _windows.ForEach(w => w.Measure());
+        LifeCycle.CurrentState = LifeCycle.State.EVENT_POLL;
+        SecondPassMeasure?.Invoke(this, EventArgs.Empty);
         LifeCycle.CurrentState = LifeCycle.State.MEASURE;
         _windows.ForEach(w => w.Measure());
         LifeCycle.CurrentState = LifeCycle.State.RENDERING;
+        _windows.ForEach(w => w.EnsureZIndicesUpdated());
+        _windows.ForEach(w => w.Render());
     }
 
     private void DisposeManagedResources() { }

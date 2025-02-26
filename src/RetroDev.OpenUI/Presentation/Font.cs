@@ -85,6 +85,15 @@ public readonly struct Font
         Type = type;
     }
 
+    /// <summary>
+    /// Creates a new <see cref="Font"/> with the same parameters as <see langword="this" />
+    /// <see cref="Font"/> but with the given <paramref name="size"/>.
+    /// </summary>
+    /// <param name="size">The new font size.</param>
+    /// <returns>A copy of <see langword="this" /> <see cref="Font"/> but with the given <paramref name="size"/>.</returns>
+    public Font WithSize(float size) =>
+        new(Data, Name, size, Type);
+
     /// <inheritdoc />
     public override int GetHashCode()
     {

@@ -13,7 +13,7 @@ The main goal is
 # Open IDE
 The OpenUI library comes with a OpenIDE application, which is a UI designer to define your xml definition file visually.
 This is still a small mvp, the UI will significantly improve later.
-![OpenIDE](Demo.png)
+![OpenIDE](doc/Demo.png)
 
 # Guidelines
 Branch name: <type>/<issue number>-<description>

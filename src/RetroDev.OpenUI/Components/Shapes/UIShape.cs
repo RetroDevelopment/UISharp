@@ -48,6 +48,12 @@ public abstract class UIShape
     protected abstract RenderingElement RenderingElement { get; }
 
     /// <summary>
+    /// The rendering order. The shape with index 0 is rendered first, then the other shapes will be rendered in ascending order.
+    /// This property value must be unique for each shape.
+    /// </summary>
+    internal ShapeProperty<UIShape, uint> ZIndex { get; }
+
+    /// <summary>
     /// The canvas area owning <see langword="this" /> <see cref="UIShape"/>.
     /// </summary>
     internal Canvas? Canvas { get; set; }
@@ -72,6 +78,7 @@ public abstract class UIShape
         RelativeRenderingArea = new ShapeProperty<UIShape, Area>(this, application, Area.Empty);
         BackgroundColor = new ShapeProperty<UIShape, Color>(this, application, Color.Transparent);
         Visible = new ShapeProperty<UIShape, bool>(this, application, true);
+        ZIndex = new ShapeProperty<UIShape, uint>(this, application, 0);
     }
 
     /// <summary>
@@ -105,6 +112,7 @@ public abstract class UIShape
         RenderingElement.RenderingArea = RelativeRenderingArea.Value.ToAbsolute(Canvas.ContainerAbsoluteDrawingArea);
         RenderingElement.ClipArea = clipArea;
         RenderingElement.BackgroundColor = BackgroundColor.Value;
+        RenderingElement.ZIndex = RenderingElement.ConvertToInternalZIndex(ZIndex.Value);
         Render();
     }
 }

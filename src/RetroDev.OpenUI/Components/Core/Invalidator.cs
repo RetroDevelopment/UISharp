@@ -8,6 +8,7 @@ public class Invalidator
 {
     private SortedDictionary<int, HashSet<UIComponent>> _invalidatedItems = [];
 
+    internal bool NeedZIndexUpdate { get; set; } = true;
     public int TreeDepth => _invalidatedItems.Keys.LastOrDefault(-1) + 1;
 
     public void Invalidate(UIComponent component)

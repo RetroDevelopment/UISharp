@@ -18,11 +18,12 @@ public abstract class RenderingElement(ThreadDispatcher dispatcher)
     private Area _clipArea = Area.Empty;
     private Color _backgroundColor = Color.Transparent;
     private bool _visible = true;
+    private (float Background, float Foreground) _zIndex = (1.0f, 1.0f);
 
     /// <summary>
     /// Whether the shape has changed and therefore needs re-drawing.
     /// </summary>
-    public TypeSafeEventHandler<RenderingElement, EventArgs>? ShapeChanged;
+    public event TypeSafeEventHandler<RenderingElement, EventArgs>? ShapeChanged;
 
     /// <summary>
     /// The area where to renderer <see langword="this" /> shape.
@@ -63,6 +64,22 @@ public abstract class RenderingElement(ThreadDispatcher dispatcher)
     }
 
     /// <summary>
+    /// The rendering order. If the value is 0, the shape will be rendered first, then the other
+    /// shape will be rendered in the <see cref="ZIndex"/> ascending order.
+    /// </summary>
+    public (float Background, float Foreground) ZIndex
+    {
+        get => _zIndex;
+        set => SetValue(ref _zIndex, value);
+    }
+
+    /// <summary>
+    /// Whether the shape is not opaque but not transparent either.
+    /// </summary>
+    public virtual bool IsSemiTransparent =>
+        BackgroundColor.IsSemiTransparent;
+
+    /// <summary>
     /// Sets a <paramref name="field"/> value.
     /// </summary>
     /// <typeparam name="TValue">The type of the propery.</typeparam>
@@ -76,5 +93,29 @@ public abstract class RenderingElement(ThreadDispatcher dispatcher)
             ShapeChanged?.Invoke(this, EventArgs.Empty);
             field = value;
         }
+    }
+
+    // Convert zIndex into a float in the [-1, 1] range suitable for GL_LESS
+    // Splits the z index into 2: background first then foreground.
+    // TODO: join background and foreground into 1 vbo so no need for this and have less memorys
+    internal (float Background, float Foreground) ConvertToInternalZIndex(uint zIndex)
+    {
+        var factor = 2u;
+        var backgroundZIndex = zIndex * factor;
+        var foregroundZIndex = backgroundZIndex + (factor / 2);
+        return (Convert(backgroundZIndex), Convert(foregroundZIndex));
+    }
+
+    // Convert zIndex (uint) to a float in the [-1, 1] range suitable for GL_LESS
+    private float Convert(uint zIndex)
+    {
+        // Maximum number of distinct z-values
+        const uint maxZIndex = 16777216;
+
+        // Ensure the zIndex is clamped within the valid range
+        var clippedZIndex = Math.Min(zIndex, maxZIndex);
+
+        // Convert the zIndex to a float in the [-1, 1] range, reversed
+        return 1f - (float)(clippedZIndex) / maxZIndex * 2f;
     }
 }

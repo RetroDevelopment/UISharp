@@ -46,6 +46,12 @@ internal class ShaderProgram
     public void SetTextureMode(TextureMode mode) =>
         SetInt("textureMode", (int)mode);
 
+    public void SetZIndex(float index) =>
+        SetFloat("zIndex", index);
+
+    public void SetVisible(bool visible) =>
+        SetBool("visible", visible);
+
     public void SetClipArea(Vector4 clipArea) =>
         SetVec4("clipArea", clipArea);
 
@@ -56,6 +62,9 @@ internal class ShaderProgram
     {
         GL.DeleteProgram(_id);
     }
+
+    private void SetBool(string name, bool value) =>
+        GL.Uniform1(GetUniformLocation(name), value ? 1.0f : 0.0f);
 
     private void SetFloat(string name, float value) =>
         GL.Uniform1(GetUniformLocation(name), value);

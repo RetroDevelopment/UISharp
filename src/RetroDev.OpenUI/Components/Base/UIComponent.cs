@@ -85,7 +85,7 @@ public abstract class UIComponent
     /// <see langword="this" /> <see cref="UIComponent"/>.
     /// </summary>
     /// <seealso cref="MouseDrag"/>.
-    public event TypeSafeEventHandler<UIComponent, EventArgs>? MouseDragBegin;
+    public event TypeSafeEventHandler<UIComponent, MouseEventArgs>? MouseDragBegin;
 
     /// <summary>
     /// The mouse is moving while the left button is being hold.
@@ -151,6 +151,12 @@ public abstract class UIComponent
     /// the value is <see langword="null" />.
     /// </summary>
     public UIRoot? Root => Parent?.Root ?? this as UIRoot;
+
+    /// <summary>
+    /// The actual component size as it was after the latest rendering.
+    /// Inside <see cref="Application.SecondPassMeasure"/>, this is the expected component size before rendering the next fame.
+    /// </summary>
+    public Size ActualSize => _relativeDrawingArea.Size;
 
     /// <summary>
     /// The component unique identifier.
@@ -286,7 +292,6 @@ public abstract class UIComponent
     public void Invalidate()
     {
         Root?.Invalidator?.Invalidate(this);
-        Application.EventSystem.InvalidateRendering();
     }
 
     /// <summary>
@@ -316,6 +321,23 @@ public abstract class UIComponent
         if (!Height.Value.IsAuto && Height.Value < 0.0f) throw new UIPropertyValidationException($"Height must be greater or equal to zero, found {Height.Value}", this);
         if (!Focusable.Value && Focus.Value) throw new UIPropertyValidationException("Cannot focus a component that is not focusable", this);
         if (!Enabled.Value && Focus.Value) throw new UIPropertyValidationException("Cannot focus a component that is not enabled");
+    }
+
+    /// <summary>
+    /// Captures the position of <see langword="this" /> <see cref="UIComponent"/> during the latest
+    /// frame rendering or the position of the next frame rendering is this is called inside <see cref="Application.SecondPassMeasure"/> and
+    /// writes the values into <see cref="X"/> and <see cref="Y"/>.
+    /// </summary>
+    /// <remarks>
+    /// This method is useful when using drag-and-drop, because that usually implies that the <see cref="UIComponent"/> position is incremented or decremented as the object is dragged.
+    /// Doing that when <see cref="X"/> and <see cref="Y"/> are set to <see cref="PixelUnit.Auto"/> would be impossible, so the first step is to cature the actual positions and then using 
+    /// manual positioning.
+    /// </remarks>
+    public void CaptureActualPosition()
+    {
+        var topLeft = _relativeDrawingArea.TopLeft;
+        X.Value = topLeft.X;
+        Y.Value = topLeft.Y;
     }
 
     /// <summary>
@@ -367,12 +389,6 @@ public abstract class UIComponent
     protected virtual List<Area?> RepositionChildrenSecondPass(Size availableSpace, IEnumerable<Area> childrenAreas) => [];
 
     /// <summary>
-    /// The size of <see langword="this" /> component at the latest frame rendering.
-    /// </summary>
-    /// TODO: remove
-    public Size ActualSize => _relativeDrawingArea.Size;
-
-    /// <summary>
     /// Adds a child to <see langword="this" /> component.
     /// </summary>
     /// <param name="component">The child component to add.</param>
@@ -385,13 +401,13 @@ public abstract class UIComponent
     protected virtual void AddChildNode(UIWidget component, int? index = null)
     {
         Application.LifeCycle.ThrowIfPropertyCannotBeSet();
+        if (Root != null) Root.Invalidator.NeedZIndexUpdate = true;
         component.Parent?.RemoveChildNode(component);
         component.Parent = this;
         component.RecomputeLevel();
         component.InvalidateAll();
         component.AttachCanvas();
         Invalidate();
-        Application.EventSystem.InvalidateRendering();
         if (index == null) _childNodes.Add(component);
         else if (index + 1 < _childNodes.Count) _childNodes.Insert((int)index + 1, component);
         else _childNodes.Add(component);
@@ -413,6 +429,7 @@ public abstract class UIComponent
     protected bool RemoveChildNode(UIWidget component)
     {
         Application.LifeCycle.ThrowIfPropertyCannotBeSet();
+        if (Root != null) Root.Invalidator.NeedZIndexUpdate = true;
         Invalidate();
 
         if (component.Parent == this)
@@ -429,7 +446,7 @@ public abstract class UIComponent
         MousePress?.Invoke(this, mouseEventArgs);
         if (mouseEventArgs.Button == MouseButton.Left)
         {
-            MouseDragBegin?.Invoke(this, EventArgs.Empty);
+            MouseDragBegin?.Invoke(this, mouseEventArgs);
             Root?.GlobalEventInformation.MarkComponentAsDragged(this);
         }
 
@@ -643,45 +660,22 @@ public abstract class UIComponent
         RenderingAreaChange?.Invoke(this, new RenderingAreaEventArgs(_relativeDrawingArea));
     }
 
-    /// <summary>
-    /// Computed the final component rendering area.
-    /// </summary>
-    /// <param name="relativeDrawingArea">A way to override the rendering area calculated values.</param>
-    /// <param name="rootCall">Whether this is called from <see cref="MeasureProvider"/> and it requires to perform the invalidated subtree area re-calculation.</param>
-    /// <exception cref="InvalidOperationException">
-    /// If <see cref="RepositionChildren(Size, IEnumerable{Size})"/> return list is not empty and it has not the same size as <see cref="_childNodes"/>.
-    /// </exception>
-    internal void ComputeDrawingAreasSecondPass()
-    {
-        var childrenAreas = RepositionChildrenSecondPass(_relativeDrawingArea.Size, _childNodes.Select(c => c._relativeDrawingArea));
-
-        // If rendering area has not changed and children area has not changed, no need to proceed.
-        if (childrenAreas.Count == 0)
-        {
-            return;
-        }
-
-        if (childrenAreas.Count != 0 && childrenAreas.Count != _childNodes.Count)
-        {
-            throw new InvalidOperationException($"{nameof(RepositionChildren)} must return the same number of elements as the number of children or be empty: {childrenAreas.Count()} provided but {_childNodes.Count} exist");
-        }
-
-        for (var i = 0; i < _childNodes.Count; i++)
-        {
-            var child = _childNodes[i];
-            var childArea = childrenAreas[i];
-            if (childArea != null) child.ComputeDrawingAreas(childArea);
-        }
-
-        Validate();
-        RenderingAreaChange?.Invoke(this, new RenderingAreaEventArgs(_relativeDrawingArea));
-    }
-
     internal MouseEventArgs CreateEventWithRelativeLocation(MouseEventArgs mouseEventArgs) =>
         new(mouseEventArgs.AbsoluteLocation,
             mouseEventArgs.AbsoluteLocation - _absoluteDrawingArea.TopLeft,
             mouseEventArgs.Button);
 
+    internal uint UpdateZIndices(uint baseZIndex)
+    {
+        // TODO: optimize traversal only for affected z indices!
+        var currentZIndex = Canvas.UpdateZIndices(baseZIndex);
+        foreach (var child in _childNodes)
+        {
+            currentZIndex = child.UpdateZIndices(currentZIndex);
+        }
+
+        return currentZIndex;
+    }
 
     private void Focus_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
     {

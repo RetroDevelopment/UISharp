@@ -72,7 +72,7 @@ public abstract class UIRoot : UIComponent, IContainer
         Invalidator = new Invalidator();
         MeasureProvider = new MeasureProvider(Invalidator);
         RenderProvider = new RenderProvider(Invalidator);
-        RenderingEngine = renderingEngine ?? new OpenGLRenderingEngine(application.Dispatcher, application.Logger, new SDLOpenGLRenderingContext(application));
+        RenderingEngine = renderingEngine ?? new OpenGLRenderingEngine(application.Dispatcher, application.Logger, new SDLOpenGLRenderingContext(application.Logger));
 
         MouseMove += UIRoot_MouseMove;
         MouseRelease += UIRoot_MouseRelease;
@@ -99,6 +99,15 @@ public abstract class UIRoot : UIComponent, IContainer
         var children = GetChildrenNodes().Where(c => c.ID.Value == id);
         if (!children.Any()) throw new ArgumentException($"Child with ID {id} not found in component with id {ID.Value}");
         return (TComponent)children.First();
+    }
+
+    internal void EnsureZIndicesUpdated()
+    {
+        if (Invalidator.NeedZIndexUpdate)
+        {
+            UpdateZIndices(1);
+            Invalidator.NeedZIndexUpdate = false;
+        }
     }
 
     private void UIRoot_MouseMove(UIComponent sender, OpenUI.Core.Windowing.Events.MouseEventArgs e)

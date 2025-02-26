@@ -67,7 +67,6 @@ public class MeasureProvider(Invalidator invalidator)
             {
                 var component = processQueue.Dequeue();
                 component.ComputeDrawingAreas(rootCall: true);
-                component.ComputeDrawingAreasSecondPass();
             }
 
             level = _invalidator.GetLowerInvalidatedLevel(level);

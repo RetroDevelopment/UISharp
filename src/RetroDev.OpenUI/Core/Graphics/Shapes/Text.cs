@@ -15,6 +15,12 @@ public class Text(ThreadDispatcher dispatcher, Font font) : RenderingElement(dis
     private Font _font = font;
 
     /// <summary>
+    /// Whether the text is not opaque but not transparent either.
+    /// </summary>
+    public override bool IsSemiTransparent =>
+        base.IsSemiTransparent || ForegroundColor.IsSemiTransparent;
+
+    /// <summary>
     /// The text color.
     /// </summary>
     public Color ForegroundColor

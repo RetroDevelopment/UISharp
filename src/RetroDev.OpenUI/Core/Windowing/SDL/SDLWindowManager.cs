@@ -44,7 +44,7 @@ public class SDLWindowManager : IWindowManager
     {
         _dispatcher = dispatcher;
         _logger = logger;
-        EventSystem = new SDLEventSystem(logger);
+        EventSystem = new SDLEventSystem(dispatcher, logger);
     }
 
     /// <summary>

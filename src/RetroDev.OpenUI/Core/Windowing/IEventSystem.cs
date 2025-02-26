@@ -98,29 +98,24 @@ public interface IEventSystem
     event TypeSafeEventHandler<IEventSystem, WindowEventArgs<MouseWheelEventArgs>> MouseWheel;
 
     /// <summary>
-    /// Before rendering.
-    /// </summary>
-    event TypeSafeEventHandler<IEventSystem, EventArgs> BeforeRender;
-
-    /// <summary>
-    /// Rendering is needed.
-    /// </summary>
-    event TypeSafeEventHandler<IEventSystem, EventArgs> Render;
-
-    /// <summary>
     /// Processes all the pending events.
+    /// This method must be blocking the calling thread waiting for events, then process all the events and exit.
     /// </summary>
-    void ProcessEvents();
+    /// <param name="timeoutMs">
+    /// The time in milliseconds after which this method must exit even if there are still events to process.
+    /// This guarantee that a frame is rendered even when the queue is pumped with too many events.
+    /// The time out does not apply to when waiting for an event, but it refers to the maximum processing time of events.
+    /// </param>
+    void ProcessEvents(long timeoutMs);
+
+    /// <summary>
+    /// Awakes the current thread if it is blocked by <see cref="ProcessEvents(long)"/>.
+    /// </summary>
+    void Signal();
 
     /// <summary>
     /// Terminates the event queue processing.
     /// </summary>
     /// <param name="emitQuitEvent">Whether to emit <see cref="ApplicationQuit"/>.</param>
     void Quit(bool emitQuitEvent);
-
-    // TODO: we will need a more sophysticated event queue for pushing custom events (dispatcher?)
-    /// <summary>
-    /// Push the invalidate rendering event.
-    /// </summary>
-    void InvalidateRendering();
 }

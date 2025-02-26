@@ -1,4 +1,5 @@
-﻿using OpenTK.Graphics.OpenGL;
+﻿using System.Collections.Immutable;
+using OpenTK.Graphics.OpenGL;
 using RetroDev.OpenUI.Core.Contexts;
 using RetroDev.OpenUI.Core.Graphics.Coordinates;
 using RetroDev.OpenUI.Core.Graphics.Fonts;
@@ -7,6 +8,7 @@ using RetroDev.OpenUI.Core.Graphics.Shapes;
 using RetroDev.OpenUI.Core.Logging;
 using RetroDev.OpenUI.Core.Windowing;
 using RetroDev.OpenUI.Presentation.Resources;
+using static SDL2.SDL;
 
 namespace RetroDev.OpenUI.Core.Graphics.OpenGL;
 
@@ -63,9 +65,13 @@ public class OpenGLRenderingEngine : IRenderingEngine
     private readonly ProceduralModelGenerator _modelGenerator;
 
     // TODO: use instanced rendering to batch all recatngles, circles, etc. in 3 draw call (+/- groups for e.g. list boxes which use sparate instances)
-    private readonly List<Rectangle> _recangles = [];
-    private readonly List<Circle> _circles = [];
-    private readonly List<Text> _texts = [];
+    private readonly HashSet<Rectangle> _recangles = [];
+    private readonly HashSet<Circle> _circles = [];
+    private readonly HashSet<Text> _texts = [];
+    private readonly HashSet<RenderingElement> _semiTransparentElements = [];
+    private List<RenderingElement> _backToFrontSortedSemiTransparentElements = [];
+
+    private bool _transparencyChanged = true;
 
     private Size _viewportSize = Size.Zero;
 
@@ -112,6 +118,9 @@ public class OpenGLRenderingEngine : IRenderingEngine
         // Load OpenGL.NET bindings
         context.LoadBinding();
 
+        var version = LoggingUtils.OpenGLCheck(() => GL.GetString(StringName.Version), _logger);
+        _logger.LogInfo($"OpenGL Version: {version}");
+
         _shader = new ShaderProgram([new Shader(ShaderType.VertexShader, shaderResources["default.vert"], _logger),
                                      new Shader(ShaderType.FragmentShader, shaderResources["default.frag"], _logger)],
                                      _logger);
@@ -122,6 +131,8 @@ public class OpenGLRenderingEngine : IRenderingEngine
         // GL.Enable(EnableCap.Multisample); // TODO: should enable anti aliasing
         LoggingUtils.OpenGLCheck(() => GL.Enable(EnableCap.Blend), _logger);
         LoggingUtils.OpenGLCheck(() => GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha), _logger);
+        LoggingUtils.OpenGLCheck(() => GL.Enable(EnableCap.DepthTest), _logger);
+        LoggingUtils.OpenGLCheck(() => GL.DepthFunc(DepthFunction.Less), _logger);
 
         _defaultTexture = CreateTexture(new RgbaImage([0, 0, 0, 0], new Size(1, 1)), interpolate: false);
         _modelGenerator = new ProceduralModelGenerator();
@@ -176,8 +187,10 @@ public class OpenGLRenderingEngine : IRenderingEngine
     /// <param name="rectangle">The rectangle to add.</param>
     public void Add(Rectangle rectangle)
     {
-        _recangles.Add(rectangle);
+        rectangle.ShapeChanged += RenderingElement_ShapeChanged;
+        RenderingElement_ShapeChanged(rectangle, EventArgs.Empty);
     }
+
 
     /// <summary>
     /// Adds the given <paramref name="circle"/> to the rendering canvas.
@@ -185,7 +198,8 @@ public class OpenGLRenderingEngine : IRenderingEngine
     /// <param name="circle">The circle to add.</param>
     public void Add(Circle circle)
     {
-        _circles.Add(circle);
+        circle.ShapeChanged += RenderingElement_ShapeChanged;
+        RenderingElement_ShapeChanged(circle, EventArgs.Empty);
     }
 
     /// <summary>
@@ -194,7 +208,8 @@ public class OpenGLRenderingEngine : IRenderingEngine
     /// <param name="text">The text to add.</param>
     public void Add(Text text)
     {
-        _texts.Add(text);
+        text.ShapeChanged += RenderingElement_ShapeChanged;
+        RenderingElement_ShapeChanged(text, EventArgs.Empty);
     }
 
     /// <summary>
@@ -203,6 +218,8 @@ public class OpenGLRenderingEngine : IRenderingEngine
     /// <param name="rectangle">The rectangle to add.</param>
     public void Remove(Rectangle rectangle)
     {
+        rectangle.ShapeChanged -= RenderingElement_ShapeChanged;
+        _transparencyChanged |= _semiTransparentElements.Remove(rectangle);
         _recangles.Remove(rectangle);
     }
 
@@ -212,6 +229,8 @@ public class OpenGLRenderingEngine : IRenderingEngine
     /// <param name="circle">The circle to add.</param>
     public void Remove(Circle circle)
     {
+        circle.ShapeChanged -= RenderingElement_ShapeChanged;
+        _transparencyChanged |= _semiTransparentElements.Remove(circle);
         _circles.Remove(circle);
     }
 
@@ -221,6 +240,8 @@ public class OpenGLRenderingEngine : IRenderingEngine
     /// <param name="text">The text to add.</param>
     public void Remove(Text text)
     {
+        text.ShapeChanged -= RenderingElement_ShapeChanged;
+        _transparencyChanged |= _semiTransparentElements.Remove(text);
         _texts.Remove(text);
     }
 
@@ -265,12 +286,23 @@ public class OpenGLRenderingEngine : IRenderingEngine
     /// </param>
     public void Render(Text text)
     {
+        // TODO: refactor and optimize. Right now we need to render background rectangle.
         _dispatcher.ThrowIfNotOnUIThread();
         var area = text.RenderingArea;
         var clippingArea = text.ClipArea;
 
+        if (!text.BackgroundColor.IsTransparent)
+        {
+            var rect = new Rectangle(_dispatcher);
+            rect.BackgroundColor = text.BackgroundColor;
+            rect.RenderingArea = text.RenderingArea;
+            rect.ClipArea = clippingArea;
+            rect.ZIndex = text.ZIndex;
+            Render(rect);
+        }
+
         if (string.IsNullOrEmpty(text.Value)) return;
-        var textKey = $"{text.Value}{text.ForegroundColor}";
+        var textKey = $"{text.Value}{text.Font.Size}{text.Font.Identifier}";
 
         if (!_textCache.TryGetValue(textKey, out var textureId))
         {
@@ -288,6 +320,8 @@ public class OpenGLRenderingEngine : IRenderingEngine
         _shader.SetClipArea((clippingArea ?? new Area(Point.Zero, ViewportSize)).ToVector4(ViewportSize));
         _shader.SetOffsetMultiplier(OpenTK.Mathematics.Vector2.Zero);
         _shader.SetTextureMode(ShaderProgram.TextureMode.GrayScale);
+        _shader.SetZIndex(text.ZIndex.Foreground);
+        _shader.SetVisible(text.Visible);
         _modelGenerator.Rectangle.Render(textureId);
     }
 
@@ -325,7 +359,7 @@ public class OpenGLRenderingEngine : IRenderingEngine
         _context.MakeCurrent();
         var openGlBackgroundColor = backroundColor.ToOpenGLColor();
         LoggingUtils.OpenGLCheck(() => GL.ClearColor(openGlBackgroundColor.X, openGlBackgroundColor.Y, openGlBackgroundColor.Z, openGlBackgroundColor.W), _logger);
-        LoggingUtils.OpenGLCheck(() => GL.Clear(ClearBufferMask.ColorBufferBit), _logger);
+        LoggingUtils.OpenGLCheck(() => GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit), _logger);
         _modelGenerator.ResetDrawCallsCount();
     }
 
@@ -364,8 +398,8 @@ public class OpenGLRenderingEngine : IRenderingEngine
             radiusY = rectangle.CornerRadiusY ?? 0.0f;
         }
 
-        GenericRender(shape.BackgroundColor, area, clippingArea, shape.Rotation, null, radiusX, radiusY, openglShape, shape.TextureID);
-        GenericRender(shape.BorderColor, area, clippingArea, shape.Rotation, shape.BorderThickness, radiusX, radiusY, openglShape, shape.TextureID);
+        GenericRender(shape.BackgroundColor, area, clippingArea, shape.Rotation, null, radiusX, radiusY, openglShape, shape.ZIndex.Background, shape.Visible, shape.TextureID);
+        GenericRender(shape.BorderColor, area, clippingArea, shape.Rotation, shape.BorderThickness, radiusX, radiusY, openglShape, shape.ZIndex.Foreground, shape.Visible, shape.TextureID);
     }
 
     private void GenericRender(Color color,
@@ -376,6 +410,8 @@ public class OpenGLRenderingEngine : IRenderingEngine
                                float xRadius,
                                float yRadius,
                                Model2D openglShape,
+                               float zIndex,
+                               bool visible,
                                int? textureId)
     {
         // TODO: use barycentric coordinates
@@ -393,6 +429,8 @@ public class OpenGLRenderingEngine : IRenderingEngine
         _shader.SetOffsetMultiplier(NormalizeRadius(xRadius, yRadius, area.Size));
         // TODO: When implementing Texture class, handle the texture format there so we support also gray scale here depending on how the texture was created.
         _shader.SetTextureMode(ShaderProgram.TextureMode.None);
+        _shader.SetZIndex(zIndex);
+        _shader.SetVisible(visible);
         openglShape.Render(textureId ?? _defaultTexture);
     }
 
@@ -425,19 +463,75 @@ public class OpenGLRenderingEngine : IRenderingEngine
 
     private void RenderAllElements()
     {
+        // TODO: use z-buffer in opengl once using render instancing.
+
+        LoggingUtils.OpenGLCheck(() => GL.DepthMask(true), _logger);
         foreach (var rectangle in _recangles)
         {
-            if (rectangle.Visible) Render(rectangle);
+            Render(rectangle);
         }
 
         foreach (var circle in _circles)
         {
-            if (circle.Visible) Render(circle);
+            Render(circle);
         }
 
         foreach (var text in _texts)
         {
-            if (text.Visible) Render(text);
+            Render(text);
+        }
+
+        LoggingUtils.OpenGLCheck(() => GL.DepthMask(false), _logger);
+        if (_transparencyChanged)
+        {
+            _backToFrontSortedSemiTransparentElements = _semiTransparentElements.OrderByDescending(e => e.ZIndex.Background).ToList();
+        }
+
+        foreach (var shape in _backToFrontSortedSemiTransparentElements)
+        {
+            if (!shape.Visible) continue;
+            if (shape is Rectangle rectangle) Render(rectangle);
+            if (shape is Circle circle) Render(circle);
+            if (shape is Text text) Render(text);
+        }
+        LoggingUtils.OpenGLCheck(() => GL.DepthMask(true), _logger);
+        _transparencyChanged = false;
+    }
+
+    private void RenderingElement_ShapeChanged(RenderingElement shape, EventArgs e)
+    {
+        if (!shape.IsSemiTransparent)
+        {
+            // TODO: add visitor
+            _transparencyChanged |= _semiTransparentElements.Remove(shape);
+            if (shape is Rectangle rectangle)
+            {
+                _recangles.Add(rectangle);
+            }
+            else if (shape is Circle circle)
+            {
+                _circles.Add(circle);
+            }
+            else if (shape is Text text)
+            {
+                _texts.Add(text);
+            }
+        }
+        else
+        {
+            _transparencyChanged |= _semiTransparentElements.Add(shape);
+            if (shape is Rectangle rectangle)
+            {
+                _recangles.Remove(rectangle);
+            }
+            else if (shape is Circle circle)
+            {
+                _circles.Remove(circle);
+            }
+            else if (shape is Text text)
+            {
+                _texts.Remove(text);
+            }
         }
     }
 }

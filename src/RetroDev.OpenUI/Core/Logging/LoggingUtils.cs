@@ -21,7 +21,7 @@ internal static class LoggingUtils
         ErrorCode error;
         while ((error = GL.GetError()) != ErrorCode.NoError)
         {
-            logger.LogError($"OpenGL {error}: {GL.GetError()}");
+            logger.LogError($"OpenGL error: {error}");
         }
     }
 

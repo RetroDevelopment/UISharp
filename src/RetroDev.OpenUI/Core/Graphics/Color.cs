@@ -155,9 +155,14 @@ public readonly record struct Color(byte RedComponent = 0, byte GreenComponent =
     public static readonly Color Mint = new(189, 252, 201, 255);
 
     /// <summary>
-    /// Whether <see langword="this" /> color is <see cref="Transparent"/>.
+    /// Whether <see langword="this" /> color is transparent.
     /// </summary>
     public bool IsTransparent => AlphaComponent == 0;
+
+    /// <summary>
+    /// Whether <see langword="this" /> color is not opaque but not fully transparent either.
+    /// </summary>
+    public bool IsSemiTransparent => AlphaComponent != byte.MaxValue && !IsTransparent;
 
     /// <summary>
     /// Creates a new color from the given <paramref name="expression"/> representation.

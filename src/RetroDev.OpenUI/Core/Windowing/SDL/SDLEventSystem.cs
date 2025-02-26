@@ -11,17 +11,17 @@ namespace RetroDev.OpenUI.Core.Windowing.SDL;
 /// <summary>
 /// Manages UI events using SDL.
 /// </summary>
-/// <param name="logger">The logger used to log events.</param>
-internal class SDLEventSystem(ILogger logger) : IEventSystem
+internal class SDLEventSystem : IEventSystem
 {
     private enum SDL_CustomEventType : uint
     {
-        SDL_INVALIDATE_RENDERING = SDL_EventType.SDL_USEREVENT + 1, // Custom event type, starting from SDL_USEREVENT
-        SDL_QUIT = SDL_EventType.SDL_USEREVENT + 2,
+        SDL_QUIT = SDL_EventType.SDL_USEREVENT + 1,
+        SDL_SIGNAL = SDL_EventType.SDL_USEREVENT + 2
     }
 
-    private ILogger _logger = logger;
-    private bool _invalidated = false; // TODO: add invalidation logic per component. And maybe glScissor for retained mode. Or detect actual UI property change. If not do not invalidate.
+    private readonly ThreadDispatcher _dispatcher;
+    private readonly ILogger _logger;
+    private bool _signaled = false;
 
     /// <summary>
     /// An event that indicates to quit the application.
@@ -111,21 +111,33 @@ internal class SDLEventSystem(ILogger logger) : IEventSystem
     public event TypeSafeEventHandler<IEventSystem, WindowEventArgs<MouseWheelEventArgs>>? MouseWheel;
 
     /// <summary>
-    /// Before rendering.
-    /// </summary>
-    public event TypeSafeEventHandler<IEventSystem, EventArgs>? BeforeRender;
-
-    /// <summary>
     /// Rendering is needed.
     /// </summary>
     public event TypeSafeEventHandler<IEventSystem, EventArgs>? Render;
 
     /// <summary>
-    /// Process all the events in the event queue.
+    /// Creates a new event system based on SDL.
     /// </summary>
-    public void ProcessEvents()
+    /// <param name="dispatcher">Manages the UI thread and dispatches UI operations from other thread to the UI thread.</param>
+    /// <param name="logger">The logger used to log events.</param>
+    public SDLEventSystem(ThreadDispatcher dispatcher, ILogger logger)
     {
+        _dispatcher = dispatcher;
+        _logger = logger;
         SDL_StartTextInput();
+    }
+
+    /// <summary>
+    /// Processes all the pending events.
+    /// This method must be blocking the calling thread waiting for events, then process all the events and exit.
+    /// </summary>
+    /// <param name="timeoutMs">
+    /// The time in milliseconds after which this method must exit even if there are still events to process.
+    /// This guarantee that a frame is rendered even when the queue is pumped with too many events.
+    /// </param>
+    public void ProcessEvents(long timeoutMs)
+    {
+        _dispatcher.ThrowIfNotOnUIThread();
         SDL_WaitEvent(out var currentEvent);
 
         var stopwatch = Stopwatch.StartNew();
@@ -134,6 +146,7 @@ internal class SDLEventSystem(ILogger logger) : IEventSystem
         do
         {
             if ((int)currentEvent.type == (int)SDL_CustomEventType.SDL_QUIT) break;
+            if ((int)currentEvent.type == (int)SDL_CustomEventType.SDL_SIGNAL) _signaled = false;
             switch (currentEvent.type)
             {
                 case SDL_EventType.SDL_MOUSEBUTTONDOWN:
@@ -263,23 +276,20 @@ internal class SDLEventSystem(ILogger logger) : IEventSystem
                     break;
             }
             // Exit the loop if more than 10 milliseconds have passed to render frame (otherwise the loop can last too long skipping frames)
-            if (stopwatch.ElapsedMilliseconds > 10) break;
+            if (stopwatch.ElapsedMilliseconds > timeoutMs) break;
         } while (SDL_PollEvent(out currentEvent) != 0);
-
-        SDL_StopTextInput();
-        if (_invalidated) EmitRenderingEvents();
     }
 
     /// <summary>
-    /// Push the invalidate rendering event.
+    /// Awakes the current thread if it is blocked by <see cref="ProcessEvents(long)"/>.
     /// </summary>
-    public void InvalidateRendering()
+    public void Signal()
     {
-        if (_invalidated) return;
-        var invalidateEvent = new SDL_Event();
-        invalidateEvent.type = (SDL_EventType)SDL_CustomEventType.SDL_INVALIDATE_RENDERING; // Set the event type
-        SDL_PushEvent(ref invalidateEvent);
-        _invalidated = true;
+        _dispatcher.ThrowIfNotOnUIThread(); // TODO: this should probably be thread safe as called from non UI thread to actually wake up the event queue?
+        var signalEvent = new SDL_Event();
+        signalEvent.type = (SDL_EventType)SDL_CustomEventType.SDL_SIGNAL;
+        SDL_PushEvent(ref signalEvent);
+        _signaled = true;
     }
 
     /// <summary>
@@ -288,10 +298,12 @@ internal class SDLEventSystem(ILogger logger) : IEventSystem
     /// <param name="emitQuitEvent">Whether to emit <see cref="ApplicationQuit"/>.</param>
     public void Quit(bool emitQuitEvent)
     {
+        _dispatcher?.ThrowIfNotOnUIThread();
         var quitEvent = new SDL_Event();
-        quitEvent.type = (SDL_EventType)SDL_CustomEventType.SDL_QUIT; // Set the event type
+        quitEvent.type = (SDL_EventType)SDL_CustomEventType.SDL_QUIT;
         SDL_PushEvent(ref quitEvent);
         if (emitQuitEvent) ApplicationQuit?.Invoke(this, EventArgs.Empty);
+        SDL_StopTextInput(); // TODO: move this into a dispose method
     }
 
     private static string GetString(SDL_TextInputEvent textInputEvent)
@@ -351,11 +363,4 @@ internal class SDLEventSystem(ILogger logger) : IEventSystem
         _ => MouseButton.Unknown,
         //TODO: add more buttons
     };
-
-    private void EmitRenderingEvents()
-    {
-        BeforeRender?.Invoke(this, EventArgs.Empty);
-        Render?.Invoke(this, EventArgs.Empty);
-        _invalidated = false; // TODO: invalidated maybe won't be needed? In general we will have a more uniform custom event dispatcher
-    }
 }

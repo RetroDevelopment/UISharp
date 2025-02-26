@@ -176,8 +176,6 @@ public class Window : UIRoot
         UpdateCloseBehavior();
 
         FullScreen.ValueChange += FullScreen_ValueChange;
-
-        Application.EventSystem.Render += EventSystem_Render;
         Invalidate();
 
         BackgroundColor.BindDestinationToSource(Application.Theme.MainBackground);
@@ -292,7 +290,7 @@ public class Window : UIRoot
         return new Size(maxRight, maxBottom);
     }
 
-    private void EventSystem_Render(IEventSystem sender, EventArgs e)
+    internal void Render()
     {
         UpdateWindowAppearance();
         var renderingEngine = RenderingEngine;

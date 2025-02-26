@@ -1,4 +1,5 @@
 ﻿using RetroDev.OpenUI.Components.Base;
+using RetroDev.OpenUI.Components.Core.AutoArea;
 using RetroDev.OpenUI.Components.Shapes;
 using RetroDev.OpenUI.Core.Graphics;
 using RetroDev.OpenUI.Core.Graphics.Coordinates;
@@ -12,14 +13,9 @@ namespace RetroDev.OpenUI.Components.Containers;
 /// </summary>
 public class ScrollView : UIContainer, ISingleContainer
 {
-    private readonly Rectangle _verticalScrollBar;
-    private readonly Rectangle _horizontalScrollBar;
-
-    private const int ScrollBarSize = 15;
-    private const int ScrollBarAlpha = 100;
     private UIWidget? _child;
-    private bool _moveHorizontalBar = false;
-    private bool _moveVerticalBar = false;
+    private readonly ScrollBar _verticalScrollBar;
+    private readonly ScrollBar _horizontalScrollBar;
 
     /// <inheritdoc />
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
@@ -33,9 +29,12 @@ public class ScrollView : UIContainer, ISingleContainer
     /// </summary>
     public UIProperty<ScrollView, Color> ScrollBarColor { get; }
 
+    /// <summary>
+    /// How big the scroll bars should be.
+    /// </summary>
+    public UIProperty<ScrollView, PixelUnit> ScrollBarThickness { get; }
+
     // TODO: scroll interval in pixels (hor and vert)
-    // TODO: scroll arrows
-    // TODO: scroll with mouse wheel
 
     /// <summary>
     /// Creates a new scroll view.
@@ -43,21 +42,28 @@ public class ScrollView : UIContainer, ISingleContainer
     /// <param name="application">The application that contain this scroll view.</param>
     public ScrollView(Application application) : base(application)
     {
-        ScrollBarColor = new UIProperty<ScrollView, Color>(this, Application.Theme.PrimaryColorContrast, bindingType: BindingType.DestinationToSource);
+        ScrollBarColor = new UIProperty<ScrollView, Color>(this, Color.Transparent);
+        ScrollBarThickness = new UIProperty<ScrollView, PixelUnit>(this, 15);
+        ScrollBarColor.BindDestinationToSource(Application.Theme.PrimaryColorContrast, c => c.WithAlpha(100));
 
-        _verticalScrollBar = new Rectangle(application);
-        _verticalScrollBar.BackgroundColor.BindDestinationToSource(ScrollBarColor, c => c.WithAlpha(ScrollBarAlpha));
-        Canvas.Add(_verticalScrollBar);
+        _verticalScrollBar = new ScrollBar(application);
+        _verticalScrollBar.BackgroundColor.BindDestinationToSource(ScrollBarColor);
+        _verticalScrollBar.Width.BindDestinationToSource(ScrollBarThickness);
+        _verticalScrollBar.HorizontalAlignment.Value = Alignment.Right;
+        _verticalScrollBar.MouseDrag += VerticalScrollBar_MouseDrag;
 
-        _horizontalScrollBar = new Rectangle(application);
-        _horizontalScrollBar.BackgroundColor.BindDestinationToSource(ScrollBarColor, c => c.WithAlpha(ScrollBarAlpha));
-        Canvas.Add(_horizontalScrollBar);
+        _horizontalScrollBar = new ScrollBar(application);
+        _horizontalScrollBar.BackgroundColor.BindDestinationToSource(ScrollBarColor);
+        _horizontalScrollBar.Height.BindDestinationToSource(ScrollBarThickness);
+        _horizontalScrollBar.VerticalAlignment.Value = Alignment.Bottom;
+        _horizontalScrollBar.MouseDrag += HorizontalScrollBar_MouseDrag;
 
-        // MouseDrag += ScrollView_MouseDrag;
-        // MouseDragBegin += ScrollView_MouseDragBegin;
-        // MouseDragEnd += ScrollView_MouseDragEnd;
+        AddChildNode(_verticalScrollBar);
+        AddChildNode(_horizontalScrollBar);
+
         MouseWheel += ScrollView_MouseWheel;
-        RenderFrame += ScrollView_RenderFrame;
+        application.SecondPassMeasure += Application_SecondPassMeasure;
+        application.ApplicationQuit += Application_ApplicationQuit;
     }
 
     /// <summary>
@@ -69,166 +75,202 @@ public class ScrollView : UIContainer, ISingleContainer
         if (_child != null) RemoveChildNode(_child);
         _child = component;
 
-        if (_child.X.Value == PixelUnit.Auto) _child.X.Value = 0;
-        if (_child.Y.Value == PixelUnit.Auto) _child.Y.Value = 0;
-
-        AddChildNode(_child);
+        AddChildNode(_child, -1);
     }
 
-    private void ScrollView_RenderFrame(UIComponent sender, RenderingEventArgs e)
+    private void VerticalScrollBar_MouseDrag(UIComponent sender, MouseEventArgs e)
     {
-        var horizontalScrollBarArea = GetHorizontalScrollBarArea();
-        var verticalScrollBarArea = GetVerticalScrollBarArea();
-
-        if (horizontalScrollBarArea != null)
-        {
-            var radius = Math.Min(Math.Min(horizontalScrollBarArea.Size.Width / 2.0f, horizontalScrollBarArea.Size.Height / 2.0f), ScrollBarSize / 2.0f);
-            _horizontalScrollBar.RelativeRenderingArea.Value = horizontalScrollBarArea;
-            _horizontalScrollBar.CornerRadiusX.Value = radius;
-            _horizontalScrollBar.CornerRadiusY.Value = radius;
-            _horizontalScrollBar.Visible.Value = true;
-        }
-        else
-        {
-            _horizontalScrollBar.Visible.Value = false;
-        }
-
-        if (verticalScrollBarArea != null)
-        {
-            var radius = Math.Min(Math.Min(verticalScrollBarArea.Size.Width / 2.0f, verticalScrollBarArea.Size.Height / 2.0f), ScrollBarSize / 2.0f);
-            _verticalScrollBar.RelativeRenderingArea.Value = verticalScrollBarArea;
-            _verticalScrollBar.CornerRadiusX.Value = radius;
-            _verticalScrollBar.CornerRadiusY.Value = radius;
-            _verticalScrollBar.Visible.Value = true;
-        }
-        else
-        {
-            _verticalScrollBar.Visible.Value = false;
-        }
+        if (_child == null) return;
+        _child.CaptureActualPosition();
+        var delta = _verticalScrollBar.Delta!.Y;
+        var childSizeScrollViewRatio = _child.ActualSize.Height / ActualSize.Height;
+        _child.Y.Value -= delta * childSizeScrollViewRatio;
     }
 
-    private void ScrollView_MouseDragBegin(UIComponent sender, MouseEventArgs e)
+    private void HorizontalScrollBar_MouseDrag(UIComponent sender, MouseEventArgs e)
     {
-        var horizontalScrollBarArea = GetHorizontalScrollBarArea();
-        var verticalScrollBarArea = GetVerticalScrollBarArea();
-
-        if (horizontalScrollBarArea != null && e.RelativeLocation.IsWithin(horizontalScrollBarArea))
-        {
-            _moveHorizontalBar = true;
-        }
-
-        if (verticalScrollBarArea != null && e.RelativeLocation.IsWithin(verticalScrollBarArea))
-        {
-            _moveVerticalBar = true;
-        }
-    }
-
-    private void ScrollView_MouseDragEnd(UIComponent sender, MouseEventArgs e)
-    {
-        _moveHorizontalBar = false;
-        _moveVerticalBar = false;
+        if (_child == null) return;
+        _child.CaptureActualPosition();
+        var delta = _horizontalScrollBar.Delta!.X;
+        var childSizeScrollViewRatio = _child.ActualSize.Width / ActualSize.Width;
+        _child.X.Value -= delta * childSizeScrollViewRatio;
     }
 
     private void ScrollView_MouseWheel(UIComponent sender, MouseWheelEventArgs e)
     {
-        // TODO: mouseDrag event and this event join in same method
         if (_child == null) return;
-        var mouseWheelSpeed = 4.0f; // How fast scroll should go.
+        _child.CaptureActualPosition();
+        var horizontalMetrics = GetScrollBarMetrics(_child.X.Value, ActualSize.Width, _child.ActualSize.Width);
+        var verticalMetrics = GetScrollBarMetrics(_child.Y.Value, ActualSize.Height, _child.ActualSize.Height);
 
-        var horizontalScrollBarArea = GetHorizontalScrollBarArea();
-        var verticalScrollBarArea = GetVerticalScrollBarArea();
-        var maximumHorizontalScrollBarAreaWidth = GetMaximumHorizontalScrollBarAreaWidth();
-        var maximumVerticalScrollBarAreaHeight = GetMaximumVerticalScrollBarAreaHeight();
-
-        if (!_moveHorizontalBar && horizontalScrollBarArea != null)
-        {
-            var offsetXFactor = -(e.HorizontalMovement * mouseWheelSpeed) / (maximumHorizontalScrollBarAreaWidth - horizontalScrollBarArea.Size.Width);
-            var maximumChildHorizontalScroll = GetMaximumChildHorizontalScroll();
-            _child.X.Value = Math.Clamp(_child.X.Value - offsetXFactor * maximumChildHorizontalScroll, -maximumChildHorizontalScroll, 0.0f);
-        }
-
-        if (!_moveVerticalBar && verticalScrollBarArea != null)
-        {
-            var offsetYFactor = -(e.VerticalMovement * mouseWheelSpeed) / (maximumVerticalScrollBarAreaHeight - verticalScrollBarArea.Size.Height);
-            var maximumChildVerticalScroll = GetMaximumChildVerticalScroll();
-            _child.Y.Value = Math.Clamp(_child.Y.Value - offsetYFactor * maximumChildVerticalScroll, -maximumChildVerticalScroll, 0.0f);
-        }
+        var childSize = _child.ActualSize;
+        // Scroll by 30% of full child size fo each mouse wheel movement
+        if (horizontalMetrics.ShouldDisplay) _child.X.Value += (e.HorizontalMovement / 30.0f) * childSize.Width;
+        if (verticalMetrics.ShouldDisplay) _child.Y.Value += (e.VerticalMovement / 30.0f) * childSize.Height;
     }
 
-    /*private void ScrollView_MouseDrag(UIComponent sender, MouseDragEventArgs e)
+    private void Application_SecondPassMeasure(Application sender, EventArgs e)
+    {
+        if (_child == null)
+        {
+            _horizontalScrollBar.Visibility.Value = ComponentVisibility.Hidden;
+            _verticalScrollBar.Visibility.Value = ComponentVisibility.Hidden;
+            return;
+        }
+
+        _child.CaptureActualPosition();
+        AdjustChildHorizontalPosition();
+        AdjustChildVerticalPosition();
+        UpdateHorizontalScrollBarSizeAndPosition();
+        UpdateVerticalScrollBarSizeAndPosition();
+    }
+
+    private void Application_ApplicationQuit(Application sender, EventArgs e)
+    {
+        Application.SecondPassMeasure -= Application_SecondPassMeasure;
+    }
+
+    private void AdjustChildHorizontalPosition()
+    {
+        if (_child == null) return;
+        _child.X.Value = GetAdjustedPosition(ActualSize.Width, _child.ActualSize.Width, _child.X.Value);
+    }
+
+    private void AdjustChildVerticalPosition()
+    {
+        if (_child == null) return;
+        _child.Y.Value = GetAdjustedPosition(ActualSize.Height, _child.ActualSize.Height, _child.Y.Value);
+    }
+
+    private void UpdateVerticalScrollBarSizeAndPosition()
     {
         if (_child == null) return;
 
-        var horizontalScrollBarArea = GetHorizontalScrollBarArea();
-        var verticalScrollBarArea = GetVerticalScrollBarArea();
-        var maximumHorizontalScrollBarAreaWidth = GetMaximumHorizontalScrollBarAreaWidth();
-        var maximumVerticalScrollBarAreaHeight = GetMaximumVerticalScrollBarAreaHeight();
-
-        if (_moveHorizontalBar && horizontalScrollBarArea != null)
+        var verticalScrollBarMetrics = GetScrollBarMetrics(_child.Y.Value, ActualSize.Height, _child.ActualSize.Height);
+        if (verticalScrollBarMetrics.ShouldDisplay)
         {
-            var offsetXFactor = e.Offset.X / (maximumHorizontalScrollBarAreaWidth - horizontalScrollBarArea.Size.Width);
-            var maximumChildHorizontalScroll = GetMaximumChildHorizontalScroll();
-            _child.X.Value = Math.Clamp(_child.X.Value - offsetXFactor * maximumChildHorizontalScroll, -maximumChildHorizontalScroll, 0.0f);
+            _verticalScrollBar.Visibility.Value = ComponentVisibility.Visible;
+            _verticalScrollBar.Y.Value = verticalScrollBarMetrics.BarStart;
+            _verticalScrollBar.Height.Value = verticalScrollBarMetrics.BarSize;
         }
-
-        if (_moveVerticalBar && verticalScrollBarArea != null)
+        else
         {
-            var offsetYFactor = e.Offset.Y / (maximumVerticalScrollBarAreaHeight - verticalScrollBarArea.Size.Height);
-            var maximumChildVerticalScroll = GetMaximumChildVerticalScroll();
-            _child.Y.Value = Math.Clamp(_child.Y.Value - offsetYFactor * maximumChildVerticalScroll, -maximumChildVerticalScroll, 0.0f);
+            _verticalScrollBar.Visibility.Value = ComponentVisibility.Hidden;
         }
-    }*/
-
-    private Area? GetHorizontalScrollBarArea()
-    {
-        if (_child == null) return null;
-
-        var scrollViewSize = ActualSize;
-        var childSize = _child.ActualSize;
-        var maximumHorizontalScrollBarAreaWidth = GetMaximumHorizontalScrollBarAreaWidth();
-        var widthFactor = maximumHorizontalScrollBarAreaWidth / childSize.Width;
-
-        if (widthFactor < 1.0f)
-        {
-            var maximumChildHorizontalScroll = GetMaximumChildHorizontalScroll();
-            var childHorizontalScroll = Math.Clamp(-_child.X.Value, 0.0f, maximumChildHorizontalScroll);
-            var childHorizontalScrollFactor = childHorizontalScroll / maximumChildHorizontalScroll;
-            var horizontalScollBarSize = new Size(maximumHorizontalScrollBarAreaWidth * widthFactor, ScrollBarSize);
-            var maximumHorizontalBarX = maximumHorizontalScrollBarAreaWidth - horizontalScollBarSize.Width;
-            var horizontalScrollBarLocation = new Point(maximumHorizontalBarX * childHorizontalScrollFactor,
-                                                        scrollViewSize.Height - ScrollBarSize);
-            return new Area(horizontalScrollBarLocation, horizontalScollBarSize);
-        }
-
-        return null;
     }
 
-    private Area? GetVerticalScrollBarArea()
+    private void UpdateHorizontalScrollBarSizeAndPosition()
     {
-        if (_child == null) return null;
+        if (_child == null) return;
 
-        var scrollViewSize = ActualSize;
-        var childSize = _child.ActualSize;
-        var maximumVerticalScollBarAreaHeight = GetMaximumVerticalScrollBarAreaHeight();
-        var heightFactor = maximumVerticalScollBarAreaHeight / childSize.Height;
-
-        if (heightFactor < 1.0f)
+        var horizontalScrollBarMetrics = GetScrollBarMetrics(_child.X.Value, ActualSize.Width, _child.ActualSize.Width);
+        if (horizontalScrollBarMetrics.ShouldDisplay)
         {
-            var maximumChildVerticalScroll = GetMaximumChildVerticalScroll();
-            var childVerticalScroll = Math.Clamp(-_child.Y.Value, 0.0f, maximumChildVerticalScroll);
-            var childVerticalScrollFactor = childVerticalScroll / maximumChildVerticalScroll;
-            var verticalScollBarSize = new Size(ScrollBarSize, maximumVerticalScollBarAreaHeight * heightFactor);
-            var maximumVerticalBarY = maximumVerticalScollBarAreaHeight - verticalScollBarSize.Height;
-            var verticalScrollBarLocation = new Point(scrollViewSize.Width - ScrollBarSize,
-                                                maximumVerticalBarY * childVerticalScrollFactor);
-            return new Area(verticalScrollBarLocation, verticalScollBarSize);
+            _horizontalScrollBar.X.Value = horizontalScrollBarMetrics.BarStart;
+            _horizontalScrollBar.Width.Value = horizontalScrollBarMetrics.BarSize;
+            _horizontalScrollBar.Visibility.Value = ComponentVisibility.Visible;
         }
-
-        return null;
+        else
+        {
+            _horizontalScrollBar.Visibility.Value = ComponentVisibility.Hidden;
+        }
     }
 
-    private PixelUnit GetMaximumChildHorizontalScroll() => _child!.ActualSize.Width - ActualSize.Width;
-    private PixelUnit GetMaximumChildVerticalScroll() => _child!.ActualSize.Height - ActualSize.Height;
-    private PixelUnit GetMaximumHorizontalScrollBarAreaWidth() => ActualSize.Width;
-    private PixelUnit GetMaximumVerticalScrollBarAreaHeight() => ActualSize.Height;
+    // Ensures that the child can be managed correctly inside this scroll view.
+    // This method apply to one dimension, and it is applied to both X and Y coordinates. 
+    private PixelUnit GetAdjustedPosition(float scrollViewSize, float childSize, float childPosition)
+    {
+        var maximumChildOffset = GetMaximumChildOffset(scrollViewSize, childSize);
+
+        // If the child can fit all in the scroll view, it has to be fully visible inside the view
+        // because no scroll bar will be available.
+        if (scrollViewSize > childSize)
+        {
+            if (childPosition < 0.0f || childPosition > scrollViewSize - childSize)
+            {
+                return PixelUnit.Auto;
+            }
+            else
+            {
+                return childPosition;
+            }
+        }
+        // Otherwise if the child is bigger than the scroll view and it is positioned with a positive
+        // offset, it is reset to position zero, because the scroll bar can only scroll children with a negative offset.
+        else if (childPosition > 0.0f)
+        {
+            return PixelUnit.Zero;
+        }
+        // Otherwise if the child is bigger than the scroll view and it is scrolled too far ahead that the scroll bar could not recover it
+        // set it ot the maximum negative offset.
+        else if (childPosition < -maximumChildOffset)
+        {
+            return -maximumChildOffset;
+        }
+        else
+        {
+            return childPosition;
+        }
+    }
+
+    private float GetMaximumChildOffset(float scrollViewSize, float childSize) =>
+        childSize - scrollViewSize;
+
+    private (bool ShouldDisplay, float BarStart, float BarSize) GetScrollBarMetrics(float childStart, float scrollViewSize, float childSize)
+    {
+        var scrollViewChildSizeRatio = scrollViewSize / childSize;
+        var shouldDisplay = scrollViewChildSizeRatio < 1.0f;
+        var barStart = -childStart * scrollViewChildSizeRatio;
+        var barSize = scrollViewSize * scrollViewChildSizeRatio;
+
+        return (shouldDisplay, barStart, barSize);
+    }
+
+    private class ScrollBar : UIWidget
+    {
+        private readonly Rectangle _barRectangle;
+        private Point? _mouseDragPosition;
+        private Point? _delta;
+
+        public Point? Delta => _delta;
+
+        public ScrollBar(Application application) : base(application)
+        {
+            _barRectangle = new Rectangle(application);
+            _barRectangle.BackgroundColor.BindDestinationToSource(BackgroundColor);
+            Canvas.Add(_barRectangle);
+
+            MouseDragBegin += ScrollBar_MouseDragBegin;
+            MouseDrag += ScrollBar_MouseDrag;
+            MouseDragEnd += ScrollBar_MouseDragEnd;
+            RenderFrame += ScrollBar_RenderFrame;
+        }
+
+        private void ScrollBar_RenderFrame(UIComponent sender, RenderingEventArgs e)
+        {
+            var cornerRadius = _barRectangle.ComputeCornerRadius(1.0f, e.RenderingAreaSize);
+            _barRectangle.RelativeRenderingArea.Value = e.RenderingAreaSize.Fill();
+            _barRectangle.CornerRadiusX.Value = cornerRadius;
+            _barRectangle.CornerRadiusY.Value = cornerRadius;
+        }
+
+        private void ScrollBar_MouseDragBegin(UIComponent sender, MouseEventArgs e)
+        {
+            _mouseDragPosition = e.AbsoluteLocation;
+        }
+
+        private void ScrollBar_MouseDrag(UIComponent sender, MouseEventArgs e)
+        {
+            _delta = e.AbsoluteLocation - _mouseDragPosition!;
+            _mouseDragPosition = e.AbsoluteLocation;
+        }
+
+        private void ScrollBar_MouseDragEnd(UIComponent sender, EventArgs e)
+        {
+            _mouseDragPosition = null;
+            _delta = null;
+        }
+
+        protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) => Size.Zero;
+    }
 }
