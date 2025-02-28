@@ -38,20 +38,11 @@ public class Label : UIWidget
     /// </summary>
     /// <param name="application">The application that contain this label.</param>
     /// <param name="text">The label display text.</param>
-    /// <param name="font">The label font.</param>
-    /// <param name="textColor">The label text color.</param>
-    public Label(Application application,
-                 string? text = null,
-                 Font? font = null,
-                 Color? textColor = null) : base(application, isFocusable: false, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
+    public Label(Application application, string text = "") : base(application, isFocusable: false, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
     {
-        Text = new UIProperty<Label, string>(this, text ?? string.Empty);
-        Font = font != null ?
-           new UIProperty<Label, Font>(this, font.Value) :
-           new UIProperty<Label, Font>(this, Application.DefaultFont, BindingType.DestinationToSource);
-        TextColor = textColor != null ?
-           new UIProperty<Label, Color>(this, textColor.Value) :
-           new UIProperty<Label, Color>(this, Application.Theme.TextColor, BindingType.DestinationToSource);
+        Text = new UIProperty<Label, string>(this, text);
+        Font = new UIProperty<Label, Font>(this, Application.DefaultFont, BindingType.DestinationToSource);
+        TextColor = new UIProperty<Label, Color>(this, Application.Theme.TextColor, BindingType.DestinationToSource);
 
         _text = new Text(application);
         _text.BackgroundColor.BindDestinationToSource(BackgroundColor);

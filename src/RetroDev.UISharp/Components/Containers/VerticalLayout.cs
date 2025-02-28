@@ -39,17 +39,15 @@ public class VerticalLayout : UIContainer, IContainer
         {
             var precedingPanelIndex = Children.ToList().FindIndex(c => c == after);
             if (precedingPanelIndex < 0) throw new ArgumentException("Vertical layout element not found");
-            var panel = new Panel(Application);
+            var panel = new Panel(Application, component);
             panel.AutoHeight.Value = AutoSize.Wrap;
-            panel.SetComponent(component);
             AddChildNode(panel, precedingPanelIndex);
             _panels.Insert(precedingPanelIndex + 1, panel);
         }
         else
         {
-            var panel = new Panel(Application);
+            var panel = new Panel(Application, component);
             panel.AutoHeight.Value = AutoSize.Wrap;
-            panel.SetComponent(component);
             _panels.Add(panel);
             AddChildNode(panel);
         }

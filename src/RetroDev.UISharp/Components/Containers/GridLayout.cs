@@ -1,7 +1,5 @@
 ﻿using RetroDev.UISharp.Components.Base;
 using RetroDev.UISharp.Core.Graphics.Coordinates;
-using RetroDev.UISharp.Core.Graphics.Shapes;
-using RetroDev.UISharp.Core.Windowing.Events;
 using RetroDev.UISharp.Presentation.Properties;
 
 namespace RetroDev.UISharp.Components.Containers;
@@ -44,10 +42,12 @@ public class GridLayout : UIContainer, IContainer
     /// Creates a new grid layout.
     /// </summary>
     /// <param name="application">The application owning this component.</param>
-    public GridLayout(Application application) : base(application)
+    /// <param name="rows">The number of layout rows.</param>
+    /// <param name="columns">The number of layout columns.</param>
+    public GridLayout(Application application, uint rows = 0, uint columns = 0) : base(application)
     {
-        Rows = new UIProperty<GridLayout, uint>(this, 0);
-        Columns = new UIProperty<GridLayout, uint>(this, 0);
+        Rows = new UIProperty<GridLayout, uint>(this, rows);
+        Columns = new UIProperty<GridLayout, uint>(this, columns);
         RowSizes = new UIProperty<GridLayout, string>(this, string.Empty);
         ColumnSizes = new UIProperty<GridLayout, string>(this, string.Empty);
     }
@@ -58,8 +58,7 @@ public class GridLayout : UIContainer, IContainer
     /// <param name="component">The component to add.</param>
     public void AddComponent(UIWidget component)
     {
-        var panel = new Panel(Application);
-        panel.SetComponent(component);
+        var panel = new Panel(Application, component);
         AddChildNode(panel);
     }
 
@@ -76,8 +75,7 @@ public class GridLayout : UIContainer, IContainer
         var count = Children.Count();
         if (position > count) throw new ArgumentException($"Cannot insert element in grid layout at row {row} column {column}: the layout has only {count} components");
 
-        var panel = new Panel(Application);
-        panel.SetComponent(component);
+        var panel = new Panel(Application, component);
         AddChildNode(panel, (int)position);
     }
 

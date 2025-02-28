@@ -60,9 +60,10 @@ public class EditBox : UIWidget
     /// Creates a new edit box to insert text.
     /// </summary>
     /// <param name="application">The application that contains this button.</param>
-    public EditBox(Application application) : base(application, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
+    /// <param name="text">The initial input text.</param>
+    public EditBox(Application application, string text = "") : base(application, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
     {
-        Text = new UIProperty<EditBox, string>(this, string.Empty);
+        Text = new UIProperty<EditBox, string>(this, text);
         Font = new UIProperty<EditBox, Font>(this, application.DefaultFont, BindingType.DestinationToSource);
         TextColor = new UIProperty<EditBox, Color>(this, Application.Theme.TextColor, BindingType.DestinationToSource);
         DisabledTextColor = new UIProperty<EditBox, Color>(this, Application.Theme.TextColorDisabled, BindingType.DestinationToSource);

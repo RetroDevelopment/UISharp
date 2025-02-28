@@ -44,9 +44,10 @@ public class ProgressBar : UIWidget
     /// Creates a new label.
     /// </summary>
     /// <param name="application">The application that contain this progress bar.</param>
-    public ProgressBar(Application application) : base(application, isFocusable: false)
+    /// <param name="value">The initial progress value.</param>
+    public ProgressBar(Application application, int value = 0) : base(application, isFocusable: false)
     {
-        Value = new UIProperty<ProgressBar, int>(this, 0);
+        Value = new UIProperty<ProgressBar, int>(this, value);
         MinimumValue = new UIProperty<ProgressBar, int>(this, 0);
         MaximumValue = new UIProperty<ProgressBar, int>(this, 100);
         ForegroundColor = new UIProperty<ProgressBar, Color>(this, application.Theme.SecondaryColorDisabled, BindingType.DestinationToSource);

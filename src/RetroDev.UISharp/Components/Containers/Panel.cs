@@ -22,12 +22,14 @@ public class Panel : UIContainer, ISingleContainer // TODO: ISingleContainer sho
     /// Creates a new panel.
     /// </summary>
     /// <param name="application">The application owning this component.</param>
-    public Panel(Application application) : base(application)
+    /// <param name="component">The component to be inserted in <see langword="this" /> <see cref="Panel"/>.</param>
+    public Panel(Application application, UIWidget? component = null) : base(application)
     {
+        if (component != null) SetComponent(component);
     }
 
     /// <summary>
-    /// Sets the component to be inserted in <see langword="this" /> panel.
+    /// Sets the component to be inserted in <see langword="this" /> <see cref="Panel"/>.
     /// </summary>
     /// <param name="component">The component to be inserted in <see langword="this" /> panel.</param>
     public void SetComponent(UIWidget component)

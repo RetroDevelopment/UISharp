@@ -60,35 +60,14 @@ public class Button : UIWidget
     /// </summary>
     /// <param name="application">The application that contains this button.</param>
     /// <param name="text">The button text.</param>
-    /// <param name="font">The button text font.</param>
-    /// <param name="textColor">The text color.</param>
-    /// <param name="disableTextColor">The text color when the button is disabled.</param>
-    /// <param name="focusColor">The color indicating that the button is focused.</param>
-    /// <param name="disableBackgroundColor">The background color when the button is disabled.</param>
-    public Button(Application application,
-                  string? text = null,
-                  Font? font = null,
-                  Color? textColor = null,
-                  Color? disableTextColor = null,
-                  Color? focusColor = null,
-                  Color? disableBackgroundColor = null) : base(application)
+    public Button(Application application, string text = "") : base(application)
     {
         Text = new UIProperty<Button, string>(this, text ?? string.Empty);
-        Font = font != null ?
-            new UIProperty<Button, Font>(this, font.Value) :
-            new UIProperty<Button, Font>(this, Application.DefaultFont, BindingType.DestinationToSource);
-        TextColor = textColor != null ?
-            new UIProperty<Button, Color>(this, textColor.Value) :
-            new UIProperty<Button, Color>(this, Application.Theme.TextColor, BindingType.DestinationToSource);
-        DisabledTextColor = disableTextColor != null ?
-            new UIProperty<Button, Color>(this, disableTextColor.Value) :
-            new UIProperty<Button, Color>(this, Application.Theme.TextColorDisabled, BindingType.DestinationToSource);
-        FocusColor = focusColor != null ?
-            new UIProperty<Button, Color>(this, focusColor.Value) :
-            new UIProperty<Button, Color>(this, Application.Theme.BorderColor, BindingType.DestinationToSource);
-        DisabledBackgroundColor = disableBackgroundColor != null ?
-            new UIProperty<Button, Color>(this, disableBackgroundColor.Value) :
-            new UIProperty<Button, Color>(this, Application.Theme.PrimaryColorDisabled, BindingType.DestinationToSource);
+        Font = new UIProperty<Button, Font>(this, Application.DefaultFont, BindingType.DestinationToSource);
+        TextColor = new UIProperty<Button, Color>(this, Application.Theme.TextColor, BindingType.DestinationToSource);
+        DisabledTextColor = new UIProperty<Button, Color>(this, Application.Theme.TextColorDisabled, BindingType.DestinationToSource);
+        FocusColor = new UIProperty<Button, Color>(this, Application.Theme.BorderColor, BindingType.DestinationToSource);
+        DisabledBackgroundColor = new UIProperty<Button, Color>(this, Application.Theme.PrimaryColorDisabled, BindingType.DestinationToSource);
 
         BackgroundColor.BindDestinationToSource(Application.Theme.SecondaryColor);
 
@@ -97,10 +76,9 @@ public class Button : UIWidget
         Canvas.Add(_backgroundRectangle);
 
         _buttonTextLabel = new Label(application);
-        _buttonTextLabel.TextColor.BindDestinationToSource(TextColor);
-
         _buttonTextLabel.Text.BindDestinationToSource(Text);
         _buttonTextLabel.Font.BindDestinationToSource(Font);
+        _buttonTextLabel.TextColor.BindDestinationToSource(TextColor);
         UpdateTextColor();
         AddChildNode(_buttonTextLabel);
 

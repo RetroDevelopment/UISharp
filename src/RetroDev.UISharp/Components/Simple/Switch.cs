@@ -48,9 +48,10 @@ public class Switch : UIWidget
     /// Creates a new switch toggle button.
     /// </summary>
     /// <param name="application">The application that contain <see langword="this" /> <see cref="Switch"/>.</param>
-    public Switch(Application application) : base(application, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
+    /// <param name="checked">Whether the initial state is checked.</param>
+    public Switch(Application application, bool @checked = false) : base(application, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
     {
-        Checked = new UIProperty<Switch, bool>(this, false);
+        Checked = new UIProperty<Switch, bool>(this, @checked);
         CircleColor = new UIProperty<Switch, Color>(this, Application.Theme.TextColor, BindingType.DestinationToSource);
         UncheckedBackgroundColor = new UIProperty<Switch, Color>(this, Application.Theme.PrimaryColor, BindingType.DestinationToSource);
         DisabledBackgroundColor = new UIProperty<Switch, Color>(this, Application.Theme.PrimaryColorDisabled, BindingType.DestinationToSource);

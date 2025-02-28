@@ -1,6 +1,4 @@
-﻿using OpenTK.Graphics.ES11;
-using OpenTK.Graphics.OpenGL;
-using RetroDev.UISharp.Components.Base;
+﻿using RetroDev.UISharp.Components.Base;
 
 namespace RetroDev.UISharp.Components.Core;
 
