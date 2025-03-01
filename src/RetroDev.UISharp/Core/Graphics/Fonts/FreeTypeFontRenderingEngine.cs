@@ -1,5 +1,5 @@
 ﻿using FreeTypeSharp;
-using RetroDev.UISharp.Core.Graphics.Coordinates;
+using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Graphics.Imaging;
 using System.Globalization;
 using static FreeTypeSharp.FT;

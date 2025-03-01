@@ -1,7 +1,7 @@
 ﻿using RetroDev.UISharp.Components.Base;
 using RetroDev.UISharp.Components.Shapes;
+using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Graphics;
-using RetroDev.UISharp.Core.Graphics.Coordinates;
 using RetroDev.UISharp.Presentation.Properties;
 using RetroDev.UISharp.Presentation.Properties.Exceptions;
 

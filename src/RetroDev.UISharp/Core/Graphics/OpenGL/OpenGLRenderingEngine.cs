@@ -1,7 +1,7 @@
 ﻿using System.Collections.Immutable;
 using OpenTK.Graphics.OpenGL;
 using RetroDev.UISharp.Core.Contexts;
-using RetroDev.UISharp.Core.Graphics.Coordinates;
+using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Graphics.Fonts;
 using RetroDev.UISharp.Core.Graphics.Imaging;
 using RetroDev.UISharp.Core.Graphics.Shapes;

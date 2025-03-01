@@ -1,6 +1,6 @@
 ﻿using RetroDev.UISharp.Core.Contexts;
+using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Exceptions;
-using RetroDev.UISharp.Core.Graphics.Coordinates;
 using RetroDev.UISharp.Core.Logging;
 using static SDL2.SDL;
 

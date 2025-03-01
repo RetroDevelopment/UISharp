@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
+using System.Reflection;
 
-namespace RetroDev.UISharp.Core.Graphics.Coordinates;
+namespace RetroDev.UISharp.Core.Coordinates;
 
 /// <summary>
 /// Represents a 2D-Area.
@@ -100,6 +101,44 @@ public record Area(Point TopLeft, Size Size)
         var bottomY = Math.Max(BottomRight.Y, area.BottomRight.Y);
 
         return new Area(new Point(leftX, topY), new Point(rightX, bottomY));
+    }
+
+    /// <summary>
+    /// Clamps an area within a container, ensuring it respects the given margins.
+    /// The top-left corner is adjusted if it's within the margin boundaries, 
+    /// and the size is clamped to ensure it does not exceed the available space.
+    /// </summary>
+    /// <param name="containerSize">The total size of the container.</param>
+    /// <param name="margin">The margins to apply around the area.</param>
+    /// <returns>A new clamped area respecting the margins.</returns>
+    public Area Clamp(Size containerSize, Margin margin = default)
+    {
+        var clampedLeftX = Math.Clamp(
+            TopLeft.X,
+            margin.Left ?? PixelUnit.Min,
+            margin.Right is not null ? Math.Max(containerSize.Width - margin.Right, PixelUnit.Zero) : PixelUnit.Max
+        );
+
+        var clampedTopY = Math.Clamp(
+            TopLeft.Y,
+            margin.Top ?? PixelUnit.Min,
+            margin.Bottom is not null ? Math.Max(containerSize.Height - margin.Bottom, PixelUnit.Zero) : PixelUnit.Max
+        );
+
+        var clampedWidth = Math.Clamp(
+            Size.Width,
+            PixelUnit.Zero,
+            margin.Right is not null ? Math.Max(containerSize.Width - clampedLeftX - margin.Right, PixelUnit.Zero) : PixelUnit.Max
+        );
+
+        var clampedHeight = Math.Clamp(
+            Size.Height,
+            PixelUnit.Zero,
+            margin.Bottom is not null ? Math.Max(containerSize.Height - clampedTopY - margin.Bottom, PixelUnit.Zero) : PixelUnit.Max
+        );
+
+        return new Area(new Point(clampedLeftX, clampedTopY),
+                        new Size(clampedWidth, clampedHeight));
     }
 
     /// <inheritdoc />

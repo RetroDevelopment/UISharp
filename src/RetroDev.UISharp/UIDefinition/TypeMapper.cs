@@ -127,7 +127,7 @@ public class TypeMapper
 
         foreach (var type in uiComponentTypes)
         {
-            var uiProperties = GetUIProperties(type);
+            var uiProperties = type.GetBindableProperties();
             if (uiProperties.Count != 0)
             {
                 result[type] = uiProperties;
@@ -158,12 +158,5 @@ public class TypeMapper
     private IEnumerable<Type> GetDerivedTypes<TBase>(IEnumerable<Type> types)
     {
         return types.Where(t => t.IsClass && !t.IsAbstract && typeof(TBase).IsAssignableFrom(t));
-    }
-
-    private List<PropertyInfo> GetUIProperties(Type type)
-    {
-        return type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                   .Where(prop => prop.PropertyType.IsGenericType && prop.PropertyType.GetGenericTypeDefinition() == typeof(UIProperty<,>))
-                   .ToList();
     }
 }

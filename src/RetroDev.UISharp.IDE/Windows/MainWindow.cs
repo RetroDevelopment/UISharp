@@ -1,11 +1,10 @@
 ﻿using System.Reflection;
-using RetroDev.UISharp;
 using RetroDev.UISharp.Components;
 using RetroDev.UISharp.Components.Base;
 using RetroDev.UISharp.Components.Containers;
 using RetroDev.UISharp.Components.Core.AutoArea;
 using RetroDev.UISharp.Components.Simple;
-using RetroDev.UISharp.Core.Graphics.Coordinates;
+using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.IDE.Components;
 using RetroDev.UISharp.Presentation.Properties;
 using RetroDev.UISharp.UIDefinition.Ast;

@@ -1,5 +1,5 @@
 ﻿using OpenTK.Graphics.OpenGL;
-using RetroDev.UISharp.Core.Graphics.Coordinates;
+using RetroDev.UISharp.Core.Coordinates;
 
 namespace RetroDev.UISharp.Core.Graphics.Imaging;
 

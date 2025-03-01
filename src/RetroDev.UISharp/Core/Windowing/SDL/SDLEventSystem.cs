@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Text;
-using RetroDev.UISharp.Core.Graphics.Coordinates;
+using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Logging;
 using RetroDev.UISharp.Core.Windowing.Events;
 using RetroDev.UISharp.Core.Windowing.Events.Internal;

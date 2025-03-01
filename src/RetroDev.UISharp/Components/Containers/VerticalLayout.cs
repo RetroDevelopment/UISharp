@@ -1,6 +1,6 @@
 ﻿using RetroDev.UISharp.Components.Base;
 using RetroDev.UISharp.Components.Core.AutoArea;
-using RetroDev.UISharp.Core.Graphics.Coordinates;
+using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Windowing.Events;
 
 namespace RetroDev.UISharp.Components.Containers;

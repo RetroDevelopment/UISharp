@@ -1,6 +1,6 @@
 ﻿using RetroDev.UISharp.Components.Base;
+using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Graphics;
-using RetroDev.UISharp.Core.Graphics.Coordinates;
 using RetroDev.UISharp.Core.Logging;
 
 namespace RetroDev.UISharp.Components.Shapes;

@@ -1,5 +1,5 @@
 ﻿using RetroDev.UISharp.Components.Base;
-using RetroDev.UISharp.Core.Graphics.Coordinates;
+using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Presentation.Properties;
 
 namespace RetroDev.UISharp.Components.Containers;

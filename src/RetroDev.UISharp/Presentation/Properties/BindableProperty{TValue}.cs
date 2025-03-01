@@ -43,6 +43,8 @@ public class BindableProperty<TValue>(TValue value, Application? application = n
     {
         set
         {
+            _application?.Dispatcher.ThrowIfNotOnUIThread();
+
             if (!EqualityComparer<TValue>.Default.Equals(_value, value))
             {
                 var previousValue = _value;
@@ -89,6 +91,7 @@ public class BindableProperty<TValue>(TValue value, Application? application = n
     /// </param>
     public void Bind(BindableProperty<TValue> destinationProperty, BindingType bindingType)
     {
+        _application?.Dispatcher.ThrowIfNotOnUIThread();
         _binder?.Unbind();
         _binder = new PropertyBinder<TValue, TValue>(this, destinationProperty, bindingType, x => x, x => x);
     }
@@ -105,6 +108,7 @@ public class BindableProperty<TValue>(TValue value, Application? application = n
     /// <param name="converter">A converter to convert source and destination property so that they match.</param>
     public void Bind<TDestinationValueType>(BindableProperty<TDestinationValueType> destinationProperty, BindingType bindingType, IBindingValueConverter<TValue, TDestinationValueType> converter)
     {
+        _application?.Dispatcher.ThrowIfNotOnUIThread();
         _binder?.Unbind();
         _binder = new PropertyBinder<TValue, TDestinationValueType>(this, destinationProperty, bindingType, converter);
     }
@@ -125,6 +129,7 @@ public class BindableProperty<TValue>(TValue value, Application? application = n
                                             Func<TValue, TDestinationValueType> sourceToDestinationConverter,
                                             Func<TDestinationValueType, TValue> destinationToSourceConverter)
     {
+        _application?.Dispatcher.ThrowIfNotOnUIThread();
         _binder?.Unbind();
         _binder = new PropertyBinder<TValue, TDestinationValueType>(this, destinationProperty, bindingType, sourceToDestinationConverter, destinationToSourceConverter);
     }
@@ -206,12 +211,12 @@ public class BindableProperty<TValue>(TValue value, Application? application = n
         Bind(destinationProperty, BindingType.TwoWays, sourceToDestinationConverter, destinationToSourceConverter);
     }
 
-
     /// <summary>
     /// Removes a binding if any.
     /// </summary>
     public void RemoveBinding()
     {
+        _application?.Dispatcher.ThrowIfNotOnUIThread();
         _binder?.Unbind();
     }
 }

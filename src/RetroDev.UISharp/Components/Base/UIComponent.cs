@@ -1,9 +1,9 @@
 ﻿using RetroDev.UISharp.Components.Core;
 using RetroDev.UISharp.Components.Core.AutoArea;
 using RetroDev.UISharp.Components.Shapes;
+using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Exceptions;
 using RetroDev.UISharp.Core.Graphics;
-using RetroDev.UISharp.Core.Graphics.Coordinates;
 using RetroDev.UISharp.Core.Windowing.Events;
 using RetroDev.UISharp.Presentation.Properties;
 using RetroDev.UISharp.Presentation.Properties.Exceptions;

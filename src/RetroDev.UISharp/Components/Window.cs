@@ -8,7 +8,7 @@ using RetroDev.UISharp.Presentation.Properties;
 using RetroDev.UISharp.Core.Windowing.SDL;
 using RetroDev.UISharp.Components.Core.AutoArea;
 using RetroDev.UISharp.Components.Base;
-using RetroDev.UISharp.Core.Graphics.Coordinates;
+using RetroDev.UISharp.Core.Coordinates;
 
 namespace RetroDev.UISharp.Components;
 

@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace RetroDev.UISharp.Core.Graphics.Coordinates;
+namespace RetroDev.UISharp.Core.Coordinates;
 
 using ValueType = float;
 
@@ -9,6 +9,8 @@ public record class PixelUnit : IEquatable<PixelUnit>, IComparable<PixelUnit>
 {
     public static readonly PixelUnit Auto = float.NaN;
     public static readonly PixelUnit Zero = 0.0f;
+    public static readonly PixelUnit Max = float.PositiveInfinity;
+    public static readonly PixelUnit Min = float.NegativeInfinity;
 
     public ValueType Value { get; }
 

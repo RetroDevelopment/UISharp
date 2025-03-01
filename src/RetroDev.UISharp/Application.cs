@@ -1,7 +1,7 @@
 ﻿using RetroDev.UISharp.Components;
 using RetroDev.UISharp.Components.Base;
+using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Exceptions;
-using RetroDev.UISharp.Core.Graphics.Coordinates;
 using RetroDev.UISharp.Core.Logging;
 using RetroDev.UISharp.Core.Windowing;
 using RetroDev.UISharp.Core.Windowing.Events;

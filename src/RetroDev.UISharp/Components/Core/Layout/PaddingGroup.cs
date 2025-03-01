@@ -1,16 +1,49 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
+﻿using RetroDev.UISharp.Components.Base;
+using RetroDev.UISharp.Core.Coordinates;
+using RetroDev.UISharp.Presentation.Properties;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+namespace RetroDev.UISharp.Components.Core.Layout;
 
-namespace RetroDev.UISharp.Components.Core.Layout
+/// <summary>
+/// Contains padding information.
+/// </summary>
+public class PaddingGroup : CompositeBindableProperty<PixelUnit>
 {
-    internal class PaddingGroup
+    /// <summary>
+    /// Top padding.
+    /// </summary>
+    public UIProperty<UIComponent, PixelUnit?> Top { get; }
+
+    /// <summary>
+    /// Right padding.
+    /// </summary>
+    public UIProperty<UIComponent, PixelUnit?> Right { get; }
+
+    /// <summary>
+    /// Bottom padding.
+    /// </summary>
+    public UIProperty<UIComponent, PixelUnit?> Bottom { get; }
+
+    /// <summary>
+    /// Left padding.
+    /// </summary>
+    public UIProperty<UIComponent, PixelUnit?> Left { get; }
+
+    /// <summary>
+    /// Creates a new <see cref="PaddingGroup"/>.
+    /// </summary>
+    /// <param name="application">The application in which the given <paramref name="parent"/> component is running.</param>
+    /// <param name="parent">The component owning <see langword="this" /> <see cref="PaddingGroup"/>.</param>
+    public PaddingGroup(Application application, UIComponent parent) : base(application)
     {
+        Top = new UIProperty<UIComponent, PixelUnit?>(parent, (PixelUnit?)null);
+        Right = new UIProperty<UIComponent, PixelUnit?>(parent, (PixelUnit?)null);
+        Bottom = new UIProperty<UIComponent, PixelUnit?>(parent, (PixelUnit?)null);
+        Left = new UIProperty<UIComponent, PixelUnit?>(parent, (PixelUnit?)null);
     }
+
+    /// <summary>
+    /// Converts this <see cref="PaddingGroup"/> into a equivalent <see cref="Margin"/> instance.
+    /// </summary>
+    public Margin ToMarginStruct() => new(Top.Value, Right.Value, Bottom.Value, Left.Value);
 }
