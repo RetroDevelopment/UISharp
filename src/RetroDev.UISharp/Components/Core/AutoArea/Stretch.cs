@@ -14,7 +14,7 @@ public class Stretch : IAutoSize
     /// <param name="wrapSize">The component wrap size.</param>
     /// <returns>The parent width.</returns>
     public PixelUnit ComputeWidth(Size parentSize, Size wrapSize) =>
-        parentSize.Width;
+        parentSize.Fill().Size.Width;
 
     /// <summary>
     /// Computes a component height so that it fits its parent's height.
@@ -23,5 +23,5 @@ public class Stretch : IAutoSize
     /// <param name="wrapSize">The component wrap size.</param>
     /// <returns>The component height.</returns>
     public PixelUnit ComputeHeight(Size parentSize, Size wrapSize) =>
-        parentSize.Height;
+        parentSize.Fill().Size.Height;
 }

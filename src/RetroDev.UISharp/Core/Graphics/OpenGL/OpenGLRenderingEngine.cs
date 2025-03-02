@@ -14,10 +14,6 @@ namespace RetroDev.UISharp.Core.Graphics.OpenGL;
 
 // TODO: intro https://learnopengl.com/code_viewer_gh.php?code=src/1.getting_started/2.2.hello_triangle_indexed/hello_triangle_indexed.cpp
 // TODO: https://learnopengl.com/code_viewer_gh.php?code=src/1.getting_started/5.2.transformations_exercise2/transformations_exercise2.cpp
-// TODO: implement texture atlas for fonts and as mutch vertex model batching as possible, but for now keep it simple
-
-// TODO: move 2D model procedural generation in a separate class (separation of concern) to be possibly
-// reused by a future svg to 2D model converter.
 
 // TODO: possible vertex shader layout
 // (x, y) (transform ID) (shadow) (u, v)
@@ -44,10 +40,6 @@ namespace RetroDev.UISharp.Core.Graphics.OpenGL;
 // With the right scale and translate we can have 1 VBO for ALL rounded corners rectangles.
 // TODO: same applis for borders. And it will be useful for matrices too. The overall idea is to reduce draw calls and vbo generation.
 
-// TODO: create a vbo per text and map texture atlas
-// TODO: batch rendering, maybe join big text in one single model. Text is expected to be the most performance critical due to high number of draw calls. So optimizing text is more critical than optimizing images.
-// TODO: start (gradually) imlpementing svg parser that decomposes svg primitives into a 2D model. Rendering is then super efficient and it can be scaled.
-
 /// <summary>
 /// The OpenGL rendering engine used to render on a given window.
 /// </summary>
@@ -68,10 +60,11 @@ public class OpenGLRenderingEngine : IRenderingEngine
     private readonly HashSet<Rectangle> _recangles = [];
     private readonly HashSet<Circle> _circles = [];
     private readonly HashSet<Text> _texts = [];
+    // Semi-transparent elements must be rendered in back to front order. Depth buffer would prevent transparent objects to overlap.
     private readonly HashSet<RenderingElement> _semiTransparentElements = [];
     private List<RenderingElement> _backToFrontSortedSemiTransparentElements = [];
 
-    private bool _transparencyChanged = true;
+    private bool _transparencyChanged = true; // Used to know when to move lists from instance rendering list to _semiTransparentElements
 
     private Size _viewportSize = Size.Zero;
 

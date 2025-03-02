@@ -9,13 +9,24 @@ namespace RetroDev.UISharp.Presentation.Properties;
 public static class ReflectionExtensions
 {
     /// <summary>
-    /// Gets the list of <see cref="BindableProperty{TValue}"/> properties define in <paramref name="this"/> type.
+    /// Gets the list of all bindable properties properties defined in <paramref name="this"/> type,
+    /// including <see cref="BindableProperty{TValue}"/> and <see cref="CompositeBindableProperty{TValue}"/>.
+    /// </summary>
+    /// <param name="this">The type where to look the properties.</param>
+    /// <returns>The list of <see cref="PropertyInfo"/> whose property type is bindable.</returns>
+    public static List<PropertyInfo> GetAllBindableProperties(this Type @this) =>
+        @this.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+             .Where(p => p.IsBindableProperty() || p.IsCompositeBindableProperty())
+             .ToList();
+
+    /// <summary>
+    /// Gets the list of <see cref="BindableProperty{TValue}"/> properties defined in <paramref name="this"/> type.
     /// </summary>
     /// <param name="this">The type where to look the properties.</param>
     /// <returns>The list of <see cref="PropertyInfo"/> whose property type is assignable to <see cref="BindableProperty{TValue}"/>.</returns>
     public static List<PropertyInfo> GetBindableProperties(this Type @this) =>
         @this.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-             .Where(IsBIndableProperty)
+             .Where(IsBindableProperty)
              .ToList();
 
     /// <summary>
@@ -26,8 +37,19 @@ public static class ReflectionExtensions
     /// <see langword="true" /> if the return type of <paramref name="this"/> property is a subtype of
     /// <see cref="BindableProperty{TValue}"/>, otherwise <see langword="false" />.
     /// </returns>
-    public static bool IsBIndableProperty(this PropertyInfo @this) =>
+    public static bool IsBindableProperty(this PropertyInfo @this) =>
         @this.PropertyType.IsBindablePropertyType();
+
+    /// <summary>
+    /// Check whether <paramref name="this"/> property is a <see cref="CompositeBindableProperty{TValue}{TValue}"/>.
+    /// </summary>
+    /// <param name="this">The property to check.</param>
+    /// <returns>
+    /// <see langword="true" /> if the return type of <paramref name="this"/> property is a subtype of
+    /// <see cref="CompositeBindableProperty{TValue}"/>, otherwise <see langword="false" />.
+    /// </returns>
+    public static bool IsCompositeBindableProperty(this PropertyInfo @this) =>
+        @this.PropertyType.IsCompositeBindablePropertyType();
 
     /// <summary>
     /// Check whether <paramref name="this"/> type is a <see cref="BindableProperty{TValue}"/>.
@@ -37,9 +59,23 @@ public static class ReflectionExtensions
     /// <see langword="true" /> if <paramref name="this"/> type is a subtype of
     /// <see cref="BindableProperty{TValue}"/>, otherwise <see langword="false" />.
     /// </returns>
-    public static bool IsBindablePropertyType(this Type @this)
+    public static bool IsBindablePropertyType(this Type @this) =>
+        @this.IsGenericType(typeof(BindableProperty<>));
+
+    /// <summary>
+    /// Check whether <paramref name="this"/> type is a <see cref="CompositeBindableProperty{TValue}"/>.
+    /// </summary>
+    /// <param name="this">The type to check.</param>
+    /// <returns>
+    /// <see langword="true" /> if <paramref name="this"/> type is a subtype of
+    /// <see cref="CompositeBindableProperty{TValue}"/>, otherwise <see langword="false" />.
+    /// </returns>
+    public static bool IsCompositeBindablePropertyType(this Type @this) =>
+        @this.IsGenericType(typeof(CompositeBindableProperty<>));
+
+    private static bool IsGenericType(this Type @this, Type type)
     {
-        if (@this.IsGenericType && @this.GetGenericTypeDefinition() == typeof(BindableProperty<>))
+        if (@this.IsGenericType && @this.GetGenericTypeDefinition() == type)
         {
             return true;
         }
@@ -48,11 +84,12 @@ public static class ReflectionExtensions
 
         if (baseType != null)
         {
-            return baseType.IsBindablePropertyType();
+            return baseType.IsGenericType(type);
         }
 
         return false;
     }
+
 
     /// <summary>
     /// Gets the <see cref="BindableProperty{TValue}"/> value of <paramref name="this"/> <see cref="PropertyInfo"/>
@@ -87,7 +124,7 @@ public static class ReflectionExtensions
     /// </exception>
     public static Type GetBindingValueType(this PropertyInfo @this)
     {
-        if (!@this.IsBIndableProperty()) throw new ArgumentException($"Cannt get a binding value from {@this}: this property does not describe a BindableProperty");
+        if (!@this.IsBindableProperty()) throw new ArgumentException($"Cannt get a binding value from {@this}: this property does not describe a BindableProperty");
         var valueProperty = @this.PropertyType.GetProperty(nameof(BindableProperty<object>.Value));
         if (valueProperty == null) throw new ArgumentException($"Cannot find value property");
         return valueProperty.PropertyType;

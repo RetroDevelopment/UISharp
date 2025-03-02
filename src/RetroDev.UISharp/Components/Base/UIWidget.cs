@@ -11,16 +11,6 @@ namespace RetroDev.UISharp.Components.Base;
 public abstract class UIWidget : UIComponent
 {
     /// <summary>
-    /// The <see cref="UIWidget"/> maring.
-    /// </summary>
-    public MarginGroup Margin { get; }
-
-    /// <summary>
-    /// The <see cref="UIWidget"/> padding.
-    /// </summary>
-    public PaddingGroup Padding { get; }
-
-    /// <summary>
     /// Creates a new UI node.
     /// </summary>
     /// <param name="application">The application owning this component.</param>
@@ -32,7 +22,5 @@ public abstract class UIWidget : UIComponent
     /// <param name="verticalAlignment">The component vertical alignment (relative to its <see cref="Parent"/>).</param>
     protected UIWidget(Application application, ComponentVisibility visibility = ComponentVisibility.Visible, bool isFocusable = true, IAutoSize? autoWidth = null, IAutoSize? autoHeight = null, IHorizontalAlignment? horizontalAlignment = null, IVerticalAlignment? verticalAlignment = null) : base(application, visibility, isFocusable, autoWidth, autoHeight, horizontalAlignment, verticalAlignment)
     {
-        Margin = new MarginGroup(application, this);
-        Padding = new PaddingGroup(application, this);
     }
 }

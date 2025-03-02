@@ -20,6 +20,7 @@ public interface IAutoSize
     /// </summary>
     /// <param name="parentSize">The parent component size.</param>
     /// <param name="wrapSize">The component wrap size.</param>
+
     /// <returns>The component height.</returns>
     PixelUnit ComputeHeight(Size parentSize, Size wrapSize);
 }

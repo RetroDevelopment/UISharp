@@ -12,22 +12,22 @@ public class PaddingGroup : CompositeBindableProperty<PixelUnit>
     /// <summary>
     /// Top padding.
     /// </summary>
-    public UIProperty<UIComponent, PixelUnit?> Top { get; }
+    public UIProperty<UIComponent, PixelUnit> Top { get; }
 
     /// <summary>
     /// Right padding.
     /// </summary>
-    public UIProperty<UIComponent, PixelUnit?> Right { get; }
+    public UIProperty<UIComponent, PixelUnit> Right { get; }
 
     /// <summary>
     /// Bottom padding.
     /// </summary>
-    public UIProperty<UIComponent, PixelUnit?> Bottom { get; }
+    public UIProperty<UIComponent, PixelUnit> Bottom { get; }
 
     /// <summary>
     /// Left padding.
     /// </summary>
-    public UIProperty<UIComponent, PixelUnit?> Left { get; }
+    public UIProperty<UIComponent, PixelUnit> Left { get; }
 
     /// <summary>
     /// Creates a new <see cref="PaddingGroup"/>.
@@ -36,10 +36,10 @@ public class PaddingGroup : CompositeBindableProperty<PixelUnit>
     /// <param name="parent">The component owning <see langword="this" /> <see cref="PaddingGroup"/>.</param>
     public PaddingGroup(Application application, UIComponent parent) : base(application)
     {
-        Top = new UIProperty<UIComponent, PixelUnit?>(parent, (PixelUnit?)null);
-        Right = new UIProperty<UIComponent, PixelUnit?>(parent, (PixelUnit?)null);
-        Bottom = new UIProperty<UIComponent, PixelUnit?>(parent, (PixelUnit?)null);
-        Left = new UIProperty<UIComponent, PixelUnit?>(parent, (PixelUnit?)null);
+        Top = new UIProperty<UIComponent, PixelUnit>(parent, PixelUnit.Auto);
+        Right = new UIProperty<UIComponent, PixelUnit>(parent, PixelUnit.Auto);
+        Bottom = new UIProperty<UIComponent, PixelUnit>(parent, PixelUnit.Auto);
+        Left = new UIProperty<UIComponent, PixelUnit>(parent, PixelUnit.Auto);
     }
 
     /// <summary>

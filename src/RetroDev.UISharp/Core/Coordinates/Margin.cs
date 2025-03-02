@@ -7,10 +7,10 @@
 /// <param name="Right">Margins from the right area.</param>
 /// <param name="Bottom">Margins from the bottom area.</param>
 /// <param name="Left">Margins from the left area.</param>
-public record struct Margin(PixelUnit? Top, PixelUnit? Right, PixelUnit? Bottom, PixelUnit? Left)
+public record struct Margin(PixelUnit Top, PixelUnit Right, PixelUnit Bottom, PixelUnit Left)
 {
     /// <summary>
-    /// Creates a new set of margins all set to <see cref="PixelUnit.Zero"/>.
+    /// Represents a Margin with all sides set to <see cref="PixelUnit.Auto"/>.
     /// </summary>
-    public Margin() : this(null, null, null, null) { }
+    public static readonly Margin Auto = new Margin(PixelUnit.Auto, PixelUnit.Auto, PixelUnit.Auto, PixelUnit.Auto);
 }

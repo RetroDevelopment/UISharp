@@ -26,5 +26,5 @@ public class Center : IAlignment
         ComputeCenterPoint(parentSize, componentSize).Y;
 
     private Point ComputeCenterPoint(Size parentSize, Size componentSize) =>
-        new Area(Point.Zero, componentSize).CenterTopLeft(new Area(Point.Zero, parentSize));
+        componentSize.PositionCenterOf(parentSize).TopLeft;
 }

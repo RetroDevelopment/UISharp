@@ -92,7 +92,7 @@ public class TypeMapper
     /// <param name="component">The component type. It must be a type assignable to <see cref="UIComponent"/>.</param>
     /// <param name="name">The name of the property to look for.</param>
     /// <returns>The property reflection information.</returns>
-    public PropertyInfo? GetUIProperty(Type component, string name)
+    public PropertyInfo? GetBindableProperty(Type component, string name)
     {
         if (!component.IsAssignableTo(typeof(UIComponent))) throw new ArgumentException($"Component type {component.FullName} is not assignable to {nameof(UIComponent)}");
         if (!_uiComponents.ContainsKey(component)) throw new ArgumentException($"Cannot find UIComponent with name {name}");
@@ -127,11 +127,8 @@ public class TypeMapper
 
         foreach (var type in uiComponentTypes)
         {
-            var uiProperties = type.GetBindableProperties();
-            if (uiProperties.Count != 0)
-            {
-                result[type] = uiProperties;
-            }
+            var uiProperties = type.GetAllBindableProperties();
+            result[type] = uiProperties;
         }
 
         return result;

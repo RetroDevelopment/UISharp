@@ -69,7 +69,7 @@ public class Validator
 
         foreach (var attribute in component.Attributes)
         {
-            if (_typeMapper.GetUIProperty(componentType, attribute.Name) == null)
+            if (_typeMapper.GetBindableProperty(componentType, attribute.Name) == null)
             {
                 exceptions.Add(new UIDefinitionValidationException($"Property {attribute.Name} does not exist in component {component.Name}", attribute));
             }

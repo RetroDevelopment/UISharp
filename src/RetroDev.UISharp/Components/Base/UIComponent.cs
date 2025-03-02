@@ -1,5 +1,6 @@
 ﻿using RetroDev.UISharp.Components.Core;
 using RetroDev.UISharp.Components.Core.AutoArea;
+using RetroDev.UISharp.Components.Core.Layout;
 using RetroDev.UISharp.Components.Shapes;
 using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Exceptions;
@@ -235,6 +236,16 @@ public abstract class UIComponent
     public UIProperty<UIComponent, Color> BackgroundColor { get; }
 
     /// <summary>
+    /// The <see cref="UIWidget"/> maring.
+    /// </summary>
+    public MarginGroup Margin { get; }
+
+    /// <summary>
+    /// The <see cref="UIWidget"/> padding.
+    /// </summary>
+    public PaddingGroup Padding { get; }
+
+    /// <summary>
     /// Creates a new component.
     /// </summary>
     /// <param name="application">The application owning this component.</param>
@@ -274,6 +285,8 @@ public abstract class UIComponent
         Focus = new UIProperty<UIComponent, bool>(this, false);
         Enabled = new UIProperty<UIComponent, bool>(this, true);
         BackgroundColor = new UIProperty<UIComponent, Color>(this, Color.Transparent);
+        Margin = new MarginGroup(application, this);
+        Padding = new PaddingGroup(application, this);
 
         Canvas = new Canvas(this);
 
@@ -713,18 +726,26 @@ public abstract class UIComponent
 
         var autoWidth = AutoWidth.Value.ComputeWidth(parentSize, _wrapSize);
         var autoHeight = AutoHeight.Value.ComputeHeight(parentSize, _wrapSize);
-        var actualWidth = sizeOverride.Width.IsAuto ? Width.Value.IsAuto ? autoWidth : Width.Value : sizeOverride.Width;
-        var actualHeight = sizeOverride.Height.IsAuto ? Height.Value.IsAuto ? autoHeight : Height.Value : sizeOverride.Height;
+        var actualWidth = sizeOverride.Width.IsAuto ? (Width.Value.IsAuto ? autoWidth : Width.Value) : sizeOverride.Width;
+        var actualHeight = sizeOverride.Height.IsAuto ? (Height.Value.IsAuto ? autoHeight : Height.Value) : sizeOverride.Height;
         var actualSize = new Size(actualWidth, actualHeight);
 
         var autoX = HorizontalAlignment.Value.ComputeX(parentSize, actualSize);
         var autoY = VerticalAlignment.Value.ComputeY(parentSize, actualSize);
-        var actualX = locationOverride.X.IsAuto ? X.Value.IsAuto ? autoX : X.Value : locationOverride.X;
-        var actualY = locationOverride.Y.IsAuto ? Y.Value.IsAuto ? autoY : Y.Value : locationOverride.Y;
+        var actualX = locationOverride.X.IsAuto ? (X.Value.IsAuto ? autoX : X.Value) : locationOverride.X;
+        var actualY = locationOverride.Y.IsAuto ? (Y.Value.IsAuto ? autoY : Y.Value) : locationOverride.Y;
         var actualTopLeft = new Point(actualX, actualY);
 
         // Windows X and Y position will be relative to the screen, but the relative area location is Point.Zero, because it is relative to the viewport (i.e. the window itslef).
-        var result = new Area(actualTopLeft, actualSize);
+        var margin = Margin.ToMarginStruct();
+        var finalArea = new Area(actualTopLeft, actualSize);
+        var clampedArea = finalArea.Clamp(parentSize, margin);
+        // The rendering area is the finalArea calculated, clamped only for auto values. For example if X is manually set, that will override clamping in order to avoid
+        // for example a component with X = 0 being positioned somewhere else because of margins. Manual overrides take priority over margin re-positioning.
+        var result = new Area(new Point(locationOverride.X.IsAuto && X.Value.IsAuto ? clampedArea.TopLeft.X : finalArea.TopLeft.X,
+                                        locationOverride.Y.IsAuto && Y.Value.IsAuto ? clampedArea.TopLeft.Y : finalArea.TopLeft.Y),
+                              new Size(sizeOverride.Width.IsAuto && Width.Value.IsAuto ? clampedArea.Size.Width : finalArea.Size.Width,
+                                       sizeOverride.Height.IsAuto && Height.Value.IsAuto ? clampedArea.Size.Height : finalArea.Size.Height));
         changed |= result != _relativeDrawingArea;
         return result;
     }

@@ -63,20 +63,6 @@ public record Area(Point TopLeft, Size Size)
     }
 
     /// <summary>
-    /// Gets the top-left point that <see langword="this"/> area should have if it must be centered in the given
-    /// <paramref name="container"/> area.
-    /// </summary>
-    /// <param name="container">The container area to center.</param>
-    /// <returns>The top-left point to center <see langword="this"/> area.</returns>
-    public Point CenterTopLeft(Area container)
-    {
-        var containerCenterX = container.TopLeft.X + container.Size.Width / 2;
-        var containerCenterY = container.TopLeft.Y + container.Size.Height / 2;
-
-        return new(containerCenterX - Size.Width / 2, containerCenterY - Size.Height / 2);
-    }
-
-    /// <summary>
     /// Creates a <see cref="Area"/> relative to <see langword="this" /> area that covers it completely.
     /// </summary>
     /// <remarks>
@@ -85,8 +71,7 @@ public record Area(Point TopLeft, Size Size)
     /// the area with location (0, 0) and size 300 x 300, which is the area relative to <c>a</c> that fully fills <c>a</c>.
     /// </remarks>
     /// <returns>The area with <see cref="Point.Zero"/> coordinate and the same <see cref="Size"/> as <see langword="this" /> area.</returns>
-    public Area Fill() =>
-        new Area(Point.Zero, Size);
+    public Area Fill() => Size.Fill();
 
     /// <summary>
     /// Merges <see langword="this" /> area with the given <paramref name="area"/>.
@@ -111,30 +96,30 @@ public record Area(Point TopLeft, Size Size)
     /// <param name="containerSize">The total size of the container.</param>
     /// <param name="margin">The margins to apply around the area.</param>
     /// <returns>A new clamped area respecting the margins.</returns>
-    public Area Clamp(Size containerSize, Margin margin = default)
+    public Area Clamp(Size containerSize, Margin margin)
     {
         var clampedLeftX = Math.Clamp(
             TopLeft.X,
-            margin.Left ?? PixelUnit.Min,
-            margin.Right is not null ? Math.Max(containerSize.Width - margin.Right, PixelUnit.Zero) : PixelUnit.Max
+            margin.Left.IsAuto ? PixelUnit.Min : margin.Left,
+            margin.Right.IsAuto ? PixelUnit.Max : Math.Max(containerSize.Width - margin.Right, PixelUnit.Zero)
         );
 
         var clampedTopY = Math.Clamp(
             TopLeft.Y,
-            margin.Top ?? PixelUnit.Min,
-            margin.Bottom is not null ? Math.Max(containerSize.Height - margin.Bottom, PixelUnit.Zero) : PixelUnit.Max
+            margin.Top.IsAuto ? PixelUnit.Min : margin.Top,
+            margin.Bottom.IsAuto ? PixelUnit.Max : Math.Max(containerSize.Height - margin.Bottom, PixelUnit.Zero)
         );
 
         var clampedWidth = Math.Clamp(
             Size.Width,
             PixelUnit.Zero,
-            margin.Right is not null ? Math.Max(containerSize.Width - clampedLeftX - margin.Right, PixelUnit.Zero) : PixelUnit.Max
+            margin.Right.IsAuto ? PixelUnit.Max : Math.Max(containerSize.Width - clampedLeftX - margin.Right, PixelUnit.Zero)
         );
 
         var clampedHeight = Math.Clamp(
             Size.Height,
             PixelUnit.Zero,
-            margin.Bottom is not null ? Math.Max(containerSize.Height - clampedTopY - margin.Bottom, PixelUnit.Zero) : PixelUnit.Max
+            margin.Bottom.IsAuto ? PixelUnit.Max : Math.Max(containerSize.Height - clampedTopY - margin.Bottom, PixelUnit.Zero)
         );
 
         return new Area(new Point(clampedLeftX, clampedTopY),
