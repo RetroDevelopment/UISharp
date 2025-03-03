@@ -47,6 +47,16 @@ public class EditBox : UIWidget
     /// </summary>
     public UIProperty<EditBox, Font> Font { get; }
 
+    /// <summary>
+    /// The input text horizontal alignment.
+    /// </summary>
+    public UIProperty<EditBox, IHorizontalAlignment> TextHorizontalAlignment { get; }
+
+    /// <summary>
+    /// The input text vertical alignment.
+    /// </summary>
+    public UIProperty<EditBox, IVerticalAlignment> TextVerticalAlignment { get; }
+
     /// <inheritdoc />
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize)
     {
@@ -69,6 +79,8 @@ public class EditBox : UIWidget
         DisabledTextColor = new UIProperty<EditBox, Color>(this, Application.Theme.TextColorDisabled, BindingType.DestinationToSource);
         FocusColor = new UIProperty<EditBox, Color>(this, Application.Theme.BorderColor, BindingType.DestinationToSource);
         DisabledBackgroundColor = new UIProperty<EditBox, Color>(this, Application.Theme.BorderColor, BindingType.DestinationToSource);
+        TextHorizontalAlignment = new UIProperty<EditBox, IHorizontalAlignment>(this, Alignment.Left);
+        TextVerticalAlignment = new UIProperty<EditBox, IVerticalAlignment>(this, Alignment.Center);
         BackgroundColor.BindDestinationToSource(Application.Theme.PrimaryBackground);
 
         _backgroundRectangle = new Rectangle(application);
@@ -80,8 +92,10 @@ public class EditBox : UIWidget
         _inputTextLabel.Font.BindDestinationToSource(Font);
         _inputTextLabel.AutoWidth.Value = AutoSize.Wrap;
         _inputTextLabel.AutoHeight.Value = AutoSize.Wrap;
-        _inputTextLabel.HorizontalAlignment.Value = Alignment.Left;
-        _inputTextLabel.VerticalAlignment.Value = Alignment.Center;
+        _inputTextLabel.HorizontalAlignment.BindDestinationToSource(TextHorizontalAlignment);
+        _inputTextLabel.VerticalAlignment.BindDestinationToSource(TextVerticalAlignment);
+        _inputTextLabel.Margin.Top.BindDestinationToSource(Padding.Top);
+        _inputTextLabel.Margin.Bottom.BindDestinationToSource(Padding.Bottom);
         AddChildNode(_inputTextLabel);
 
         MousePress += EditBox_MousePress;

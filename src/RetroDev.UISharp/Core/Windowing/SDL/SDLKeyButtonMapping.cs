@@ -1,9 +1,9 @@
 ﻿using RetroDev.UISharp.Core.Windowing.Events;
 using static SDL2.SDL;
 
-namespace RetroDev.UISharp.Core.Windowing.Events.Internal;
+namespace RetroDev.UISharp.Core.Windowing.SDL;
 
-internal static class KeyMapping
+internal static class SDLKeyButtonMapping
 {
     private static readonly Dictionary<SDL_Keycode, KeyButton> sdlToKeyButtonMap = new Dictionary<SDL_Keycode, KeyButton>
     {

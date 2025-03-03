@@ -1,4 +1,5 @@
-﻿using RetroDev.UISharp.Components.Base;
+﻿using System.ComponentModel.DataAnnotations;
+using RetroDev.UISharp.Components.Base;
 using RetroDev.UISharp.Components.Core.AutoArea;
 using RetroDev.UISharp.Components.Shapes;
 using RetroDev.UISharp.Core.Coordinates;
@@ -41,9 +42,6 @@ public class Switch : UIWidget
     /// </summary>
     public UIProperty<Switch, Color> FocusColor { get; }
 
-    /// <inheritdoc/>
-    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) => new(80, 30); // TODO: Maybe same size as default label text size (which is 20).
-
     /// <summary>
     /// Creates a new switch toggle button.
     /// </summary>
@@ -59,6 +57,8 @@ public class Switch : UIWidget
 
         BackgroundColor.BindDestinationToSource(Application.Theme.SecondaryColor);
 
+        Padding.SetAll(5.0f); // TODO: use styles
+
         _backgroundRectangle = new Rectangle(application);
         _backgroundRectangle.BorderColor.BindDestinationToSource(FocusColor);
         Canvas.Add(_backgroundRectangle);
@@ -71,8 +71,16 @@ public class Switch : UIWidget
         RenderFrame += Switch_RenderFrame;
     }
 
+    /// <inheritdoc/>
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize)
+    {
+        var size = Application.DefaultFont.Value.Size;
+        return new Size(size * 3, size);
+    }
+
     private void Switch_MousePress(UIComponent sender, MouseEventArgs e)
     {
+        if (e.Button != MouseButton.Left) return;
         Checked.Value = !Checked.Value;
         Focus.Value = true;
     }
@@ -119,17 +127,29 @@ public class Switch : UIWidget
 
     private void UpdateSelectionCirclePosition(RenderingEventArgs args)
     {
-        var height = args.RenderingAreaSize.Height;
+        var padding = Padding.ToMarginStruct();
+        var maxPadding = Math.Max(padding.Top.IsAuto ? PixelUnit.Min : padding.Top,
+                                  Math.Max(padding.Right.IsAuto ? PixelUnit.Min : padding.Right,
+                                  Math.Max(padding.Bottom.IsAuto ? padding.Bottom : PixelUnit.Min,
+                                           padding.Left.IsAuto ? padding.Left : PixelUnit.Min)));
+        if (padding.IsAuto) maxPadding = PixelUnit.Zero;
+
+        var height = args.RenderingAreaSize.Height - maxPadding * 2.0f;
         var width = height;
         var size = new Size(width, height);
+        var area = Area.Empty;
 
         if (Checked.Value)
         {
-            _selectionCircle.RelativeRenderingArea.Value = size.PositionCenterRightOf(args.RenderingAreaSize);
+            area = size.PositionCenterRightOf(args.RenderingAreaSize, padding);
+            area = new Area(new Point(area.TopLeft.X, area.TopLeft.Y), area.Size);
         }
         else
         {
-            _selectionCircle.RelativeRenderingArea.Value = size.PositionCenterLeftOf(args.RenderingAreaSize);
+            area = size.PositionCenterLeftOf(args.RenderingAreaSize, padding);
+            area = new Area(new Point(area.TopLeft.X, area.TopLeft.Y), area.Size);
         }
+
+        _selectionCircle.RelativeRenderingArea.Value = area;
     }
 }

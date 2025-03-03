@@ -13,6 +13,7 @@ namespace RetroDev.UISharp.Components.Simple;
 /// </summary>
 public class Label : UIWidget
 {
+    private readonly Rectangle _backgroundRectangle;
     private readonly Text _text;
 
     /// <summary>
@@ -30,8 +31,15 @@ public class Label : UIWidget
     /// </summary>
     public UIProperty<Label, Font> Font { get; }
 
-    /// <inheritdoc/>
-    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) => _text.ComputeTextSize();
+    /// <summary>
+    /// The text horizontal alignment within the label.
+    /// </summary>
+    public UIProperty<Label, IHorizontalAlignment> TextHorizontalAlignment { get; }
+
+    /// <summary>
+    /// The text vertical alignment within the label.
+    /// </summary>
+    public UIProperty<Label, IVerticalAlignment> TextVerticalAlignment { get; }
 
     /// <summary>
     /// Creates a new label.
@@ -43,15 +51,22 @@ public class Label : UIWidget
         Text = new UIProperty<Label, string>(this, text);
         Font = new UIProperty<Label, Font>(this, Application.DefaultFont, BindingType.DestinationToSource);
         TextColor = new UIProperty<Label, Color>(this, Application.Theme.TextColor, BindingType.DestinationToSource);
+        TextHorizontalAlignment = new UIProperty<Label, IHorizontalAlignment>(this, Alignment.Center);
+        TextVerticalAlignment = new UIProperty<Label, IVerticalAlignment>(this, Alignment.Center);
+
+        _backgroundRectangle = new Rectangle(application);
+        _backgroundRectangle.BackgroundColor.BindDestinationToSource(BackgroundColor);
+        Canvas.Add(_backgroundRectangle);
 
         _text = new Text(application);
-        _text.BackgroundColor.BindDestinationToSource(BackgroundColor);
         _text.TextColor.BindDestinationToSource(TextColor);
         _text.DisplayText.BindDestinationToSource(Text);
         _text.Font.BindDestinationToSource(Font);
+        _text.TextHorizontalAlignment.BindDestinationToSource(TextHorizontalAlignment);
+        _text.TextVerticalAlignment.BindDestinationToSource(TextVerticalAlignment);
+        Canvas.Add(_text);
 
         RenderFrame += Label_RenderFrame;
-        Canvas.Add(_text);
     }
 
     /// <summary>
@@ -66,8 +81,19 @@ public class Label : UIWidget
     /// <returns>The height necessary to display any character of text using the given <see cref="Font"/>.</returns>
     public PixelUnit ComputeTextMaximumHeight() => _text.ComputeTextMaximumHeight();
 
+    /// <inheritdoc/>
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) => _text.ComputeTextSize();
+
     private void Label_RenderFrame(UIComponent sender, UISharp.Core.Windowing.Events.RenderingEventArgs e)
     {
-        _text.RelativeRenderingArea.Value = e.RenderingAreaSize.Fill();
+        _backgroundRectangle.RelativeRenderingArea.Value = e.RenderingAreaSize.Fill();
+
+        var textSize = ComputeTextSize();
+        var parentSize = e.RenderingAreaSize;
+        var x = TextHorizontalAlignment.Value.ComputeX(parentSize, textSize);
+        var y = TextVerticalAlignment.Value.ComputeY(parentSize, textSize);
+        var textArea = new Area(new Point(x, y), textSize).Clamp(parentSize, Padding.ToMarginStruct());
+        _text.RelativeRenderingArea.Value = textArea;
+        _text.ClipArea.Value = textArea;
     }
 }

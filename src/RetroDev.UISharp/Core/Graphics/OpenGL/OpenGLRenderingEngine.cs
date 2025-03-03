@@ -313,7 +313,7 @@ public class OpenGLRenderingEngine : IRenderingEngine
         _shader.SetClipArea((clippingArea ?? new Area(Point.Zero, ViewportSize)).ToVector4(ViewportSize));
         _shader.SetOffsetMultiplier(OpenTK.Mathematics.Vector2.Zero);
         _shader.SetTextureMode(ShaderProgram.TextureMode.GrayScale);
-        _shader.SetZIndex(text.ZIndex.Foreground);
+        _shader.SetZIndex(ConvertToInternalZIndex(text.ZIndex).Foreground);
         _shader.SetVisible(text.Visible);
         _modelGenerator.Rectangle.Render(textureId);
     }
@@ -391,8 +391,8 @@ public class OpenGLRenderingEngine : IRenderingEngine
             radiusY = rectangle.CornerRadiusY ?? 0.0f;
         }
 
-        GenericRender(shape.BackgroundColor, area, clippingArea, shape.Rotation, null, radiusX, radiusY, openglShape, shape.ZIndex.Background, shape.Visible, shape.TextureID);
-        GenericRender(shape.BorderColor, area, clippingArea, shape.Rotation, shape.BorderThickness, radiusX, radiusY, openglShape, shape.ZIndex.Foreground, shape.Visible, shape.TextureID);
+        GenericRender(shape.BackgroundColor, area, clippingArea, shape.Rotation, null, radiusX, radiusY, openglShape, ConvertToInternalZIndex(shape.ZIndex).Background, shape.Visible, shape.TextureID);
+        GenericRender(shape.BorderColor, area, clippingArea, shape.Rotation, shape.BorderThickness, radiusX, radiusY, openglShape, ConvertToInternalZIndex(shape.ZIndex).Foreground, shape.Visible, shape.TextureID);
     }
 
     private void GenericRender(Color color,
@@ -477,7 +477,7 @@ public class OpenGLRenderingEngine : IRenderingEngine
         LoggingUtils.OpenGLCheck(() => GL.DepthMask(false), _logger);
         if (_transparencyChanged)
         {
-            _backToFrontSortedSemiTransparentElements = _semiTransparentElements.OrderByDescending(e => e.ZIndex.Background).ToList();
+            _backToFrontSortedSemiTransparentElements = _semiTransparentElements.OrderByDescending(e => ConvertToInternalZIndex(e.ZIndex).Background).ToList();
         }
 
         foreach (var shape in _backToFrontSortedSemiTransparentElements)
@@ -526,5 +526,29 @@ public class OpenGLRenderingEngine : IRenderingEngine
                 _texts.Remove(text);
             }
         }
+    }
+
+    // Convert zIndex into a float in the [-1, 1] range suitable for GL_LESS
+    // Splits the z index into 2: background first then foreground.
+    // TODO: join background and foreground into 1 vbo so no need for this and have less memorys
+    internal (float Background, float Foreground) ConvertToInternalZIndex(uint ZIndex)
+    {
+        var factor = 2u;
+        var backgroundZIndex = ZIndex * factor;
+        var foregroundZIndex = backgroundZIndex + (factor / 2);
+        return (Convert(backgroundZIndex), Convert(foregroundZIndex));
+    }
+
+    // Convert zIndex (uint) to a float in the [-1, 1] range suitable for GL_LESS
+    private float Convert(uint zIndex)
+    {
+        // Maximum number of distinct z-values
+        const uint maxZIndex = 16777216;
+
+        // Ensure the zIndex is clamped within the valid range
+        var clippedZIndex = Math.Min(zIndex, maxZIndex);
+
+        // Convert the zIndex to a float in the [-1, 1] range, reversed
+        return 1f - (float)(clippedZIndex) / maxZIndex * 2f;
     }
 }

@@ -19,6 +19,14 @@ public abstract class UIShape
     /// </summary>
     public ShapeProperty<UIShape, Area> RelativeRenderingArea { get; }
 
+    /// <summary>
+    /// Defines a custom clip area relative to the <see cref="Canvas.Component"/>.
+    /// Note that the clip area will only restrict the shape boundaries, never extend.
+    /// In other words, this property does not allow to render outside of the <see cref="Canvas.Component"/> region,
+    /// but it allows to restrict its clip area.
+    /// </summary>
+    public ShapeProperty<UIShape, Area?> ClipArea { get; }
+
     // TODO: include RelativeClipArea property so that it is possible to override the absolute clipping area (useful for progress bar with rounded corners)
 
     /// <summary>
@@ -76,6 +84,7 @@ public abstract class UIShape
     protected UIShape(Application application)
     {
         RelativeRenderingArea = new ShapeProperty<UIShape, Area>(this, application, Area.Empty);
+        ClipArea = new ShapeProperty<UIShape, Area?>(this, application, (Area?)null);
         BackgroundColor = new ShapeProperty<UIShape, Color>(this, application, Color.Transparent);
         Visible = new ShapeProperty<UIShape, bool>(this, application, true);
         ZIndex = new ShapeProperty<UIShape, uint>(this, application, 0);
@@ -108,11 +117,12 @@ public abstract class UIShape
     {
         if (Canvas == null) throw new InvalidOperationException("Canvas must be set when rendering.");
 
+        var customClipArea = ClipArea.Value?.ToAbsolute(Canvas.ContainerAbsoluteDrawingArea);
         RenderingElement.Visible = CanRender && Visible.Value;
         RenderingElement.RenderingArea = RelativeRenderingArea.Value.ToAbsolute(Canvas.ContainerAbsoluteDrawingArea);
-        RenderingElement.ClipArea = clipArea;
+        RenderingElement.ClipArea = customClipArea is not null ? customClipArea.Clip(clipArea) : clipArea;
         RenderingElement.BackgroundColor = BackgroundColor.Value;
-        RenderingElement.ZIndex = RenderingElement.ConvertToInternalZIndex(ZIndex.Value);
+        RenderingElement.ZIndex = ZIndex.Value;
         Render();
     }
 }

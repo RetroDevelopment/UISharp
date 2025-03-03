@@ -605,6 +605,7 @@ public abstract class UIComponent
         var collapsed = Visibility.Value == ComponentVisibility.Collapsed;
         var currentWrapSize = _wrapSize;
         var newWrapSize = collapsed ? Size.Zero : new Size(width, height);
+        newWrapSize = newWrapSize.Inflate(Padding.ToMarginStruct());
         _wrapSize = newWrapSize;
         return currentWrapSize != newWrapSize;
     }

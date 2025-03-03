@@ -1,4 +1,5 @@
 ﻿using RetroDev.UISharp.Components.Base;
+using RetroDev.UISharp.Components.Core.AutoArea;
 using RetroDev.UISharp.Components.Shapes;
 using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Graphics;
@@ -51,6 +52,16 @@ public class Button : UIWidget
     /// </summary>
     public UIProperty<Button, Color> FocusColor { get; }
 
+    /// <summary>
+    /// The button text horizontal alignment.
+    /// </summary>
+    public UIProperty<Button, IHorizontalAlignment> TextHorizontalAlignment { get; }
+
+    /// <summary>
+    /// The button text vertical alignment.
+    /// </summary>
+    public UIProperty<Button, IVerticalAlignment> TextVerticalAlignment { get; }
+
     /// <inheritdoc/>
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
         childrenSize.First();
@@ -68,6 +79,8 @@ public class Button : UIWidget
         DisabledTextColor = new UIProperty<Button, Color>(this, Application.Theme.TextColorDisabled, BindingType.DestinationToSource);
         FocusColor = new UIProperty<Button, Color>(this, Application.Theme.BorderColor, BindingType.DestinationToSource);
         DisabledBackgroundColor = new UIProperty<Button, Color>(this, Application.Theme.PrimaryColorDisabled, BindingType.DestinationToSource);
+        TextHorizontalAlignment = new UIProperty<Button, IHorizontalAlignment>(this, Alignment.Center);
+        TextVerticalAlignment = new UIProperty<Button, IVerticalAlignment>(this, Alignment.Center);
 
         BackgroundColor.BindDestinationToSource(Application.Theme.SecondaryColor);
 
@@ -79,6 +92,9 @@ public class Button : UIWidget
         _buttonTextLabel.Text.BindDestinationToSource(Text);
         _buttonTextLabel.Font.BindDestinationToSource(Font);
         _buttonTextLabel.TextColor.BindDestinationToSource(TextColor);
+        _buttonTextLabel.HorizontalAlignment.BindDestinationToSource(TextHorizontalAlignment);
+        _buttonTextLabel.VerticalAlignment.BindDestinationToSource(TextVerticalAlignment);
+        _buttonTextLabel.Margin.BindDestinationToSource(Padding);
         UpdateTextColor();
         AddChildNode(_buttonTextLabel);
 

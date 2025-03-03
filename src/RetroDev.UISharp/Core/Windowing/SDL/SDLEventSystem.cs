@@ -3,7 +3,6 @@ using System.Text;
 using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Logging;
 using RetroDev.UISharp.Core.Windowing.Events;
-using RetroDev.UISharp.Core.Windowing.Events.Internal;
 using static SDL2.SDL;
 
 namespace RetroDev.UISharp.Core.Windowing.SDL;
@@ -179,7 +178,7 @@ internal class SDLEventSystem : IEventSystem
                 case SDL_EventType.SDL_KEYDOWN:
                     var keyDownEvent = currentEvent.key;
                     var keyDownWindowId = GetWidnowIdFromKeyboardEvent(keyDownEvent);
-                    var keyDownKey = KeyMapping.ToKeyButton(keyDownEvent.keysym.sym);
+                    var keyDownKey = SDLKeyButtonMapping.ToKeyButton(keyDownEvent.keysym.sym);
                     var keyDownArgs = new WindowEventArgs<KeyEventArgs>(keyDownWindowId, new KeyEventArgs(keyDownKey));
                     keyDownArgs.Log("keyDown", _logger);
                     KeyPress?.Invoke(this, keyDownArgs);
@@ -188,7 +187,7 @@ internal class SDLEventSystem : IEventSystem
                 case SDL_EventType.SDL_KEYUP:
                     var keyUpEvent = currentEvent.key;
                     var keyUpWindowId = GetWidnowIdFromKeyboardEvent(keyUpEvent);
-                    var keyUpKey = KeyMapping.ToKeyButton(keyUpEvent.keysym.sym);
+                    var keyUpKey = SDLKeyButtonMapping.ToKeyButton(keyUpEvent.keysym.sym);
                     var keyUpArgs = new WindowEventArgs<KeyEventArgs>(keyUpWindowId, new KeyEventArgs(keyUpKey));
                     keyUpArgs.Log("keyUp", _logger);
                     KeyRelease?.Invoke(this, keyUpArgs);

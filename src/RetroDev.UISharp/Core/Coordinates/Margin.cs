@@ -1,4 +1,6 @@
-﻿namespace RetroDev.UISharp.Core.Coordinates;
+﻿using System.Runtime.CompilerServices;
+
+namespace RetroDev.UISharp.Core.Coordinates;
 
 /// <summary>
 /// Defines margins within an area.
@@ -13,4 +15,9 @@ public record struct Margin(PixelUnit Top, PixelUnit Right, PixelUnit Bottom, Pi
     /// Represents a Margin with all sides set to <see cref="PixelUnit.Auto"/>.
     /// </summary>
     public static readonly Margin Auto = new Margin(PixelUnit.Auto, PixelUnit.Auto, PixelUnit.Auto, PixelUnit.Auto);
+
+    /// <summary>
+    /// Whether <see langword="this" /> margin has all values set to <see cref="PixelUnit.Auto"/>.
+    /// </summary>
+    public bool IsAuto => this == Auto;
 }

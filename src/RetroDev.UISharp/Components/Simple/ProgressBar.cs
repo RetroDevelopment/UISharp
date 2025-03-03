@@ -2,6 +2,7 @@
 using RetroDev.UISharp.Components.Shapes;
 using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Graphics;
+using RetroDev.UISharp.Core.Windowing.Events;
 using RetroDev.UISharp.Presentation.Properties;
 using RetroDev.UISharp.Presentation.Properties.Exceptions;
 
@@ -73,21 +74,24 @@ public class ProgressBar : UIWidget
         if (MaximumValue.Value < MinimumValue.Value) throw new UIPropertyValidationException($"MaximumValue {MaximumValue.Value} must be greater or equal to {MinimumValue.Value}", this);
     }
 
-    protected override List<Area?> RepositionChildren(Size availableSpace, IEnumerable<Size> childrenSize)
+    private void ProgressBar_RenderFrame(UIComponent sender, RenderingEventArgs e)
     {
-        var value = Math.Clamp(Value.Value, MinimumValue.Value, MaximumValue.Value);
-        var percentage = (value - MinimumValue.Value) / (float)(MaximumValue.Value - MinimumValue.Value);
-        var progressRectangleWidth = availableSpace.Width * percentage;
-        return [null, new Area(Point.Zero, new Size(progressRectangleWidth, availableSpace.Height))];
-    }
+        var padding = Padding.ToMarginStruct();
 
-    private void ProgressBar_RenderFrame(UIComponent sender, UISharp.Core.Windowing.Events.RenderingEventArgs e)
-    {
         _backgroundRectangle.RelativeRenderingArea.Value = e.RenderingAreaSize.Fill();
+        var backgroundCornerRadius = _backgroundRectangle.ComputeCornerRadius(1.0f, _backgroundRectangle.RelativeRenderingArea.Value.Size);
+        _backgroundRectangle.CornerRadiusX.Value = backgroundCornerRadius;
+        _backgroundRectangle.CornerRadiusY.Value = backgroundCornerRadius;
+
         var value = Math.Clamp(Value.Value, MinimumValue.Value, MaximumValue.Value);
         var percentage = (value - MinimumValue.Value) / (float)(MaximumValue.Value - MinimumValue.Value);
-        var progressRectangleWidth = e.RenderingAreaSize.Width * percentage;
-        var progressRecangleSize = new Size(progressRectangleWidth, e.RenderingAreaSize.Height);
-        _progressRectangle.RelativeRenderingArea.Value = progressRecangleSize.PositionCenterLeftOf(e.RenderingAreaSize);
+        var paddedRenderingArea = e.RenderingAreaSize.Fill().Clamp(e.RenderingAreaSize, padding);
+        var progressRectangleWidth = paddedRenderingArea.Size.Width * percentage;
+        var progressRecangleSize = new Size(progressRectangleWidth, paddedRenderingArea.Size.Height);
+        _progressRectangle.RelativeRenderingArea.Value = paddedRenderingArea;
+        _progressRectangle.ClipArea.Value = new Area(paddedRenderingArea.TopLeft, progressRecangleSize);
+        var progressCornerRadius = _progressRectangle.ComputeCornerRadius(1.0f, _progressRectangle.RelativeRenderingArea.Value.Size);
+        _progressRectangle.CornerRadiusX.Value = progressCornerRadius;
+        _progressRectangle.CornerRadiusY.Value = progressCornerRadius;
     }
 }

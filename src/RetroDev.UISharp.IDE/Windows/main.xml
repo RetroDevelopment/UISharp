@@ -6,9 +6,9 @@
                 <label text="File:" />
                 <editbox id="file" autowidth="stretch" text="calculator.xml" />
             </gridlayout>
-            <gridlayout id="theme" rows="1" columns="2" columnsizes="120px;*">
+            <gridlayout id="theme" rows="1" columns="2" columnsizes="80px;*" margin="0;15;0;15">
                 <label id="darkModeText" text="Dark mode:" />
-                <switch id="darkMode" checked="true" width="60" />
+                <switch id="darkMode" checked="true" />
             </gridlayout>
             <button id="load" text="Load" autowidth="stretch" autoheight="stretch" margin="0;10;5;10" />
             <button id="save" text="Save" autowidth="stretch" autoheight="stretch" enabled="false" margin="0;10;5;10" />

@@ -1,4 +1,5 @@
 ﻿using RetroDev.UISharp.Components.Base;
+using RetroDev.UISharp.Components.Core.AutoArea;
 using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Graphics;
 using RetroDev.UISharp.Core.Graphics.Shapes;
@@ -29,6 +30,17 @@ public class Text : UIShape
     /// </summary>
     public ShapeProperty<Text, Font> Font { get; }
 
+    /// <summary>
+    /// The text horizontal alignment within the text boundaries.
+    /// </summary>
+    public ShapeProperty<Text, IHorizontalAlignment> TextHorizontalAlignment { get; }
+
+    /// <summary>
+    /// The text vertical alignment within the text boundaries.
+    /// </summary>
+    public ShapeProperty<Text, IVerticalAlignment> TextVerticalAlignment { get; }
+
+
     /// <inheritdoc />
     protected override RenderingElement RenderingElement => _text;
 
@@ -45,6 +57,8 @@ public class Text : UIShape
         TextColor = new ShapeProperty<Text, Color>(this, application, Color.Transparent);
         DisplayText = new ShapeProperty<Text, string>(this, application, string.Empty);
         Font = new ShapeProperty<Text, Font>(this, application, application.DefaultFont, BindingType.DestinationToSource);
+        TextHorizontalAlignment = new ShapeProperty<Text, IHorizontalAlignment>(this, application, Alignment.Left);
+        TextVerticalAlignment = new ShapeProperty<Text, IVerticalAlignment>(this, application, Alignment.Center);
     }
 
     /// <summary>
@@ -79,9 +93,14 @@ public class Text : UIShape
 
     protected internal override void Render()
     {
-        _text.RenderingArea = ComputeTextSize().PositionCenterOf(RelativeRenderingArea.Value.Size).ToAbsolute(Canvas.ContainerAbsoluteDrawingArea);
         _text.ForegroundColor = TextColor.Value;
         _text.Value = DisplayText.Value;
         _text.Font = Font.Value.ToGraphicsFont();
+        var textSize = ComputeTextSize();
+        var x = TextHorizontalAlignment.Value.ComputeX(RelativeRenderingArea.Value.Size, textSize);
+        var y = TextVerticalAlignment.Value.ComputeY(RelativeRenderingArea.Value.Size, textSize);
+        var area = new Area(new Point(x, y), textSize);
+        var parentRelativeArea = area.ToAbsolute(RelativeRenderingArea.Value);
+        _text.RenderingArea = parentRelativeArea.ToAbsolute(Canvas?.ContainerAbsoluteDrawingArea);
     }
 }
