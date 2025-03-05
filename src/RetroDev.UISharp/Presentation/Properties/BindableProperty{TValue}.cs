@@ -190,7 +190,7 @@ public class BindableProperty<TValue>(TValue value, Application? application = n
     /// The <see cref="BindingType"/> (<see langword="this"/> property is the source property and).
     /// the given <paramref name="destinationProperty" /> is the destination property.
     /// </param>
-    public void BindSourceTwoWays(BindableProperty<TValue> destinationProperty)
+    public void BindTwoWays(BindableProperty<TValue> destinationProperty)
     {
         Bind(destinationProperty, BindingType.TwoWays);
     }

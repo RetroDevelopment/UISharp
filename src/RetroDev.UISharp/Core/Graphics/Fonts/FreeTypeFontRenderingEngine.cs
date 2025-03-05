@@ -69,6 +69,14 @@ public class FreeTypeFontRenderingEngine : IFontRenderingEngine
         return metrics.height + 1;
     }
 
+    /// <inheritdoc />
+    public PixelUnit[] ComputeCharactersWidths(string text, Font font)
+    {
+        EnsureFontIsLoaded(font);
+        var gliphs = GetCharacters(text, font);
+        return gliphs.Select(g => new PixelUnit(g.Advance)).ToArray();
+    }
+
     private (int Width, int XOffset) ComputeTextMaximumWidth(IEnumerable<Gliph> gliphs)
     {
         if (!gliphs.Any()) return (0, 0);

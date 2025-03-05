@@ -50,7 +50,6 @@ public class Canvas
         _shapes.Add(shape);
         shape.Canvas = this;
         shape.AddShapeToRenderingEngine();
-        shape.Visible.Value = Component.Visibility.Value == UIComponent.ComponentVisibility.Visible;
         shape.Invalidate();
     }
 

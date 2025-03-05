@@ -16,6 +16,9 @@ public class SDLWindowManager : IWindowManager
 
     private readonly ThreadDispatcher _dispatcher;
     private readonly ILogger _logger;
+    private readonly Dictionary<MouseCursor, nint> _cursorCache = [];
+
+    private MouseCursor _mouseCursor = MouseCursor.Unknown;
 
     /// <summary>
     /// Gets the size of the main display.
@@ -27,6 +30,32 @@ public class SDLWindowManager : IWindowManager
             _dispatcher.ThrowIfNotOnUIThread();
             SDL_GetCurrentDisplayMode(0, out var displayMode);
             return new Size(displayMode.w, displayMode.h);
+        }
+    }
+
+    /// <summary>
+    /// The mouse cursor shape to display.
+    /// </summary>
+    public MouseCursor Cursor
+    {
+        set
+        {
+            _mouseCursor = value;
+            if (_cursorCache.TryGetValue(value, out var sdlCursor))
+            {
+                SDL_SetCursor(sdlCursor);
+            }
+            else
+            {
+                var cursor = SDL_CreateSystemCursor(SDLMouseCursorMapping.ToKeyButton(value));
+                if (cursor == IntPtr.Zero) throw new InvalidOperationException($"SDL failed to create cursor {value}");
+                _cursorCache.Add(value, cursor);
+                SDL_SetCursor(cursor);
+            }
+        }
+        get
+        {
+            return _mouseCursor;
         }
     }
 
@@ -63,6 +92,7 @@ public class SDLWindowManager : IWindowManager
             LoggingUtils.SDLCheck(() => SDL_InitSubSystem(SDL_INIT_VIDEO), _logger);
             SDL_GetVersion(out var version);
             _logger.LogInfo($"Window manger based on SDL {version.major}.{version.minor}.{version.patch}");
+            Cursor = MouseCursor.Default;
             s_isInitialized = true;
         }
     }
@@ -192,6 +222,26 @@ public class SDLWindowManager : IWindowManager
         ExecuteOnWindow(windowId, id => SDL_RestoreWindow(id.Handle));
 
     /// <summary>
+    /// Copies the given <paramref name="text"/> to the clipboard.
+    /// </summary>
+    /// <param name="text">The text to copy.</param>
+    public void CopyToClipboard(string text)
+    {
+        _dispatcher.ThrowIfNotOnUIThread();
+        LoggingUtils.SDLCheck(() => SDL_SetClipboardText(text), _logger);
+    }
+
+    /// <summary>
+    /// Gets the text in the clipboard.
+    /// </summary>
+    /// <returns>The clipboard text.</returns>
+    public string GetClipboardContent()
+    {
+        _dispatcher.ThrowIfNotOnUIThread();
+        return SDL_GetClipboardText();
+    }
+
+    /// <summary>
     /// Dispose the window and deallocates all the graphical resources.
     /// </summary>
     public void Shutdown()
@@ -199,6 +249,11 @@ public class SDLWindowManager : IWindowManager
         _dispatcher.ThrowIfNotOnUIThread();
         // TODO: dispose all rendering engines
         // if (_window != nint.Zero) SDL2.SDL.SDL_DestroyWindow(_window);
+        foreach (var cursor in _cursorCache)
+        {
+            SDL_FreeCursor(cursor.Value);
+        }
+
         SDL_Quit();
     }
 

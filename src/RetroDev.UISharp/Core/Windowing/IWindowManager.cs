@@ -14,6 +14,11 @@ public interface IWindowManager
     Size ScreenSize { get; }
 
     /// <summary>
+    /// The mouse cursor shape to display.
+    /// </summary>
+    MouseCursor Cursor { set; get; }
+
+    /// <summary>
     /// The system that emits event using <see langword="this" /> <see cref="IWindowManager{TWindowId}"/>.
     /// </summary>
     IEventSystem EventSystem { get; }
@@ -109,6 +114,18 @@ public interface IWindowManager
     /// </summary>
     /// <param name="windowId">The identifier of the window to maximize.</param>
     void RestoreWindow(IWindowId windowId);
+
+    /// <summary>
+    /// Copies the given <paramref name="text"/> to the clipboard.
+    /// </summary>
+    /// <param name="text">The text to copy.</param>
+    void CopyToClipboard(string text);
+
+    /// <summary>
+    /// Gets the text in the clipboard.
+    /// </summary>
+    /// <returns>The clipboard text.</returns>
+    string GetClipboardContent();
 
     /// <summary>
     /// Closes the UI environment. Make sure that no other SDL operation is performed after calling this method!

@@ -8,7 +8,10 @@ namespace RetroDev.UISharp.Core.Windowing.Events;
 /// <param name="absoluteLocation">The mouse location when the event appears relative to the root container (e.g. window).</param>
 /// <param name="relativeLocation">The mouse location when the event appears relative to the component where the event occurs.</param>
 /// <param name="button">The mouse button pressed, if any.</param>
-public class MouseEventArgs(Point absoluteLocation, Point relativeLocation, MouseButton button) : EventArgs
+/// <param name="clicks">The number of time a click was performed, if any.
+/// For mouse motion events the value is 0, for single click it is 1, for double clicks it is 2, and so on.
+/// </param>
+public class MouseEventArgs(Point absoluteLocation, Point relativeLocation, MouseButton button, uint clicks) : EventArgs
 {
     /// <summary>
     /// The mouse location when the event appears. The location is in pixels and it is the location
@@ -28,6 +31,12 @@ public class MouseEventArgs(Point absoluteLocation, Point relativeLocation, Mous
     /// The mouse button pressed, if any.
     /// </summary>
     public MouseButton Button { get; } = button;
+
+    /// <summary>
+    /// The number of time a click was performed, if any.
+    /// For mouse motion events the value is 0, for single click it is 1, for double clicks it is 2, and so on.
+    /// </summary>
+    public uint Clicks { get; } = clicks;
 
     /// <inheritdoc />
     public override string ToString() => $"locationAbs={AbsoluteLocation}, locationRel={RelativeLocation}, button={Button}";

@@ -147,7 +147,11 @@ internal class SDLEventSystem : IEventSystem
                     var buttonDownEvent = currentEvent.button;
                     var mouseButtonDownWindowId = GetWidnowIdFromButtonEvent(buttonDownEvent);
                     var mouseButtonDownButton = GetMouseButton(buttonDownEvent);
-                    var mouseButtonDownArgs = new WindowEventArgs<MouseEventArgs>(mouseButtonDownWindowId, new(new(buttonDownEvent.x, buttonDownEvent.y), new(buttonDownEvent.x, buttonDownEvent.y), mouseButtonDownButton));
+                    var mouseButtonDownArgs = new WindowEventArgs<MouseEventArgs>(mouseButtonDownWindowId,
+                                                                                  new MouseEventArgs(new Point(buttonDownEvent.x, buttonDownEvent.y),
+                                                                                                     new Point(buttonDownEvent.x, buttonDownEvent.y),
+                                                                                                     mouseButtonDownButton,
+                                                                                                     buttonDownEvent.clicks));
                     mouseButtonDownArgs.Log("mouseDown", _logger);
                     MousePress?.Invoke(this, mouseButtonDownArgs);
                     break;
@@ -159,7 +163,8 @@ internal class SDLEventSystem : IEventSystem
                     var mouseButtonUpArgs = new WindowEventArgs<MouseEventArgs>(mouseButtonUpWindowId,
                                                                                 new MouseEventArgs(new Point(buttonUpEvent.x, buttonUpEvent.y),
                                                                                                    new Point(buttonUpEvent.x, buttonUpEvent.y),
-                                                                                mouseButtonUpButton));
+                                                                                                   mouseButtonUpButton,
+                                                                                                   buttonUpEvent.clicks));
                     mouseButtonUpArgs.Log("mouseDown", _logger);
                     MouseRelease?.Invoke(this, mouseButtonUpArgs);
                     break;
@@ -170,7 +175,9 @@ internal class SDLEventSystem : IEventSystem
                     var mouseButtonMoveButton = MouseButton.None;
                     var mouseMotionMoveArgs = new WindowEventArgs<MouseEventArgs>(mouseButtonMoveWindowId,
                                                                                   new MouseEventArgs(new Point(motionEvent.x, motionEvent.y),
-                                                                                                     new Point(motionEvent.x, motionEvent.y), mouseButtonMoveButton));
+                                                                                                     new Point(motionEvent.x, motionEvent.y),
+                                                                                                     mouseButtonMoveButton,
+                                                                                                     0));
                     mouseMotionMoveArgs.Log("mouseMove", _logger);
                     MouseMove?.Invoke(this, mouseMotionMoveArgs);
                     break;

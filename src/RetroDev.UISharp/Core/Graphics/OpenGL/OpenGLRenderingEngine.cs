@@ -328,6 +328,18 @@ public class OpenGLRenderingEngine : IRenderingEngine
         _fontEngine.ComputeTextSize(text, font);
 
     /// <summary>
+    /// Computes each character width separately for the given <paramref name="text"/>.
+    /// </summary>
+    /// <param name="text">The text for which to compute widths.</param>
+    /// <param name="font">The font the text is rendered.</param>
+    /// <returns>
+    /// An array of widths <c>W</c> where <c>W[i]</c> is the total width occupide by
+    /// <paramref name="text"/><c>[i]</c> including advance.
+    /// </returns>
+    public PixelUnit[] ComputeCharactersWidths(string text, Font font) =>
+        _fontEngine.ComputeCharactersWidths(text, font);
+
+    /// <summary>
     /// Gets the maximum height occupied by a line of text using the given <paramref name="font"/>.
     /// </summary>
     /// <param name="font">The font for which to compute the height.</param>
@@ -482,7 +494,6 @@ public class OpenGLRenderingEngine : IRenderingEngine
 
         foreach (var shape in _backToFrontSortedSemiTransparentElements)
         {
-            if (!shape.Visible) continue;
             if (shape is Rectangle rectangle) Render(rectangle);
             if (shape is Circle circle) Render(circle);
             if (shape is Text text) Render(text);

@@ -3,9 +3,12 @@ using static SDL2.SDL;
 
 namespace RetroDev.UISharp.Core.Windowing.SDL;
 
-internal static class SDLKeyButtonMapping
+/// <summary>
+/// Maps the SDL keyboard keys defined in <see cref="SDL_Keycode"/> to <see cref="KeyButton"/>.
+/// </summary>
+public static class SDLKeyButtonMapping
 {
-    private static readonly Dictionary<SDL_Keycode, KeyButton> sdlToKeyButtonMap = new Dictionary<SDL_Keycode, KeyButton>
+    private static readonly Dictionary<SDL_Keycode, KeyButton> s_sdlToKeyButtonMap = new()
     {
         { SDL_Keycode.SDLK_UNKNOWN, KeyButton.Unknown },
         { SDL_Keycode.SDLK_RETURN, KeyButton.Return },
@@ -249,8 +252,17 @@ internal static class SDLKeyButtonMapping
         { SDL_Keycode.SDLK_AUDIOFASTFORWARD, KeyButton.AudioFastForward }
     };
 
+    /// <summary>
+    /// Returns the <see cref="KeyButton"/> equivalent to the given <paramref name="sdlKeycode"/>.
+    /// </summary>
+    /// <param name="sdlKeycode">The SDL key code to convert.</param>
+    /// <returns>The equivalent <see cref="KeyButton"/>.</returns>
+    /// <remarks>
+    /// Having a SDL enum and a framework equivlent enum is necessary since all SDL specific code is
+    /// provided by interface implementation and SDL can be replaced by other technologies.
+    /// </remarks>
     public static KeyButton ToKeyButton(SDL_Keycode sdlKeycode)
     {
-        return sdlToKeyButtonMap.TryGetValue(sdlKeycode, out var keyButton) ? keyButton : KeyButton.Unknown;
+        return s_sdlToKeyButtonMap.TryGetValue(sdlKeycode, out var keyButton) ? keyButton : KeyButton.Unknown;
     }
 }

@@ -28,6 +28,8 @@ void main()
     TextureCoordinates += 0.001;
     FragmentCoorindates += 0.001;
 
+    // If visible == true gl_position is projectedPos, otherwise gl_position is always 0, meaning the vertices
+    // won't be visible.
     gl_Position = mix(vec4(0.0, 0.0, 0.0, 0.0),
                       vec4(projectedPos.xy, 0.0, 1.0),
                       step(0.5, float(visible)));

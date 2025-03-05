@@ -667,7 +667,8 @@ public abstract class UIComponent
     internal MouseEventArgs CreateEventWithRelativeLocation(MouseEventArgs mouseEventArgs) =>
         new(mouseEventArgs.AbsoluteLocation,
             mouseEventArgs.AbsoluteLocation - _absoluteDrawingArea.TopLeft,
-            mouseEventArgs.Button);
+            mouseEventArgs.Button,
+            mouseEventArgs.Clicks);
 
     internal uint UpdateZIndices(uint baseZIndex)
     {
