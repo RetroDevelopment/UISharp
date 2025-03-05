@@ -5,6 +5,7 @@ using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Graphics;
 using RetroDev.UISharp.Presentation;
 using RetroDev.UISharp.Presentation.Properties;
+using RetroDev.UISharp.Presentation.Themes;
 
 namespace RetroDev.UISharp.Components.Simple;
 
@@ -50,7 +51,7 @@ public class Label : UIWidget
     {
         Text = new UIProperty<Label, string>(this, text);
         Font = new UIProperty<Label, Font>(this, Application.DefaultFont, BindingType.DestinationToSource);
-        TextColor = new UIProperty<Label, Color>(this, Application.Theme.TextColor, BindingType.DestinationToSource);
+        TextColor = CreateNewColorPropertyFor<Label>(UISharpColorNames.TextColor);
         TextHorizontalAlignment = new UIProperty<Label, IHorizontalAlignment>(this, Alignment.Center);
         TextVerticalAlignment = new UIProperty<Label, IVerticalAlignment>(this, Alignment.Center);
 

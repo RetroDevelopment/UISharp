@@ -40,6 +40,7 @@ public class SDLWindowManager : IWindowManager
     {
         set
         {
+            if (_mouseCursor == value) return;
             _mouseCursor = value;
             if (_cursorCache.TryGetValue(value, out var sdlCursor))
             {

@@ -1,12 +1,12 @@
 <theme>
-    <color key="mainBackground" value="#121212" />
-    <color key="primaryBackground" value="#1E1E1E" />
-    <color key="primaryColor" value="#333333" />
-    <color key="primaryColorDisabled" value="#555555" />
-    <color key="primaryColorContrast" value="#999999" />
-    <color key="secondaryColor" value="#1976D2" />
-    <color key="secondaryColorDisabled" value="#64B5F6" />
-    <color key="textColor" value="#FFFFFF" />
-    <color key="textColorDisabled" value="#CCCCCC" />
-    <color key="borderColor" value="#4CAF50" />
+    <mainBackground color="#121212" />
+    <primaryBackground color="#1E1E1E" />
+    <primaryColor color="#333333" />
+    <primaryColorDisabled color="#555555" />
+    <primaryColorContrast color="#999999" />
+    <secondaryColor color="#1976D2" />
+    <secondaryColorDisabled color="#64B5F6" />
+    <textColor color="#FFFFFF" />
+    <textColorDisabled color="#CCCCCC" />
+    <borderColor color="#4CAF50" />
 </theme>

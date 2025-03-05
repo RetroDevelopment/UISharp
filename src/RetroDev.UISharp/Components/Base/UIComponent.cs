@@ -577,6 +577,19 @@ public abstract class UIComponent
         }
     }
 
+    /// <summary>
+    /// Creates a new <see cref="BindableProperty{TValue}"/> and binds it to the theme color with the given <paramref name="id"/>.
+    /// </summary>
+    /// <param name="id">The theme color id to bind.</param>
+    /// <returns>The <see cref="UIProperty{TComponent, TValue}"/> bound to the theme color with the given <paramref name="id"/>.</returns>
+    /// <exception cref="ArgumentException">If a color with the given <paramref name="id"/> does not exist in the current theme.</exception>
+    /// <typeparam name="TComponent">The component type.</typeparam>
+    protected UIProperty<TComponent, Color> CreateNewColorPropertyFor<TComponent>(string id) where TComponent : UIComponent
+    {
+        var themeProperty = Application.ThemeManager.GetColorProperty(id);
+        return new UIProperty<TComponent, Color>((TComponent)this, themeProperty, BindingType.DestinationToSource);
+    }
+
     internal IEnumerable<UIComponent> GetComponentTreeNodesDepthFirstSearch() =>
         _childNodes.Union(_childNodes.SelectMany(c => c.GetComponentTreeNodesDepthFirstSearch()));
 

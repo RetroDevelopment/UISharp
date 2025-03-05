@@ -6,6 +6,7 @@ using RetroDev.UISharp.Core.Graphics;
 using RetroDev.UISharp.Core.Windowing.Events;
 using RetroDev.UISharp.Presentation;
 using RetroDev.UISharp.Presentation.Properties;
+using RetroDev.UISharp.Presentation.Themes;
 
 namespace RetroDev.UISharp.Components.Simple;
 
@@ -75,14 +76,14 @@ public class Button : UIWidget
     {
         Text = new UIProperty<Button, string>(this, text ?? string.Empty);
         Font = new UIProperty<Button, Font>(this, Application.DefaultFont, BindingType.DestinationToSource);
-        TextColor = new UIProperty<Button, Color>(this, Application.Theme.TextColor, BindingType.DestinationToSource);
-        DisabledTextColor = new UIProperty<Button, Color>(this, Application.Theme.TextColorDisabled, BindingType.DestinationToSource);
-        FocusColor = new UIProperty<Button, Color>(this, Application.Theme.BorderColor, BindingType.DestinationToSource);
-        DisabledBackgroundColor = new UIProperty<Button, Color>(this, Application.Theme.PrimaryColorDisabled, BindingType.DestinationToSource);
+        TextColor = CreateNewColorPropertyFor<Button>(UISharpColorNames.TextColor);
+        DisabledTextColor = CreateNewColorPropertyFor<Button>(UISharpColorNames.TextColorDisabled);
+        FocusColor = CreateNewColorPropertyFor<Button>(UISharpColorNames.BorderColor);
+        DisabledBackgroundColor = CreateNewColorPropertyFor<Button>(UISharpColorNames.PrimaryColorDisabled);
         TextHorizontalAlignment = new UIProperty<Button, IHorizontalAlignment>(this, Alignment.Center);
         TextVerticalAlignment = new UIProperty<Button, IVerticalAlignment>(this, Alignment.Center);
 
-        BackgroundColor.BindDestinationToSource(Application.Theme.SecondaryColor);
+        BackgroundColor.BindTheme(UISharpColorNames.SecondaryColor);
 
         _backgroundRectangle = new Rectangle(application);
         _backgroundRectangle.BorderColor.BindDestinationToSource(FocusColor);

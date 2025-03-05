@@ -9,6 +9,7 @@ using RetroDev.UISharp.Core.Windowing.SDL;
 using RetroDev.UISharp.Components.Core.AutoArea;
 using RetroDev.UISharp.Components.Base;
 using RetroDev.UISharp.Core.Coordinates;
+using RetroDev.UISharp.Presentation.Themes;
 
 namespace RetroDev.UISharp.Components;
 
@@ -178,7 +179,7 @@ public class Window : UIRoot
         FullScreen.ValueChange += FullScreen_ValueChange;
         Invalidate();
 
-        BackgroundColor.BindDestinationToSource(Application.Theme.MainBackground);
+        BackgroundColor.BindTheme(UISharpColorNames.MainBackground);
         CloseBehavior.ValueChange += (_, _) => UpdateCloseBehavior();
 
         Visibility.ValueChange += Visibility_ValueChange;

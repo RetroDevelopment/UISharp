@@ -5,6 +5,7 @@ using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Graphics;
 using RetroDev.UISharp.Core.Windowing.Events;
 using RetroDev.UISharp.Presentation.Properties;
+using RetroDev.UISharp.Presentation.Themes;
 
 namespace RetroDev.UISharp.Components.Containers;
 
@@ -44,7 +45,7 @@ public class ScrollView : UIContainer, ISingleContainer
     {
         ScrollBarColor = new UIProperty<ScrollView, Color>(this, Color.Transparent);
         ScrollBarThickness = new UIProperty<ScrollView, PixelUnit>(this, 15);
-        ScrollBarColor.BindDestinationToSource(Application.Theme.PrimaryColorContrast, c => c.WithAlpha(100));
+        ScrollBarColor.BindTheme(UISharpColorNames.PrimaryColorContrast, c => c.WithAlpha(100));
 
         _verticalScrollBar = new ScrollBar(application);
         _verticalScrollBar.BackgroundColor.BindDestinationToSource(ScrollBarColor);

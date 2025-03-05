@@ -8,6 +8,7 @@ using RetroDev.UISharp.Core.Windowing;
 using RetroDev.UISharp.Core.Windowing.Events;
 using RetroDev.UISharp.Presentation;
 using RetroDev.UISharp.Presentation.Properties;
+using RetroDev.UISharp.Presentation.Themes;
 
 namespace RetroDev.UISharp.Components.Simple;
 
@@ -112,16 +113,16 @@ public class EditBox : UIWidget
     {
         Text = new UIProperty<EditBox, string>(this, text);
         Font = new UIProperty<EditBox, Font>(this, application.DefaultFont, BindingType.DestinationToSource);
-        TextColor = new UIProperty<EditBox, Color>(this, Application.Theme.TextColor, BindingType.DestinationToSource);
-        DisabledTextColor = new UIProperty<EditBox, Color>(this, Application.Theme.TextColorDisabled, BindingType.DestinationToSource);
-        FocusColor = new UIProperty<EditBox, Color>(this, Application.Theme.BorderColor, BindingType.DestinationToSource);
-        DisabledBackgroundColor = new UIProperty<EditBox, Color>(this, Application.Theme.BorderColor, BindingType.DestinationToSource);
+        TextColor = CreateNewColorPropertyFor<EditBox>(UISharpColorNames.TextColor);
+        DisabledTextColor = CreateNewColorPropertyFor<EditBox>(UISharpColorNames.TextColorDisabled);
+        FocusColor = CreateNewColorPropertyFor<EditBox>(UISharpColorNames.BorderColor);
+        DisabledBackgroundColor = CreateNewColorPropertyFor<EditBox>(UISharpColorNames.BorderColor);
         CaretColor = new UIProperty<EditBox, Color>(this, TextColor, BindingType.DestinationToSource);
-        SelectionColor = new UIProperty<EditBox, Color>(this, Application.Theme.SecondaryColor, BindingType.DestinationToSource);
+        SelectionColor = CreateNewColorPropertyFor<EditBox>(UISharpColorNames.SecondaryColor);
         TextVerticalAlignment = new UIProperty<EditBox, IVerticalAlignment>(this, Alignment.Center);
         CaretIndex = new UIProperty<EditBox, uint>(this, 0);
         SelectionLength = new UIProperty<EditBox, int>(this, 0);
-        BackgroundColor.BindDestinationToSource(Application.Theme.PrimaryBackground);
+        BackgroundColor.BindTheme(UISharpColorNames.PrimaryBackground);
 
         Padding.SetAll(5.0f);
 
@@ -158,6 +159,7 @@ public class EditBox : UIWidget
         MouseDragBegin += EditBox_MouseDragBegin;
         MouseDrag += EditBox_MouseDrag;
         MouseEnter += EditBox_MouseEnter;
+        MouseMove += EditBox_MouseEnter;
         MouseLeave += EditBox_MouseLeave;
         Enabled.ValueChange += Enabled_ValueChange;
         Focus.ValueChange += Focus_ValueChange;

@@ -1,14 +1,14 @@
 <theme>
-    <color key="mainBackground" value="#FFFFFF" />
-    <color key="primaryBackground" value="#CCCCCC" />
-    <color key="primaryColor" value="#DDDDDD" />
-    <color key="primaryColorDisabled" value="#EAEAEA" />
-    <color key="primaryColorContrast" value="#090909" />
-    <color key="secondaryColor" value="#BBDEFB" />
-    <color key="secondaryColorDisabled" value="#90CAF9" />
-    <color key="textColor" value="#333333" />
-    <color key="textColorDisabled" value="#666666" />
-    <color key="borderColor" value="#FF5722" />
-    <color key="overlayBackgroundColor" value="#9999FF" />
-    <color key="overlayForegroundColor" value="#101010" />
+    <mainBackground color="#FFFFFF" />
+    <primaryBackground color="#CCCCCC" />
+    <primaryColor color="#DDDDDD" />
+    <primaryColorDisabled color="#EAEAEA" />
+    <primaryColorContrast color="#090909" />
+    <secondaryColor color="#BBDEFB" />
+    <secondaryColorDisabled color="#90CAF9" />
+    <textColor color="#333333" />
+    <textColorDisabled color="#666666" />
+    <borderColor color="#FF5722" />
+    <overlayBackgroundColor color="#9999FF" />
+    <overlayForegroundColor color="#101010" />
 </theme>

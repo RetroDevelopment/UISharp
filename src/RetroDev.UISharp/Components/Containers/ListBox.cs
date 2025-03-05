@@ -4,6 +4,7 @@ using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Graphics;
 using RetroDev.UISharp.Core.Windowing.Events;
 using RetroDev.UISharp.Presentation.Properties;
+using RetroDev.UISharp.Presentation.Themes;
 
 namespace RetroDev.UISharp.Components.Containers;
 
@@ -105,7 +106,7 @@ public class ListBox : UIContainer, IContainer
         var index = _verticalLayout.Panels.ToList().IndexOf(selectedPanel);
         if (index < 0) throw new ArgumentException($"Cannot find element in list box: make sure the element has not been deleted");
         SelectedIndex.Value = (uint)index;
-        selectedPanel.BackgroundColor.BindDestinationToSource(Application.Theme.SecondaryColor);
+        selectedPanel.BackgroundColor.BindTheme(UISharpColorNames.SecondaryColor);
     }
 
     private void SelectedIndex_ValueChange(BindableProperty<uint?> sender, ValueChangeEventArgs<uint?> e)

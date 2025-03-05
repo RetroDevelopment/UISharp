@@ -177,11 +177,11 @@ internal class MainWindow : Window
     {
         if (e.CurrentValue)
         {
-            Application.LoadThemeResource("uisharp-dark");
+            Application.ThemeManager.LoadTheme("uisharp-dark");
         }
         else
         {
-            Application.LoadThemeResource("uisharp-light");
+            Application.ThemeManager.LoadTheme("uisharp-light");
         }
     }
 

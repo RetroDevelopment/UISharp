@@ -5,6 +5,7 @@ using RetroDev.UISharp.Core.Graphics;
 using RetroDev.UISharp.Core.Windowing.Events;
 using RetroDev.UISharp.Presentation.Properties;
 using RetroDev.UISharp.Presentation.Properties.Exceptions;
+using RetroDev.UISharp.Presentation.Themes;
 
 namespace RetroDev.UISharp.Components.Simple;
 
@@ -51,8 +52,8 @@ public class ProgressBar : UIWidget
         Value = new UIProperty<ProgressBar, int>(this, value);
         MinimumValue = new UIProperty<ProgressBar, int>(this, 0);
         MaximumValue = new UIProperty<ProgressBar, int>(this, 100);
-        ForegroundColor = new UIProperty<ProgressBar, Color>(this, application.Theme.SecondaryColorDisabled, BindingType.DestinationToSource);
-        BackgroundColor.BindDestinationToSource(Application.Theme.PrimaryColor);
+        ForegroundColor = CreateNewColorPropertyFor<ProgressBar>(UISharpColorNames.SecondaryColorDisabled);
+        BackgroundColor.BindTheme(UISharpColorNames.PrimaryColor);
 
         _backgroundRectangle = new Rectangle(application);
         _backgroundRectangle.BackgroundColor.BindDestinationToSource(BackgroundColor);

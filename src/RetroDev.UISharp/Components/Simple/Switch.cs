@@ -6,6 +6,7 @@ using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Graphics;
 using RetroDev.UISharp.Core.Windowing.Events;
 using RetroDev.UISharp.Presentation.Properties;
+using RetroDev.UISharp.Presentation.Themes;
 
 namespace RetroDev.UISharp.Components.Simple;
 
@@ -50,12 +51,12 @@ public class Switch : UIWidget
     public Switch(Application application, bool @checked = false) : base(application, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
     {
         Checked = new UIProperty<Switch, bool>(this, @checked);
-        CircleColor = new UIProperty<Switch, Color>(this, Application.Theme.TextColor, BindingType.DestinationToSource);
-        UncheckedBackgroundColor = new UIProperty<Switch, Color>(this, Application.Theme.PrimaryColor, BindingType.DestinationToSource);
-        DisabledBackgroundColor = new UIProperty<Switch, Color>(this, Application.Theme.PrimaryColorDisabled, BindingType.DestinationToSource);
-        FocusColor = new UIProperty<Switch, Color>(this, Application.Theme.BorderColor, BindingType.DestinationToSource);
+        CircleColor = CreateNewColorPropertyFor<Switch>(UISharpColorNames.TextColor);
+        UncheckedBackgroundColor = CreateNewColorPropertyFor<Switch>(UISharpColorNames.PrimaryColor);
+        DisabledBackgroundColor = CreateNewColorPropertyFor<Switch>(UISharpColorNames.PrimaryColorDisabled);
+        FocusColor = CreateNewColorPropertyFor<Switch>(UISharpColorNames.BorderColor);
 
-        BackgroundColor.BindDestinationToSource(Application.Theme.SecondaryColor);
+        BackgroundColor.BindTheme(UISharpColorNames.SecondaryColor);
 
         Padding.SetAll(5.0f); // TODO: use styles
 
