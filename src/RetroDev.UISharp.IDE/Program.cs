@@ -44,7 +44,6 @@ internal class Program
         w.Width.Value = 800;
         w.Height.Value = 600;
         var edit = new EditBox(application, "0123456789 0123456789 0123456789 0123456789");
-        edit.Padding.SetAll(5);
         edit.CaretIndex.Value = 3;
         edit.SelectionLength.Value = 7;
         w.AddComponent(edit);

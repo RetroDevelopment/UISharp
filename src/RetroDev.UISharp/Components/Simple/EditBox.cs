@@ -123,6 +123,8 @@ public class EditBox : UIWidget
         SelectionLength = new UIProperty<EditBox, int>(this, 0);
         BackgroundColor.BindDestinationToSource(Application.Theme.PrimaryBackground);
 
+        Padding.SetAll(5.0f);
+
         _backgroundRectangle = new Rectangle(application);
         _backgroundRectangle.BorderColor.BindDestinationToSource(FocusColor);
         Canvas.Add(_backgroundRectangle);
@@ -195,11 +197,11 @@ public class EditBox : UIWidget
         }
         else if (key == KeyButton.Backspace)
         {
-            _textBuffer.DeleteLeft();
+            _textBuffer.DeleteLeft(_ctrlPressed);
         }
         else if (key == KeyButton.Delete)
         {
-            _textBuffer.DeleteRight();
+            _textBuffer.DeleteRight(_ctrlPressed);
         }
         else if (key == KeyButton.Right)
         {
@@ -225,9 +227,9 @@ public class EditBox : UIWidget
         }
         else if (_ctrlPressed && key == KeyButton.C && SelectionLength.Value != 0)
         {
-            var selectionInterval = _textBuffer.GetSelectionInterval();
-            var selectionLength = (int)(selectionInterval.EndIndex - selectionInterval.StartIndex);
-            Application.WindowManager.CopyToClipboard(Text.Value.Substring((int)selectionInterval.StartIndex, selectionLength));
+            var (startIndex, endIndex) = _textBuffer.GetSelectionInterval();
+            var selectionLength = (int)(endIndex - startIndex);
+            Application.WindowManager.CopyToClipboard(Text.Value.Substring((int)startIndex, selectionLength));
         }
         else if (_ctrlPressed && key == KeyButton.V)
         {
@@ -236,9 +238,9 @@ public class EditBox : UIWidget
         }
         else if (_ctrlPressed && key == KeyButton.X && SelectionLength.Value != 0)
         {
-            var selectionInterval = _textBuffer.GetSelectionInterval();
-            var selectionLength = (int)(selectionInterval.EndIndex - selectionInterval.StartIndex);
-            Application.WindowManager.CopyToClipboard(Text.Value.Substring((int)selectionInterval.StartIndex, selectionLength));
+            var (startIndex, endIndex) = _textBuffer.GetSelectionInterval();
+            var selectionLength = (int)(endIndex - startIndex);
+            Application.WindowManager.CopyToClipboard(Text.Value.Substring((int)startIndex, selectionLength));
             _textBuffer.DeleteCurrentSelectedText();
         }
     }
@@ -390,11 +392,10 @@ public class EditBox : UIWidget
 
         var padding = Padding.ToMarginStruct();
         var textLeftBoundingBox = _inputText.RelativeRenderingArea.Value.TopLeft.X;
-        var textRightBoundingBox = _inputText.RelativeRenderingArea.Value.BottomRight.X;
         var textStartPosition = textLeftBoundingBox + _inputText.HorizontalScroll.Value;
-        var selectionInterval = _textBuffer.GetSelectionInterval();
-        var selectionStartPosition = textStartPosition + _inputText.ComputeTextSize(selectionInterval.StartIndex).Width;
-        var selectionEndPosition = textStartPosition + _inputText.ComputeTextSize(selectionInterval.EndIndex).Width;
+        var (startIndex, endIndex) = _textBuffer.GetSelectionInterval();
+        var selectionStartPosition = textStartPosition + _inputText.ComputeTextSize(startIndex).Width;
+        var selectionEndPosition = textStartPosition + _inputText.ComputeTextSize(endIndex).Width;
 
         _selectionRectangle.RelativeRenderingArea.Value =
             new Area(new Point(selectionStartPosition, PixelUnit.Zero),
