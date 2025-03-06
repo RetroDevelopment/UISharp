@@ -134,9 +134,11 @@ public class Application : IDisposable
     public void Run()
     {
         Dispatcher.ThrowIfNotOnUIThread();
+        EventSystem.TimeoutMilliseconds = 10; // TODO: probably set this according to frame rate
 
         Logger.LogInfo("Application started");
         EventSystem.ApplicationQuit += (_, _) => _shoudQuit = true;
+        EventSystem.RenderNeeded += (_, _) => Render();
         Started = true;
         ApplicationStarted?.Invoke(this, EventArgs.Empty);
         EventSystem.Signal();
@@ -241,7 +243,11 @@ public class Application : IDisposable
     internal void RunUIEventPollLoop()
     {
         LifeCycle.CurrentState = LifeCycle.State.EVENT_POLL;
-        EventSystem.ProcessEvents(timeoutMs: 10); // TODO: probably set this according to frame rate
+        EventSystem.ProcessEvents();
+    }
+
+    private void Render()
+    {
         LifeCycle.CurrentState = LifeCycle.State.MEASURE;
         _windows.ForEach(w => w.Measure());
         LifeCycle.CurrentState = LifeCycle.State.EVENT_POLL;
@@ -252,6 +258,7 @@ public class Application : IDisposable
         LifeCycle.CurrentState = LifeCycle.State.RENDERING;
         _windows.ForEach(w => w.EnsureZIndicesUpdated());
         _windows.ForEach(w => w.Render());
+        LifeCycle.CurrentState = LifeCycle.State.EVENT_POLL;
     }
 
     private void DisposeManagedResources() { }

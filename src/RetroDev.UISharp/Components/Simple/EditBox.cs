@@ -421,7 +421,7 @@ public class EditBox : UIWidget
     {
         if (Focus.Value)
         {
-            _backgroundRectangle.BorderThickness.Value = 5.0f;
+            _backgroundRectangle.BorderThickness.Value = 3.0f; // TODO: use styles
         }
         else
         {

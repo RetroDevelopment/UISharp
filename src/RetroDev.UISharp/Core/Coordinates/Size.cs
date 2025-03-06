@@ -136,6 +136,16 @@ public record Size
         new(Width + (margin.Left.IsAuto ? PixelUnit.Zero : margin.Left) + (margin.Right.IsAuto ? PixelUnit.Zero : margin.Right),
             Height + (margin.Top.IsAuto ? PixelUnit.Zero : margin.Top) + (margin.Bottom.IsAuto ? PixelUnit.Zero : margin.Bottom));
 
+    /// <summary>
+    /// Clamps <see langword="this" /> <see cref="Size"/> to the given <paramref name="minimumSize"/> and <paramref name="maximumSize"/>.
+    /// </summary>
+    /// <param name="minimumSize">The minimum allowed size.</param>
+    /// <param name="maximumSize">The maximum allowed size.</param>
+    /// <returns></returns>
+    public Size Clamp(Size minimumSize, Size maximumSize) =>
+        new(Math.Clamp(Width, minimumSize.Width, maximumSize.Width),
+            Math.Clamp(Height, minimumSize.Height, maximumSize.Height));
+
     public static Size operator +(Size s1, Size s2) => new(s1.Width + s2.Width, s1.Height + s2.Height);
     public static Size operator -(Size s1, Size s2) => new(s1.Width - s2.Width, s1.Height - s2.Height);
     public static Size operator +(Size s, PixelUnit u) => new(s.Width + u, s.Height + u);

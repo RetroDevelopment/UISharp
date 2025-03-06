@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
+using RetroDev.UISharp.Components;
 using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Logging;
 using RetroDev.UISharp.Core.Windowing.Events;
@@ -19,13 +21,26 @@ internal class SDLEventSystem : IEventSystem
     }
 
     private readonly ThreadDispatcher _dispatcher;
+    private readonly Stopwatch _stopwatch;
     private readonly ILogger _logger;
+    private readonly SDL_EventFilter _eventFilter;
     private bool _signaled = false;
+
+    /// <summary>
+    /// The time in milliseconds after which this method must exit even if there are still events to process.
+    /// This guarantee that a frame is rendered even when the queue is pumped with too many events.
+    /// </summary>
+    public long TimeoutMilliseconds { get; set; } = 10;
 
     /// <summary>
     /// An event that indicates to quit the application.
     /// </summary>
     public event TypeSafeEventHandler<IEventSystem, EventArgs>? ApplicationQuit;
+
+    /// <summary>
+    /// An event that indicates that rendering is needed.
+    /// </summary>
+    public event TypeSafeEventHandler<IEventSystem, EventArgs>? RenderNeeded;
 
     /// <summary>
     /// Mouse button press on a window.
@@ -117,30 +132,34 @@ internal class SDLEventSystem : IEventSystem
     public SDLEventSystem(ThreadDispatcher dispatcher, ILogger logger)
     {
         _dispatcher = dispatcher;
+        _stopwatch = new Stopwatch();
+        _stopwatch.Start();
         _logger = logger;
+        _eventFilter = new SDL_EventFilter(EventCallback);
         SDL_StartTextInput();
+        SDL_AddEventWatch(_eventFilter, IntPtr.Zero);
     }
 
     /// <summary>
     /// Processes all the pending events.
     /// This method must be blocking the calling thread waiting for events, then process all the events and exit.
     /// </summary>
-    /// <param name="timeoutMs">
-    /// The time in milliseconds after which this method must exit even if there are still events to process.
-    /// This guarantee that a frame is rendered even when the queue is pumped with too many events.
-    /// </param>
-    public void ProcessEvents(long timeoutMs)
+    public void ProcessEvents()
     {
         _dispatcher.ThrowIfNotOnUIThread();
         SDL_WaitEvent(out var currentEvent);
 
-        var stopwatch = Stopwatch.StartNew();
+        _stopwatch.Start();
         // TODO: add more events
 
         do
         {
             if ((int)currentEvent.type == (int)SDL_CustomEventType.SDL_QUIT) break;
-            if ((int)currentEvent.type == (int)SDL_CustomEventType.SDL_SIGNAL) _signaled = false;
+            if ((int)currentEvent.type == (int)SDL_CustomEventType.SDL_SIGNAL)
+            {
+                Console.WriteLine("TIME TO RENDER");
+                _signaled = false;
+            }
             switch (currentEvent.type)
             {
                 case SDL_EventType.SDL_MOUSEBUTTONDOWN:
@@ -276,8 +295,6 @@ internal class SDLEventSystem : IEventSystem
                     MouseWheel?.Invoke(this, mouseWheelArgs);
                     break;
             }
-            // Exit the loop if more than 10 milliseconds have passed to render frame (otherwise the loop can last too long skipping frames)
-            if (stopwatch.ElapsedMilliseconds > timeoutMs) break;
         } while (SDL_PollEvent(out currentEvent) != 0);
     }
 
@@ -306,7 +323,42 @@ internal class SDLEventSystem : IEventSystem
         SDL_PushEvent(ref quitEvent);
         if (emitQuitEvent) ApplicationQuit?.Invoke(this, EventArgs.Empty);
         SDL_StopTextInput(); // TODO: move this into a dispose method
+        SDL_DelEventWatch(_eventFilter, IntPtr.Zero);
     }
+
+    private int EventCallback(nint userdata, nint sdlevent)
+    {
+        _dispatcher.ThrowIfNotOnUIThread(); // TODO: use dispatcher to decide whether to push to event queue or not
+        SDL_Event e = Marshal.PtrToStructure<SDL_Event>(sdlevent);
+
+        if (e.type == SDL_EventType.SDL_WINDOWEVENT)
+        {
+            var windowEvent = e.window;
+            var windowId = GetWindowIdFromWindowEvent(windowEvent);
+
+            switch (windowEvent.windowEvent)
+            {
+                case SDL_WindowEventID.SDL_WINDOWEVENT_RESIZED:
+                case SDL_WindowEventID.SDL_WINDOWEVENT_SIZE_CHANGED:
+                    var resizedArgs = new WindowEventArgs<WindowResizeEventArgs>(windowId, new WindowResizeEventArgs(new Size(windowEvent.data1, windowEvent.data2)));
+                    resizedArgs.Log("windowResize", _logger);
+                    WindowResize?.Invoke(this, resizedArgs);
+                    RenderNeeded?.Invoke(this, EventArgs.Empty);
+                    break;
+            }
+
+            return 0;
+        }
+
+        if (_stopwatch.ElapsedMilliseconds > TimeoutMilliseconds)
+        {
+            RenderNeeded?.Invoke(this, EventArgs.Empty);
+            _stopwatch.Restart();
+        }
+
+        return 1;
+    }
+
 
     private static string GetString(SDL_TextInputEvent textInputEvent)
     {

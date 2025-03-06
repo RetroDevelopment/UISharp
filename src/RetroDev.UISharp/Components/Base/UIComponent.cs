@@ -246,6 +246,34 @@ public abstract class UIComponent
     public PaddingGroup Padding { get; }
 
     /// <summary>
+    /// The minimum width for <see langword="this" /> <see cref="UIComponent"/>.
+    /// The <see cref="Width"/> property takes priority over this property, meaning that if
+    /// <see cref="Width"/> is not <see cref="PixelUnit.Auto"/> it will not be clamped.
+    /// </summary>
+    public UIProperty<UIComponent, PixelUnit> MinimumWidth { get; }
+
+    /// <summary>
+    /// The minimum height for <see langword="this" /> <see cref="UIComponent"/>.
+    /// The <see cref="Height"/> property takes priority over this property, meaning that if
+    /// <see cref="Height"/> is not <see cref="PixelUnit.Auto"/> it will not be clamped.
+    /// </summary>
+    public UIProperty<UIComponent, PixelUnit> MinimumHeight { get; }
+
+    /// <summary>
+    /// The maximum width for <see langword="this" /> <see cref="UIComponent"/>.
+    /// The <see cref="Width"/> property takes priority over this property, meaning that if
+    /// <see cref="Width"/> is not <see cref="PixelUnit.Auto"/> it will not be clamped.
+    /// </summary>
+    public UIProperty<UIComponent, PixelUnit> MaximumWidth { get; }
+
+    /// <summary>
+    /// The maximum height for <see langword="this" /> <see cref="UIComponent"/>.
+    /// The <see cref="Height"/> property takes priority over this property, meaning that if
+    /// <see cref="Height"/> is not <see cref="PixelUnit.Auto"/> it will not be clamped.
+    /// </summary>
+    public UIProperty<UIComponent, PixelUnit> MaximumHeight { get; }
+
+    /// <summary>
     /// Creates a new component.
     /// </summary>
     /// <param name="application">The application owning this component.</param>
@@ -287,6 +315,10 @@ public abstract class UIComponent
         BackgroundColor = new UIProperty<UIComponent, Color>(this, Color.Transparent);
         Margin = new MarginGroup(application, this);
         Padding = new PaddingGroup(application, this);
+        MinimumWidth = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Zero);
+        MinimumHeight = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Zero);
+        MaximumWidth = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Max);
+        MaximumHeight = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Max);
 
         Canvas = new Canvas(this);
 
@@ -618,7 +650,9 @@ public abstract class UIComponent
         var collapsed = Visibility.Value == ComponentVisibility.Collapsed;
         var currentWrapSize = _wrapSize;
         var newWrapSize = collapsed ? Size.Zero : new Size(width, height);
-        newWrapSize = newWrapSize.Inflate(Padding.ToMarginStruct());
+        var minimumSize = new Size(Width.Value.IsAuto ? MinimumWidth.Value : PixelUnit.Zero, Height.Value.IsAuto ? MinimumHeight.Value : PixelUnit.Zero);
+        var maximumSize = new Size(Width.Value.IsAuto ? MaximumWidth.Value : PixelUnit.Max, Height.Value.IsAuto ? MaximumHeight.Value : PixelUnit.Max);
+        newWrapSize = newWrapSize.Inflate(Padding.ToMarginStruct()).Clamp(minimumSize, maximumSize);
         _wrapSize = newWrapSize;
         return currentWrapSize != newWrapSize;
     }
@@ -741,8 +775,11 @@ public abstract class UIComponent
 
         var autoWidth = AutoWidth.Value.ComputeWidth(parentSize, _wrapSize);
         var autoHeight = AutoHeight.Value.ComputeHeight(parentSize, _wrapSize);
-        var actualWidth = sizeOverride.Width.IsAuto ? (Width.Value.IsAuto ? autoWidth : Width.Value) : sizeOverride.Width;
-        var actualHeight = sizeOverride.Height.IsAuto ? (Height.Value.IsAuto ? autoHeight : Height.Value) : sizeOverride.Height;
+        var minimumSize = new Size(MinimumWidth.Value, MinimumHeight.Value);
+        var maximumSize = new Size(MaximumWidth.Value, MaximumHeight.Value);
+        var autoSize = new Size(autoWidth, autoHeight).Clamp(minimumSize, maximumSize);
+        var actualWidth = sizeOverride.Width.IsAuto ? (Width.Value.IsAuto ? autoSize.Width : Width.Value) : sizeOverride.Width;
+        var actualHeight = sizeOverride.Height.IsAuto ? (Height.Value.IsAuto ? autoSize.Height : Height.Value) : sizeOverride.Height;
         var actualSize = new Size(actualWidth, actualHeight);
 
         var autoX = HorizontalAlignment.Value.ComputeX(parentSize, actualSize);

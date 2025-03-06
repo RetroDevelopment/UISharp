@@ -371,7 +371,9 @@ public class Window : UIRoot
 
     private void EventSystem_WindowResize(IEventSystem sender, WindowEventArgs<WindowResizeEventArgs> windowArgs)
     {
-        if (ShouldPropagateEvent(windowArgs))
+        // Only override manual size (width/height) if the window resize event happens during event polling
+        // and not as a consequence of resizing the window.
+        if (ShouldPropagateEvent(windowArgs) && Application.LifeCycle.CurrentState == LifeCycle.State.EVENT_POLL)
         {
             var size = windowArgs.Args.Size;
             Width.Value = size.Width;
@@ -465,7 +467,6 @@ public class Window : UIRoot
 
     private void Window_RenderingAreaChange(UIComponent sender, RenderingAreaEventArgs e)
     {
-        Application.WindowManager.SetRenderingArea(_windowId, e.RenderingArea);
         RenderingEngine.ViewportSize = e.RenderingArea.Size;
     }
 

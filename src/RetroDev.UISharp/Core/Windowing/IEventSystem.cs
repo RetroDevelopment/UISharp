@@ -8,12 +8,23 @@ namespace RetroDev.UISharp.Core.Windowing;
 public interface IEventSystem
 {
     /// <summary>
+    /// The time in milliseconds after which this method must exit even if there are still events to process.
+    /// This guarantee that a frame is rendered even when the queue is pumped with too many events.
+    /// </summary>
+    long TimeoutMilliseconds { get; set; }
+
+    /// <summary>
     /// An event that indicates to quit the application.
     /// The only way to trigger this event is that there is a call to <see cref="Quit"/>, because
     /// quitting the application must be managed by the <see cref="Application"/> class and not implicity by
     /// the event system underneath, unless there are specific needs or interrupts.
     /// </summary>
     event TypeSafeEventHandler<IEventSystem, EventArgs> ApplicationQuit;
+
+    /// <summary>
+    /// An event that indicates that rendering is needed.
+    /// </summary>
+    event TypeSafeEventHandler<IEventSystem, EventArgs>? RenderNeeded;
 
     /// <summary>
     /// Mouse button press inside the given window.
@@ -101,12 +112,7 @@ public interface IEventSystem
     /// Processes all the pending events.
     /// This method must be blocking the calling thread waiting for events, then process all the events and exit.
     /// </summary>
-    /// <param name="timeoutMs">
-    /// The time in milliseconds after which this method must exit even if there are still events to process.
-    /// This guarantee that a frame is rendered even when the queue is pumped with too many events.
-    /// The time out does not apply to when waiting for an event, but it refers to the maximum processing time of events.
-    /// </param>
-    void ProcessEvents(long timeoutMs);
+    void ProcessEvents();
 
     /// <summary>
     /// Awakes the current thread if it is blocked by <see cref="ProcessEvents(long)"/>.
