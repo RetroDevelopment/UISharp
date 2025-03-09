@@ -52,8 +52,8 @@ public class ProgressBar : UIWidget
         Value = new UIProperty<ProgressBar, int>(this, value);
         MinimumValue = new UIProperty<ProgressBar, int>(this, 0);
         MaximumValue = new UIProperty<ProgressBar, int>(this, 100);
-        ForegroundColor = CreateNewColorPropertyFor<ProgressBar>(UISharpColorNames.SecondaryColorDisabled);
-        BackgroundColor.BindTheme(UISharpColorNames.PrimaryColor);
+        ForegroundColor = CreateNewColorPropertyFor<ProgressBar>(UISharpColorNames.ProgressBarForeground);
+        BackgroundColor.BindTheme(UISharpColorNames.ProgressBarBackground);
 
         _backgroundRectangle = new Rectangle(application);
         _backgroundRectangle.BackgroundColor.BindDestinationToSource(BackgroundColor);

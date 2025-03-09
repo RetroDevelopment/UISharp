@@ -28,8 +28,10 @@ internal static class ExtensionMethods
 
         if (borderThickness != null)
         {
-            scale = new Vector2(renderingArea.Size.Width - borderThickness,
-                                renderingArea.Size.Height - borderThickness);
+            var maxBorderThickness = Math.Min(renderingArea.Size.Width, renderingArea.Size.Height);
+            var cappedBorderThickness = Math.Min(borderThickness.Value, maxBorderThickness);
+            scale = new Vector2(renderingArea.Size.Width - cappedBorderThickness,
+                                renderingArea.Size.Height - cappedBorderThickness);
         }
         else
         {

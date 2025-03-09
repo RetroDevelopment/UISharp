@@ -444,7 +444,7 @@ public class OpenGLRenderingEngine : IRenderingEngine
         var maximumBorderThickness = Math.Min(area.Size.Width, area.Size.Height);
         if (shape.BorderThickness != null && shape.BorderThickness.Value > maximumBorderThickness)
         {
-            throw new ArgumentException($"Border thickness {shape.BorderThickness} pixels exceed maximum allowed size of {maximumBorderThickness}");
+            //throw new ArgumentException($"Border thickness {shape.BorderThickness} pixels exceed maximum allowed size of {maximumBorderThickness}");
         }
 
         if (area.Size.Width < 0.0f) throw new ArgumentException($"Shape negative width ({area.Size.Width}) not allowed");

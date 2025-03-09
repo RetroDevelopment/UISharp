@@ -18,6 +18,9 @@ public class Button : UIWidget
     private readonly Rectangle _backgroundRectangle;
     private readonly Label _buttonTextLabel;
 
+    private readonly UIProperty<Button, bool> _isMouseHover;
+    private readonly UIProperty<Button, bool> _isAction;
+
     /// <summary>
     /// Raised when clicking on the button.
     /// </summary>
@@ -54,6 +57,21 @@ public class Button : UIWidget
     public UIProperty<Button, Color> FocusColor { get; }
 
     /// <summary>
+    /// The button border color.
+    /// </summary>
+    public UIProperty<Button, Color> BorderColor { get; }
+
+    /// <summary>
+    /// The color when the mouse is whithin the button.
+    /// </summary>
+    public UIProperty<Button, Color> HoverColor { get; }
+
+    /// <summary>
+    /// The color when clicking on the button.
+    /// </summary>
+    public UIProperty<Button, Color> ActionColor { get; }
+
+    /// <summary>
     /// The button text horizontal alignment.
     /// </summary>
     public UIProperty<Button, IHorizontalAlignment> TextHorizontalAlignment { get; }
@@ -74,19 +92,25 @@ public class Button : UIWidget
     /// <param name="text">The button text.</param>
     public Button(Application application, string text = "") : base(application)
     {
+        _isMouseHover = new UIProperty<Button, bool>(this, false);
+        _isAction = new UIProperty<Button, bool>(this, false);
+
         Text = new UIProperty<Button, string>(this, text ?? string.Empty);
         Font = new UIProperty<Button, Font>(this, Application.DefaultFont, BindingType.DestinationToSource);
-        TextColor = CreateNewColorPropertyFor<Button>(UISharpColorNames.TextColor);
-        DisabledTextColor = CreateNewColorPropertyFor<Button>(UISharpColorNames.TextColorDisabled);
-        FocusColor = CreateNewColorPropertyFor<Button>(UISharpColorNames.BorderColor);
-        DisabledBackgroundColor = CreateNewColorPropertyFor<Button>(UISharpColorNames.PrimaryColorDisabled);
+        TextColor = CreateNewColorPropertyFor<Button>(UISharpColorNames.ButtonText);
+        DisabledTextColor = CreateNewColorPropertyFor<Button>(UISharpColorNames.ButtonDisabledText);
+        FocusColor = CreateNewColorPropertyFor<Button>(UISharpColorNames.ButtonFocusBorder);
+        DisabledBackgroundColor = CreateNewColorPropertyFor<Button>(UISharpColorNames.ButtonDisabled);
+        BorderColor = CreateNewColorPropertyFor<Button>(UISharpColorNames.ButtonBorder);
+        HoverColor = CreateNewColorPropertyFor<Button>(UISharpColorNames.ButtonHover);
+        ActionColor = CreateNewColorPropertyFor<Button>(UISharpColorNames.ButtonAction);
         TextHorizontalAlignment = new UIProperty<Button, IHorizontalAlignment>(this, Alignment.Center);
         TextVerticalAlignment = new UIProperty<Button, IVerticalAlignment>(this, Alignment.Center);
 
-        BackgroundColor.BindTheme(UISharpColorNames.SecondaryColor);
+        BackgroundColor.BindTheme(UISharpColorNames.ButtonBackground);
 
         _backgroundRectangle = new Rectangle(application);
-        _backgroundRectangle.BorderColor.BindDestinationToSource(FocusColor);
+        _backgroundRectangle.BorderThickness.Value = 3.0f; // TODO: use styles
         Canvas.Add(_backgroundRectangle);
 
         _buttonTextLabel = new Label(application);
@@ -99,7 +123,10 @@ public class Button : UIWidget
         UpdateTextColor();
         AddChildNode(_buttonTextLabel);
 
-        MousePress += Button_MousePress; // TODO: managing button action is more complicated than intercepting key press events.
+        MousePress += Button_MousePress;
+        MouseEnter += Button_MouseEnter;
+        MouseLeave += Button_MouseLeave;
+        MouseDragEnd += Button_MouseDragEnd;
         RenderFrame += Button_RenderFrame;
         Enabled.ValueChange += (_, _) => UpdateTextColor();
     }
@@ -109,8 +136,28 @@ public class Button : UIWidget
         if (e.Button == MouseButton.Left)
         {
             Focus.Value = true;
+            _isAction.Value = true;
+        }
+    }
+
+    private void Button_MouseEnter(UIComponent sender, EventArgs e)
+    {
+        _isMouseHover.Value = true;
+    }
+
+    private void Button_MouseLeave(UIComponent sender, EventArgs e)
+    {
+        _isMouseHover.Value = false;
+    }
+
+    private void Button_MouseDragEnd(UIComponent sender, EventArgs e)
+    {
+        if (_isMouseHover.Value)
+        {
             Action?.Invoke(this, EventArgs.Empty);
         }
+
+        _isAction.Value = false;
     }
 
     private void Button_RenderFrame(UIComponent sender, RenderingEventArgs e)
@@ -125,7 +172,15 @@ public class Button : UIWidget
 
     private void UpdateBackgroundRectangleColor()
     {
-        if (Enabled.Value)
+        if (Enabled.Value && _isAction.Value)
+        {
+            _backgroundRectangle.BackgroundColor.Value = ActionColor.Value;
+        }
+        else if (Enabled.Value && _isMouseHover.Value)
+        {
+            _backgroundRectangle.BackgroundColor.Value = HoverColor.Value;
+        }
+        else if (Enabled.Value)
         {
             _backgroundRectangle.BackgroundColor.Value = BackgroundColor.Value;
         }
@@ -151,11 +206,11 @@ public class Button : UIWidget
     {
         if (Focus.Value)
         {
-            _backgroundRectangle.BorderThickness.Value = 3.0f;
+            _backgroundRectangle.BorderColor.BindDestinationToSource(FocusColor);
         }
         else
         {
-            _backgroundRectangle.BorderThickness.Value = 0.0f;
+            _backgroundRectangle.BorderColor.BindDestinationToSource(BorderColor);
         }
     }
 }

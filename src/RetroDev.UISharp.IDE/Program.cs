@@ -1,6 +1,4 @@
 ﻿using RetroDev.UISharp.Components;
-using RetroDev.UISharp.Components.Containers;
-using RetroDev.UISharp.Components.Core.AutoArea;
 using RetroDev.UISharp.Components.Simple;
 using RetroDev.UISharp.Core.Graphics;
 using RetroDev.UISharp.Core.Logging;
@@ -23,13 +21,21 @@ namespace RetroDev.UISharp.IDE;
 // Dynamic and scalable interfaces.
 // Lightweight and efficient tools for medium-sized applications.
 
+// TODO
+// More unified way of handling border and backgrounds
+// Add missing border color properties
+// Fix slow scroll bar issue when dragging with mouse
+// Fix issue with multi token selection in edit boxes
+// Fix crash due to margin calculation when not enough space
+// Fix wrong invalidation logic
+
 internal class Program
 {
     static void Main(string[] _)
     {
         using var application = new Application();
         application.Logger.Verbosity = Verbosity.Verbose;
-        application.ApplicationStarted += (_, _) => LoadTest(application);
+        application.ApplicationStarted += (_, _) => LoadMain(application);
         application.Run();
     }
 
@@ -41,12 +47,45 @@ internal class Program
     private static void LoadTest(Application application)
     {
         Window w = new Window(application);
-        w.Width.Value = 800;
-        w.Height.Value = 600;
+        w.X.ValueChange += (_, _) => application.Logger.LogError("X = " + w.X.Value);
+        w.Width.ValueChange += (_, _) => application.Logger.LogError("WIDTH = " + w.Width.Value);
+        w.MinimumWidth.Value = 100;
+        w.MaximumWidth.Value = 400;
+        w.MinimumHeight.Value = 100;
+        w.MaximumHeight.Value = 300;
         var edit = new EditBox(application, "0123456789 0123456789 0123456789 0123456789");
         edit.CaretIndex.Value = 3;
         edit.SelectionLength.Value = 7;
         w.AddComponent(edit);
+
+        var b = new Button(application, "Click");
+        b.Y.Value = 100;
+        b.Height.Value = 30;
+        w.AddComponent(b);
+        w.Title.Value = "Hello title!";
+        b.Action += (_, _) => b.Text.Value = new MD(application, edit).ShowDialog(w).ToString();
+
         w.Show();
+    }
+
+    class MD : Dialog<string>
+    {
+        EditBox es;
+        public MD(Application application, EditBox e, IRenderingEngine? renderingEngine = null) : base(application, renderingEngine)
+        {
+            CloseBehavior.Value = WindowCloseBehavior.None;
+            WindowCloseRequest += MD_WindowCloseRequest;
+            var b = new Button(application, "Done");
+            b.Action += (_, _) => Close("<CLOSED>");
+            b.Margin.SetAll(30);
+            FullScreen.Value = true;
+            AddComponent(b);
+            es = e;
+        }
+
+        private void MD_WindowCloseRequest(Window sender, EventArgs e)
+        {
+            Close(es.Text.Value);
+        }
     }
 }

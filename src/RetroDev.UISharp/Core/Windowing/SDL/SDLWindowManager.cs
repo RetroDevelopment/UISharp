@@ -139,7 +139,7 @@ public class SDLWindowManager : IWindowManager
     /// <param name="windowId">The ID of the window for which to set the title.</param>
     /// <param name="renderingArea">The window position and size.</param>
     /// <exception cref="ArgumentException">If the <paramref name="windowId"/> is not a <see cref="SDLWindowId"/>.</exception>
-    public void SetRenderingArea(IWindowId windowId, Area renderingArea)
+    public void SetWindowRenderingArea(IWindowId windowId, Area renderingArea)
     {
         ExecuteOnWindow(windowId, id =>
         {
@@ -221,6 +221,25 @@ public class SDLWindowManager : IWindowManager
     /// <param name="windowId">The identifier of the window to maximize.</param>
     public void RestoreWindow(IWindowId windowId) =>
         ExecuteOnWindow(windowId, id => SDL_RestoreWindow(id.Handle));
+
+    /// <summary>
+    /// Sets the window minimum size informing the operating system that user cannot in any way resize the window identified by the given
+    /// <paramref name="windowId"/> below the given <paramref name="size"/>.
+    /// </summary>
+    /// <param name="windowId">The identifier of the window for which to set the minimum size.</param>
+    /// <param name="size">The window minimum size.</param>
+    public void SetWindowMinimumSize(IWindowId windowId, Size size) =>
+        ExecuteOnWindow(windowId, id => SDL_SetWindowMinimumSize(id.Handle, (int)size.Width, (int)size.Height));
+
+    /// <summary>
+    /// Sets the window maximum size informing the operating system that user cannot in any way resize the window identified by the given
+    /// <paramref name="windowId"/> above the given <paramref name="size"/>.
+    /// </summary>
+    /// <param name="windowId">The identifier of the window for which to set the maximum size.</param>
+    /// <param name="size">The window maximum size.</param>
+    public void SetWindowMaximumSize(IWindowId windowId, Size size) =>
+        ExecuteOnWindow(windowId, id => SDL_SetWindowMaximumSize(id.Handle, size.Width.Value == PixelUnit.Max ? 1000 : (int)size.Width,
+                                                                            size.Height.Value == PixelUnit.Max ? 1000 : (int)size.Height));
 
     /// <summary>
     /// Copies the given <paramref name="text"/> to the clipboard.

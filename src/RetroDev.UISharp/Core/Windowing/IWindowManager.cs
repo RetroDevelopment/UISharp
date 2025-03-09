@@ -56,7 +56,7 @@ public interface IWindowManager
     /// </summary>
     /// <param name="windowId">The identifier of the window for which to change rendering area.</param>
     /// <param name="renderingArea">The new rendering area.</param>
-    void SetRenderingArea(IWindowId windowId, Area renderingArea);
+    void SetWindowRenderingArea(IWindowId windowId, Area renderingArea);
 
     /// <summary>
     /// Sets the title for the window with the given <paramref name="windowId"/>.
@@ -114,6 +114,22 @@ public interface IWindowManager
     /// </summary>
     /// <param name="windowId">The identifier of the window to maximize.</param>
     void RestoreWindow(IWindowId windowId);
+
+    /// <summary>
+    /// Sets the window minimum size informing the operating system that user cannot in any way resize the window identified by the given
+    /// <paramref name="windowId"/> below the given <paramref name="size"/>.
+    /// </summary>
+    /// <param name="windowId">The identifier of the window for which to set the minimum size.</param>
+    /// <param name="size">The window minimum size.</param>
+    void SetWindowMinimumSize(IWindowId windowId, Size size);
+
+    /// <summary>
+    /// Sets the window maximum size informing the operating system that user cannot in any way resize the window identified by the given
+    /// <paramref name="windowId"/> above the given <paramref name="size"/>.
+    /// </summary>
+    /// <param name="windowId">The identifier of the window for which to set the maximum size.</param>
+    /// <param name="size">The window maximum size.</param>
+    void SetWindowMaximumSize(IWindowId windowId, Size size);
 
     /// <summary>
     /// Copies the given <paramref name="text"/> to the clipboard.

@@ -4,9 +4,10 @@ using RetroDev.UISharp.Core.Graphics;
 using RetroDev.UISharp.Presentation.Themes.Exceptions;
 using RetroDev.UISharp.Presentation.Resources;
 using RetroDev.UISharp.Presentation.Properties;
-using RetroDev.UISharp.Components.Base;
 
 namespace RetroDev.UISharp.Presentation.Themes;
+
+using ColorDictionary = Dictionary<string, Color>;
 
 /// <summary>
 /// Manages themes.
@@ -15,11 +16,32 @@ namespace RetroDev.UISharp.Presentation.Themes;
 /// </summary>
 /// <param name="application">The application owning <see langword="this" /> <see cref="ThemeManager"/>.</param>
 /// <param name="themeResources">The object that loads theme xml files.</param>
+/// <remarks>
+/// The theme xml is in the form: <br />
+/// &lt;theme name="name" include="theme-name"&gt; <br />
+/// &lt;colorName1 color="#RRGGBBAA" /&gt; <br />
+/// &lt;colorName2 link="colorName1" /&gt; <br />
+/// ... <br />
+/// &lt;/theme&gt; <br />
+/// The theme will be a list of mapping from <c>colorName1</c> to the color in the RRGGBBAA hex format,
+/// or mappings from <c>colorName2</c> to another mapping.
+/// The <c>include</c> attribute is optional and it indicates that the theme also includes the theme entries from
+/// the specified <c>theme-name</c> resource (loaded using the given <paramref name="themeResources"/>).
+/// The theme name is just a remark, it is not processed by any mean.
+/// Note that it is NOT possible to link a color to another color with the <c>link</c> attribute, but the linked color (the ID inside the link attribute)
+/// must be a color tag with the <c>color</c> attribute.
+/// It is possible to override a color attribute and it is done in order: included themes are processed first.
+/// </remarks>
 public class ThemeManager(Application application, ITextResources themeResources)
 {
+    private const string Theme = "theme";
+    private const string IncludeAttribute = "include";
+    private const string ColorAttribute = "color";
+    private const string LinkAttribute = "link";
+
     private readonly Application _application = application;
     private readonly Dictionary<string, BindableProperty<Color>> _colorProperties = [];
-    private Dictionary<string, Color> _currentTheme = [];
+    private ColorDictionary _currentTheme = [];
 
     /// <summary>
     /// The object that loads theme xml files.
@@ -36,11 +58,13 @@ public class ThemeManager(Application application, ITextResources themeResources
         try
         {
             _application.Logger.LogDebug($"Theme xml: {xml}");
-            var document = XDocument.Parse(xml);
-            if (document?.Root == null) throw new ThemeParseException("Failed to parse ui definition xml");
-            var rootName = document.Root.Name.LocalName;
-            if (!rootName.Equals("theme", StringComparison.OrdinalIgnoreCase)) throw new ThemeParseException($"Root theme tag xml must be theme, found {rootName} instead.");
-            _currentTheme = document.Root.Elements().Select(Parse).ToDictionary();
+            Dictionary<string, string> links = [];
+            _currentTheme = InternalParseTheme(xml, links);
+            foreach (var link in links)
+            {
+                ResolveLink(link.Key, link.Value, _currentTheme, links);
+            }
+
             UpdateThemeProperties();
         }
         catch (XmlException e)
@@ -81,16 +105,60 @@ public class ThemeManager(Application application, ITextResources themeResources
         return _colorProperties[id];
     }
 
-    private KeyValuePair<string, Color> Parse(XElement element)
+    private ColorDictionary InternalParseTheme(string xml, Dictionary<string, string> links)
     {
-        var attributes = element.Attributes().ToList();
-        var key = element.Name.LocalName;
-        var hexColor = attributes.Where(a => a.Name.LocalName.Equals("color", StringComparison.OrdinalIgnoreCase))
-                                 .Select(a => a.Value)
-                                 .FirstOrDefault();
+        try
+        {
+            var document = XDocument.Parse(xml);
+            if (document?.Root == null) throw new ThemeParseException("Failed to parse color theme xml");
+            var rootName = document.Root.Name.LocalName;
+            if (!rootName.Equals(Theme, StringComparison.OrdinalIgnoreCase)) throw new ThemeParseException($"Root theme tag xml must be theme, found {rootName} instead.");
+            var include = document.Root.GetAttributeIgnoreCase(IncludeAttribute);
+            ColorDictionary themeDictionary = [];
 
-        if (hexColor == null) throw new ThemeParseException($"Cannot find color attribute in color tag {element}");
-        return new KeyValuePair<string, Color>(key, new Color(hexColor));
+            if (include != null)
+            {
+                var includedXml = ThemeResources[include];
+                themeDictionary = InternalParseTheme(includedXml, links);
+            }
+
+            themeDictionary = themeDictionary.Union(document.Root.Elements().Select(e => ParseColors(e, links))).ToDictionary();
+
+            return themeDictionary;
+        }
+        catch (XmlException e)
+        {
+            throw new ThemeParseException($"Failed to parse ui definition xml: {e.Message}", e);
+        }
+    }
+
+    private KeyValuePair<string, Color> ParseColors(XElement element, Dictionary<string, string> links)
+    {
+        var key = element.Name.LocalName;
+        var hexColor = element.GetAttributeIgnoreCase(ColorAttribute);
+        var link = element.GetAttributeIgnoreCase(LinkAttribute);
+
+        if (link != null)
+        {
+            links.Add(key, link);
+            return new KeyValuePair<string, Color>(key, Color.Transparent);
+        }
+        else if (hexColor != null)
+        {
+            links.Remove(key);
+            return new KeyValuePair<string, Color>(key, new Color(hexColor));
+        }
+        else
+        {
+            throw new ThemeParseException($"Cannot find color attribute in color tag {element}");
+        }
+    }
+
+    private void ResolveLink(string key, string linkKey, ColorDictionary dictionary, Dictionary<string, string> links)
+    {
+        if (links.ContainsKey(linkKey)) _application.Logger.LogWarning($"Failed to link color {key} to color {linkKey}: cannot link a color to another color with the link attribute");
+        else if (dictionary.ContainsKey(linkKey)) dictionary[key] = dictionary[linkKey];
+        else _application.Logger.LogWarning($"Failed to link color {key} to color {linkKey}: {linkKey} does not exist");
     }
 
     private void UpdateThemeProperties()

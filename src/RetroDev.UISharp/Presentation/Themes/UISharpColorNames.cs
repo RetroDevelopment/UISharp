@@ -1,54 +1,177 @@
 ﻿namespace RetroDev.UISharp.Presentation.Themes;
 
+/// <summary>
+/// The list of default theme property names.
+/// </summary>
 public static class UISharpColorNames
 {
     /// <summary>
-    /// Main window background.
+    /// The <see cref="Window" /> background <see cref="Color" />.
     /// </summary>
-    public const string MainBackground = "mainBackground";
+    public const string WindowBackground = "windowBackground";
 
     /// <summary>
-    /// Background used for containers.
+    /// The <see cref="Label" /> text <see cref="Color" />.
     /// </summary>
-    public const string PrimaryBackground = "primaryBackground";
+    public const string LabelText = "labelText";
 
     /// <summary>
-    /// Primary background color.
+    /// The <see cref="EditBox" /> background <see cref="Color" />.
     /// </summary>
-    public const string PrimaryColor = "primaryColor";
+    public const string EditBoxBackground = "editBoxBackground";
 
     /// <summary>
-    /// Light version of <see cref="PrimaryColor"/> mostly used for disable components.
+    /// The <see cref="EditBox" /> disabled background <see cref="Color" />.
     /// </summary>
-    public const string PrimaryColorDisabled = "primaryColorDisabled";
+    public const string EditBoxDisabled = "editBoxDisabled";
 
     /// <summary>
-    /// Light version of <see cref="PrimaryColor"/> with contrasts primary color.
+    /// The <see cref="EditBox" /> border <see cref="Color" />.
     /// </summary>
-    public const string PrimaryColorContrast = "primaryColorContrast";
+    public const string EditBoxBorder = "editBoxBorder";
 
     /// <summary>
-    /// Secondary background color.
+    /// The <see cref="EditBox" /> focus border <see cref="Color" />.
     /// </summary>
-    public const string SecondaryColor = "secondaryColor";
+    public const string EditBoxFocusBorder = "editBoxFocusBorder";
 
     /// <summary>
-    /// Light version of <see cref="SecondaryColor"/>.
+    /// The <see cref="EditBox" /> selection <see cref="Color" />.
     /// </summary>
-    public const string SecondaryColorDisabled = "secondaryColorDisabled";
+    public const string EditBoxSelection = "editBoxSelection";
 
     /// <summary>
-    /// The main color for text.
+    /// The <see cref="EditBox" /> unfocused selection <see cref="Color" />.
     /// </summary>
-    public const string TextColor = "textColor";
+    public const string EditBoxUnfocusedSelection = "editBoxUnfocusedSelection";
 
     /// <summary>
-    /// Light version of <see cref="TextColor"/>, usually for disabled text.
+    /// The <see cref="EditBox" /> text <see cref="Color" />.
     /// </summary>
-    public const string TextColorDisabled = "textColorDisabled";
+    public const string EditBoxText = "editBoxText";
 
     /// <summary>
-    /// Color for border surrounding UI elements.
+    /// The <see cref="EditBox" /> disabled text <see cref="Color" />.
     /// </summary>
-    public const string BorderColor = "borderColor";
+    public const string EditBoxDisabledText = "editBoxDisabledText";
+
+    /// <summary>
+    /// The <see cref="Button" /> background <see cref="Color" />.
+    /// </summary>
+    public const string ButtonBackground = "buttonBackground";
+
+    /// <summary>
+    /// The <see cref="Button" /> hover background <see cref="Color" />.
+    /// </summary>
+    public const string ButtonHover = "buttonHover";
+
+    /// <summary>
+    /// The <see cref="Button" /> action background <see cref="Color" />.
+    /// </summary>
+    public const string ButtonAction = "buttonAction";
+
+    /// <summary>
+    /// The <see cref="Button" /> disabled background <see cref="Color" />.
+    /// </summary>
+    public const string ButtonDisabled = "buttonDisabled";
+
+    /// <summary>
+    /// The <see cref="Button" /> border <see cref="Color" />.
+    /// </summary>
+    public const string ButtonBorder = "buttonBorder";
+
+    /// <summary>
+    /// The <see cref="Button" /> focus border <see cref="Color" />.
+    /// </summary>
+    public const string ButtonFocusBorder = "buttonFocusBorder";
+
+    /// <summary>
+    /// The <see cref="Button" /> text <see cref="Color" />.
+    /// </summary>
+    public const string ButtonText = "buttonText";
+
+    /// <summary>
+    /// The <see cref="Button" /> disabled text <see cref="Color" />.
+    /// </summary>
+    public const string ButtonDisabledText = "buttonDisabledText";
+
+    /// <summary>
+    /// The <see cref="Switch" /> 'on' background <see cref="Color" />.
+    /// </summary>
+    public const string SwitchOnBackground = "switchOnBackground";
+
+    /// <summary>
+    /// The <see cref="Switch" /> 'off' background <see cref="Color" />.
+    /// </summary>
+    public const string SwitchOffBackground = "switchOffBackground";
+
+    /// <summary>
+    /// The <see cref="Switch" /> disabled background <see cref="Color" />.
+    /// </summary>
+    public const string SwitchDisabled = "switchDisabled";
+
+    /// <summary>
+    /// The <see cref="Switch" /> border <see cref="Color" />.
+    /// </summary>
+    public const string SwitchBorder = "switchBorder";
+
+    /// <summary>
+    /// The <see cref="Switch" /> focus border <see cref="Color" />.
+    /// </summary>
+    public const string SwitchFocusBorder = "switchFocusBorder";
+
+    /// <summary>
+    /// The <see cref="Switch" /> circle <see cref="Color" />.
+    /// </summary>
+    public const string SwitchCircleColor = "switchCircleColor";
+
+    /// <summary>
+    /// The <see cref="ProgressBar" /> background <see cref="Color" />.
+    /// </summary>
+    public const string ProgressBarBackground = "progressBarBackground";
+
+    /// <summary>
+    /// The <see cref="ProgressBar" /> foreground <see cref="Color" />.
+    /// </summary>
+    public const string ProgressBarForeground = "progressBarForeground";
+
+    /// <summary>
+    /// The <see cref="ProgressBar" /> border <see cref="Color" />.
+    /// </summary>
+    public const string ProgressBarBorder = "progressBarBorder";
+
+    /// <summary>
+    /// The <see cref="ListBox" /> and <see cref="TreeView" /> background <see cref="Color" />.
+    /// </summary>
+    public const string ListBackground = "listBackground";
+
+    /// <summary>
+    /// The <see cref="ListBox" /> and <see cref="TreeView" /> selection <see cref="Color" />.
+    /// </summary>
+    public const string ListSelection = "listSelection";
+
+    /// <summary>
+    /// The <see cref="ListBox" /> and <see cref="TreeView" /> border <see cref="Color" />.
+    /// </summary>
+    public const string ListBorder = "listBorder";
+
+    /// <summary>
+    /// The <see cref="ListBox" /> and <see cref="TreeView" /> hover <see cref="Color" />.
+    /// </summary>
+    public const string ListHover = "listHover";
+
+    /// <summary>
+    /// The <see cref="ScrollView" /> background <see cref="Color" />.
+    /// </summary>
+    public const string ScrollViewBackground = "scrollViewBackground";
+
+    /// <summary>
+    /// The <see cref="ScrollView" /> border <see cref="Color" />.
+    /// </summary>
+    public const string ScrollViewBorder = "scrollViewBorder";
+
+    /// <summary>
+    /// The <see cref="ScrollView" /> scrollbar <see cref="Color" />.
+    /// </summary>
+    public const string ScrollViewBars = "scrollViewBars";
 }

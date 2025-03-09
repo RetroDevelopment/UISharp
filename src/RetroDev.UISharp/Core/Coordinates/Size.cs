@@ -143,8 +143,8 @@ public record Size
     /// <param name="maximumSize">The maximum allowed size.</param>
     /// <returns></returns>
     public Size Clamp(Size minimumSize, Size maximumSize) =>
-        new(Math.Clamp(Width, minimumSize.Width, maximumSize.Width),
-            Math.Clamp(Height, minimumSize.Height, maximumSize.Height));
+        new(Math.Clamp(Width, minimumSize.Width.IsAuto ? PixelUnit.Min : minimumSize.Width, maximumSize.Width.IsAuto ? PixelUnit.Max : maximumSize.Width),
+            Math.Clamp(Height, minimumSize.Height.IsAuto ? PixelUnit.Min : minimumSize.Height, maximumSize.Height.IsAuto ? PixelUnit.Auto : maximumSize.Height));
 
     public static Size operator +(Size s1, Size s2) => new(s1.Width + s2.Width, s1.Height + s2.Height);
     public static Size operator -(Size s1, Size s2) => new(s1.Width - s2.Width, s1.Height - s2.Height);

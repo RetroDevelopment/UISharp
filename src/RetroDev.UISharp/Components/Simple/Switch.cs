@@ -51,12 +51,12 @@ public class Switch : UIWidget
     public Switch(Application application, bool @checked = false) : base(application, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
     {
         Checked = new UIProperty<Switch, bool>(this, @checked);
-        CircleColor = CreateNewColorPropertyFor<Switch>(UISharpColorNames.TextColor);
-        UncheckedBackgroundColor = CreateNewColorPropertyFor<Switch>(UISharpColorNames.PrimaryColor);
-        DisabledBackgroundColor = CreateNewColorPropertyFor<Switch>(UISharpColorNames.PrimaryColorDisabled);
-        FocusColor = CreateNewColorPropertyFor<Switch>(UISharpColorNames.BorderColor);
+        CircleColor = CreateNewColorPropertyFor<Switch>(UISharpColorNames.SwitchCircleColor);
+        UncheckedBackgroundColor = CreateNewColorPropertyFor<Switch>(UISharpColorNames.SwitchOffBackground);
+        DisabledBackgroundColor = CreateNewColorPropertyFor<Switch>(UISharpColorNames.SwitchDisabled);
+        FocusColor = CreateNewColorPropertyFor<Switch>(UISharpColorNames.SwitchFocusBorder);
 
-        BackgroundColor.BindTheme(UISharpColorNames.SecondaryColor);
+        BackgroundColor.BindTheme(UISharpColorNames.SwitchOnBackground);
 
         Padding.SetAll(5.0f); // TODO: use styles
 

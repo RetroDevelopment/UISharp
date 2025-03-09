@@ -79,6 +79,8 @@ public class ListBox : UIContainer, IContainer
         _verticalLayout.AddComponent(component, after);
         var container = _verticalLayout.Panels.First(p => p.Children.ElementAt(0) == component);
         container.MousePress += Container_MousePress;
+        container.MouseEnter += Container_MouseEnter;
+        container.MouseLeave += Container_MouseLeave;
     }
 
     public void RemoveComponent(uint index)
@@ -97,16 +99,37 @@ public class ListBox : UIContainer, IContainer
     {
         if (SelectedIndex.Value != null)
         {
-            var previouslySelectedPanel = _verticalLayout.Panels.ElementAt((int)SelectedIndex.Value);
-            previouslySelectedPanel.BackgroundColor.Value = Color.Transparent;
-            previouslySelectedPanel.BackgroundColor.RemoveBinding();
+            var previouslySelectedPanel = GetSelectedPanel();
+            previouslySelectedPanel!.BackgroundColor.Value = Color.Transparent;
+            previouslySelectedPanel!.BackgroundColor.RemoveBinding();
         }
 
         var selectedPanel = (Panel)sender;
         var index = _verticalLayout.Panels.ToList().IndexOf(selectedPanel);
         if (index < 0) throw new ArgumentException($"Cannot find element in list box: make sure the element has not been deleted");
         SelectedIndex.Value = (uint)index;
-        selectedPanel.BackgroundColor.BindTheme(UISharpColorNames.SecondaryColor);
+        selectedPanel.BackgroundColor.BindTheme(UISharpColorNames.ListSelection);
+    }
+
+    private void Container_MouseLeave(UIComponent sender, EventArgs e)
+    {
+        var selectedPanel = GetSelectedPanel();
+        if (selectedPanel != sender)
+        {
+            var panel = (Panel)sender;
+            panel.BackgroundColor.RemoveBinding();
+            panel.BackgroundColor.Value = Color.Transparent;
+        }
+    }
+
+    private void Container_MouseEnter(UIComponent sender, EventArgs e)
+    {
+        var selectedPanel = GetSelectedPanel();
+        if (selectedPanel != sender)
+        {
+            var panel = (Panel)sender;
+            panel.BackgroundColor.BindTheme(UISharpColorNames.ListHover);
+        }
     }
 
     private void SelectedIndex_ValueChange(BindableProperty<uint?> sender, ValueChangeEventArgs<uint?> e)
@@ -131,5 +154,15 @@ public class ListBox : UIContainer, IContainer
         var selectedIndex = _verticalLayout.Children.ToList().IndexOf(e.CurrentValue);
         if (selectedIndex == -1) throw new InvalidOperationException("ListBox selected element not found");
         SelectedIndex.Value = (uint)selectedIndex;
+    }
+
+    private Panel? GetSelectedPanel()
+    {
+        if (SelectedIndex.Value is not null)
+        {
+            return _verticalLayout.Panels.ElementAt((int)SelectedIndex.Value);
+        }
+
+        return null;
     }
 }

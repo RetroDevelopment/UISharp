@@ -4,6 +4,7 @@ namespace RetroDev.UISharp.Components.Core;
 
 public class Invalidator
 {
+    private readonly Application _application;
     private readonly SortedDictionary<int, HashSet<UIComponent>> _firstPassInvalidatedItems = [];
     private readonly SortedDictionary<int, HashSet<UIComponent>> _secondPassInvalidatedItems = [];
     private SortedDictionary<int, HashSet<UIComponent>> _invalidatedItems;
@@ -11,8 +12,9 @@ public class Invalidator
     internal bool NeedZIndexUpdate { get; set; } = true;
     public int TreeDepth => _invalidatedItems.Keys.LastOrDefault(-1) + 1;
 
-    public Invalidator()
+    public Invalidator(Application application)
     {
+        _application = application;
         _invalidatedItems = _firstPassInvalidatedItems;
     }
 
@@ -20,6 +22,7 @@ public class Invalidator
     {
         Invalidate(component, _firstPassInvalidatedItems);
         Invalidate(component, _secondPassInvalidatedItems);
+        _application.EventSystem.Signal();
     }
 
     public void CancelInvalidation(UIComponent component)

@@ -1,12 +1,26 @@
-<theme>
+<?xml version="1.0" encoding="utf-8"?>
+
+<theme name="dark" include="uisharp-base">
+    <!-- Background Colors -->
     <mainBackground color="#121212" />
     <primaryBackground color="#1E1E1E" />
-    <primaryColor color="#333333" />
-    <primaryColorDisabled color="#555555" />
-    <primaryColorContrast color="#999999" />
-    <secondaryColor color="#1976D2" />
-    <secondaryColorDisabled color="#64B5F6" />
-    <textColor color="#FFFFFF" />
-    <textColorDisabled color="#CCCCCC" />
-    <borderColor color="#4CAF50" />
+    <surfaceBackground color="#252525" />
+
+    <!-- Actionable Colors -->
+    <actionableBackground color="#1976D2" />
+    <actionableHover color="#2196F3" />
+    <actionablePressed color="#1565C0" />
+    <actionableDisabled color="#555555" />
+
+    <!-- Selection Colors -->
+    <selectionBackground color="#448AFF" />
+    <lightSelectionBackground color="#757575" />
+
+    <!-- Borders -->
+    <border color="#424242" />
+    <borderFocus color="#4CAF50" />
+
+    <!-- Text Colors -->
+    <text color="#FFFFFF" />
+    <textDisabled color="#AAAAAA" />
 </theme>

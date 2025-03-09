@@ -10,6 +10,7 @@ using RetroDev.UISharp.Components.Core.AutoArea;
 using RetroDev.UISharp.Components.Base;
 using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Presentation.Themes;
+using RetroDev.UISharp.Presentation.Properties.Exceptions;
 
 namespace RetroDev.UISharp.Components;
 
@@ -63,12 +64,6 @@ public class Window : UIRoot
     }
 
     private readonly IWindowId _windowId;
-
-    // If visibility changes, this flag is true so that the the window is actually displayed, but only
-    // after, when the rendering area will be updated.
-    // TODO: consider pushing the event in a priority queue to be done before rendering.
-    // Let's see when we will have implement an event queue.
-    private bool _scheduleVisibilityChange = false;
 
     private Window? _modalChild;
     private Window? _modalOwner;
@@ -174,15 +169,28 @@ public class Window : UIRoot
         CloseBehavior = new UIProperty<Window, WindowCloseBehavior>(this, application.Windows.Count() > 1 ? WindowCloseBehavior.HideWindow : WindowCloseBehavior.QuitApplication);
         SizeStatus = new UIProperty<Window, WindowSizeStatus>(this, WindowSizeStatus.None);
         FullScreen = new UIProperty<Window, bool>(this, false);
+
+        //TODO: unregister in dispose?
+        Title.ValueChange += Title_ValueChange;
+        Resizable.ValueChange += Resizable_ValueChange;
+        CloseBehavior.ValueChange += (_, _) => UpdateCloseBehavior();
+        SizeStatus.ValueChange += SizeStatus_ValueChange;
+        FullScreen.ValueChange += FullScreen_ValueChange;
+        BackgroundColor.ValueChange += BackgroundColor_ValueChange;
+        Visibility.ValueChange += Visibility_ValueChange;
+        Focus.ValueChange += Focus_ValueChange;
+        MinimumWidth.ValueChange += MinimumWidth_ValueChange;
+        MinimumHeight.ValueChange += MinimumHeight_ValueChange;
+        MaximumWidth.ValueChange += MaximumWidth_ValueChange;
+        MaximumHeight.ValueChange += MaximumHeight_ValueChange;
+        UpdateWindowAppearance(); // TODO: with RX subscribe to latest event.
         UpdateCloseBehavior();
 
-        FullScreen.ValueChange += FullScreen_ValueChange;
         Invalidate();
 
-        BackgroundColor.BindTheme(UISharpColorNames.MainBackground);
+        BackgroundColor.BindTheme(UISharpColorNames.WindowBackground);
         CloseBehavior.ValueChange += (_, _) => UpdateCloseBehavior();
 
-        Visibility.ValueChange += Visibility_ValueChange;
         RenderingAreaChange += Window_RenderingAreaChange;
 
         application.EventSystem.MousePress += EventSystem_MousePress;
@@ -202,6 +210,38 @@ public class Window : UIRoot
         application.EventSystem.WindowFocusGain += EventSystem_WindowFocusGain;
         application.EventSystem.WindowFocusLost += EventSystem_WindowFocusLost;
         // TODO remove events on dispose?
+    }
+
+    /// <summary>
+    /// Resets the position (<see cref="X"/> and <see cref="Y"/>) and window size (<see cref="Width"/> and <see cref="Height"/>)
+    /// to <see cref="PixelUnit"/> repositioning the window to auto size settings (<see cref="AutoWidth"/>, <see cref="HorizontalAlignment"/>, etc.).
+    /// </summary>
+    public void Reset()
+    {
+        X.Value = PixelUnit.Auto;
+        Y.Value = PixelUnit.Auto;
+        Width.Value = PixelUnit.Auto;
+        Height.Value = PixelUnit.Auto;
+    }
+
+    private void MinimumWidth_ValueChange(BindableProperty<PixelUnit> sender, ValueChangeEventArgs<PixelUnit> e)
+    {
+        Application.WindowManager.SetWindowMinimumSize(_windowId, new Size(MinimumWidth.Value, MinimumHeight.Value));
+    }
+
+    private void MinimumHeight_ValueChange(BindableProperty<PixelUnit> sender, ValueChangeEventArgs<PixelUnit> e)
+    {
+        Application.WindowManager.SetWindowMinimumSize(_windowId, new Size(MinimumWidth.Value, MinimumHeight.Value));
+    }
+
+    private void MaximumWidth_ValueChange(BindableProperty<PixelUnit> sender, ValueChangeEventArgs<PixelUnit> e)
+    {
+        Application.WindowManager.SetWindowMaximumSize(_windowId, new Size(MaximumWidth.Value, MaximumHeight.Value));
+    }
+
+    private void MaximumHeight_ValueChange(BindableProperty<PixelUnit> sender, ValueChangeEventArgs<PixelUnit> e)
+    {
+        Application.WindowManager.SetWindowMaximumSize(_windowId, new Size(MaximumWidth.Value, MaximumHeight.Value));
     }
 
     /// <summary>
@@ -284,8 +324,12 @@ public class Window : UIRoot
 
             var childX = child.X.Value.IsAuto ? PixelUnit.Zero : child.X.Value;
             var childY = child.Y.Value.IsAuto ? PixelUnit.Zero : child.Y.Value;
-            var childWidth = childWrapSize.Width;
-            var childHeight = childWrapSize.Height;
+            var childWidth = childWrapSize.Width +
+                             (child.Margin.Left.Value.IsAuto ? PixelUnit.Zero : child.Margin.Left.Value) +
+                             (child.Margin.Right.Value.IsAuto ? PixelUnit.Zero : child.Margin.Right.Value);
+            var childHeight = childWrapSize.Height +
+                              (child.Margin.Top.Value.IsAuto ? PixelUnit.Zero : child.Margin.Top.Value) +
+                              (child.Margin.Bottom.Value.IsAuto ? PixelUnit.Zero : child.Margin.Bottom.Value);
             maxRight = Math.Max(maxRight, childX + childWidth);
             maxBottom = Math.Max(maxBottom, childY + childHeight);
         }
@@ -299,9 +343,14 @@ public class Window : UIRoot
     internal void Render()
     {
         Invalidator.Swap();
-        UpdateWindowAppearance();
         var renderingEngine = RenderingEngine;
         RenderProvider.Render(this, renderingEngine);
+    }
+
+    internal void OnRenderDone()
+    {
+        CaptureActualPosition();
+        CaptureActualSize();
     }
 
     public void Shutdown()
@@ -360,26 +409,47 @@ public class Window : UIRoot
 
     private void EventSystem_WindowMove(IEventSystem sender, WindowEventArgs<WindowMoveEventArgs> windowArgs)
     {
-        if (ShouldPropagateEvent(windowArgs))
+        var topLeft = windowArgs.Args.TopLeft;
+        if (topLeft.X == X.Value && topLeft.Y == Y.Value) return;
+
+        // TODO: remove the lifecycle check once using dispatcher
+        if (ShouldPropagateEvent(windowArgs) && !HasModal(windowArgs))
         {
-            var topLeft = windowArgs.Args.TopLeft;
             X.Value = topLeft.X;
             Y.Value = topLeft.Y;
             WindowMove?.Invoke(this, windowArgs.Args);
+        }
+
+        if (HasModal(windowArgs))
+        {
+            LockWindowArea(windowArgs.WindowId);
         }
     }
 
     private void EventSystem_WindowResize(IEventSystem sender, WindowEventArgs<WindowResizeEventArgs> windowArgs)
     {
-        // Only override manual size (width/height) if the window resize event happens during event polling
-        // and not as a consequence of resizing the window.
-        if (ShouldPropagateEvent(windowArgs) && Application.LifeCycle.CurrentState == LifeCycle.State.EVENT_POLL)
+        var size = windowArgs.Args.Size;
+        if (Width.Value == size.Width && Height.Value == size.Height.Value) return;
+
+        if (ShouldPropagateEvent(windowArgs))
         {
-            var size = windowArgs.Args.Size;
             Width.Value = size.Width;
             Height.Value = size.Height;
             WindowResize?.Invoke(this, windowArgs.Args);
         }
+
+        if (HasModal(windowArgs))
+        {
+            LockWindowArea(windowArgs.WindowId);
+        }
+    }
+
+    private void LockWindowArea(IWindowId windowId)
+    {
+        if (X.Value.IsAuto || Y.Value.IsAuto || Width.Value.IsAuto || Height.Value.IsAuto) return;
+        var position = new Point(X.Value, Y.Value);
+        var size = new Size(Width.Value, Height.Value);
+        Application.WindowManager.SetWindowRenderingArea(windowId, new Area(position, size));
     }
 
     private void EventSystem_WindowOpen(IEventSystem sender, WindowEventArgs<EventArgs> windowArgs)
@@ -424,7 +494,7 @@ public class Window : UIRoot
 
     private void EventSystem_WindowFocusGain(IEventSystem sender, WindowEventArgs<EventArgs> windowArgs)
     {
-        if (ShouldRedirectToModal(windowArgs))
+        if (HasModal(windowArgs))
         {
             Application.WindowManager.FocusWindow(_modalChild!._windowId);
         }
@@ -452,21 +522,9 @@ public class Window : UIRoot
         }
     }
 
-    private void Visibility_ValueChange(BindableProperty<ComponentVisibility> sender, ValueChangeEventArgs<ComponentVisibility> e)
-    {
-        if (Visibility.Value != ComponentVisibility.Visible)
-        {
-            Application.WindowManager.HideWindow(_windowId);
-        }
-        else
-        {
-            // TODO: Push to event queue
-            _scheduleVisibilityChange = true;
-        }
-    }
-
     private void Window_RenderingAreaChange(UIComponent sender, RenderingAreaEventArgs e)
     {
+        Application.WindowManager.SetWindowRenderingArea(_windowId, e.RenderingArea);
         RenderingEngine.ViewportSize = e.RenderingArea.Size;
     }
 
@@ -479,26 +537,59 @@ public class Window : UIRoot
         }
     }
 
-    private void FullScreen_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
+    private void Title_ValueChange(BindableProperty<string> sender, ValueChangeEventArgs<string> e)
     {
-        X.Value = PixelUnit.Auto;
-        Y.Value = PixelUnit.Auto;
-        Width.Value = PixelUnit.Auto;
-        Height.Value = PixelUnit.Auto;
+        Application.WindowManager.SetTitle(_windowId, Title.Value);
     }
 
-    private void UpdateWindowAppearance()
+    private void Resizable_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
     {
-        if (_scheduleVisibilityChange)
+        Application.WindowManager.SetResizable(_windowId, Resizable.Value);
+    }
+
+    private void SizeStatus_ValueChange(BindableProperty<WindowSizeStatus> sender, ValueChangeEventArgs<WindowSizeStatus> e)
+    {
+        switch (SizeStatus.Value)
+        {
+            case WindowSizeStatus.None:
+                Application.WindowManager.RestoreWindow(_windowId);
+                break;
+            case WindowSizeStatus.Maximized:
+                Application.WindowManager.Maximize(_windowId);
+                break;
+            case WindowSizeStatus.Minimized:
+                Application.WindowManager.Minimize(_windowId);
+                break;
+            default:
+                throw new InvalidOperationException($"Unrecognized enum type {SizeStatus.Value}");
+        }
+    }
+
+    private void FullScreen_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
+    {
+        //Reset();
+    }
+
+    private void BackgroundColor_ValueChange(BindableProperty<Color> sender, ValueChangeEventArgs<Color> e)
+    {
+        Application.WindowManager.SetOpacity(_windowId, BackgroundColor.Value.AlphaComponent);
+    }
+
+    private void Visibility_ValueChange(BindableProperty<ComponentVisibility> sender, ValueChangeEventArgs<ComponentVisibility> e)
+    {
+        // Reset();
+        if (Visibility.Value != ComponentVisibility.Visible)
+        {
+            Application.WindowManager.HideWindow(_windowId);
+        }
+        else
         {
             Application.WindowManager.ShowWindow(_windowId);
-            _scheduleVisibilityChange = false;
         }
+    }
 
-        Application.WindowManager.SetTitle(_windowId, Title.Value);
-        Application.WindowManager.SetOpacity(_windowId, BackgroundColor.Value.AlphaComponent);
-        Application.WindowManager.SetResizable(_windowId, Resizable.Value);
-
+    private void Focus_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
+    {
         if (Focus.Value)
         {
             Application.WindowManager.FocusWindow(_windowId);
@@ -507,6 +598,13 @@ public class Window : UIRoot
         {
             // TODO: remove focus? Maybe use focus group to set another window focus (similar to tab).
         }
+    }
+
+    private void UpdateWindowAppearance()
+    {
+        Application.WindowManager.SetTitle(_windowId, Title.Value);
+        Application.WindowManager.SetOpacity(_windowId, BackgroundColor.Value.AlphaComponent);
+        Application.WindowManager.SetResizable(_windowId, Resizable.Value);
 
         switch (SizeStatus.Value)
         {
@@ -554,6 +652,6 @@ public class Window : UIRoot
     private bool ShouldPropagateEvent<TEventArgs>(WindowEventArgs<TEventArgs> windowArgs) where TEventArgs : EventArgs =>
         windowArgs.WindowId.Equals(_windowId) && (_modalChild == null || _modalChild.Visibility.Value != ComponentVisibility.Visible);
 
-    private bool ShouldRedirectToModal<TEventArgs>(WindowEventArgs<TEventArgs> windowArgs) where TEventArgs : EventArgs =>
+    private bool HasModal<TEventArgs>(WindowEventArgs<TEventArgs> windowArgs) where TEventArgs : EventArgs =>
         windowArgs.WindowId.Equals(_windowId) && _modalChild != null && _modalChild.Visibility.Value == ComponentVisibility.Visible;
 }

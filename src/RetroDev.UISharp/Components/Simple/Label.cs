@@ -51,7 +51,7 @@ public class Label : UIWidget
     {
         Text = new UIProperty<Label, string>(this, text);
         Font = new UIProperty<Label, Font>(this, Application.DefaultFont, BindingType.DestinationToSource);
-        TextColor = CreateNewColorPropertyFor<Label>(UISharpColorNames.TextColor);
+        TextColor = CreateNewColorPropertyFor<Label>(UISharpColorNames.LabelText);
         TextHorizontalAlignment = new UIProperty<Label, IHorizontalAlignment>(this, Alignment.Center);
         TextVerticalAlignment = new UIProperty<Label, IVerticalAlignment>(this, Alignment.Center);
 

@@ -247,29 +247,29 @@ public abstract class UIComponent
 
     /// <summary>
     /// The minimum width for <see langword="this" /> <see cref="UIComponent"/>.
-    /// The <see cref="Width"/> property takes priority over this property, meaning that if
-    /// <see cref="Width"/> is not <see cref="PixelUnit.Auto"/> it will not be clamped.
+    /// This property takes priority over the <see cref="Width"/>, meaning that even if
+    /// <see cref="Width"/> is not <see cref="PixelUnit.Auto"/> the minimum width will still be <see cref="MinimumWidth"/>.
     /// </summary>
     public UIProperty<UIComponent, PixelUnit> MinimumWidth { get; }
 
     /// <summary>
     /// The minimum height for <see langword="this" /> <see cref="UIComponent"/>.
-    /// The <see cref="Height"/> property takes priority over this property, meaning that if
-    /// <see cref="Height"/> is not <see cref="PixelUnit.Auto"/> it will not be clamped.
+    /// This property takes priority over the <see cref="Height"/>, meaning that even if
+    /// <see cref="Height"/> is not <see cref="PixelUnit.Auto"/> the minimum heigth will still be <see cref="MinimumHeight"/>.
     /// </summary>
     public UIProperty<UIComponent, PixelUnit> MinimumHeight { get; }
 
     /// <summary>
     /// The maximum width for <see langword="this" /> <see cref="UIComponent"/>.
-    /// The <see cref="Width"/> property takes priority over this property, meaning that if
-    /// <see cref="Width"/> is not <see cref="PixelUnit.Auto"/> it will not be clamped.
+    /// This property takes priority over the <see cref="Width"/>, meaning that even if
+    /// <see cref="Width"/> is not <see cref="PixelUnit.Auto"/> the maximum width will still be <see cref="MaximumWidth"/>.
     /// </summary>
     public UIProperty<UIComponent, PixelUnit> MaximumWidth { get; }
 
     /// <summary>
     /// The maximum height for <see langword="this" /> <see cref="UIComponent"/>.
-    /// The <see cref="Height"/> property takes priority over this property, meaning that if
-    /// <see cref="Height"/> is not <see cref="PixelUnit.Auto"/> it will not be clamped.
+    /// This property takes priority over the <see cref="Height"/>, meaning that even if
+    /// <see cref="Height"/> is not <see cref="PixelUnit.Auto"/> the maximum height will still be <see cref="MaximumHeight"/>.
     /// </summary>
     public UIProperty<UIComponent, PixelUnit> MaximumHeight { get; }
 
@@ -317,8 +317,8 @@ public abstract class UIComponent
         Padding = new PaddingGroup(application, this);
         MinimumWidth = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Zero);
         MinimumHeight = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Zero);
-        MaximumWidth = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Max);
-        MaximumHeight = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Max);
+        MaximumWidth = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Auto);
+        MaximumHeight = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Auto);
 
         Canvas = new Canvas(this);
 
@@ -389,6 +389,23 @@ public abstract class UIComponent
         var topLeft = _relativeDrawingArea.TopLeft;
         X.Value = topLeft.X;
         Y.Value = topLeft.Y;
+    }
+
+    /// <summary>
+    /// Captures the size of <see langword="this" /> <see cref="UIComponent"/> during the latest
+    /// frame rendering or the position of the next frame rendering is this is called inside <see cref="Application.SecondPassMeasure"/> and
+    /// writes the values into <see cref="Width"/> and <see cref="Height"/>.
+    /// </summary>
+    /// <remarks>
+    /// This method is useful when using drag-and-drop, because that usually implies that the <see cref="UIComponent"/> size is incremented or decremented as the object is dragged.
+    /// Doing that when <see cref="Width"/> and <see cref="Height"/> are set to <see cref="PixelUnit.Auto"/> would be impossible, so the first step is to cature the actual positions and then using 
+    /// manual size.
+    /// </remarks>
+    public void CaptureActualSize()
+    {
+        var size = _relativeDrawingArea.Size;
+        Width.Value = size.Width;
+        Height.Value = size.Height;
     }
 
     /// <summary>
@@ -777,10 +794,10 @@ public abstract class UIComponent
         var autoHeight = AutoHeight.Value.ComputeHeight(parentSize, _wrapSize);
         var minimumSize = new Size(MinimumWidth.Value, MinimumHeight.Value);
         var maximumSize = new Size(MaximumWidth.Value, MaximumHeight.Value);
-        var autoSize = new Size(autoWidth, autoHeight).Clamp(minimumSize, maximumSize);
+        var autoSize = new Size(autoWidth, autoHeight);
         var actualWidth = sizeOverride.Width.IsAuto ? (Width.Value.IsAuto ? autoSize.Width : Width.Value) : sizeOverride.Width;
         var actualHeight = sizeOverride.Height.IsAuto ? (Height.Value.IsAuto ? autoSize.Height : Height.Value) : sizeOverride.Height;
-        var actualSize = new Size(actualWidth, actualHeight);
+        var actualSize = new Size(actualWidth, actualHeight).Clamp(minimumSize, maximumSize);
 
         var autoX = HorizontalAlignment.Value.ComputeX(parentSize, actualSize);
         var autoY = VerticalAlignment.Value.ComputeY(parentSize, actualSize);

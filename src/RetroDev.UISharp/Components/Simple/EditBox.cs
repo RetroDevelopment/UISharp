@@ -65,6 +65,16 @@ public class EditBox : UIWidget
     public UIProperty<EditBox, Color> SelectionColor { get; }
 
     /// <summary>
+    /// The selection color when <see cref="Focus"/> is <see langword="false" />.
+    /// </summary>
+    public UIProperty<EditBox, Color> UnfocusedSelectionColor { get; }
+
+    /// <summary>
+    /// The box border color when the component is not focused.
+    /// </summary>
+    public UIProperty<EditBox, Color> BorderColor { get; }
+
+    /// <summary>
     /// The font of the edited text.
     /// </summary>
     public UIProperty<EditBox, Font> Font { get; }
@@ -113,25 +123,26 @@ public class EditBox : UIWidget
     {
         Text = new UIProperty<EditBox, string>(this, text);
         Font = new UIProperty<EditBox, Font>(this, application.DefaultFont, BindingType.DestinationToSource);
-        TextColor = CreateNewColorPropertyFor<EditBox>(UISharpColorNames.TextColor);
-        DisabledTextColor = CreateNewColorPropertyFor<EditBox>(UISharpColorNames.TextColorDisabled);
-        FocusColor = CreateNewColorPropertyFor<EditBox>(UISharpColorNames.BorderColor);
-        DisabledBackgroundColor = CreateNewColorPropertyFor<EditBox>(UISharpColorNames.BorderColor);
+        TextColor = CreateNewColorPropertyFor<EditBox>(UISharpColorNames.EditBoxText);
+        DisabledTextColor = CreateNewColorPropertyFor<EditBox>(UISharpColorNames.EditBoxDisabledText);
+        FocusColor = CreateNewColorPropertyFor<EditBox>(UISharpColorNames.EditBoxFocusBorder);
+        DisabledBackgroundColor = CreateNewColorPropertyFor<EditBox>(UISharpColorNames.EditBoxDisabled);
         CaretColor = new UIProperty<EditBox, Color>(this, TextColor, BindingType.DestinationToSource);
-        SelectionColor = CreateNewColorPropertyFor<EditBox>(UISharpColorNames.SecondaryColor);
+        SelectionColor = CreateNewColorPropertyFor<EditBox>(UISharpColorNames.EditBoxSelection);
+        UnfocusedSelectionColor = CreateNewColorPropertyFor<EditBox>(UISharpColorNames.EditBoxUnfocusedSelection);
+        BorderColor = CreateNewColorPropertyFor<EditBox>(UISharpColorNames.EditBoxBorder);
         TextVerticalAlignment = new UIProperty<EditBox, IVerticalAlignment>(this, Alignment.Center);
         CaretIndex = new UIProperty<EditBox, uint>(this, 0);
         SelectionLength = new UIProperty<EditBox, int>(this, 0);
-        BackgroundColor.BindTheme(UISharpColorNames.PrimaryBackground);
+        BackgroundColor.BindTheme(UISharpColorNames.EditBoxBackground);
 
         Padding.SetAll(5.0f);
 
         _backgroundRectangle = new Rectangle(application);
-        _backgroundRectangle.BorderColor.BindDestinationToSource(FocusColor);
+        _backgroundRectangle.BorderThickness.Value = 3.0f; // TODO: use styles
         Canvas.Add(_backgroundRectangle);
 
         _selectionRectangle = new Rectangle(application);
-        _selectionRectangle.BackgroundColor.BindDestinationToSource(SelectionColor);
         Canvas.Add(_selectionRectangle);
 
         _inputText = new Text(application);
@@ -392,6 +403,9 @@ public class EditBox : UIWidget
         _selectionRectangle.Visible.Value = SelectionLength.Value != 0;
         if (!_selectionRectangle.Visible.Value) return;
 
+        if (Focus.Value) _selectionRectangle.BackgroundColor.BindDestinationToSource(SelectionColor);
+        else _selectionRectangle.BackgroundColor.BindDestinationToSource(UnfocusedSelectionColor);
+
         var padding = Padding.ToMarginStruct();
         var textLeftBoundingBox = _inputText.RelativeRenderingArea.Value.TopLeft.X;
         var textStartPosition = textLeftBoundingBox + _inputText.HorizontalScroll.Value;
@@ -421,11 +435,11 @@ public class EditBox : UIWidget
     {
         if (Focus.Value)
         {
-            _backgroundRectangle.BorderThickness.Value = 3.0f; // TODO: use styles
+            _backgroundRectangle.BorderColor.BindDestinationToSource(FocusColor);
         }
         else
         {
-            _backgroundRectangle.BorderThickness.Value = 0.0f;
+            _backgroundRectangle.BorderColor.BindDestinationToSource(BorderColor);
         }
     }
 

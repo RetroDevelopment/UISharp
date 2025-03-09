@@ -248,17 +248,19 @@ public class Application : IDisposable
 
     private void Render()
     {
+        var visibleWindows = _windows.Where(w => w.Visibility.Value == UIComponent.ComponentVisibility.Visible).ToList();
         LifeCycle.CurrentState = LifeCycle.State.MEASURE;
-        _windows.ForEach(w => w.Measure());
+        visibleWindows.ForEach(w => w.Measure());
         LifeCycle.CurrentState = LifeCycle.State.EVENT_POLL;
-        _windows.ForEach(w => w.PrepareSecondPass());
+        visibleWindows.ForEach(w => w.PrepareSecondPass());
         SecondPassMeasure?.Invoke(this, EventArgs.Empty);
         LifeCycle.CurrentState = LifeCycle.State.MEASURE;
-        _windows.ForEach(w => w.Measure());
+        visibleWindows.ForEach(w => w.Measure());
         LifeCycle.CurrentState = LifeCycle.State.RENDERING;
-        _windows.ForEach(w => w.EnsureZIndicesUpdated());
-        _windows.ForEach(w => w.Render());
+        visibleWindows.ForEach(w => w.EnsureZIndicesUpdated());
+        visibleWindows.ForEach(w => w.Render());
         LifeCycle.CurrentState = LifeCycle.State.EVENT_POLL;
+        visibleWindows.ForEach(w => w.OnRenderDone());
     }
 
     private void DisposeManagedResources() { }

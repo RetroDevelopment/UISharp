@@ -45,7 +45,10 @@ public class ScrollView : UIContainer, ISingleContainer
     {
         ScrollBarColor = new UIProperty<ScrollView, Color>(this, Color.Transparent);
         ScrollBarThickness = new UIProperty<ScrollView, PixelUnit>(this, 15);
-        ScrollBarColor.BindTheme(UISharpColorNames.PrimaryColorContrast, c => c.WithAlpha(100));
+
+        BackgroundColor.BindTheme(UISharpColorNames.ScrollViewBackground);
+        ScrollBarColor.BindTheme(UISharpColorNames.ScrollViewBars, c => c.WithAlpha(100));
+        BorderColor.BindTheme(UISharpColorNames.ScrollViewBorder);
 
         _verticalScrollBar = new ScrollBar(application);
         _verticalScrollBar.BackgroundColor.BindDestinationToSource(ScrollBarColor);

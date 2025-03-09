@@ -113,7 +113,7 @@ public class EditableTextBuffer
         var selectionLegnth = SelectionLength.Value;
 
         var clampedOffset = (int)Math.Clamp(offset, -caretIndex, Text.Value.Length - CaretIndex.Value);
-        caretIndex += (uint)clampedOffset;
+        caretIndex = (uint)(caretIndex + clampedOffset);
 
         if (selectionActive)
         {
@@ -122,7 +122,8 @@ public class EditableTextBuffer
         else if (SelectionLength.Value != 0)
         {
             selectionLegnth = 0;
-            caretIndex -= (uint)clampedOffset;
+            var selectionInterval = GetSelectionInterval();
+            caretIndex = clampedOffset < 0 ? selectionInterval.StartIndex : selectionInterval.EndIndex;
         }
 
         CaretIndex.Value = caretIndex;

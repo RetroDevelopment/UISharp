@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+
+<theme name="base">
+    <windowBackground link="mainBackground" />
+
+    <!-- Label -->
+    <labelText link="text" />
+
+    <!-- EditBox -->
+    <editBoxBackground link="surfaceBackground" />
+    <editBoxDisabled link="actionableDisabled" />
+    <editBoxBorder link="border" />
+    <editBoxFocusBorder link="borderFocus" />
+    <editBoxSelection link="selectionBackground" />
+    <editBoxUnfocusedSelection link="lightSelectionBackground" />
+    <editBoxText link="text" />
+    <editBoxDisabledText link="textDisabled" />
+
+    <!-- Button -->
+    <buttonBackground link="actionableBackground" />
+    <buttonHover link="actionableHover" />
+    <buttonAction link="actionablePressed" />
+    <buttonDisabled link="actionableDisabled" />
+    <buttonBorder color="#00000000" />
+    <buttonFocusBorder link="borderFocus" />
+    <buttonText link="text" />
+    <buttonDisabledText link="textDisabled" />
+
+    <!-- Switch -->
+    <switchOnBackground link="actionableBackground" />
+    <switchOffBackground link="surfaceBackground" />
+    <switchDisabled  link="actionableDisabled" />
+    <switchBorder link="border" />
+    <switchFocusBorder link="borderFocus" />
+    <switchCircleColor link="text" />
+
+    <!-- ProgressBar -->
+    <progressBarBackground link="surfaceBackground" />
+    <progressBarForeground link="selectionBackground" />
+    <progressBarBorder link="border" />
+
+    <!-- ListBox and TreeView -->
+    <listBackground link="primaryBackground" />
+    <listSelection link="selectionBackground" />
+    <listBorder link="border" />
+    <listHover link="lightSelectionBackground" />
+
+    <!-- ScrollView -->
+    <scrollViewBackground link="primaryBackground" />
+    <scrollViewBorder link="border" />
+    <scrollViewBars link="text" />
+</theme>

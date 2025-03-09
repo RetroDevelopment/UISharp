@@ -1,6 +1,5 @@
-﻿using RetroDev.UISharp;
-using RetroDev.UISharp.Components;
-using RetroDev.UISharp.Components.Base;
+﻿using RetroDev.UISharp.Components.Base;
+using RetroDev.UISharp.Components.Core;
 using RetroDev.UISharp.Components.Core.AutoArea;
 using RetroDev.UISharp.Core.Coordinates;
 
