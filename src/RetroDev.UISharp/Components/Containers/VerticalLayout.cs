@@ -1,7 +1,6 @@
 ﻿using RetroDev.UISharp.Components.Base;
 using RetroDev.UISharp.Components.Core.AutoArea;
 using RetroDev.UISharp.Core.Coordinates;
-using RetroDev.UISharp.Core.Windowing.Events;
 
 namespace RetroDev.UISharp.Components.Containers;
 
@@ -69,14 +68,18 @@ public class VerticalLayout : UIContainer, IContainer
 
     protected override List<Area?> RepositionChildren(Size availableSpace, IEnumerable<Size> childrenSize)
     {
-        var verticalPosition = PixelUnit.Zero;
+        var availableSpaceAfterPadding = availableSpace.Deflate(Padding.ToMarginStruct());
+        var leftPadding = Padding.Left.Value.IfAuto(PixelUnit.Zero);
+        var topPadding = Padding.Top.Value.IfAuto(PixelUnit.Zero);
+
+        var verticalPosition = topPadding;
         List<Area?> childrenFinalSize = [];
 
         foreach (var childSize in childrenSize)
         {
-            var x = 0;
+            var x = leftPadding;
             var y = verticalPosition;
-            var width = availableSpace.Width;
+            var width = availableSpaceAfterPadding.Width;
             var height = childSize.Height;
             childrenFinalSize.Add(new Area(new Point(x, y), new Size(width, height)));
             verticalPosition += height;

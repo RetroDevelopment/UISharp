@@ -25,7 +25,7 @@ public class ListBox : UIContainer, IContainer
     private readonly ScrollView _scrollView;
 
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
-        childrenSize.Any() ? childrenSize.First() : Size.Zero;
+        childrenSize.FirstOrDefault() ?? Size.Zero;
 
     /// <summary>
     /// The index of the selected element in the list, or <see langword="null" /> if no element is selected.
@@ -49,9 +49,17 @@ public class ListBox : UIContainer, IContainer
         _verticalLayout = new VerticalLayout(application);
         _scrollView = new ScrollView(application);
 
+        BackgroundColor.BindTheme(UISharpColorNames.ListBackground);
+        BorderColor.BindTheme(UISharpColorNames.ListBorder);
+
         _scrollView.SetComponent(_verticalLayout);
         _scrollView.AutoWidth.Value = AutoSize.Stretch;
         _scrollView.AutoHeight.Value = AutoSize.Stretch;
+        _scrollView.BackgroundColor.RemoveBinding();
+        _scrollView.BorderColor.RemoveBinding();
+        _scrollView.BackgroundColor.Value = Color.Transparent;
+        _scrollView.BorderColor.Value = Color.Transparent;
+
         // TODO: add property so user can decide if auto width and height are stretch or wrap for vertical layout.
         // This changes how the list box is displayed. Also add whether to center or do top left, etc. for inner vertical layout components.
         // What about adding a new auto size like "MaxWrapStretch" that takes maximum size between wrap and stretch?
@@ -59,6 +67,7 @@ public class ListBox : UIContainer, IContainer
         _verticalLayout.AutoWidth.Value = AutoSize.Stretch;
         _verticalLayout.HorizontalAlignment.Value = Alignment.Left;
         _verticalLayout.VerticalAlignment.Value = Alignment.Top;
+        _verticalLayout.Margin.BindDestinationToSource(Padding);
 
         SelectedIndex = new UIProperty<ListBox, uint?>(this, (uint?)null);
         SelectedIndex.ValueChange += SelectedIndex_ValueChange;

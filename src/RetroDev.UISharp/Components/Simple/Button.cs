@@ -131,6 +131,14 @@ public class Button : UIWidget
         Enabled.ValueChange += (_, _) => UpdateTextColor();
     }
 
+    /// <summary>
+    /// Simulates the button press action, by triggering the <see cref="Action"/> event.
+    /// </summary>
+    public void Press()
+    {
+        Action?.Invoke(this, EventArgs.Empty);
+    }
+
     private void Button_MousePress(UIComponent sender, MouseEventArgs e)
     {
         if (e.Button == MouseButton.Left)

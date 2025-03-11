@@ -24,10 +24,11 @@ public record class PixelUnit : IEquatable<PixelUnit>, IComparable<PixelUnit>
 
     public override string ToString() => IsAuto ? "auto" : Value.ToString();
 
-    public override int GetHashCode()
-    {
-        return Value.GetHashCode();
-    }
+    public override int GetHashCode() =>
+        Value.GetHashCode();
+
+    public PixelUnit IfAuto(PixelUnit defaultValue) =>
+        IsAuto ? defaultValue : Value;
 
     public int CompareTo(PixelUnit? other) => (int)(Value - other?.Value ?? 0.0f);
 }

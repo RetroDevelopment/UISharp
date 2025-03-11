@@ -30,7 +30,7 @@
     <switchOnBackground link="actionableBackground" />
     <switchOffBackground link="surfaceBackground" />
     <switchDisabled  link="actionableDisabled" />
-    <switchBorder link="border" />
+    <switchBorder color="#00000000" />
     <switchFocusBorder link="borderFocus" />
     <switchCircleColor link="text" />
 

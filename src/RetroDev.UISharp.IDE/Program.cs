@@ -22,11 +22,8 @@ namespace RetroDev.UISharp.IDE;
 // Lightweight and efficient tools for medium-sized applications.
 
 // TODO
-// More unified way of handling border and backgrounds
 // Add missing border color properties
-// Fix slow scroll bar issue when dragging with mouse
 // Fix issue with multi token selection in edit boxes
-// Fix crash due to margin calculation when not enough space
 // Fix wrong invalidation logic
 
 internal class Program

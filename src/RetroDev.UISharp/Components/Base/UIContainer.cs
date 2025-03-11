@@ -1,5 +1,4 @@
-﻿using RetroDev.UISharp.Components.Containers;
-using RetroDev.UISharp.Components.Core.AutoArea;
+﻿using RetroDev.UISharp.Components.Core.AutoArea;
 using RetroDev.UISharp.Components.Shapes;
 using RetroDev.UISharp.Core.Graphics;
 using RetroDev.UISharp.Presentation.Properties;
@@ -51,7 +50,7 @@ public abstract class UIContainer : UIWidget, IGenericContainer
     /// <summary>
     /// Gets the child component with <see cref="ID"/> equal to the given <paramref name="id"/>.
     /// </summary>
-    /// <typeparam name="TComponent">The comnponent type.</typeparam>
+    /// <typeparam name="TComponent">The component type.</typeparam>
     /// <returns>The component.</returns>
     /// <exception cref="ArgumentException">If the component does not exist.</exception>
     /// <exception cref="InvalidCastException">If the component was found but with a type not assignable to <typeparamref name="TComponent"/>.</exception>

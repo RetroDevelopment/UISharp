@@ -14,6 +14,11 @@ public record Size
     public static readonly Size Zero = new(0, 0);
 
     /// <summary>
+    /// The maximum possible size.
+    /// </summary>
+    public static readonly Size Max = new(PixelUnit.Max, PixelUnit.Max);
+
+    /// <summary>
     /// The width in pixels.
     /// </summary>
     public PixelUnit Width { get; }
@@ -133,8 +138,20 @@ public record Size
     /// <param name="margin">The margin for inflation.</param>
     /// <returns>A <see cref="Size"/> which is bigger than <see langword="this" /> to accomodate the specified <paramref name="margin"/>.</returns>
     public Size Inflate(Margin margin) =>
-        new(Width + (margin.Left.IsAuto ? PixelUnit.Zero : margin.Left) + (margin.Right.IsAuto ? PixelUnit.Zero : margin.Right),
-            Height + (margin.Top.IsAuto ? PixelUnit.Zero : margin.Top) + (margin.Bottom.IsAuto ? PixelUnit.Zero : margin.Bottom));
+        new Size(Width + (margin.Left.IfAuto(PixelUnit.Zero)) + (margin.Right.IfAuto(PixelUnit.Zero)),
+                 Height + (margin.Top.IfAuto(PixelUnit.Zero)) + (margin.Bottom.IfAuto(PixelUnit.Zero)))
+           .Clamp(Zero, Max);
+
+    /// <summary>
+    /// Deflates <see langword="this" /> <see cref="Size"/> taking padding into account.
+    /// For example a 100 x 100 size with left padding of 10 and right padding of 20 will be deflated into an area 60 x 100.
+    /// </summary>
+    /// <param name="paddding">The padding for deflation.</param>
+    /// <returns>A <see cref="Size"/> which is smaller than <see langword="this" /> to accomodate the specified <paramref name="padding"/>.</returns>
+    public Size Deflate(Margin padding) =>
+        new Size(Width - (padding.Left.IfAuto(PixelUnit.Zero)) - (padding.Right.IfAuto(PixelUnit.Zero)),
+                 Height - (padding.Top.IfAuto(PixelUnit.Zero)) - (padding.Bottom.IfAuto(PixelUnit.Zero)))
+           .Clamp(Zero, Max);
 
     /// <summary>
     /// Clamps <see langword="this" /> <see cref="Size"/> to the given <paramref name="minimumSize"/> and <paramref name="maximumSize"/>.

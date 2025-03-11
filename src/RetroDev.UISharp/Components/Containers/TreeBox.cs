@@ -3,7 +3,9 @@ using RetroDev.UISharp.Components.Base;
 using RetroDev.UISharp.Components.Core.AutoArea;
 using RetroDev.UISharp.Components.Simple;
 using RetroDev.UISharp.Core.Coordinates;
+using RetroDev.UISharp.Core.Graphics;
 using RetroDev.UISharp.Presentation.Properties;
+using RetroDev.UISharp.Presentation.Themes;
 
 namespace RetroDev.UISharp.Components.Containers;
 
@@ -38,11 +40,18 @@ public class TreeBox : UIContainer
     /// <param name="parent">The application that contain this scroll view.</param>
     public TreeBox(Application application) : base(application)
     {
-        _listBox = new ListBox(application);
-        AddChildNode(_listBox);
+        BackgroundColor.BindTheme(UISharpColorNames.ListBackground);
+        BorderColor.BindTheme(UISharpColorNames.ListBorder);
 
+        _listBox = new ListBox(application);
         _listBox.AutoWidth.Value = AutoSize.Stretch;
         _listBox.AutoHeight.Value = AutoSize.Stretch;
+        _listBox.BackgroundColor.RemoveBinding();
+        _listBox.BorderColor.RemoveBinding();
+        _listBox.BackgroundColor.Value = Color.Transparent;
+        _listBox.BorderColor.Value = Color.Transparent;
+        _listBox.Margin.BindDestinationToSource(Padding);
+        AddChildNode(_listBox);
 
         SelectedNode = new UIProperty<TreeBox, TreeNode?>(this, (TreeNode?)null);
         // TODO SelectedNode can be bound to _listBox.SelectedItem and converters!
@@ -63,10 +72,24 @@ public class TreeBox : UIContainer
         foldUnfoldButton.Text.Value = "*";
         foldUnfoldButton.Width.Value = FoldUnfoldButtonSize;
         foldUnfoldButton.Height.Value = FoldUnfoldButtonSize;
+        // TODO: Unsubscribe these events.
         foldUnfoldButton.Action += (_, _) =>
         {
             component.Collapsed.Value = !component.Collapsed.Value;
             UpdateCollapseState(component, recursive: true);
+        };
+
+        KeyPress += (_, e) =>
+        {
+            if (SelectedNode.Value != component) return; // TODO: and has focus
+            if (e.Button == UISharp.Core.Windowing.Events.KeyButton.Left && !component.Collapsed.Value)
+            {
+                foldUnfoldButton.Press();
+            }
+            else if (e.Button == UISharp.Core.Windowing.Events.KeyButton.Right && component.Collapsed.Value)
+            {
+                foldUnfoldButton.Press();
+            }
         };
 
         var panel = new Panel(Application);

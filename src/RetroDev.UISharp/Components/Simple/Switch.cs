@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using RetroDev.UISharp.Components.Base;
+﻿using RetroDev.UISharp.Components.Base;
 using RetroDev.UISharp.Components.Core.AutoArea;
 using RetroDev.UISharp.Components.Shapes;
 using RetroDev.UISharp.Core.Coordinates;
@@ -11,7 +10,7 @@ using RetroDev.UISharp.Presentation.Themes;
 namespace RetroDev.UISharp.Components.Simple;
 
 /// <summary>
-/// A toogle button switch to mark with a tick if something is checked.
+/// A toggle button switch to mark with a tick if something is checked.
 /// </summary>
 public class Switch : UIWidget
 {
@@ -44,6 +43,11 @@ public class Switch : UIWidget
     public UIProperty<Switch, Color> FocusColor { get; }
 
     /// <summary>
+    /// The switch border color.
+    /// </summary>
+    public UIProperty<Switch, Color> BorderColor { get; }
+
+    /// <summary>
     /// Creates a new switch toggle button.
     /// </summary>
     /// <param name="application">The application that contain <see langword="this" /> <see cref="Switch"/>.</param>
@@ -55,13 +59,14 @@ public class Switch : UIWidget
         UncheckedBackgroundColor = CreateNewColorPropertyFor<Switch>(UISharpColorNames.SwitchOffBackground);
         DisabledBackgroundColor = CreateNewColorPropertyFor<Switch>(UISharpColorNames.SwitchDisabled);
         FocusColor = CreateNewColorPropertyFor<Switch>(UISharpColorNames.SwitchFocusBorder);
+        BorderColor = CreateNewColorPropertyFor<Switch>(UISharpColorNames.SwitchBorder);
 
         BackgroundColor.BindTheme(UISharpColorNames.SwitchOnBackground);
 
         Padding.SetAll(5.0f); // TODO: use styles
 
         _backgroundRectangle = new Rectangle(application);
-        _backgroundRectangle.BorderColor.BindDestinationToSource(FocusColor);
+        _backgroundRectangle.BorderThickness.Value = 3.0f; // TODO: use styles
         Canvas.Add(_backgroundRectangle);
 
         _selectionCircle = new Circle(application);
@@ -118,11 +123,11 @@ public class Switch : UIWidget
     {
         if (Focus.Value)
         {
-            _backgroundRectangle.BorderThickness.Value = 3.0f;
+            _backgroundRectangle.BorderColor.Value = FocusColor.Value;
         }
         else
         {
-            _backgroundRectangle.BorderThickness.Value = 0.0f;
+            _backgroundRectangle.BorderColor.Value = BorderColor.Value;
         }
     }
 
@@ -142,13 +147,13 @@ public class Switch : UIWidget
 
         if (Checked.Value)
         {
-            area = size.PositionCenterRightOf(args.RenderingAreaSize, padding);
-            area = new Area(new Point(area.TopLeft.X, area.TopLeft.Y), area.Size);
+            area = size.PositionCenterRightOf(args.RenderingAreaSize);
+            area = new Area(new Point(area.TopLeft.X - padding.Right, area.TopLeft.Y), area.Size);
         }
         else
         {
-            area = size.PositionCenterLeftOf(args.RenderingAreaSize, padding);
-            area = new Area(new Point(area.TopLeft.X, area.TopLeft.Y), area.Size);
+            area = size.PositionCenterLeftOf(args.RenderingAreaSize);
+            area = new Area(new Point(area.TopLeft.X + padding.Left, area.TopLeft.Y), area.Size);
         }
 
         _selectionCircle.RelativeRenderingArea.Value = area;

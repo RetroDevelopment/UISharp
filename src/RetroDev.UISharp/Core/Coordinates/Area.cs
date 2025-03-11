@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
+using RetroDev.UISharp.Components.Base;
 
 namespace RetroDev.UISharp.Core.Coordinates;
 
@@ -98,54 +99,17 @@ public record Area(Point TopLeft, Size Size)
     /// <returns>A new clamped area respecting the margins.</returns>
     public Area Clamp(Size containerSize, Margin margin)
     {
-        if (!margin.Right.IsAuto && margin.Right >= containerSize.Width)
-        {
-            throw new ArgumentException($"Right margin ({margin.Right}) cannot be greater than the full width ({containerSize.Width})");
-        }
+        var minX = margin.Left.IfAuto(PixelUnit.Min);
+        var maxX = Math.Clamp((containerSize.Width - margin.Right).IfAuto(PixelUnit.Max), minX, PixelUnit.Max);
+        var minY = margin.Top.IfAuto(PixelUnit.Min);
+        var maxY = Math.Clamp((containerSize.Height - margin.Bottom).IfAuto(PixelUnit.Max), minY, PixelUnit.Max);
 
-        if (!margin.Bottom.IsAuto && margin.Bottom >= containerSize.Height)
-        {
-            throw new ArgumentException($"Bottom margin ({margin.Bottom}) cannot be greater than the full height ({containerSize.Height})");
-        }
+        var left = Math.Clamp(TopLeft.X, minX, maxX);
+        var right = Math.Clamp(left + Size.Width, minX, maxX);
+        var top = Math.Clamp(TopLeft.Y, minY, maxY);
+        var bottom = Math.Clamp(top + Size.Height, minY, maxY);
 
-        var deltaX = PixelUnit.Zero;
-        var deltaY = PixelUnit.Zero;
-
-        if (!margin.Left.IsAuto && TopLeft.X < margin.Left)
-        {
-            deltaX = margin.Left - TopLeft.X;
-        }
-
-        if (!margin.Top.IsAuto && TopLeft.Y < margin.Top)
-        {
-            deltaY = margin.Top - TopLeft.Y;
-        }
-
-        var leftX = TopLeft.X + deltaX;
-        var topY = TopLeft.Y + deltaY;
-        var rightX = leftX + Size.Width;
-        var bottomY = topY + Size.Height;
-
-        var maxX = margin.Right.IsAuto ? PixelUnit.Max : containerSize.Width - margin.Right;
-        var maxY = margin.Bottom.IsAuto ? PixelUnit.Max : containerSize.Height - margin.Bottom;
-
-        // Adjusting for right alignment, shifting left if necessary
-        if (!margin.Right.IsAuto && rightX > maxX)
-        {
-            var delta = rightX - maxX;
-            rightX -= delta;
-            leftX = Math.Clamp(leftX - delta, margin.Left.IsAuto ? PixelUnit.Min : margin.Left, maxX);
-        }
-
-        // Adjusting for bottom alignment, shifting up if necessary
-        if (!margin.Bottom.IsAuto && bottomY > maxY)
-        {
-            var delta = bottomY - maxY;
-            bottomY -= delta;
-            topY = Math.Clamp(topY - delta, margin.Top.IsAuto ? PixelUnit.Min : margin.Top, maxY);  // Use maxY here for vertical clamping
-        }
-
-        return new Area(topLeft: new Point(leftX, topY), bottomRight: new Point(rightX, bottomY));
+        return new Area(topLeft: new Point(left, top), bottomRight: new Point(right, bottom));
     }
 
     /// <inheritdoc />

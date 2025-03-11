@@ -11,7 +11,7 @@ public class GridLayout : UIContainer, IContainer
 {
     public interface IGridSize { }
     public record AbsoluteSize(PixelUnit Size) : IGridSize;
-    public record RelateiveSize(float Size) : IGridSize;
+    public record RelativeSize(float Size) : IGridSize;
     public record AutoSize : IGridSize;
 
     /// <summary>
@@ -122,12 +122,16 @@ public class GridLayout : UIContainer, IContainer
 
         if (availableSpace == Size.Zero) return Enumerable.Repeat<Area?>(Area.Empty, childrenSize.Count()).ToList();
 
-        List<Area?> areas = new List<Area?>();
+        var areas = new List<Area?>();
+
+        var availableSpaceAfterPadding = availableSpace.Deflate(Padding.ToMarginStruct());
+        var leftPadding = Padding.Left.Value.IfAuto(PixelUnit.Zero);
+        var topPadding = Padding.Top.Value.IfAuto(PixelUnit.Zero);
 
         var rowSizeDefinitions = Parse(RowSizes.Value, Rows.Value);
         var columnSizeDefinitions = Parse(ColumnSizes.Value, Columns.Value);
-        var rowSizes = ComputeSizes(availableSpace.Height, rowSizeDefinitions, Rows.Value);
-        var columnSizes = ComputeSizes(availableSpace.Width, columnSizeDefinitions, Columns.Value);
+        var rowSizes = ComputeSizes(availableSpaceAfterPadding.Height, rowSizeDefinitions, Rows.Value);
+        var columnSizes = ComputeSizes(availableSpaceAfterPadding.Width, columnSizeDefinitions, Columns.Value);
 
         var children = base.GetChildrenNodes();
         var size = children.Count();
@@ -143,7 +147,8 @@ public class GridLayout : UIContainer, IContainer
             var height = rowSizes[(int)row];
             var x = column == 0 ? 0.0f : columnSizes[..((int)column)].Sum(p => p.Value);
             var y = row == 0 ? 0.0f : rowSizes[..((int)row)].Sum(p => p.Value);
-            areas.Add(new Area(new Point(x, y), new Size(width, height)));
+
+            areas.Add(new Area(new Point(x + leftPadding, y + topPadding), new Size(width, height)));
             i++;
         }
 
@@ -167,7 +172,7 @@ public class GridLayout : UIContainer, IContainer
 
         foreach (var column in columnSizeDefinitions)
         {
-            if (column is AutoSize || column is RelateiveSize)
+            if (column is AutoSize || column is RelativeSize)
             {
                 for (int rowIndex = 0; rowIndex < Rows.Value; rowIndex++)
                 {
@@ -190,7 +195,7 @@ public class GridLayout : UIContainer, IContainer
 
         foreach (var row in rowSizeDefinitions)
         {
-            if (row is AutoSize || row is RelateiveSize)
+            if (row is AutoSize || row is RelativeSize)
             {
                 for (int columnIndex = 0; columnIndex < Columns.Value; columnIndex++)
                 {
@@ -248,7 +253,7 @@ public class GridLayout : UIContainer, IContainer
                 var parseSuccess = float.TryParse(size.Substring(0, size.Length - 1), null, out var sizeNumber);
                 if (!parseSuccess) throw new InvalidOperationException($"Failed to convert {size} as number");
                 if (sizeNumber > 100 || sizeNumber < 0) throw new InvalidOperationException($"Invalid size {size}: relative values must be between 0% to 100%");
-                result.Add(new RelateiveSize(sizeNumber / 100.0f));
+                result.Add(new RelativeSize(sizeNumber / 100.0f));
             }
             else if (size == "auto" || size == "*")
             {
@@ -276,7 +281,7 @@ public class GridLayout : UIContainer, IContainer
         foreach (var size in sizes)
         {
             if (size is AbsoluteSize absoluteSize) result.Add(absoluteSize.Size);
-            else if (size is RelateiveSize relateiveSize) result.Add(maximumSize * relateiveSize.Size);
+            else if (size is RelativeSize relateiveSize) result.Add(maximumSize * relateiveSize.Size);
             else if (size is AutoSize autoSize) result.Add(autoGridSize);
             else throw new InvalidOperationException($"Unhandled grid layout autosize type {size.GetType()}");
         }
@@ -292,7 +297,7 @@ public class GridLayout : UIContainer, IContainer
         foreach (var size in sizes)
         {
             if (size is AbsoluteSize absoluteSize) cumulativeKnownSize += absoluteSize.Size;
-            if (size is RelateiveSize relateiveSize) cumulativeKnownSize += maximumSize * relateiveSize.Size;
+            if (size is RelativeSize relateiveSize) cumulativeKnownSize += maximumSize * relateiveSize.Size;
         }
 
         return cumulativeKnownSize;

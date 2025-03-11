@@ -28,8 +28,8 @@ internal class UIPreview : UIContainer
             var child = children[i];
             var childWrapSize = childrenSizeList[i];
 
-            var childX = child.X.Value.IsAuto ? PixelUnit.Zero : child.X.Value;
-            var childY = child.Y.Value.IsAuto ? PixelUnit.Zero : child.Y.Value;
+            var childX = child.X.Value.IfAuto(PixelUnit.Zero);
+            var childY = child.Y.Value.IfAuto(PixelUnit.Zero);
             var childWidth = childWrapSize.Width;
             var childHeight = childWrapSize.Height;
             maxRight = Math.Max(maxRight, childX + childWidth);

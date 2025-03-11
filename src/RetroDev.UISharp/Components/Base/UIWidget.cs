@@ -1,6 +1,5 @@
-﻿using RetroDev.UISharp.Components.Core.AutoArea;
-using RetroDev.UISharp.Components.Core.Layout;
-using RetroDev.UISharp.Presentation.Properties;
+﻿using RetroDev.UISharp.Components.Containers;
+using RetroDev.UISharp.Components.Core.AutoArea;
 
 namespace RetroDev.UISharp.Components.Base;
 
@@ -8,6 +7,14 @@ namespace RetroDev.UISharp.Components.Base;
 /// Represents a widget that is part of the UI tree but it is not a root.
 /// For example, it can be a label, button or a layout, but not a window (or a <see cref="UIRoot"/>).
 /// </summary>
+/// <remarks>
+/// When implementing a new <see cref="UIWidget"/> you should consider the following:
+/// - Position the content within the rendering area taking into account padding. <br />
+/// - If implementing a layout or container, you can wrap each child into a <see cref="Panel"/> which will automatically take each child margin into account when computing the wrap size.<br />
+/// - Margin calculation for this component will be performed automatically. <br />
+/// - Padding calculation in <see cref="UIComponent.ComputeMinimumOptimalSize(IEnumerable{UISharp.Core.Coordinates.Size})"/> implementation must be disregarded. <br />
+/// In summary: consider only padding of this component (children margin is already taken into account by <see cref="Panel"/>), and leave every other margin/padding calculation to the framework.
+/// </remarks>
 public abstract class UIWidget : UIComponent
 {
     /// <summary>
