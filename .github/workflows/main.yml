@@ -5,7 +5,7 @@ on:
     branches: [ "main", "mvp", "pipeline-8/create" ]
   pull_request:
     branches: [ "main", "mvp" ]
-workflow_dispatch:
+  workflow_dispatch:
     inputs:
       branch:
         description: "Branch to run the workflow on"
