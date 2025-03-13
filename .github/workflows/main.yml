@@ -2,7 +2,7 @@ name: .NET Multi-Platform Build
 
 on:
   push:
-    branches: [ "main", "mvp" ]
+    branches: [ "main", "mvp", "pipeline-8/create" ]
   pull_request:
     branches: [ "main", "mvp" ]
 workflow_dispatch:
@@ -11,7 +11,7 @@ workflow_dispatch:
         description: "Branch to run the workflow on"
         required: true
         default: "main"
-        
+
 jobs:
   build:
     strategy:
