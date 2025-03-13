@@ -11,17 +11,6 @@ public class Panel : UIContainer, ISingleContainer // TODO: ISingleContainer sho
     private UIWidget? _child;
 
     /// <inheritdoc />
-    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize)
-    {
-        if (_child != null)
-        {
-            return childrenSize.First().Inflate(_child.Margin.ToMarginStruct());
-        }
-
-        return Size.Zero;
-    }
-
-    /// <inheritdoc />
 
     public override IEnumerable<UIWidget> Children => [GetChildrenNodes().First()];
 
@@ -33,6 +22,17 @@ public class Panel : UIContainer, ISingleContainer // TODO: ISingleContainer sho
     public Panel(Application application, UIWidget? component = null) : base(application)
     {
         if (component != null) SetComponent(component);
+    }
+
+    /// <inheritdoc />
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize)
+    {
+        if (_child != null)
+        {
+            return childrenSize.First().Inflate(_child.Margin.ToMarginStruct());
+        }
+
+        return Size.Zero;
     }
 
     /// <summary>

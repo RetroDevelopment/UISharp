@@ -172,30 +172,30 @@ internal class SDLEventSystem : IEventSystem
     /// <summary>
     /// Terminates the event queue processing.
     /// </summary>
-    /// <param name="emitQuitEvent">Whether to emit <see cref="ApplicationQuit"/>.</param>
-    public void Quit(bool emitQuitEvent)
+    public void Quit()
     {
         _dispatcher?.ThrowIfNotOnUIThread();
         var quitEvent = new SDL_Event();
         quitEvent.type = (SDL_EventType)SDL_CustomEventType.SDL_QUIT;
         SDL_PushEvent(ref quitEvent);
-
-        if (emitQuitEvent)
-        {
-            ApplicationQuit?.Invoke(this, EventArgs.Empty);
-            SDL_StopTextInput(); // TODO: move this into a dispose method
-            SDL_DelEventWatch(_eventFilter, IntPtr.Zero);
-        }
+        ApplicationQuit?.Invoke(this, EventArgs.Empty);
+        SDL_StopTextInput(); // TODO: move this into a dispose method
+        SDL_DelEventWatch(_eventFilter, IntPtr.Zero);
     }
 
     private int EventCallback(nint userdata, nint sdlevent)
     {
         _dispatcher.ThrowIfNotOnUIThread(); // TODO: use dispatcher to decide whether to push to event queue or not
-        if (_prepareRender) return 1; // TODO: do not discard events when rendering, queue them instead (once dispatcher is implemented)
         SDL_Event currentEvent = Marshal.PtrToStructure<SDL_Event>(sdlevent);
 
+        if (_prepareRender)
+        {
+            _logger.LogWarning($"Discarding event {currentEvent} - TODO: push it into dispatcher");
+            return 1; // TODO: do not discard events when rendering, queue them instead (once dispatcher is implemented)
+        }
+
         if ((int)currentEvent.type == (int)SDL_CustomEventType.SDL_QUIT) return 1;
-        if ((int)currentEvent.type == (int)SDL_CustomEventType.SDL_SIGNAL) _signaled = false;
+
         switch (currentEvent.type)
         {
             case SDL_EventType.SDL_MOUSEBUTTONDOWN:
@@ -332,9 +332,9 @@ internal class SDLEventSystem : IEventSystem
                 break;
         }
 
-        if ((_stopwatch.ElapsedMilliseconds > TimeoutMilliseconds || (int)currentEvent.type == (int)SDL_CustomEventType.SDL_SIGNAL) && !_prepareRender)
+        if (_signaled && !_prepareRender)
         {
-            _prepareRender = true; // Avoid loops if an event is trigered inside the RenderNeeded handler.
+            _prepareRender = true; // Avoid loops if an event is triggered inside the RenderNeeded handler.
             RenderNeeded?.Invoke(this, EventArgs.Empty);
             _stopwatch.Restart();
             _prepareRender = false;

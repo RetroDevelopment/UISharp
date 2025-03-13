@@ -21,11 +21,6 @@ namespace RetroDev.UISharp.IDE;
 // Dynamic and scalable interfaces.
 // Lightweight and efficient tools for medium-sized applications.
 
-// TODO
-// Add missing border color properties
-// Fix issue with multi token selection in edit boxes
-// Fix wrong invalidation logic
-
 internal class Program
 {
     static void Main(string[] _)

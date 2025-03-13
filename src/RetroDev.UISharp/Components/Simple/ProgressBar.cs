@@ -39,9 +39,6 @@ public class ProgressBar : UIWidget
     /// </summary>
     public UIProperty<ProgressBar, Color> ForegroundColor { get; }
 
-    /// <inheritdoc/>
-    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) => new(100, 20); // TODO: 20 is the common text size, 100 is some value to be big enough. Make sure that the size fits the screen.
-
     /// <summary>
     /// Creates a new label.
     /// </summary>
@@ -74,6 +71,9 @@ public class ProgressBar : UIWidget
         if (Value.Value > MaximumValue.Value) throw new UIPropertyValidationException($"Value {Value.Value} must be less than or equal to MaximumValue {MaximumValue.Value}", this);
         if (MaximumValue.Value < MinimumValue.Value) throw new UIPropertyValidationException($"MaximumValue {MaximumValue.Value} must be greater or equal to {MinimumValue.Value}", this);
     }
+
+    /// <inheritdoc/>
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) => new(100, 20); // TODO: 20 is the common text size, 100 is some value to be big enough. Make sure that the size fits the screen.
 
     private void ProgressBar_RenderFrame(UIComponent sender, RenderingEventArgs e)
     {

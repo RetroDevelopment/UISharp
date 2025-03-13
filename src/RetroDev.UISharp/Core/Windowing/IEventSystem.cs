@@ -122,6 +122,5 @@ public interface IEventSystem
     /// <summary>
     /// Terminates the event queue processing.
     /// </summary>
-    /// <param name="emitQuitEvent">Whether to emit <see cref="ApplicationQuit"/>.</param>
-    void Quit(bool emitQuitEvent);
+    void Quit();
 }

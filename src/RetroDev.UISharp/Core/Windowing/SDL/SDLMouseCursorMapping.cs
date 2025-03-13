@@ -1,6 +1,4 @@
 ﻿using System.ComponentModel;
-using RetroDev.UISharp.Core.Windowing.Events;
-using RetroDev.UISharp.UIDefinition.Ast;
 using static SDL2.SDL;
 
 namespace RetroDev.UISharp.Core.Windowing.SDL;
@@ -20,9 +18,9 @@ public static class SDLMouseCursorMapping
         { MouseCursor.SizeNorthEastSouthWest, SDL_SystemCursor.SDL_SYSTEM_CURSOR_SIZENESW },
         { MouseCursor.SizeWestEast, SDL_SystemCursor.SDL_SYSTEM_CURSOR_SIZEWE },
         { MouseCursor.SizeNorthSouth, SDL_SystemCursor.SDL_SYSTEM_CURSOR_SIZENS },
-        {MouseCursor.SizeAll, SDL_SystemCursor.SDL_SYSTEM_CURSOR_SIZEALL },
-        {MouseCursor.Hand, SDL_SystemCursor.SDL_SYSTEM_CURSOR_HAND },
-        {MouseCursor.None, SDL_SystemCursor.SDL_SYSTEM_CURSOR_NO }
+        { MouseCursor.SizeAll, SDL_SystemCursor.SDL_SYSTEM_CURSOR_SIZEALL },
+        { MouseCursor.Hand, SDL_SystemCursor.SDL_SYSTEM_CURSOR_HAND },
+        { MouseCursor.None, SDL_SystemCursor.SDL_SYSTEM_CURSOR_NO }
     };
 
     /// <summary>

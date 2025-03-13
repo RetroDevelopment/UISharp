@@ -22,10 +22,6 @@ public class ScrollView : UIContainer, ISingleContainer
     private PixelUnit? _childHorizontalPositionDragBegin;
 
     /// <inheritdoc />
-    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
-        childrenSize.FirstOrDefault() ?? Size.Zero;
-
-    /// <inheritdoc />
     public override IEnumerable<UIWidget> Children => GetChildrenNodes();
 
     /// <summary>
@@ -87,6 +83,10 @@ public class ScrollView : UIContainer, ISingleContainer
 
         AddChildNode(_child, -1);
     }
+
+    /// <inheritdoc />
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
+        childrenSize.FirstOrDefault() ?? Size.Zero;
 
     private void VerticalScrollBar_MouseDragBegin(UIComponent sender, MouseEventArgs e)
     {

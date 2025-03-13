@@ -3,17 +3,24 @@ using RetroDev.UISharp.Presentation.Properties;
 
 namespace RetroDev.UISharp.Components.Core;
 
+using Token = (uint Start, uint End);
+
 /// <summary>
 /// Contains all the utilities to manage editable text logic.
 /// </summary>
 public class EditableTextBuffer
 {
+    private readonly List<Token> _tokens = [];
+    private readonly List<string> _history = [];
+
+    private int _historyIndex;
+
     /// <summary>
     /// The regex to detect token delimiters.
     /// The <see cref="Text"/> is split into tokens (by this <see cref="TokenRegex"/>) for
     /// rapid movements and deletes (e.g. with CTRL + delete).
     /// </summary>
-    public string TokenRegex { get; set; } = @"(?<=\s)(\S)|(?<=\W)(\w)";
+    public string TokenRegex { get; set; } = @"\S+";
 
     /// <summary>
     /// The buffer text.
@@ -47,6 +54,8 @@ public class EditableTextBuffer
         SelectionLength = new BindableProperty<int>(0, application);
 
         Text.ValueChange += Text_ValueChange;
+        _history.Add(Text.Value);
+        _historyIndex = 0;
     }
 
     /// <summary>
@@ -54,7 +63,7 @@ public class EditableTextBuffer
     /// marked by the selection.
     /// </summary>
     /// <param name="deleteToken">
-    /// Whether to thelete the full part of the current token at the left of the caret or just the 
+    /// Whether to delete the full part of the current token at the left of the caret or just the 
     /// character at the left of the caret.
     /// </param>
     public virtual void DeleteLeft(bool deleteToken)
@@ -77,7 +86,7 @@ public class EditableTextBuffer
     /// marked by the selection.
     /// </summary>
     /// <param name="deleteToken">
-    /// Whether to thelete the full part of the current token at the right of the caret or just the 
+    /// Whether to delete the full part of the current token at the right of the caret or just the 
     /// character at the right of the caret.
     /// </param>
     public virtual void DeleteRight(bool deleteToken)
@@ -102,7 +111,7 @@ public class EditableTextBuffer
     /// </summary>
     /// <param name="offset">
     /// The number of character for which to move the caret.
-    /// Positive offsets move the caret towards the right, netative offsets move it torwards the left.
+    /// Positive offsets move the caret towards the right, negative offsets move it toward the left.
     /// </param>
     /// <param name="selectionActive"></param>
     public virtual void MoveCaret(int offset, bool selectionActive)
@@ -123,7 +132,7 @@ public class EditableTextBuffer
         {
             selectionLegnth = 0;
             var selectionInterval = GetSelectionInterval();
-            caretIndex = clampedOffset < 0 ? selectionInterval.StartIndex : selectionInterval.EndIndex;
+            caretIndex = offset < 0 ? selectionInterval.StartIndex : selectionInterval.EndIndex;
         }
 
         CaretIndex.Value = caretIndex;
@@ -144,6 +153,49 @@ public class EditableTextBuffer
     }
 
     /// <summary>
+    /// Reverts the <see cref="Text"/> value to the value it had the last time <see cref="TakeHistorySnapshot"/> was called.
+    /// </summary>
+    public void Undo()
+    {
+        if (_historyIndex == 0) return;
+        _historyIndex--;
+        Text.Value = _history[_historyIndex];
+        CaretIndex.Value = (uint)Text.Value.Length;
+        SelectionLength.Value = 0;
+    }
+
+    /// <summary>
+    /// Reverts the <see cref="Text"/> value to the value it had the last time <see cref="Undo"/> was performed.
+    /// </summary>
+    public void Redo()
+    {
+        if (_historyIndex >= _history.Count - 1) return;
+        _historyIndex++;
+        Text.Value = _history[_historyIndex];
+        CaretIndex.Value = (uint)Text.Value.Length;
+        SelectionLength.Value = 0;
+    }
+
+    /// <summary>
+    /// Stores the current <see cref="Text"/> value in the internal history used by <see cref="Undo"/> and <see cref="Redo"/>.
+    /// operations.
+    /// </summary>
+    /// <param name="text">The text for which to take the snapshot.</param>
+    /// <remarks>Duplicate strings are disregarded, meaning that if two snapshots are taken with the same <see cref="Text"/>, the second one will be disregarded to avoid for example multiple equal undo operations.</remarks>
+    public virtual void TakeHistorySnapshot(string text)
+    {
+        if (_history.Count > 0 && _history[_historyIndex] == text) return;
+
+        if (_historyIndex < _history.Count - 1)
+        {
+            _history.RemoveRange(_historyIndex + 1, _history.Count - _historyIndex - 1);
+        }
+
+        _history.Add(text);
+        _historyIndex = _history.Count - 1;
+    }
+
+    /// <summary>
     /// Sets the selection interval (useful for mouse dragging selection).
     /// </summary>
     /// <param name="dragStartIndex">The index of the character where the selection ends.
@@ -153,10 +205,25 @@ public class EditableTextBuffer
     /// The index of the character where the selection starts and where the caret is.
     /// For mouse drag, this is the current mouse position.
     /// </param>
-    public virtual void SetSelectionDragInterval(uint dragStartIndex, uint caretIndex)
+    /// <param name="multiTokenSelection">
+    /// if <see langword="true" /> it includes the full <paramref name="dragStartIndex"/> and <paramref name="caretIndex"/>
+    /// tokens in the selection.
+    /// </param>
+    public virtual void SetSelectionDragInterval(uint dragStartIndex, uint caretIndex, bool multiTokenSelection)
     {
-        CaretIndex.Value = caretIndex;
-        SelectionLength.Value = (int)dragStartIndex - (int)caretIndex;
+        if (multiTokenSelection)
+        {
+            var caretIndexToken = GetTokenAt(caretIndex);
+            var dragStartToken = GetTokenAt(dragStartIndex);
+            CaretIndex.Value = caretIndex < dragStartIndex ? caretIndexToken.Start : caretIndexToken.End + 1;
+            var selectionStart = (int)(caretIndex < dragStartIndex ? dragStartToken.End + 1 : dragStartToken.Start);
+            SelectionLength.Value = (int)(selectionStart - CaretIndex.Value);
+        }
+        else
+        {
+            CaretIndex.Value = caretIndex;
+            SelectionLength.Value = (int)(dragStartIndex - caretIndex);
+        }
     }
 
     /// <summary>
@@ -169,18 +236,12 @@ public class EditableTextBuffer
     /// </returns>
     public virtual int GetNextTokenOffset()
     {
-        if (CaretIndex.Value >= Text.Value.Length) return 0;
+        var caretIndex = CaretIndex.Value;
+        if (caretIndex >= Text.Value.Length) return 0;
 
-        var rightCaretSubstring = Text.Value.Substring((int)CaretIndex.Value);
-        var match = Regex.Match(rightCaretSubstring, TokenRegex, RegexOptions.None);
-
-        var maxStep = (int)(Text.Value.Length - CaretIndex.Value);
-        if (match.Success)
-        {
-            return Math.Clamp(match.Index, 0, maxStep);
-        }
-
-        return maxStep;
+        var nextTokenIndex = _tokens.FindIndex(interval => interval.Start > caretIndex);
+        if (nextTokenIndex < 0) return Text.Value.Length - (int)caretIndex;
+        return (int)_tokens[nextTokenIndex].Start - (int)caretIndex;
     }
 
     /// <summary>
@@ -193,18 +254,12 @@ public class EditableTextBuffer
     /// </returns>
     public virtual int GetPreviousTokenOffset()
     {
-        if (CaretIndex.Value == 0) return 0;
+        var caretIndex = CaretIndex.Value;
+        if (caretIndex == 0) return 0;
 
-        var leftCaretSubstring = Text.Value.Substring(0, (int)CaretIndex.Value);
-        var match = Regex.Match(leftCaretSubstring, TokenRegex, RegexOptions.RightToLeft);
-
-        var minStep = (int)(-CaretIndex.Value);
-        if (match.Success)
-        {
-            return Math.Clamp((int)(match.Index - CaretIndex.Value), minStep, 0);
-        }
-
-        return minStep;
+        var previousTokenIndex = _tokens.FindLastIndex(interval => interval.Start < caretIndex);
+        if (previousTokenIndex < 0) return -(int)caretIndex;
+        return (int)_tokens[previousTokenIndex].Start - (int)caretIndex;
     }
 
     /// <summary>
@@ -212,10 +267,11 @@ public class EditableTextBuffer
     /// </summary>
     public virtual void SelectCurrentToken()
     {
-        var start = CaretIndex.Value + GetPreviousTokenOffset();
-        var end = CaretIndex.Value + GetNextTokenOffset();
-        CaretIndex.Value = (uint)start;
-        SelectionLength.Value = (int)(end - start);
+        if (Text.Value.Length == 0) return;
+        var caretIndex = CaretIndex.Value;
+        var interval = GetTokenAt(caretIndex);
+        CaretIndex.Value = interval.Start;
+        SelectionLength.Value = (int)((interval.End + 1) - interval.Start);
     }
 
     /// <summary>
@@ -231,7 +287,7 @@ public class EditableTextBuffer
     /// Gets the text selection interval.
     /// </summary>
     /// <returns>
-    /// The pair <c>(StartIndex, EndIndex)</c> identifying the idices of the first and last selected
+    /// The pair <c>(StartIndex, EndIndex)</c> identifying the indexes of the first and last selected
     /// characters (extremes included).
     /// </returns>
     public virtual (uint StartIndex, uint EndIndex) GetSelectionInterval()
@@ -256,8 +312,30 @@ public class EditableTextBuffer
         SelectionLength.Value = 0;
     }
 
+    /// <summary>
+    /// Gets the token where the character at the given <paramref name="index"/> lies.
+    /// </summary>
+    /// <param name="index">The index of the character for which to find the token.</param>
+    /// <returns>The token start and end 0-based index.</returns>
+    public virtual Token GetTokenAt(uint index) =>
+        _tokens.FindLast(interval => index >= interval.Start);
+
+    private void RefreshTokenList()
+    {
+        _tokens.Clear();
+        var text = Text.Value;
+        var match = Regex.Match(text, TokenRegex);
+        while (match.Success)
+        {
+            _tokens.Add(((uint)match.Index, (uint)(match.Index + match.Length - 1)));
+            match = match.NextMatch();
+        }
+    }
+
     private void Text_ValueChange(BindableProperty<string> sender, ValueChangeEventArgs<string> e)
     {
-        CaretIndex.Value = (uint)Math.Clamp(CaretIndex.Value, 0, Text.Value.Length + 1);
+        CaretIndex.Value = (uint)Math.Clamp(CaretIndex.Value, 0, Text.Value.Length);
+        SelectionLength.Value = Math.Clamp(SelectionLength.Value, -(int)CaretIndex.Value, Text.Value.Length - (int)CaretIndex.Value);
+        RefreshTokenList();
     }
 }

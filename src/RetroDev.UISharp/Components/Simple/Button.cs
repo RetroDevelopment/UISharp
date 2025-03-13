@@ -62,7 +62,7 @@ public class Button : UIWidget
     public UIProperty<Button, Color> BorderColor { get; }
 
     /// <summary>
-    /// The color when the mouse is whithin the button.
+    /// The color when the mouse is within the button.
     /// </summary>
     public UIProperty<Button, Color> HoverColor { get; }
 
@@ -80,10 +80,6 @@ public class Button : UIWidget
     /// The button text vertical alignment.
     /// </summary>
     public UIProperty<Button, IVerticalAlignment> TextVerticalAlignment { get; }
-
-    /// <inheritdoc/>
-    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
-        childrenSize.First();
 
     /// <summary>
     /// Creates a new button.
@@ -123,6 +119,7 @@ public class Button : UIWidget
         UpdateTextColor();
         AddChildNode(_buttonTextLabel);
 
+        KeyPress += Button_KeyPress;
         MousePress += Button_MousePress;
         MouseEnter += Button_MouseEnter;
         MouseLeave += Button_MouseLeave;
@@ -137,6 +134,18 @@ public class Button : UIWidget
     public void Press()
     {
         Action?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <inheritdoc/>
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
+        childrenSize.First();
+
+    private void Button_KeyPress(UIComponent sender, KeyEventArgs e)
+    {
+        if (e.Button == KeyButton.Return || e.Button == KeyButton.KeyPadEnter)
+        {
+            Press();
+        }
     }
 
     private void Button_MousePress(UIComponent sender, MouseEventArgs e)

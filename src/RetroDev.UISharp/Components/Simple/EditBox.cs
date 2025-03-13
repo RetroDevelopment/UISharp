@@ -25,9 +25,11 @@ public class EditBox : UIWidget
     private readonly Rectangle _caretRectangle;
 
     private uint? _dragStartIndex;
+    private bool _textSnapshotEnabled = true;
 
     private bool _shiftPressed = false;
     private bool _ctrlPressed = false;
+    private bool _multiTokenSelection = false;
 
     /// <summary>
     /// The edit text.
@@ -105,15 +107,6 @@ public class EditBox : UIWidget
     /// </summary>
     public UIProperty<EditBox, int> SelectionLength { get; }
 
-    /// <inheritdoc />
-    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize)
-    {
-        if (Root == null) return Size.Zero;
-        var height = _inputText.ComputeTextMaximumHeight();
-        var estimatedNumberOfCharacters = 10;
-        return new Size(height * estimatedNumberOfCharacters, height);
-    }
-
     /// <summary>
     /// Creates a new edit box to insert text.
     /// </summary>
@@ -135,6 +128,8 @@ public class EditBox : UIWidget
         CaretIndex = new UIProperty<EditBox, uint>(this, 0);
         SelectionLength = new UIProperty<EditBox, int>(this, 0);
         BackgroundColor.BindTheme(UISharpColorNames.EditBoxBackground);
+
+        Text.ValueChange += Text_ValueChange;
 
         Padding.SetAll(5.0f);
 
@@ -193,12 +188,31 @@ public class EditBox : UIWidget
         }
     }
 
+    /// <inheritdoc />
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize)
+    {
+        if (Root == null) return Size.Zero;
+        var height = _inputText.ComputeTextMaximumHeight();
+        var estimatedNumberOfCharacters = 10;
+        return new Size(height * estimatedNumberOfCharacters, height);
+    }
+
+    private void Text_ValueChange(BindableProperty<string> sender, ValueChangeEventArgs<string> e)
+    {
+        _textSnapshotEnabled = false;
+        _textBuffer.TakeHistorySnapshot(e.CurrentValue);
+        _textSnapshotEnabled = true;
+    }
+
+
     private void EditBox_KeyPress(UIComponent sender, KeyEventArgs e)
     {
         var key = e.Button;
 
         // Need to make sure that selection and caret position are consistent with the string.
         Validate();
+        _multiTokenSelection = false;
+        _dragStartIndex = null;
 
         if (key == KeyButton.LeftShift || key == KeyButton.RightShift)
         {
@@ -215,6 +229,7 @@ public class EditBox : UIWidget
         else if (key == KeyButton.Delete)
         {
             _textBuffer.DeleteRight(_ctrlPressed);
+
         }
         else if (key == KeyButton.Right)
         {
@@ -248,6 +263,7 @@ public class EditBox : UIWidget
         {
             var textToPaste = Application.WindowManager.GetClipboardContent();
             _textBuffer.AddText(textToPaste);
+
         }
         else if (_ctrlPressed && key == KeyButton.X && SelectionLength.Value != 0)
         {
@@ -255,6 +271,15 @@ public class EditBox : UIWidget
             var selectionLength = (int)(endIndex - startIndex);
             Application.WindowManager.CopyToClipboard(Text.Value.Substring((int)startIndex, selectionLength));
             _textBuffer.DeleteCurrentSelectedText();
+
+        }
+        else if (_ctrlPressed && _shiftPressed && key == KeyButton.Z)
+        {
+            _textBuffer.Redo();
+        }
+        else if (_ctrlPressed && key == KeyButton.Z)
+        {
+            _textBuffer.Undo();
         }
     }
 
@@ -274,6 +299,7 @@ public class EditBox : UIWidget
     private void EditBox_TextInput(UIComponent sender, TextInputEventArgs e)
     {
         _textBuffer.AddText(e.Text);
+
     }
 
     private void EditBox_MouseDragBegin(UIComponent sender, MouseEventArgs e)
@@ -283,8 +309,9 @@ public class EditBox : UIWidget
 
     private void EditBox_MouseDrag(UIComponent sender, MouseEventArgs e)
     {
+        if (_dragStartIndex == null) _dragStartIndex = ConvertPointToCharacterIndex(e.RelativeLocation);
         var caretIndex = ConvertPointToCharacterIndex(e.RelativeLocation);
-        _textBuffer.SetSelectionDragInterval(_dragStartIndex!.Value, caretIndex);
+        _textBuffer.SetSelectionDragInterval(_dragStartIndex!.Value, caretIndex, _multiTokenSelection);
     }
 
     private void EditBox_MouseEnter(UIComponent sender, EventArgs e)
@@ -297,7 +324,6 @@ public class EditBox : UIWidget
         Application.WindowManager.Cursor = MouseCursor.Default;
     }
 
-
     private void EditBox_MousePress(UIComponent sender, MouseEventArgs e)
     {
         if (e.Button == MouseButton.Left)
@@ -308,14 +334,21 @@ public class EditBox : UIWidget
             {
                 CaretIndex.Value = ConvertPointToCharacterIndex(e.RelativeLocation);
                 SelectionLength.Value = 0;
+                _multiTokenSelection = false;
             }
             else if (e.Clicks == 2)
             {
                 _textBuffer.SelectCurrentToken();
+                _multiTokenSelection = true;
             }
             else if (e.Clicks == 3)
             {
                 _textBuffer.SelectAll();
+                _multiTokenSelection = false;
+            }
+            else
+            {
+                _multiTokenSelection = false;
             }
         }
     }
@@ -375,6 +408,7 @@ public class EditBox : UIWidget
         _caretRectangle.Visible.Value = Focus.Value;
 
         var padding = Padding.ToMarginStruct();
+        padding.Right--;
         var textLeftBoundingBox = _inputText.RelativeRenderingArea.Value.TopLeft.X;
         var textRightBoundingBox = _inputText.RelativeRenderingArea.Value.BottomRight.X;
 

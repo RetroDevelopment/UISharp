@@ -200,7 +200,7 @@ public class Application : IDisposable
     {
         Dispatcher.ThrowIfNotOnUIThread();
         Logger.LogInfo("Application quit requested");
-        EventSystem.Quit(emitQuitEvent: true);
+        EventSystem.Quit();
     }
 
     /// <summary>

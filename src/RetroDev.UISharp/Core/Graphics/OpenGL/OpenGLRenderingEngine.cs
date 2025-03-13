@@ -121,7 +121,7 @@ public class OpenGLRenderingEngine : IRenderingEngine
         _logger.LogDebug("OpenGL Shaders loaded");
 
         // SDLCheck(() => SDL.SDL_GL_SetSwapInterval(0)); // This will run the CPU and GPU at 100%
-        // GL.Enable(EnableCap.Multisample); // TODO: should enable anti aliasing
+        //GL.Enable(EnableCap.Multisample); // TODO: should enable anti aliasing
         LoggingUtils.OpenGLCheck(() => GL.Enable(EnableCap.Blend), _logger);
         LoggingUtils.OpenGLCheck(() => GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha), _logger);
         LoggingUtils.OpenGLCheck(() => GL.Enable(EnableCap.DepthTest), _logger);

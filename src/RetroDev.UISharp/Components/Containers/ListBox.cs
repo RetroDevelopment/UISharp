@@ -24,9 +24,6 @@ public class ListBox : UIContainer, IContainer
     private readonly VerticalLayout _verticalLayout;
     private readonly ScrollView _scrollView;
 
-    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
-        childrenSize.FirstOrDefault() ?? Size.Zero;
-
     /// <summary>
     /// The index of the selected element in the list, or <see langword="null" /> if no element is selected.
     /// </summary>
@@ -78,11 +75,20 @@ public class ListBox : UIContainer, IContainer
         AddChildNode(_scrollView);
     }
 
+    /// <summary>
+    /// Adds the given <paramref name="component"/> to <see langword="this" /> <see cref="ListBox"/>.
+    /// </summary>
+    /// <param name="component">The component to add.</param>
     public void AddComponent(UIWidget component)
     {
         AddComponent(component, null);
     }
 
+    /// <summary>
+    /// Adds the given <paramref name="component"/> to <see langword="this" /> <see cref="ListBox"/> after the
+    /// given <paramref name="after"/> component.
+    /// </summary>
+    /// <param name="component">The component to add.</param>
     public void AddComponent(UIWidget component, UIComponent? after = null)
     {
         _verticalLayout.AddComponent(component, after);
@@ -92,17 +98,28 @@ public class ListBox : UIContainer, IContainer
         container.MouseLeave += Container_MouseLeave;
     }
 
+    /// <summary>
+    /// Removes component at the given <paramref name="index"/> from <see langword="this" /> <see cref="ListBox"/>.
+    /// </summary>
+    /// <param name="index">The zero-based index locating the component position in the list.</param>
     public void RemoveComponent(uint index)
     {
         SelectedIndex.Value = null;
         _verticalLayout.RemoveComponent(index);
     }
 
+    /// <summary>
+    /// Removes all the components from <see langword="this" /> <see cref="ListBox"/>.
+    /// </summary>
     public void Clear()
     {
         _verticalLayout.Clear();
         SelectedIndex.Value = null;
     }
+
+    /// <inheritdoc />
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
+        childrenSize.FirstOrDefault() ?? Size.Zero;
 
     private void Container_MousePress(UIComponent sender, MouseEventArgs e)
     {

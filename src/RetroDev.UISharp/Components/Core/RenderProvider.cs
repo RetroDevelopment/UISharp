@@ -21,6 +21,8 @@ public class RenderProvider(Invalidator invalidator)
     /// <param name="root">The root component to render, usually a <see cref="Window"/>.</param>
     public void Render(UIComponent root, IRenderingEngine renderingEngine)
     {
+        if (!_invalidator.HasInvalidatedNodes) return;
+
         renderingEngine.InitializeFrame(root.BackgroundColor.Value);
 
         var component = _invalidator.GetNextInvalidatedComponent();
@@ -32,7 +34,6 @@ public class RenderProvider(Invalidator invalidator)
         }
 
         renderingEngine.FinalizeFrame();
-
         _invalidator.Reset();
     }
 }

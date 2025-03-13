@@ -10,7 +10,6 @@ using RetroDev.UISharp.Components.Core.AutoArea;
 using RetroDev.UISharp.Components.Base;
 using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Presentation.Themes;
-using RetroDev.UISharp.Presentation.Properties.Exceptions;
 
 namespace RetroDev.UISharp.Components;
 
@@ -53,7 +52,7 @@ public class Window : UIRoot
         None,
 
         /// <summary>
-        /// The window is maximized and it occupise the full screen.
+        /// The window is maximized and it occupies the full screen.
         /// </summary>
         Maximized,
 
@@ -91,7 +90,7 @@ public class Window : UIRoot
 
     /// <summary>
     /// Raised when the window manager requests that the window is closed.
-    /// Note that this does not necessarely mean that the window will be closed (see <see cref="CloseBehavior"/>).
+    /// Note that this does not necessarily mean that the window will be closed (see <see cref="CloseBehavior"/>).
     /// If you want to be notified when a window is actually closed (meaning hidden) use the <see cref="UIComponent.Visibility"/> <see cref="BindableProperty{TValue}.ValueChange"/>
     /// event.
     /// </summary>
@@ -106,7 +105,7 @@ public class Window : UIRoot
     public UIProperty<Window, string> Title { get; }
 
     /// <summary>
-    /// Whether the window is resizable.
+    /// Whether the window is re-sizable.
     /// </summary>
     public UIProperty<Window, bool> Resizable { get; }
 
@@ -153,7 +152,7 @@ public class Window : UIRoot
     /// <param name="renderingEngine">
     /// The rendering engine to render this window. By default the <see cref="OpenGLRenderingEngine"/> with <see cref="SDLOpenGLRenderingContext"/> is created.
     /// If you want to create another rendering engine (e.g. Vulkan) or you are not using the standard <see cref="SDLWindowManager"/>, you pass an instance of
-    /// <see cref="IRenderingEngine"/>. If using opengl but not based on SDL, you can create a <see cref="OpenGLRenderingEngine"/> but you must implement and use your custom
+    /// <see cref="IRenderingEngine"/>. If using OpenGL but not based on SDL, you can create a <see cref="OpenGLRenderingEngine"/> but you must implement and use your custom
     /// instance of <see cref="IRenderingContext"/>.
     /// </param>
     public Window(Application application, IRenderingEngine? renderingEngine = null) :

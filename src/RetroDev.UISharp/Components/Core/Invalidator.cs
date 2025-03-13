@@ -11,6 +11,7 @@ public class Invalidator
 
     internal bool NeedZIndexUpdate { get; set; } = true;
     public int TreeDepth => _invalidatedItems.Keys.LastOrDefault(-1) + 1;
+    public bool HasInvalidatedNodes => _invalidatedItems.Any();
 
     public Invalidator(Application application)
     {

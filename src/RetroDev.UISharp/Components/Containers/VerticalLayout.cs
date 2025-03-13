@@ -11,10 +11,6 @@ public class VerticalLayout : UIContainer, IContainer
 {
     private readonly List<Panel> _panels = [];
 
-    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
-        new(childrenSize.Max(s => s.Width) ?? PixelUnit.Zero,
-            childrenSize.Sum(s => s.Height));
-
     public override IEnumerable<UIWidget> Children => _panels.Select(p => p.Children.ElementAt(0));
 
     public IEnumerable<Panel> Panels => _panels;
@@ -66,6 +62,12 @@ public class VerticalLayout : UIContainer, IContainer
         _panels.Clear();
     }
 
+    /// <inheritdoc />
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
+        new(childrenSize.Max(s => s.Width) ?? PixelUnit.Zero,
+            childrenSize.Sum(s => s.Height));
+
+    /// <inheritdoc />
     protected override List<Area?> RepositionChildren(Size availableSpace, IEnumerable<Size> childrenSize)
     {
         var availableSpaceAfterPadding = availableSpace.Deflate(Padding.ToMarginStruct());

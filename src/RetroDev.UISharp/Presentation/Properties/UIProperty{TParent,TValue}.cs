@@ -25,6 +25,7 @@ public class UIProperty<TComponent, TValue> : BindableProperty<TValue> where TCo
         {
             Component.Application.LifeCycle.ThrowIfPropertyCannotBeSet();
             base.Value = value;
+            Component.Invalidate();
         }
         get => base.Value;
     }
@@ -43,7 +44,6 @@ public class UIProperty<TComponent, TValue> : BindableProperty<TValue> where TCo
     public UIProperty(TComponent parent, TValue value, BindingType allowedBinding = BindingType.TwoWays) : base(value, parent.Application, allowedBinding)
     {
         Component = parent;
-        ValueChange += (_, _) => Component.Invalidate();
     }
 
     /// <summary>

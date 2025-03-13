@@ -7,9 +7,9 @@
     <surfaceBackground color="#EEEEEE" />
 
     <!-- Actionable Colors -->
-    <actionableBackground color="#1976D2" />
-    <actionableHover color="#2196F3" />
-    <actionablePressed color="#1565C0" />
+    <actionableBackground color="#82B1FF" />
+    <actionableHover color="#448AFF" />
+    <actionablePressed color="#2979FF" />
     <actionableDisabled color="#BBBBBB" />
 
     <!-- Selection Colors -->

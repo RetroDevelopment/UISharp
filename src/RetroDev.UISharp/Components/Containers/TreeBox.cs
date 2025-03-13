@@ -27,9 +27,6 @@ public class TreeBox : UIContainer
     private readonly ListBox _listBox;
     private readonly List<TreeNode> _nodes = [];
 
-    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
-        childrenSize.First();
-
     public override IEnumerable<UIWidget> Children => _listBox.Children.Cast<GridLayout>().Select(c => c.Children.ElementAt(2));
 
     public UIProperty<TreeBox, TreeNode?> SelectedNode { get; }
@@ -64,6 +61,10 @@ public class TreeBox : UIContainer
         AddTreeNode(component, null);
     }
 
+    /// <inheritdoc />
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
+        childrenSize.First();
+
     internal void AddTreeNode(TreeNode component, TreeNode? after = null)
     {
         component._root = this;
@@ -77,19 +78,6 @@ public class TreeBox : UIContainer
         {
             component.Collapsed.Value = !component.Collapsed.Value;
             UpdateCollapseState(component, recursive: true);
-        };
-
-        KeyPress += (_, e) =>
-        {
-            if (SelectedNode.Value != component) return; // TODO: and has focus
-            if (e.Button == UISharp.Core.Windowing.Events.KeyButton.Left && !component.Collapsed.Value)
-            {
-                foldUnfoldButton.Press();
-            }
-            else if (e.Button == UISharp.Core.Windowing.Events.KeyButton.Right && component.Collapsed.Value)
-            {
-                foldUnfoldButton.Press();
-            }
         };
 
         var panel = new Panel(Application);

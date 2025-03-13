@@ -35,12 +35,11 @@ public class Dialog<TResult> : Window
     /// <param name="renderingEngine">
     /// The rendering engine to render this window. By default the <see cref="OpenGLRenderingEngine"/> with <see cref="SDLOpenGLRenderingContext"/> is created.
     /// If you want to create another rendering engine (e.g. Vulkan) or you are not using the standard <see cref="SDLWindowManager"/>, you pass an instance of
-    /// <see cref="IRenderingEngine"/>. If using opengl but not based on SDL, you can create a <see cref="OpenGLRenderingEngine"/> but you must implement and use your custom
+    /// <see cref="IRenderingEngine"/>. If using OpenGL but not based on SDL, you can create a <see cref="OpenGLRenderingEngine"/> but you must implement and use your custom
     /// instance of <see cref="IRenderingContext"/>.
     /// </param>
     public Dialog(Application application, IRenderingEngine? renderingEngine = null) : base(application, renderingEngine)
     {
-        Visibility.ValueChange += Visibility_ValueChange;
     }
 
     /// <summary>
@@ -50,10 +49,10 @@ public class Dialog<TResult> : Window
     /// <param name="owner">The modal owner, or <see langword="null" /> if the dialog has no owner.</param>
     /// <returns>The dialog result, or <see langword="null" /> if no result is provided.</returns>
     /// <remarks>
-    /// There are subtle differences between various window show methods in oreder to allow for flexibility.
+    /// There are subtle differences between various window show methods in order to allow for flexibility.
     /// <list type="bullet">
     ///     <item>
-    ///         <see cref="Window.Show"/> diplays the window and proceeds with execution as normal without altering any other window behavior.
+    ///         <see cref="Window.Show"/> displays the window and proceeds with execution as normal without altering any other window behavior.
     ///     </item>
     ///     <item>
     ///         <see cref="Window.ShowModal(Window)"/> displays the window as modal of the given parent window <c>owner</c>.
@@ -92,13 +91,5 @@ public class Dialog<TResult> : Window
         Application.Dispatcher.ThrowIfNotOnUIThread();
         Result = result;
         Close();
-    }
-
-    private void Visibility_ValueChange(Presentation.Properties.BindableProperty<ComponentVisibility> sender, Presentation.Properties.ValueChangeEventArgs<ComponentVisibility> e)
-    {
-        if (Visibility.Value != ComponentVisibility.Visible)
-        {
-            Application.EventSystem.Quit(emitQuitEvent: false);
-        }
     }
 }
