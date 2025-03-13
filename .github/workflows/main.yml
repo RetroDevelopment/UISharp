@@ -2,16 +2,16 @@ name: .NET Multi-Platform Build
 
 on:
   push:
-    branches: [ "main", "mvp", "pipeline-8/create" ]
+    branches: [ "main", "mvp" ]
   pull_request:
-    branches: [ "main", "mvp", "pipeline-8/create" ]
+    branches: [ "main", "mvp" ]
+  workflow_dispatch:  # Allows manual triggering
 
 jobs:
   build:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        rid: [win-x64, linux-x64, osx-x64]
         include:
           - os: ubuntu-latest
             rid: linux-x64
@@ -36,20 +36,11 @@ jobs:
     - name: Build
       run: dotnet build --no-restore --configuration Release
 
-    - name: Publish UISharp Library
-      run: dotnet publish UISharp/UISharp.csproj -c Release -r ${{ matrix.rid }} --self-contained false -o publish/UISharp/${{ matrix.rid }}
+    - name: Publish
+      run: dotnet publish -c Release -r ${{ matrix.rid }} --self-contained -o publish/${{ matrix.rid }}
 
-    - name: Publish UISharp.IDE Application
-      run: dotnet publish UISharp.IDE/UISharp.IDE.csproj -c Release -r ${{ matrix.rid }} --self-contained true -o publish/UISharp.IDE/${{ matrix.rid }}
-
-    - name: Upload Library Artifacts (UISharp)
+    - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: UISharp-${{ matrix.rid }}
-        path: publish/UISharp/${{ matrix.rid }}/*
-
-    - name: Upload Application Artifacts (UISharp.IDE)
-      uses: actions/upload-artifact@v4
-      with:
-        name: UISharp.IDE-${{ matrix.rid }}
-        path: publish/UISharp.IDE/${{ matrix.rid }}/*
+        name: UISharp-IDEs-${{ matrix.rid }}
+        path: publish/${{ matrix.rid }}/*
