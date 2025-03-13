@@ -1,4 +1,4 @@
-﻿using RetroDev.UISharp.Core.Graphics.Coordinates;
+﻿using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Graphics.Imaging;
 
 namespace RetroDev.UISharp.Core.Graphics.Fonts;
@@ -24,6 +24,17 @@ public interface IFontRenderingEngine
     /// <param name="font">The text font.
     /// <returns>The text size.</returns>
     Size ComputeTextSize(string text, Font font);
+
+    /// <summary>
+    /// Computes each character width separately for the given <paramref name="text"/>.
+    /// </summary>
+    /// <param name="text">The text for which to compute widths.</param>
+    /// <param name="font">The font the text is rendered.</param>
+    /// <returns>
+    /// An array of widths <c>W</c> where <c>W[i]</c> is the total width occupide by
+    /// <paramref name="text"/><c>[i]</c> including advance.
+    /// </returns>
+    PixelUnit[] ComputeCharactersWidths(string text, Font font);
 
     /// <summary>
     /// Gets the maximum height occupied by a line of text using the given <paramref name="font"/>.

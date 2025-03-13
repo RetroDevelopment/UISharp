@@ -1,6 +1,7 @@
 ﻿using RetroDev.UISharp.Components.Core.AutoArea;
 using RetroDev.UISharp.Components.Shapes;
-using static System.Net.Mime.MediaTypeNames;
+using RetroDev.UISharp.Core.Graphics;
+using RetroDev.UISharp.Presentation.Properties;
 
 namespace RetroDev.UISharp.Components.Base;
 
@@ -12,6 +13,11 @@ public abstract class UIContainer : UIWidget, IGenericContainer
     private readonly Rectangle _backgroundRectangle;
 
     public abstract IEnumerable<UIWidget> Children { get; }
+
+    /// <summary>
+    /// The control border color.
+    /// </summary>
+    public UIProperty<UIContainer, Color> BorderColor { get; }
 
     /// <summary>
     /// Creates a new container.
@@ -31,8 +37,12 @@ public abstract class UIContainer : UIWidget, IGenericContainer
                           IHorizontalAlignment? horizontalAlignment = null,
                           IVerticalAlignment? verticalAlignment = null) : base(application, visibility, isFocusable, autoWidth, autoHeight, horizontalAlignment, verticalAlignment)
     {
+        BorderColor = new UIProperty<UIContainer, Color>(this, Color.Transparent);
+
         _backgroundRectangle = new Rectangle(application);
         _backgroundRectangle.BackgroundColor.BindDestinationToSource(BackgroundColor);
+        _backgroundRectangle.BorderColor.BindDestinationToSource(BorderColor);
+        _backgroundRectangle.BorderThickness.Value = 2.0f; // TODO: use styles
         Canvas.Add(_backgroundRectangle);
         RenderFrame += UIContainer_RenderFrame;
     }
@@ -40,7 +50,7 @@ public abstract class UIContainer : UIWidget, IGenericContainer
     /// <summary>
     /// Gets the child component with <see cref="ID"/> equal to the given <paramref name="id"/>.
     /// </summary>
-    /// <typeparam name="TComponent">The comnponent type.</typeparam>
+    /// <typeparam name="TComponent">The component type.</typeparam>
     /// <returns>The component.</returns>
     /// <exception cref="ArgumentException">If the component does not exist.</exception>
     /// <exception cref="InvalidCastException">If the component was found but with a type not assignable to <typeparamref name="TComponent"/>.</exception>

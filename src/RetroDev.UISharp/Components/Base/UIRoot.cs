@@ -69,7 +69,7 @@ public abstract class UIRoot : UIComponent, IContainer
                      IHorizontalAlignment? horizontalAlignment = null,
                      IVerticalAlignment? verticalAlignment = null) : base(application, visibility, isFocusable, autoWidth, autoHeight, horizontalAlignment, verticalAlignment)
     {
-        Invalidator = new Invalidator();
+        Invalidator = new Invalidator(application);
         MeasureProvider = new MeasureProvider(Invalidator);
         RenderProvider = new RenderProvider(Invalidator);
         RenderingEngine = renderingEngine ?? new OpenGLRenderingEngine(application.Dispatcher, application.Logger, new SDLOpenGLRenderingContext(application.Logger));

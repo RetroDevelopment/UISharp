@@ -1,6 +1,6 @@
 ﻿using RetroDev.UISharp.Components.Base;
 
-namespace RetroDev.UISharp.Components;
+namespace RetroDev.UISharp.Components.Core;
 
 /// <summary>
 /// Specify UISharp IDE editor settings for a <see cref="UIComponent"/>.

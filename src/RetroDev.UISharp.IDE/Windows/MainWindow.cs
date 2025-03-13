@@ -1,11 +1,11 @@
 ﻿using System.Reflection;
-using RetroDev.UISharp;
 using RetroDev.UISharp.Components;
 using RetroDev.UISharp.Components.Base;
 using RetroDev.UISharp.Components.Containers;
+using RetroDev.UISharp.Components.Core;
 using RetroDev.UISharp.Components.Core.AutoArea;
 using RetroDev.UISharp.Components.Simple;
-using RetroDev.UISharp.Core.Graphics.Coordinates;
+using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.IDE.Components;
 using RetroDev.UISharp.Presentation.Properties;
 using RetroDev.UISharp.UIDefinition.Ast;
@@ -40,7 +40,7 @@ internal class MainWindow : Window
     private readonly Button _refreshButton;
     private readonly Button _addButton;
     private readonly Button _removeButton;
-    private readonly CheckBox _darkMode;
+    private readonly Switch _darkMode;
     private readonly ListBox _propertyList;
 
     public MainWindow(Application parent,
@@ -53,7 +53,7 @@ internal class MainWindow : Window
                       Button refresh,
                       Button add,
                       Button remove,
-                      CheckBox darkMode,
+                      Switch darkMode,
                       ListBox propertyList) : base(parent)
     {
         Initialized += MainWindow_Initialized;
@@ -178,11 +178,11 @@ internal class MainWindow : Window
     {
         if (e.CurrentValue)
         {
-            Application.LoadThemeResource("uisharp-dark");
+            Application.ThemeManager.LoadTheme("uisharp-dark");
         }
         else
         {
-            Application.LoadThemeResource("uisharp-light");
+            Application.ThemeManager.LoadTheme("uisharp-light");
         }
     }
 

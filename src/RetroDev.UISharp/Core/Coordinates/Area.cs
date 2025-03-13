@@ -1,6 +1,8 @@
 ﻿using System.Diagnostics;
+using System.Reflection;
+using RetroDev.UISharp.Components.Base;
 
-namespace RetroDev.UISharp.Core.Graphics.Coordinates;
+namespace RetroDev.UISharp.Core.Coordinates;
 
 /// <summary>
 /// Represents a 2D-Area.
@@ -62,20 +64,6 @@ public record Area(Point TopLeft, Size Size)
     }
 
     /// <summary>
-    /// Gets the top-left point that <see langword="this"/> area should have if it must be centered in the given
-    /// <paramref name="container"/> area.
-    /// </summary>
-    /// <param name="container">The container area to center.</param>
-    /// <returns>The top-left point to center <see langword="this"/> area.</returns>
-    public Point CenterTopLeft(Area container)
-    {
-        var containerCenterX = container.TopLeft.X + container.Size.Width / 2;
-        var containerCenterY = container.TopLeft.Y + container.Size.Height / 2;
-
-        return new(containerCenterX - Size.Width / 2, containerCenterY - Size.Height / 2);
-    }
-
-    /// <summary>
     /// Creates a <see cref="Area"/> relative to <see langword="this" /> area that covers it completely.
     /// </summary>
     /// <remarks>
@@ -84,8 +72,7 @@ public record Area(Point TopLeft, Size Size)
     /// the area with location (0, 0) and size 300 x 300, which is the area relative to <c>a</c> that fully fills <c>a</c>.
     /// </remarks>
     /// <returns>The area with <see cref="Point.Zero"/> coordinate and the same <see cref="Size"/> as <see langword="this" /> area.</returns>
-    public Area Fill() =>
-        new Area(Point.Zero, Size);
+    public Area Fill() => Size.Fill();
 
     /// <summary>
     /// Merges <see langword="this" /> area with the given <paramref name="area"/>.
@@ -100,6 +87,29 @@ public record Area(Point TopLeft, Size Size)
         var bottomY = Math.Max(BottomRight.Y, area.BottomRight.Y);
 
         return new Area(new Point(leftX, topY), new Point(rightX, bottomY));
+    }
+
+    /// <summary>
+    /// Clamps an area within a container, ensuring it respects the given margins.
+    /// The top-left corner is adjusted if it's within the margin boundaries, 
+    /// and the size is clamped to ensure it does not exceed the available space.
+    /// </summary>
+    /// <param name="containerSize">The total size of the container.</param>
+    /// <param name="margin">The margins to apply around the area.</param>
+    /// <returns>A new clamped area respecting the margins.</returns>
+    public Area Clamp(Size containerSize, Margin margin)
+    {
+        var minX = margin.Left.IfAuto(PixelUnit.Min);
+        var maxX = Math.Clamp((containerSize.Width - margin.Right).IfAuto(PixelUnit.Max), minX, PixelUnit.Max);
+        var minY = margin.Top.IfAuto(PixelUnit.Min);
+        var maxY = Math.Clamp((containerSize.Height - margin.Bottom).IfAuto(PixelUnit.Max), minY, PixelUnit.Max);
+
+        var left = Math.Clamp(TopLeft.X, minX, maxX);
+        var right = Math.Clamp(left + Size.Width, minX, maxX);
+        var top = Math.Clamp(TopLeft.Y, minY, maxY);
+        var bottom = Math.Clamp(top + Size.Height, minY, maxY);
+
+        return new Area(topLeft: new Point(left, top), bottomRight: new Point(right, bottom));
     }
 
     /// <inheritdoc />

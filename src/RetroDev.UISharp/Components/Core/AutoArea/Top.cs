@@ -1,4 +1,4 @@
-﻿using RetroDev.UISharp.Core.Graphics.Coordinates;
+﻿using RetroDev.UISharp.Core.Coordinates;
 
 namespace RetroDev.UISharp.Components.Core.AutoArea;
 
@@ -13,5 +13,6 @@ public class Top : IVerticalAlignment
     /// <param name="parentSize">The compoenent parent size.</param>
     /// <param name="componentSize">The actual component size.</param>
     /// <returns>The component y-coordinate.</returns>
-    public PixelUnit ComputeY(Size parentSize, Size componentSize) => 0;
+    public PixelUnit ComputeY(Size parentSize, Size componentSize) =>
+        componentSize.PositionTopLeftOf(componentSize).TopLeft.Y;
 }

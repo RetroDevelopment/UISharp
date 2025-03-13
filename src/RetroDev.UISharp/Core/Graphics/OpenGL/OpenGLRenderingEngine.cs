@@ -1,7 +1,7 @@
 ﻿using System.Collections.Immutable;
 using OpenTK.Graphics.OpenGL;
 using RetroDev.UISharp.Core.Contexts;
-using RetroDev.UISharp.Core.Graphics.Coordinates;
+using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Graphics.Fonts;
 using RetroDev.UISharp.Core.Graphics.Imaging;
 using RetroDev.UISharp.Core.Graphics.Shapes;
@@ -14,10 +14,6 @@ namespace RetroDev.UISharp.Core.Graphics.OpenGL;
 
 // TODO: intro https://learnopengl.com/code_viewer_gh.php?code=src/1.getting_started/2.2.hello_triangle_indexed/hello_triangle_indexed.cpp
 // TODO: https://learnopengl.com/code_viewer_gh.php?code=src/1.getting_started/5.2.transformations_exercise2/transformations_exercise2.cpp
-// TODO: implement texture atlas for fonts and as mutch vertex model batching as possible, but for now keep it simple
-
-// TODO: move 2D model procedural generation in a separate class (separation of concern) to be possibly
-// reused by a future svg to 2D model converter.
 
 // TODO: possible vertex shader layout
 // (x, y) (transform ID) (shadow) (u, v)
@@ -44,10 +40,6 @@ namespace RetroDev.UISharp.Core.Graphics.OpenGL;
 // With the right scale and translate we can have 1 VBO for ALL rounded corners rectangles.
 // TODO: same applis for borders. And it will be useful for matrices too. The overall idea is to reduce draw calls and vbo generation.
 
-// TODO: create a vbo per text and map texture atlas
-// TODO: batch rendering, maybe join big text in one single model. Text is expected to be the most performance critical due to high number of draw calls. So optimizing text is more critical than optimizing images.
-// TODO: start (gradually) imlpementing svg parser that decomposes svg primitives into a 2D model. Rendering is then super efficient and it can be scaled.
-
 /// <summary>
 /// The OpenGL rendering engine used to render on a given window.
 /// </summary>
@@ -68,10 +60,11 @@ public class OpenGLRenderingEngine : IRenderingEngine
     private readonly HashSet<Rectangle> _recangles = [];
     private readonly HashSet<Circle> _circles = [];
     private readonly HashSet<Text> _texts = [];
+    // Semi-transparent elements must be rendered in back to front order. Depth buffer would prevent transparent objects to overlap.
     private readonly HashSet<RenderingElement> _semiTransparentElements = [];
     private List<RenderingElement> _backToFrontSortedSemiTransparentElements = [];
 
-    private bool _transparencyChanged = true;
+    private bool _transparencyChanged = true; // Used to know when to move lists from instance rendering list to _semiTransparentElements
 
     private Size _viewportSize = Size.Zero;
 
@@ -128,7 +121,7 @@ public class OpenGLRenderingEngine : IRenderingEngine
         _logger.LogDebug("OpenGL Shaders loaded");
 
         // SDLCheck(() => SDL.SDL_GL_SetSwapInterval(0)); // This will run the CPU and GPU at 100%
-        // GL.Enable(EnableCap.Multisample); // TODO: should enable anti aliasing
+        //GL.Enable(EnableCap.Multisample); // TODO: should enable anti aliasing
         LoggingUtils.OpenGLCheck(() => GL.Enable(EnableCap.Blend), _logger);
         LoggingUtils.OpenGLCheck(() => GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha), _logger);
         LoggingUtils.OpenGLCheck(() => GL.Enable(EnableCap.DepthTest), _logger);
@@ -320,7 +313,7 @@ public class OpenGLRenderingEngine : IRenderingEngine
         _shader.SetClipArea((clippingArea ?? new Area(Point.Zero, ViewportSize)).ToVector4(ViewportSize));
         _shader.SetOffsetMultiplier(OpenTK.Mathematics.Vector2.Zero);
         _shader.SetTextureMode(ShaderProgram.TextureMode.GrayScale);
-        _shader.SetZIndex(text.ZIndex.Foreground);
+        _shader.SetZIndex(ConvertToInternalZIndex(text.ZIndex).Foreground);
         _shader.SetVisible(text.Visible);
         _modelGenerator.Rectangle.Render(textureId);
     }
@@ -333,6 +326,18 @@ public class OpenGLRenderingEngine : IRenderingEngine
     /// <returns>The size to correctly and fully display the given <paramref name="text"/>.</returns>
     public Size ComputeTextSize(string text, Font font) =>
         _fontEngine.ComputeTextSize(text, font);
+
+    /// <summary>
+    /// Computes each character width separately for the given <paramref name="text"/>.
+    /// </summary>
+    /// <param name="text">The text for which to compute widths.</param>
+    /// <param name="font">The font the text is rendered.</param>
+    /// <returns>
+    /// An array of widths <c>W</c> where <c>W[i]</c> is the total width occupide by
+    /// <paramref name="text"/><c>[i]</c> including advance.
+    /// </returns>
+    public PixelUnit[] ComputeCharactersWidths(string text, Font font) =>
+        _fontEngine.ComputeCharactersWidths(text, font);
 
     /// <summary>
     /// Gets the maximum height occupied by a line of text using the given <paramref name="font"/>.
@@ -398,8 +403,8 @@ public class OpenGLRenderingEngine : IRenderingEngine
             radiusY = rectangle.CornerRadiusY ?? 0.0f;
         }
 
-        GenericRender(shape.BackgroundColor, area, clippingArea, shape.Rotation, null, radiusX, radiusY, openglShape, shape.ZIndex.Background, shape.Visible, shape.TextureID);
-        GenericRender(shape.BorderColor, area, clippingArea, shape.Rotation, shape.BorderThickness, radiusX, radiusY, openglShape, shape.ZIndex.Foreground, shape.Visible, shape.TextureID);
+        GenericRender(shape.BackgroundColor, area, clippingArea, shape.Rotation, null, radiusX, radiusY, openglShape, ConvertToInternalZIndex(shape.ZIndex).Background, shape.Visible, shape.TextureID);
+        GenericRender(shape.BorderColor, area, clippingArea, shape.Rotation, shape.BorderThickness, radiusX, radiusY, openglShape, ConvertToInternalZIndex(shape.ZIndex).Foreground, shape.Visible, shape.TextureID);
     }
 
     private void GenericRender(Color color,
@@ -439,7 +444,7 @@ public class OpenGLRenderingEngine : IRenderingEngine
         var maximumBorderThickness = Math.Min(area.Size.Width, area.Size.Height);
         if (shape.BorderThickness != null && shape.BorderThickness.Value > maximumBorderThickness)
         {
-            throw new ArgumentException($"Border thickness {shape.BorderThickness} pixels exceed maximum allowed size of {maximumBorderThickness}");
+            //throw new ArgumentException($"Border thickness {shape.BorderThickness} pixels exceed maximum allowed size of {maximumBorderThickness}");
         }
 
         if (area.Size.Width < 0.0f) throw new ArgumentException($"Shape negative width ({area.Size.Width}) not allowed");
@@ -484,12 +489,11 @@ public class OpenGLRenderingEngine : IRenderingEngine
         LoggingUtils.OpenGLCheck(() => GL.DepthMask(false), _logger);
         if (_transparencyChanged)
         {
-            _backToFrontSortedSemiTransparentElements = _semiTransparentElements.OrderByDescending(e => e.ZIndex.Background).ToList();
+            _backToFrontSortedSemiTransparentElements = _semiTransparentElements.OrderByDescending(e => ConvertToInternalZIndex(e.ZIndex).Background).ToList();
         }
 
         foreach (var shape in _backToFrontSortedSemiTransparentElements)
         {
-            if (!shape.Visible) continue;
             if (shape is Rectangle rectangle) Render(rectangle);
             if (shape is Circle circle) Render(circle);
             if (shape is Text text) Render(text);
@@ -533,5 +537,29 @@ public class OpenGLRenderingEngine : IRenderingEngine
                 _texts.Remove(text);
             }
         }
+    }
+
+    // Convert zIndex into a float in the [-1, 1] range suitable for GL_LESS
+    // Splits the z index into 2: background first then foreground.
+    // TODO: join background and foreground into 1 vbo so no need for this and have less memorys
+    internal (float Background, float Foreground) ConvertToInternalZIndex(uint ZIndex)
+    {
+        var factor = 2u;
+        var backgroundZIndex = ZIndex * factor;
+        var foregroundZIndex = backgroundZIndex + (factor / 2);
+        return (Convert(backgroundZIndex), Convert(foregroundZIndex));
+    }
+
+    // Convert zIndex (uint) to a float in the [-1, 1] range suitable for GL_LESS
+    private float Convert(uint zIndex)
+    {
+        // Maximum number of distinct z-values
+        const uint maxZIndex = 16777216;
+
+        // Ensure the zIndex is clamped within the valid range
+        var clippedZIndex = Math.Min(zIndex, maxZIndex);
+
+        // Convert the zIndex to a float in the [-1, 1] range, reversed
+        return 1f - (float)(clippedZIndex) / maxZIndex * 2f;
     }
 }

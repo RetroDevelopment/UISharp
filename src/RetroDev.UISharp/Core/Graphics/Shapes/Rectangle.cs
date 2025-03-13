@@ -1,4 +1,4 @@
-﻿using RetroDev.UISharp.Core.Graphics.Coordinates;
+﻿using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Windowing;
 
 namespace RetroDev.UISharp.Core.Graphics.Shapes;

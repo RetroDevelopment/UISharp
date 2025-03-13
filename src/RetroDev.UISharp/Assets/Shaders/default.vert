@@ -26,8 +26,10 @@ void main()
     TextureCoordinates = transformMatrixIndex == 0.0f ? vec2(position.x + 0.5, -position.y + 0.5) : vec2(0.5, 0.5);
     // Small imprecision to avoid rounding errors to make coordinate fall between textels causing text artifacts
     TextureCoordinates += 0.001;
-    FragmentCoorindates += 0.001;
+    FragmentCoorindates += 0.01;
 
+    // If visible == true gl_position is projectedPos, otherwise gl_position is always 0, meaning the vertices
+    // won't be visible.
     gl_Position = mix(vec4(0.0, 0.0, 0.0, 0.0),
                       vec4(projectedPos.xy, 0.0, 1.0),
                       step(0.5, float(visible)));

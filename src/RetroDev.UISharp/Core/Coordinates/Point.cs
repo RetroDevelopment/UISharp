@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace RetroDev.UISharp.Core.Graphics.Coordinates;
+namespace RetroDev.UISharp.Core.Coordinates;
 
 /// <summary>
 /// Represents a 2D-point.

@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace RetroDev.UISharp.Core.Graphics.Coordinates;
+namespace RetroDev.UISharp.Core.Coordinates;
 
 using ValueType = float;
 
@@ -9,6 +9,8 @@ public record class PixelUnit : IEquatable<PixelUnit>, IComparable<PixelUnit>
 {
     public static readonly PixelUnit Auto = float.NaN;
     public static readonly PixelUnit Zero = 0.0f;
+    public static readonly PixelUnit Max = float.PositiveInfinity;
+    public static readonly PixelUnit Min = float.NegativeInfinity;
 
     public ValueType Value { get; }
 
@@ -22,10 +24,11 @@ public record class PixelUnit : IEquatable<PixelUnit>, IComparable<PixelUnit>
 
     public override string ToString() => IsAuto ? "auto" : Value.ToString();
 
-    public override int GetHashCode()
-    {
-        return Value.GetHashCode();
-    }
+    public override int GetHashCode() =>
+        Value.GetHashCode();
+
+    public PixelUnit IfAuto(PixelUnit defaultValue) =>
+        IsAuto ? defaultValue : Value;
 
     public int CompareTo(PixelUnit? other) => (int)(Value - other?.Value ?? 0.0f);
 }

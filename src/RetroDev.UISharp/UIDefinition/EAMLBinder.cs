@@ -32,14 +32,40 @@ public class EAMLBinder(TypeMapper typeMapper) : IEAMLBinder
     public Dictionary<string, object> Instances { get; set; } = [];
 
     /// <summary>
-    /// Sets the <see cref="UIProperty{TParent, TValue}"/> defined by the given <paramref name="propertyInfo"/> to the
+    /// Sets the bindable property defined by the given <paramref name="propertyInfo"/> to the
     /// value defined by the given <paramref name="attribute"/>.
     /// </summary>
-    /// <param name="propertyInfo">The property set. Its type must be <see cref="UIProperty{TParent, TValue}"/>.</param>
+    /// <param name="propertyInfo">The property set. Its type must be either <see cref="BindableProperty{TValue}"/> or <see cref="CompositeBindableProperty{TValue}"/>.</param>
     /// <param name="attribute">The attribute definition.</param>
-    /// <param name="componentInstance">The <see cref="UIComponent"/> owning the <see cref="UIProperty{TParent, TValue}"/> defined by <paramref name="propertyInfo"/>.</param>
+    /// <param name="componentInstance">The <see cref="UIComponent"/> owning the property defined by <paramref name="propertyInfo"/>.</param>
     /// <exception cref="UIDefinitionValidationCompoundException">If something failes during the property assignment.</exception>
-    public virtual void SetUIProperty(PropertyInfo propertyInfo, Ast.Attribute attribute, UIComponent componentInstance)
+    /// <exception cref="InvalidOperationException">If the given <paramref name="propertyInfo"/> is not a valid bindable property.</exception>
+    public virtual void SetGenericBindableProperty(PropertyInfo propertyInfo, Ast.Attribute attribute, UIComponent componentInstance)
+    {
+        if (propertyInfo.IsBindableProperty())
+        {
+            SetBindableProperty(propertyInfo, attribute, componentInstance);
+        }
+        else if (propertyInfo.IsCompositeBindableProperty())
+        {
+            SetCompositeBindableProperty(propertyInfo, attribute, componentInstance);
+        }
+        else
+        {
+            throw new InvalidOperationException($"Invalid bindable property {propertyInfo}");
+        }
+    }
+
+    /// <summary>
+    /// Sets the <see cref="BindableProperty{TValue}"/> property defined by the given <paramref name="propertyInfo"/> to the
+    /// value defined by the given <paramref name="attribute"/>.
+    /// </summary>
+    /// <param name="propertyInfo">The property set. Its type must be either <see cref="BindableProperty{TValue}"/>.</param>
+    /// <param name="attribute">The attribute definition.</param>
+    /// <param name="componentInstance">The instance owning the property defined by <paramref name="propertyInfo"/>.</param>
+    /// <exception cref="UIDefinitionValidationCompoundException">If something failes during the property assignment.</exception>
+    /// <exception cref="InvalidOperationException">If the given <paramref name="propertyInfo"/> is not a valid bindable property.</exception>
+    protected virtual void SetBindableProperty(PropertyInfo propertyInfo, Ast.Attribute attribute, object componentInstance)
     {
         var propertyValueType = propertyInfo.PropertyType;
         var propertyValue = propertyInfo.GetValue(componentInstance) ?? throw new UIDefinitionValidationException("Property value cannot be null", attribute);
@@ -48,6 +74,34 @@ public class EAMLBinder(TypeMapper typeMapper) : IEAMLBinder
         var propertyType = propertyValueInfo.PropertyType;
         var actualValue = ConvertAttributeValueToPropertyValue(attribute, propertyType);
         propertyValueInfo.SetValue(propertyValue, actualValue);
+    }
+
+    /// <summary>
+    /// Sets the <see cref="CompositeBindableProperty{TValue}"/> property defined by the given <paramref name="propertyInfo"/> to the
+    /// value defined by the given <paramref name="attribute"/>.
+    /// </summary>
+    /// <param name="propertyInfo">The property set. Its type must be either <see cref="CompositeBindableProperty{TValue}"/>.</param>
+    /// <param name="attribute">The attribute definition.</param>
+    /// <param name="componentInstance">The <see cref="UIComponent"/> owning the property defined by <paramref name="propertyInfo"/>.</param>
+    /// <exception cref="UIDefinitionValidationCompoundException">If something failes during the property assignment.</exception>
+    /// <exception cref="InvalidOperationException">If the given <paramref name="propertyInfo"/> is not a valid bindable property.</exception>
+    protected virtual void SetCompositeBindableProperty(PropertyInfo propertyInfo, Ast.Attribute attribute, UIComponent componentInstance)
+    {
+        var propertyValueType = propertyInfo.PropertyType;
+        var propertyInfos = propertyValueType.GetBindableProperties();
+        var attributes = ToAttributeList(attribute.Value);
+        var propertyValue = propertyInfo.GetValue(componentInstance) ?? throw new UIDefinitionValidationException("Property value cannot be null", attribute);
+
+        if (attributes.Count == 1) attributes = Enumerable.Repeat(attributes.First(), propertyInfos.Count).ToList();
+        if (attributes.Count != propertyInfos.Count) throw new UIDefinitionValidationException($"Compound property expects {propertyInfos.Count} values but {attributes.Count} values where provided", attribute);
+        var count = propertyInfos.Count;
+
+        for (int i = 0; i < count; i++)
+        {
+            var compositeAttribute = attributes[i];
+            var compositePropertyInfo = propertyInfos[i];
+            SetBindableProperty(compositePropertyInfo, new Ast.Attribute($"{attribute.Name}.{compositePropertyInfo.Name}", compositeAttribute), propertyValue);
+        }
     }
 
     /// <summary>
@@ -66,6 +120,7 @@ public class EAMLBinder(TypeMapper typeMapper) : IEAMLBinder
         if (TryConvertAttributeToPrimitiveType(out value, attribute, propertyType)) return value;
         if (TryConvertAttributeUsingConstructor(out value, attribute, propertyType)) return value;
         if (TryConvertAttributeUsingInterfaceHirarchy(out value, attribute, propertyType)) return value;
+        if (TryConvertAttributeUsingEnums(out value, attribute, propertyType)) return value;
 
         throw new UIDefinitionValidationException($"Failed to convert {attribute.Name}={attribute.Value}", attribute);
     }
@@ -183,6 +238,27 @@ public class EAMLBinder(TypeMapper typeMapper) : IEAMLBinder
         return true;
     }
 
+    /// <summary>
+    /// Try to convert the given <paramref name="attribute"/> into an object of the same type as the given <paramref name="propertyType"/> type,
+    /// assuming <paramref name="propertyType"/> is an enum type.
+    /// </summary>
+    /// <param name="value">The conversion result.</param>
+    /// <param name="attribute">The attribute to convert.</param>
+    /// <param name="propertyType">The target property type.</param>
+    /// <exception cref="UIDefinitionValidationException">If the convertion failed with an error.</exception
+    /// <returns><see langword="true" /> if it is possible to convert the attribute into a primitive type, otherwise <see langword="false" /></see></returns>
+    protected virtual bool TryConvertAttributeUsingEnums(out object? value, Ast.Attribute attribute, Type propertyType)
+    {
+        if (!propertyType.IsEnum)
+        {
+            value = null;
+            return false;
+        }
+
+        value = Enum.Parse(propertyType, attribute.Value, ignoreCase: true);
+        return true;
+    }
+
     private List<string> FindAttributeArguments(Ast.Attribute attribute)
     {
         string pattern = @"[^,\s]+";
@@ -233,4 +309,7 @@ public class EAMLBinder(TypeMapper typeMapper) : IEAMLBinder
         var removeBindingsMethod = propertyValueType.GetMethod(removeBindersName) ?? throw new UIDefinitionValidationException($"Missing method {removeBindersName} in property type {propertyValueType.FullName}", attribute);
         removeBindingsMethod.Invoke(propertyValue, []);
     }
+
+    private IReadOnlyList<string> ToAttributeList(string attribute) =>
+        attribute.Split([',', ';']);
 }

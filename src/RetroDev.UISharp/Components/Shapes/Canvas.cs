@@ -1,6 +1,6 @@
 ﻿using RetroDev.UISharp.Components.Base;
+using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Graphics;
-using RetroDev.UISharp.Core.Graphics.Coordinates;
 using RetroDev.UISharp.Core.Logging;
 
 namespace RetroDev.UISharp.Components.Shapes;
@@ -50,7 +50,6 @@ public class Canvas
         _shapes.Add(shape);
         shape.Canvas = this;
         shape.AddShapeToRenderingEngine();
-        shape.Visible.Value = Component.Visibility.Value == UIComponent.ComponentVisibility.Visible;
         shape.Invalidate();
     }
 

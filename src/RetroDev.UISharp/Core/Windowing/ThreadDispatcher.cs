@@ -42,7 +42,7 @@ public class ThreadDispatcher
     {
         if (_uiThread != Thread.CurrentThread)
         {
-            throw new InvalidUIThreadException($"Expected thread: {_uiThread.Name ?? "Unknown"}, but was: {Thread.CurrentThread.Name ?? "Unknown"}.");
+            throw new InvalidUIThreadException($"UI operations must be performed on the UI thread (named '{_uiThread.Name ?? "Unknown"}'), but currently on thread: '{Thread.CurrentThread.Name ?? "Unknown"}'.");
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿using RetroDev.UISharp.Core.Contexts;
+using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Exceptions;
-using RetroDev.UISharp.Core.Graphics.Coordinates;
 using RetroDev.UISharp.Core.Logging;
 using static SDL2.SDL;
 
@@ -16,6 +16,9 @@ public class SDLWindowManager : IWindowManager
 
     private readonly ThreadDispatcher _dispatcher;
     private readonly ILogger _logger;
+    private readonly Dictionary<MouseCursor, nint> _cursorCache = [];
+
+    private MouseCursor _mouseCursor = MouseCursor.Unknown;
 
     /// <summary>
     /// Gets the size of the main display.
@@ -27,6 +30,33 @@ public class SDLWindowManager : IWindowManager
             _dispatcher.ThrowIfNotOnUIThread();
             SDL_GetCurrentDisplayMode(0, out var displayMode);
             return new Size(displayMode.w, displayMode.h);
+        }
+    }
+
+    /// <summary>
+    /// The mouse cursor shape to display.
+    /// </summary>
+    public MouseCursor Cursor
+    {
+        set
+        {
+            if (_mouseCursor == value) return;
+            _mouseCursor = value;
+            if (_cursorCache.TryGetValue(value, out var sdlCursor))
+            {
+                SDL_SetCursor(sdlCursor);
+            }
+            else
+            {
+                var cursor = SDL_CreateSystemCursor(SDLMouseCursorMapping.ToKeyButton(value));
+                if (cursor == IntPtr.Zero) throw new InvalidOperationException($"SDL failed to create cursor {value}");
+                _cursorCache.Add(value, cursor);
+                SDL_SetCursor(cursor);
+            }
+        }
+        get
+        {
+            return _mouseCursor;
         }
     }
 
@@ -63,6 +93,7 @@ public class SDLWindowManager : IWindowManager
             LoggingUtils.SDLCheck(() => SDL_InitSubSystem(SDL_INIT_VIDEO), _logger);
             SDL_GetVersion(out var version);
             _logger.LogInfo($"Window manger based on SDL {version.major}.{version.minor}.{version.patch}");
+            Cursor = MouseCursor.Default;
             s_isInitialized = true;
         }
     }
@@ -108,7 +139,7 @@ public class SDLWindowManager : IWindowManager
     /// <param name="windowId">The ID of the window for which to set the title.</param>
     /// <param name="renderingArea">The window position and size.</param>
     /// <exception cref="ArgumentException">If the <paramref name="windowId"/> is not a <see cref="SDLWindowId"/>.</exception>
-    public void SetRenderingArea(IWindowId windowId, Area renderingArea)
+    public void SetWindowRenderingArea(IWindowId windowId, Area renderingArea)
     {
         ExecuteOnWindow(windowId, id =>
         {
@@ -192,6 +223,45 @@ public class SDLWindowManager : IWindowManager
         ExecuteOnWindow(windowId, id => SDL_RestoreWindow(id.Handle));
 
     /// <summary>
+    /// Sets the window minimum size informing the operating system that user cannot in any way resize the window identified by the given
+    /// <paramref name="windowId"/> below the given <paramref name="size"/>.
+    /// </summary>
+    /// <param name="windowId">The identifier of the window for which to set the minimum size.</param>
+    /// <param name="size">The window minimum size.</param>
+    public void SetWindowMinimumSize(IWindowId windowId, Size size) =>
+        ExecuteOnWindow(windowId, id => SDL_SetWindowMinimumSize(id.Handle, (int)size.Width, (int)size.Height));
+
+    /// <summary>
+    /// Sets the window maximum size informing the operating system that user cannot in any way resize the window identified by the given
+    /// <paramref name="windowId"/> above the given <paramref name="size"/>.
+    /// </summary>
+    /// <param name="windowId">The identifier of the window for which to set the maximum size.</param>
+    /// <param name="size">The window maximum size.</param>
+    public void SetWindowMaximumSize(IWindowId windowId, Size size) =>
+        ExecuteOnWindow(windowId, id => SDL_SetWindowMaximumSize(id.Handle, size.Width.Value == PixelUnit.Max ? 1000 : (int)size.Width,
+                                                                            size.Height.Value == PixelUnit.Max ? 1000 : (int)size.Height));
+
+    /// <summary>
+    /// Copies the given <paramref name="text"/> to the clipboard.
+    /// </summary>
+    /// <param name="text">The text to copy.</param>
+    public void CopyToClipboard(string text)
+    {
+        _dispatcher.ThrowIfNotOnUIThread();
+        LoggingUtils.SDLCheck(() => SDL_SetClipboardText(text), _logger);
+    }
+
+    /// <summary>
+    /// Gets the text in the clipboard.
+    /// </summary>
+    /// <returns>The clipboard text.</returns>
+    public string GetClipboardContent()
+    {
+        _dispatcher.ThrowIfNotOnUIThread();
+        return SDL_GetClipboardText();
+    }
+
+    /// <summary>
     /// Dispose the window and deallocates all the graphical resources.
     /// </summary>
     public void Shutdown()
@@ -199,6 +269,11 @@ public class SDLWindowManager : IWindowManager
         _dispatcher.ThrowIfNotOnUIThread();
         // TODO: dispose all rendering engines
         // if (_window != nint.Zero) SDL2.SDL.SDL_DestroyWindow(_window);
+        foreach (var cursor in _cursorCache)
+        {
+            SDL_FreeCursor(cursor.Value);
+        }
+
         SDL_Quit();
     }
 

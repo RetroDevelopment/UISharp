@@ -1,5 +1,5 @@
 ﻿using FreeTypeSharp;
-using RetroDev.UISharp.Core.Graphics.Coordinates;
+using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Graphics.Imaging;
 using System.Globalization;
 using static FreeTypeSharp.FT;
@@ -67,6 +67,14 @@ public class FreeTypeFontRenderingEngine : IFontRenderingEngine
         EnsureFontIsLoaded(font);
         var metrics = CalculateFontMetrics(font);
         return metrics.height + 1;
+    }
+
+    /// <inheritdoc />
+    public PixelUnit[] ComputeCharactersWidths(string text, Font font)
+    {
+        EnsureFontIsLoaded(font);
+        var gliphs = GetCharacters(text, font);
+        return gliphs.Select(g => new PixelUnit(g.Advance)).ToArray();
     }
 
     private (int Width, int XOffset) ComputeTextMaximumWidth(IEnumerable<Gliph> gliphs)

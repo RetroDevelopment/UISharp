@@ -1,7 +1,7 @@
 ﻿using RetroDev.UISharp.Components;
 using RetroDev.UISharp.Components.Base;
+using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Exceptions;
-using RetroDev.UISharp.Core.Graphics.Coordinates;
 using RetroDev.UISharp.Core.Logging;
 using RetroDev.UISharp.Core.Windowing;
 using RetroDev.UISharp.Core.Windowing.Events;
@@ -20,7 +20,6 @@ namespace RetroDev.UISharp;
 public class Application : IDisposable
 {
     private readonly List<Window> _windows = [];
-    private readonly ThemeParser _themeParser;
     private bool _disposed = false;
     private bool _shoudQuit = false;
 
@@ -66,9 +65,9 @@ public class Application : IDisposable
     public UIDefinitionManager UIDefinitionManager => new(this);
 
     /// <summary>
-    /// The main theme used in the application.
+    /// The theme manager used in <see langword="this" /> <see cref="Application"/> to load and manage themes.
     /// </summary>
-    public Theme Theme { get; }
+    public ThemeManager ThemeManager { get; }
 
     /// <summary>
     /// The primary screen size.
@@ -107,26 +106,20 @@ public class Application : IDisposable
     /// <param name="windowManager">The low-level implementation of window manager interacting with the OS to create and manage windows.</param>
     /// <param name="resourceManager">The object that loads resources from the project.</param>
     /// <param name="logger">The logging implementation.</param>
-    /// <param name="createTheme">
-    /// The function that creates a <see cref="Theme"/>. The theme will be automatically created, so pass this function if you want to inject <see cref="Theme"/>
-    /// with an instance of a class derived from <see cref="Presentation.Themes.Theme"/>.
-    /// </param>
     /// <remarks>The application, as well as all the UI related operations, must run in the same thread as this constructor is invoked.</remarks>
     public Application(IWindowManager? windowManager = null,
                        IResourceManager? resourceManager = null,
-                       ILogger? logger = null,
-                       Func<Application, Theme>? createTheme = null)
+                       ILogger? logger = null)
     {
         Logger = logger ?? new ConsoleLogger();
         WindowManager = windowManager ?? new SDLWindowManager(Dispatcher, Logger);
         ResourceManager = resourceManager ?? new EmbeddedResourceManager();
-        Theme = createTheme != null ? createTheme(this) : new Theme(this);
-        _themeParser = new ThemeParser(Theme);
+        ThemeManager = new ThemeManager(this, ResourceManager.Themes);
         LifeCycle.CurrentState = LifeCycle.State.INIT;
         var font = new Font(this, "LiberationSans", 16, FontType.Regular);
         DefaultFont = new BindableProperty<Font>(font, this, BindingType.SourceToDestination);
 
-        LoadThemeResource("uisharp-dark");
+        ThemeManager.LoadTheme("uisharp-dark");
         WindowManager.Initialize();
     }
 
@@ -141,9 +134,11 @@ public class Application : IDisposable
     public void Run()
     {
         Dispatcher.ThrowIfNotOnUIThread();
+        EventSystem.TimeoutMilliseconds = 10; // TODO: probably set this according to frame rate
 
         Logger.LogInfo("Application started");
         EventSystem.ApplicationQuit += (_, _) => _shoudQuit = true;
+        EventSystem.RenderNeeded += (_, _) => Render();
         Started = true;
         ApplicationStarted?.Invoke(this, EventArgs.Empty);
         EventSystem.Signal();
@@ -199,23 +194,13 @@ public class Application : IDisposable
     }
 
     /// <summary>
-    /// Loads a new theme from a theme resource.
-    /// </summary>
-    /// <param name="themeName">The theme resource name.</param>
-    public void LoadThemeResource(string themeName)
-    {
-        _themeParser.Parse(ResourceManager.Themes[themeName]);
-        Logger.LogInfo($"Theme: {themeName}");
-    }
-
-    /// <summary>
     /// Quits the application.
     /// </summary>
     public void Quit()
     {
         Dispatcher.ThrowIfNotOnUIThread();
         Logger.LogInfo("Application quit requested");
-        EventSystem.Quit(emitQuitEvent: true);
+        EventSystem.Quit();
     }
 
     /// <summary>
@@ -258,17 +243,24 @@ public class Application : IDisposable
     internal void RunUIEventPollLoop()
     {
         LifeCycle.CurrentState = LifeCycle.State.EVENT_POLL;
-        EventSystem.ProcessEvents(timeoutMs: 10); // TODO: probably set this according to frame rate
+        EventSystem.ProcessEvents();
+    }
+
+    private void Render()
+    {
+        var visibleWindows = _windows.Where(w => w.Visibility.Value == UIComponent.ComponentVisibility.Visible).ToList();
         LifeCycle.CurrentState = LifeCycle.State.MEASURE;
-        _windows.ForEach(w => w.Measure());
+        visibleWindows.ForEach(w => w.Measure());
         LifeCycle.CurrentState = LifeCycle.State.EVENT_POLL;
-        _windows.ForEach(w => w.PrepareSecondPass());
+        visibleWindows.ForEach(w => w.PrepareSecondPass());
         SecondPassMeasure?.Invoke(this, EventArgs.Empty);
         LifeCycle.CurrentState = LifeCycle.State.MEASURE;
-        _windows.ForEach(w => w.Measure());
+        visibleWindows.ForEach(w => w.Measure());
         LifeCycle.CurrentState = LifeCycle.State.RENDERING;
-        _windows.ForEach(w => w.EnsureZIndicesUpdated());
-        _windows.ForEach(w => w.Render());
+        visibleWindows.ForEach(w => w.EnsureZIndicesUpdated());
+        visibleWindows.ForEach(w => w.Render());
+        LifeCycle.CurrentState = LifeCycle.State.EVENT_POLL;
+        visibleWindows.ForEach(w => w.OnRenderDone());
     }
 
     private void DisposeManagedResources() { }

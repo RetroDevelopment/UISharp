@@ -1,6 +1,6 @@
 ﻿using RetroDev.UISharp.Core.Contexts;
+using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Exceptions;
-using RetroDev.UISharp.Core.Graphics.Coordinates;
 
 namespace RetroDev.UISharp.Core.Windowing;
 
@@ -12,6 +12,11 @@ public interface IWindowManager
     /// Gets the size of the main display.
     /// </summary>
     Size ScreenSize { get; }
+
+    /// <summary>
+    /// The mouse cursor shape to display.
+    /// </summary>
+    MouseCursor Cursor { set; get; }
 
     /// <summary>
     /// The system that emits event using <see langword="this" /> <see cref="IWindowManager{TWindowId}"/>.
@@ -51,7 +56,7 @@ public interface IWindowManager
     /// </summary>
     /// <param name="windowId">The identifier of the window for which to change rendering area.</param>
     /// <param name="renderingArea">The new rendering area.</param>
-    void SetRenderingArea(IWindowId windowId, Area renderingArea);
+    void SetWindowRenderingArea(IWindowId windowId, Area renderingArea);
 
     /// <summary>
     /// Sets the title for the window with the given <paramref name="windowId"/>.
@@ -109,6 +114,34 @@ public interface IWindowManager
     /// </summary>
     /// <param name="windowId">The identifier of the window to maximize.</param>
     void RestoreWindow(IWindowId windowId);
+
+    /// <summary>
+    /// Sets the window minimum size informing the operating system that user cannot in any way resize the window identified by the given
+    /// <paramref name="windowId"/> below the given <paramref name="size"/>.
+    /// </summary>
+    /// <param name="windowId">The identifier of the window for which to set the minimum size.</param>
+    /// <param name="size">The window minimum size.</param>
+    void SetWindowMinimumSize(IWindowId windowId, Size size);
+
+    /// <summary>
+    /// Sets the window maximum size informing the operating system that user cannot in any way resize the window identified by the given
+    /// <paramref name="windowId"/> above the given <paramref name="size"/>.
+    /// </summary>
+    /// <param name="windowId">The identifier of the window for which to set the maximum size.</param>
+    /// <param name="size">The window maximum size.</param>
+    void SetWindowMaximumSize(IWindowId windowId, Size size);
+
+    /// <summary>
+    /// Copies the given <paramref name="text"/> to the clipboard.
+    /// </summary>
+    /// <param name="text">The text to copy.</param>
+    void CopyToClipboard(string text);
+
+    /// <summary>
+    /// Gets the text in the clipboard.
+    /// </summary>
+    /// <returns>The clipboard text.</returns>
+    string GetClipboardContent();
 
     /// <summary>
     /// Closes the UI environment. Make sure that no other SDL operation is performed after calling this method!

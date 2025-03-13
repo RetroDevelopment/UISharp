@@ -1,9 +1,10 @@
 ﻿using RetroDev.UISharp.Components.Core;
 using RetroDev.UISharp.Components.Core.AutoArea;
+using RetroDev.UISharp.Components.Core.Layout;
 using RetroDev.UISharp.Components.Shapes;
+using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Exceptions;
 using RetroDev.UISharp.Core.Graphics;
-using RetroDev.UISharp.Core.Graphics.Coordinates;
 using RetroDev.UISharp.Core.Windowing.Events;
 using RetroDev.UISharp.Presentation.Properties;
 using RetroDev.UISharp.Presentation.Properties.Exceptions;
@@ -14,7 +15,7 @@ namespace RetroDev.UISharp.Components.Base;
 // They can also have dictionary/xml. Then bind these properties in your project and you will get automatic language change.
 
 /// <summary>
-/// The abstract calss for all UI components (windows, buttons, etc.).
+/// The abstract class for all UI components (windows, buttons, etc.).
 /// </summary>
 public abstract class UIComponent
 {
@@ -54,7 +55,7 @@ public abstract class UIComponent
     private Area? _relativeDrawingAreaOverride = null; // Memorizes the latest parameter used in RecomputeDrawingArea()
     private Area _relativeDrawingArea; // Area relative to the parent. So (0, 0) is top left of parent.
     private Area _absoluteDrawingArea; // Area relative to the window. So (0, 0) is top left of window.
-    private Area _clipArea; // Absolute clipping area. Each pixel with absolute cooridnates outside of the area are clipped.
+    private Area _clipArea; // Absolute clipping area. Each pixel with absolute coordinates outside of the area are clipped.
 
     /// <summary>
     /// Mouse button press inside <<see langword="this" /> <see cref="UIComponent"/>.
@@ -235,6 +236,44 @@ public abstract class UIComponent
     public UIProperty<UIComponent, Color> BackgroundColor { get; }
 
     /// <summary>
+    /// The <see cref="UIWidget"/> margin.
+    /// </summary>
+    public MarginGroup Margin { get; }
+
+    /// <summary>
+    /// The <see cref="UIWidget"/> padding.
+    /// </summary>
+    public PaddingGroup Padding { get; }
+
+    /// <summary>
+    /// The minimum width for <see langword="this" /> <see cref="UIComponent"/>.
+    /// This property takes priority over the <see cref="Width"/>, meaning that even if
+    /// <see cref="Width"/> is not <see cref="PixelUnit.Auto"/> the minimum width will still be <see cref="MinimumWidth"/>.
+    /// </summary>
+    public UIProperty<UIComponent, PixelUnit> MinimumWidth { get; }
+
+    /// <summary>
+    /// The minimum height for <see langword="this" /> <see cref="UIComponent"/>.
+    /// This property takes priority over the <see cref="Height"/>, meaning that even if
+    /// <see cref="Height"/> is not <see cref="PixelUnit.Auto"/> the minimum height will still be <see cref="MinimumHeight"/>.
+    /// </summary>
+    public UIProperty<UIComponent, PixelUnit> MinimumHeight { get; }
+
+    /// <summary>
+    /// The maximum width for <see langword="this" /> <see cref="UIComponent"/>.
+    /// This property takes priority over the <see cref="Width"/>, meaning that even if
+    /// <see cref="Width"/> is not <see cref="PixelUnit.Auto"/> the maximum width will still be <see cref="MaximumWidth"/>.
+    /// </summary>
+    public UIProperty<UIComponent, PixelUnit> MaximumWidth { get; }
+
+    /// <summary>
+    /// The maximum height for <see langword="this" /> <see cref="UIComponent"/>.
+    /// This property takes priority over the <see cref="Height"/>, meaning that even if
+    /// <see cref="Height"/> is not <see cref="PixelUnit.Auto"/> the maximum height will still be <see cref="MaximumHeight"/>.
+    /// </summary>
+    public UIProperty<UIComponent, PixelUnit> MaximumHeight { get; }
+
+    /// <summary>
     /// Creates a new component.
     /// </summary>
     /// <param name="application">The application owning this component.</param>
@@ -257,7 +296,7 @@ public abstract class UIComponent
 
         if (!Application.Started)
         {
-            throw new UIInitializationException($"Cannot create UI element {this}: application must be started. Make sure all UI initializtion is within the {nameof(Application.ApplicationStarted)} event");
+            throw new UIInitializationException($"Cannot create UI element {this}: application must be started. Make sure all UI initialization is within the {nameof(Application.ApplicationStarted)} event");
         }
 
         ID = new UIProperty<UIComponent, string>(this, string.Empty);
@@ -274,6 +313,12 @@ public abstract class UIComponent
         Focus = new UIProperty<UIComponent, bool>(this, false);
         Enabled = new UIProperty<UIComponent, bool>(this, true);
         BackgroundColor = new UIProperty<UIComponent, Color>(this, Color.Transparent);
+        Margin = new MarginGroup(application, this);
+        Padding = new PaddingGroup(application, this);
+        MinimumWidth = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Zero);
+        MinimumHeight = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Zero);
+        MaximumWidth = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Auto);
+        MaximumHeight = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Auto);
 
         Canvas = new Canvas(this);
 
@@ -303,7 +348,7 @@ public abstract class UIComponent
     /// <summary>
     /// Marks <see langword="this" /> <see cref="UIComponent"/> as no longer invalidated.
     /// It is usually not necessary to cancel invalidation because it is done automatically by the framework,
-    /// but it is possible to manually override the behaviod if needed.
+    /// but it is possible to manually override the behavior if needed.
     /// </summary>
     public void CancelInvalidation()
     {
@@ -318,8 +363,8 @@ public abstract class UIComponent
     /// </exception>
     /// <remarks>
     /// The validation is performed right before rendering, when re-calculating the component sizes. This allows for more flexibility
-    /// when setting values that may temporarely lead to object inconsistency.
-    /// However, since this method is public, validation can occurr at any time.
+    /// when setting values that may temporarily lead to object inconsistency.
+    /// However, since this method is public, validation can occur at any time.
     /// </remarks>
     public virtual void Validate()
     {
@@ -336,7 +381,7 @@ public abstract class UIComponent
     /// </summary>
     /// <remarks>
     /// This method is useful when using drag-and-drop, because that usually implies that the <see cref="UIComponent"/> position is incremented or decremented as the object is dragged.
-    /// Doing that when <see cref="X"/> and <see cref="Y"/> are set to <see cref="PixelUnit.Auto"/> would be impossible, so the first step is to cature the actual positions and then using 
+    /// Doing that when <see cref="X"/> and <see cref="Y"/> are set to <see cref="PixelUnit.Auto"/> would be impossible, so the first step is to capture the actual positions and then using 
     /// manual positioning.
     /// </remarks>
     public void CaptureActualPosition()
@@ -347,23 +392,42 @@ public abstract class UIComponent
     }
 
     /// <summary>
-    /// Compute the minimum size necessary to dipslay all the component correctly.
-    /// This does not include padding.
+    /// Captures the size of <see langword="this" /> <see cref="UIComponent"/> during the latest
+    /// frame rendering or the position of the next frame rendering is this is called inside <see cref="Application.SecondPassMeasure"/> and
+    /// writes the values into <see cref="Width"/> and <see cref="Height"/>.
+    /// </summary>
+    /// <remarks>
+    /// This method is useful when using drag-and-drop, because that usually implies that the <see cref="UIComponent"/> size is incremented or decremented as the object is dragged.
+    /// Doing that when <see cref="Width"/> and <see cref="Height"/> are set to <see cref="PixelUnit.Auto"/> would be impossible, so the first step is to capture the actual positions and then using 
+    /// manual size.
+    /// </remarks>
+    public void CaptureActualSize()
+    {
+        var size = _relativeDrawingArea.Size;
+        Width.Value = size.Width;
+        Height.Value = size.Height;
+    }
+
+    /// <summary>
+    /// Compute the minimum size necessary to display all the component correctly.
+    /// It is used to calculate the optimal size in <see cref="AutoSize.Wrap"/> mode.
+    /// This does NOT include padding, which is automatically taking into account by the framework when
+    /// calculating the wrap size in <see cref="AutoSize.Wrap"/> mode.
     /// </summary>
     /// <param name="childrenSize">
     /// The best estimated size to render the children correctly.
     /// This parameter can be used for layout re-computation, where the best size is the size that fits
     /// all estimate sizes of the children.
     /// </param>
-    /// <returns>The minimum size necessary to dipslay all the component correctly.</returns>
+    /// <returns>The minimum size necessary to display all the component correctly.</returns>
     /// <remarks>
-    /// Getting the minimum optimzal size for a component might not be always easy. In that case, it should
+    /// Getting the minimum optimal size for a component might not be always easy. In that case, it should
     /// at least get close to it or be as small as possible.
     /// </remarks>
     protected abstract Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize);
 
     /// <summary>
-    /// Override this method to estabilsh custom final rendering area for <see langword="this" /> component children.
+    /// Override this method to establish custom final rendering area for <see langword="this" /> component children.
     /// This is useful when implementing layouts, where it is required to arrange layout children in a given area.
     /// </summary>
     /// <param name="availableSpace"><see langword="this" /> container full available size to render.</param>
@@ -405,7 +469,7 @@ public abstract class UIComponent
     }
 
     /// <summary>
-    /// Gets all the child components of <see cref="this"/> comoponet.
+    /// Gets all the child components of <see cref="this"/> component.
     /// </summary>
     /// <returns>The list of child component.</returns>
     protected virtual IEnumerable<UIWidget> GetChildrenNodes() =>
@@ -564,6 +628,19 @@ public abstract class UIComponent
         }
     }
 
+    /// <summary>
+    /// Creates a new <see cref="BindableProperty{TValue}"/> and binds it to the theme color with the given <paramref name="id"/>.
+    /// </summary>
+    /// <param name="id">The theme color id to bind.</param>
+    /// <returns>The <see cref="UIProperty{TComponent, TValue}"/> bound to the theme color with the given <paramref name="id"/>.</returns>
+    /// <exception cref="ArgumentException">If a color with the given <paramref name="id"/> does not exist in the current theme.</exception>
+    /// <typeparam name="TComponent">The component type.</typeparam>
+    protected UIProperty<TComponent, Color> CreateNewColorPropertyFor<TComponent>(string id) where TComponent : UIComponent
+    {
+        var themeProperty = Application.ThemeManager.GetColorProperty(id);
+        return new UIProperty<TComponent, Color>((TComponent)this, themeProperty, BindingType.DestinationToSource);
+    }
+
     internal IEnumerable<UIComponent> GetComponentTreeNodesDepthFirstSearch() =>
         _childNodes.Union(_childNodes.SelectMany(c => c.GetComponentTreeNodesDepthFirstSearch()));
 
@@ -581,17 +658,20 @@ public abstract class UIComponent
     /// Computes the size of the component if <see cref="AutoSize.Wrap"/> is chose for both width and hight.
     /// </summary>
     /// <returns>
-    /// <see langword="true" /> if the size has changeed since the last time thos method was called, otherwise <see langword="false" />.
+    /// <see langword="true" /> if the size has changed since the last time this method was called, otherwise <see langword="false" />.
     /// </returns>
     internal bool ReComputeWrapSize()
     {
         var childrenSize = _childNodes.Select(c => c._wrapSize);
         var minimalOptimalSize = ComputeMinimumOptimalSize(childrenSize);
-        var width = Width.Value.IsAuto ? minimalOptimalSize.Width : Width.Value;
-        var height = Height.Value.IsAuto ? minimalOptimalSize.Height : Height.Value;
+        var width = Width.Value.IfAuto(minimalOptimalSize.Width);
+        var height = Height.Value.IfAuto(minimalOptimalSize.Height);
         var collapsed = Visibility.Value == ComponentVisibility.Collapsed;
         var currentWrapSize = _wrapSize;
         var newWrapSize = collapsed ? Size.Zero : new Size(width, height);
+        var minimumSize = new Size(MinimumWidth.Value, MinimumHeight.Value);
+        var maximumSize = new Size(MaximumWidth.Value, Height.Value);
+        newWrapSize = newWrapSize.Inflate(Padding.ToMarginStruct()).Clamp(minimumSize, maximumSize);
         _wrapSize = newWrapSize;
         return currentWrapSize != newWrapSize;
     }
@@ -653,11 +733,12 @@ public abstract class UIComponent
     internal MouseEventArgs CreateEventWithRelativeLocation(MouseEventArgs mouseEventArgs) =>
         new(mouseEventArgs.AbsoluteLocation,
             mouseEventArgs.AbsoluteLocation - _absoluteDrawingArea.TopLeft,
-            mouseEventArgs.Button);
+            mouseEventArgs.Button,
+            mouseEventArgs.Clicks);
 
     internal uint UpdateZIndices(uint baseZIndex)
     {
-        // TODO: optimize traversal only for affected z indices!
+        // TODO: optimize traversal only for affected z indexes!
         var currentZIndex = Canvas.UpdateZIndices(baseZIndex);
         foreach (var child in _childNodes)
         {
@@ -713,18 +794,29 @@ public abstract class UIComponent
 
         var autoWidth = AutoWidth.Value.ComputeWidth(parentSize, _wrapSize);
         var autoHeight = AutoHeight.Value.ComputeHeight(parentSize, _wrapSize);
-        var actualWidth = sizeOverride.Width.IsAuto ? Width.Value.IsAuto ? autoWidth : Width.Value : sizeOverride.Width;
-        var actualHeight = sizeOverride.Height.IsAuto ? Height.Value.IsAuto ? autoHeight : Height.Value : sizeOverride.Height;
-        var actualSize = new Size(actualWidth, actualHeight);
+        var minimumSize = new Size(MinimumWidth.Value, MinimumHeight.Value);
+        var maximumSize = new Size(MaximumWidth.Value, MaximumHeight.Value);
+        var autoSize = new Size(autoWidth, autoHeight);
+        var actualWidth = sizeOverride.Width.IsAuto ? (Width.Value.IsAuto ? autoSize.Width : Width.Value) : sizeOverride.Width;
+        var actualHeight = sizeOverride.Height.IsAuto ? (Height.Value.IsAuto ? autoSize.Height : Height.Value) : sizeOverride.Height;
+        var actualSize = new Size(actualWidth, actualHeight).Clamp(minimumSize, maximumSize);
 
         var autoX = HorizontalAlignment.Value.ComputeX(parentSize, actualSize);
         var autoY = VerticalAlignment.Value.ComputeY(parentSize, actualSize);
-        var actualX = locationOverride.X.IsAuto ? X.Value.IsAuto ? autoX : X.Value : locationOverride.X;
-        var actualY = locationOverride.Y.IsAuto ? Y.Value.IsAuto ? autoY : Y.Value : locationOverride.Y;
+        var actualX = locationOverride.X.IsAuto ? (X.Value.IsAuto ? autoX : X.Value) : locationOverride.X;
+        var actualY = locationOverride.Y.IsAuto ? (Y.Value.IsAuto ? autoY : Y.Value) : locationOverride.Y;
         var actualTopLeft = new Point(actualX, actualY);
 
-        // Windows X and Y position will be relative to the screen, but the relative area location is Point.Zero, because it is relative to the viewport (i.e. the window itslef).
-        var result = new Area(actualTopLeft, actualSize);
+        // Windows X and Y position will be relative to the screen, but the relative area location is Point.Zero, because it is relative to the viewport (i.e. the window itself).
+        var margin = Margin.ToMarginStruct();
+        var finalArea = new Area(actualTopLeft, actualSize);
+        var clampedArea = finalArea.Clamp(parentSize, margin);
+        // The rendering area is the finalArea calculated, clamped only for auto values. For example if X is manually set, that will override clamping in order to avoid
+        // for example a component with X = 0 being positioned somewhere else because of margins. Manual overrides take priority over margin re-positioning.
+        var result = new Area(new Point(locationOverride.X.IsAuto && X.Value.IsAuto ? clampedArea.TopLeft.X : finalArea.TopLeft.X,
+                                        locationOverride.Y.IsAuto && Y.Value.IsAuto ? clampedArea.TopLeft.Y : finalArea.TopLeft.Y),
+                              new Size(sizeOverride.Width.IsAuto && Width.Value.IsAuto ? clampedArea.Size.Width : finalArea.Size.Width,
+                                       sizeOverride.Height.IsAuto && Height.Value.IsAuto ? clampedArea.Size.Height : finalArea.Size.Height));
         changed |= result != _relativeDrawingArea;
         return result;
     }

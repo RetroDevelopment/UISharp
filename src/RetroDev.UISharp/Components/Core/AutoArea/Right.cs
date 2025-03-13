@@ -1,4 +1,4 @@
-﻿using RetroDev.UISharp.Core.Graphics.Coordinates;
+﻿using RetroDev.UISharp.Core.Coordinates;
 
 namespace RetroDev.UISharp.Components.Core.AutoArea;
 
@@ -14,5 +14,5 @@ public class Right : IHorizontalAlignment
     /// <param name="componentSize">The actual component size.</param>
     /// <returns>The component x-coordinate.</returns>
     public PixelUnit ComputeX(Size parentSize, Size componentSize) =>
-        parentSize.Width - componentSize.Width;
+        componentSize.PositionTopRightOf(parentSize).TopLeft.X;
 }

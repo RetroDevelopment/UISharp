@@ -1,5 +1,5 @@
 ﻿using RetroDev.UISharp.Components.Base;
-using RetroDev.UISharp.Core.Graphics.Coordinates;
+using RetroDev.UISharp.Core.Coordinates;
 
 namespace RetroDev.UISharp.Components.Containers;
 
@@ -11,10 +11,6 @@ public class Panel : UIContainer, ISingleContainer // TODO: ISingleContainer sho
     private UIWidget? _child;
 
     /// <inheritdoc />
-    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
-        childrenSize.FirstOrDefault() ?? Size.Zero;
-
-    /// <inheritdoc />
 
     public override IEnumerable<UIWidget> Children => [GetChildrenNodes().First()];
 
@@ -22,12 +18,25 @@ public class Panel : UIContainer, ISingleContainer // TODO: ISingleContainer sho
     /// Creates a new panel.
     /// </summary>
     /// <param name="application">The application owning this component.</param>
-    public Panel(Application application) : base(application)
+    /// <param name="component">The component to be inserted in <see langword="this" /> <see cref="Panel"/>.</param>
+    public Panel(Application application, UIWidget? component = null) : base(application)
     {
+        if (component != null) SetComponent(component);
+    }
+
+    /// <inheritdoc />
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize)
+    {
+        if (_child != null)
+        {
+            return childrenSize.First().Inflate(_child.Margin.ToMarginStruct());
+        }
+
+        return Size.Zero;
     }
 
     /// <summary>
-    /// Sets the component to be inserted in <see langword="this" /> panel.
+    /// Sets the component to be inserted in <see langword="this" /> <see cref="Panel"/>.
     /// </summary>
     /// <param name="component">The component to be inserted in <see langword="this" /> panel.</param>
     public void SetComponent(UIWidget component)

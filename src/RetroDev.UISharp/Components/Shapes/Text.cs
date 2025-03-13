@@ -1,6 +1,7 @@
 ﻿using RetroDev.UISharp.Components.Base;
+using RetroDev.UISharp.Components.Core.AutoArea;
+using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Graphics;
-using RetroDev.UISharp.Core.Graphics.Coordinates;
 using RetroDev.UISharp.Core.Graphics.Shapes;
 using RetroDev.UISharp.Presentation;
 using RetroDev.UISharp.Presentation.Properties;
@@ -29,6 +30,22 @@ public class Text : UIShape
     /// </summary>
     public ShapeProperty<Text, Font> Font { get; }
 
+    /// <summary>
+    /// The text horizontal alignment within the text boundaries.
+    /// </summary>
+    public ShapeProperty<Text, IHorizontalAlignment> TextHorizontalAlignment { get; }
+
+    /// <summary>
+    /// The text vertical alignment within the text boundaries.
+    /// </summary>
+    public ShapeProperty<Text, IVerticalAlignment> TextVerticalAlignment { get; }
+
+    /// <summary>
+    /// An horizontal offset to apply to text after all positioning calculation.
+    /// That is useful for implementing scrollable text.
+    /// </summary>
+    public ShapeProperty<Text, PixelUnit> HorizontalScroll { get; }
+
     /// <inheritdoc />
     protected override RenderingElement RenderingElement => _text;
 
@@ -45,17 +62,54 @@ public class Text : UIShape
         TextColor = new ShapeProperty<Text, Color>(this, application, Color.Transparent);
         DisplayText = new ShapeProperty<Text, string>(this, application, string.Empty);
         Font = new ShapeProperty<Text, Font>(this, application, application.DefaultFont, BindingType.DestinationToSource);
+        TextHorizontalAlignment = new ShapeProperty<Text, IHorizontalAlignment>(this, application, Alignment.Left);
+        TextVerticalAlignment = new ShapeProperty<Text, IVerticalAlignment>(this, application, Alignment.Center);
+        HorizontalScroll = new ShapeProperty<Text, PixelUnit>(this, application, PixelUnit.Zero);
     }
 
     /// <summary>
     /// The minimum size required to render the text correctly.
     /// </summary>
+    /// <param name="index">
+    /// The truncation index. If <see langword="null" /> the full text size will be computed, otherwise only the size of the text
+    /// untile <paramref name="index"/> will be computed.
+    /// </param>
     /// <returns>
     /// The text size, which is <see cref="Size.Zero"/> if the text has not yet been attached to a <see cref="Canvas"/> or
     /// the <see cref="UIComponent"/> owning <see langword="this" /> text is not yet assigned to a window or a component with a rendering viewport.
     /// </returns>
-    public Size ComputeTextSize() =>
-        RenderingEngine?.ComputeTextSize(DisplayText.Value, Font.Value.ToGraphicsFont()) ?? Size.Zero;
+    public Size ComputeTextSize(uint? index = null)
+    {
+        var text = DisplayText.Value;
+
+        if (index != null && index > text.Length)
+        {
+            throw new ArgumentOutOfRangeException($"Cannot calculate advance for index {index} of text {text}: index cannot be greater than the text size ({text.Length})");
+        }
+
+        if (index != null)
+        {
+            text = text.Substring(0, (int)index);
+        }
+
+
+        return RenderingEngine?.ComputeTextSize(text, Font.Value.ToGraphicsFont()) ?? Size.Zero;
+    }
+
+    /// <summary>
+    /// Computes each character width separately for the given <paramref name="text"/>.
+    /// </summary>
+    /// <param name="text">The text for which to compute widths.</param>
+    /// <param name="font">The font the text is rendered.</param>
+    /// <returns>
+    /// An array of widths <c>W</c> where <c>W[i]</c> is the total width occupide by
+    /// <paramref name="text"/><c>[i]</c> including advance.
+    /// </returns>
+    public PixelUnit[] ComputeCharactersWidths(string text, Font font)
+    {
+        if (RenderingEngine == null) throw new NullReferenceException("Cannot compute characters width: no rendering engine is defined");
+        return RenderingEngine.ComputeCharactersWidths(text, font.ToGraphicsFont());
+    }
 
     /// <summary>
     /// Gets the maximum height occupied in a line of text with the given <see cref="Font"/>.
@@ -79,9 +133,14 @@ public class Text : UIShape
 
     protected internal override void Render()
     {
-        _text.RenderingArea = ComputeTextSize().FillCenterOf(RelativeRenderingArea.Value.Size).ToAbsolute(Canvas.ContainerAbsoluteDrawingArea);
         _text.ForegroundColor = TextColor.Value;
         _text.Value = DisplayText.Value;
         _text.Font = Font.Value.ToGraphicsFont();
+        var textSize = ComputeTextSize();
+        var x = TextHorizontalAlignment.Value.ComputeX(RelativeRenderingArea.Value.Size, textSize) + HorizontalScroll.Value;
+        var y = TextVerticalAlignment.Value.ComputeY(RelativeRenderingArea.Value.Size, textSize);
+        var area = new Area(new Point(x, y), textSize);
+        var parentRelativeArea = area.ToAbsolute(RelativeRenderingArea.Value);
+        _text.RenderingArea = parentRelativeArea.ToAbsolute(Canvas?.ContainerAbsoluteDrawingArea);
     }
 }

@@ -1,7 +1,5 @@
 ﻿using RetroDev.UISharp.Components.Base;
-using RetroDev.UISharp.Core.Graphics.Coordinates;
-using RetroDev.UISharp.Core.Graphics.Shapes;
-using RetroDev.UISharp.Core.Windowing.Events;
+using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Presentation.Properties;
 
 namespace RetroDev.UISharp.Components.Containers;
@@ -13,7 +11,7 @@ public class GridLayout : UIContainer, IContainer
 {
     public interface IGridSize { }
     public record AbsoluteSize(PixelUnit Size) : IGridSize;
-    public record RelateiveSize(float Size) : IGridSize;
+    public record RelativeSize(float Size) : IGridSize;
     public record AutoSize : IGridSize;
 
     /// <summary>
@@ -44,10 +42,12 @@ public class GridLayout : UIContainer, IContainer
     /// Creates a new grid layout.
     /// </summary>
     /// <param name="application">The application owning this component.</param>
-    public GridLayout(Application application) : base(application)
+    /// <param name="rows">The number of layout rows.</param>
+    /// <param name="columns">The number of layout columns.</param>
+    public GridLayout(Application application, uint rows = 0, uint columns = 0) : base(application)
     {
-        Rows = new UIProperty<GridLayout, uint>(this, 0);
-        Columns = new UIProperty<GridLayout, uint>(this, 0);
+        Rows = new UIProperty<GridLayout, uint>(this, rows);
+        Columns = new UIProperty<GridLayout, uint>(this, columns);
         RowSizes = new UIProperty<GridLayout, string>(this, string.Empty);
         ColumnSizes = new UIProperty<GridLayout, string>(this, string.Empty);
     }
@@ -58,8 +58,7 @@ public class GridLayout : UIContainer, IContainer
     /// <param name="component">The component to add.</param>
     public void AddComponent(UIWidget component)
     {
-        var panel = new Panel(Application);
-        panel.SetComponent(component);
+        var panel = new Panel(Application, component);
         AddChildNode(panel);
     }
 
@@ -76,8 +75,7 @@ public class GridLayout : UIContainer, IContainer
         var count = Children.Count();
         if (position > count) throw new ArgumentException($"Cannot insert element in grid layout at row {row} column {column}: the layout has only {count} components");
 
-        var panel = new Panel(Application);
-        panel.SetComponent(component);
+        var panel = new Panel(Application, component);
         AddChildNode(panel, (int)position);
     }
 
@@ -124,12 +122,16 @@ public class GridLayout : UIContainer, IContainer
 
         if (availableSpace == Size.Zero) return Enumerable.Repeat<Area?>(Area.Empty, childrenSize.Count()).ToList();
 
-        List<Area?> areas = new List<Area?>();
+        var areas = new List<Area?>();
+
+        var availableSpaceAfterPadding = availableSpace.Deflate(Padding.ToMarginStruct());
+        var leftPadding = Padding.Left.Value.IfAuto(PixelUnit.Zero);
+        var topPadding = Padding.Top.Value.IfAuto(PixelUnit.Zero);
 
         var rowSizeDefinitions = Parse(RowSizes.Value, Rows.Value);
         var columnSizeDefinitions = Parse(ColumnSizes.Value, Columns.Value);
-        var rowSizes = ComputeSizes(availableSpace.Height, rowSizeDefinitions, Rows.Value);
-        var columnSizes = ComputeSizes(availableSpace.Width, columnSizeDefinitions, Columns.Value);
+        var rowSizes = ComputeSizes(availableSpaceAfterPadding.Height, rowSizeDefinitions, Rows.Value);
+        var columnSizes = ComputeSizes(availableSpaceAfterPadding.Width, columnSizeDefinitions, Columns.Value);
 
         var children = base.GetChildrenNodes();
         var size = children.Count();
@@ -145,7 +147,8 @@ public class GridLayout : UIContainer, IContainer
             var height = rowSizes[(int)row];
             var x = column == 0 ? 0.0f : columnSizes[..((int)column)].Sum(p => p.Value);
             var y = row == 0 ? 0.0f : rowSizes[..((int)row)].Sum(p => p.Value);
-            areas.Add(new Area(new Point(x, y), new Size(width, height)));
+
+            areas.Add(new Area(new Point(x + leftPadding, y + topPadding), new Size(width, height)));
             i++;
         }
 
@@ -169,7 +172,7 @@ public class GridLayout : UIContainer, IContainer
 
         foreach (var column in columnSizeDefinitions)
         {
-            if (column is AutoSize || column is RelateiveSize)
+            if (column is AutoSize || column is RelativeSize)
             {
                 for (int rowIndex = 0; rowIndex < Rows.Value; rowIndex++)
                 {
@@ -192,7 +195,7 @@ public class GridLayout : UIContainer, IContainer
 
         foreach (var row in rowSizeDefinitions)
         {
-            if (row is AutoSize || row is RelateiveSize)
+            if (row is AutoSize || row is RelativeSize)
             {
                 for (int columnIndex = 0; columnIndex < Columns.Value; columnIndex++)
                 {
@@ -250,7 +253,7 @@ public class GridLayout : UIContainer, IContainer
                 var parseSuccess = float.TryParse(size.Substring(0, size.Length - 1), null, out var sizeNumber);
                 if (!parseSuccess) throw new InvalidOperationException($"Failed to convert {size} as number");
                 if (sizeNumber > 100 || sizeNumber < 0) throw new InvalidOperationException($"Invalid size {size}: relative values must be between 0% to 100%");
-                result.Add(new RelateiveSize(sizeNumber / 100.0f));
+                result.Add(new RelativeSize(sizeNumber / 100.0f));
             }
             else if (size == "auto" || size == "*")
             {
@@ -278,7 +281,7 @@ public class GridLayout : UIContainer, IContainer
         foreach (var size in sizes)
         {
             if (size is AbsoluteSize absoluteSize) result.Add(absoluteSize.Size);
-            else if (size is RelateiveSize relateiveSize) result.Add(maximumSize * relateiveSize.Size);
+            else if (size is RelativeSize relateiveSize) result.Add(maximumSize * relateiveSize.Size);
             else if (size is AutoSize autoSize) result.Add(autoGridSize);
             else throw new InvalidOperationException($"Unhandled grid layout autosize type {size.GetType()}");
         }
@@ -294,7 +297,7 @@ public class GridLayout : UIContainer, IContainer
         foreach (var size in sizes)
         {
             if (size is AbsoluteSize absoluteSize) cumulativeKnownSize += absoluteSize.Size;
-            if (size is RelateiveSize relateiveSize) cumulativeKnownSize += maximumSize * relateiveSize.Size;
+            if (size is RelativeSize relateiveSize) cumulativeKnownSize += maximumSize * relateiveSize.Size;
         }
 
         return cumulativeKnownSize;

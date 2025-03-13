@@ -1,7 +1,6 @@
 ﻿using RetroDev.UISharp.Components.Base;
 using RetroDev.UISharp.Components.Core.AutoArea;
-using RetroDev.UISharp.Core.Graphics.Coordinates;
-using RetroDev.UISharp.Core.Windowing.Events;
+using RetroDev.UISharp.Core.Coordinates;
 
 namespace RetroDev.UISharp.Components.Containers;
 
@@ -11,10 +10,6 @@ namespace RetroDev.UISharp.Components.Containers;
 public class VerticalLayout : UIContainer, IContainer
 {
     private readonly List<Panel> _panels = [];
-
-    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
-        new(childrenSize.Max(s => s.Width) ?? PixelUnit.Zero,
-            childrenSize.Sum(s => s.Height));
 
     public override IEnumerable<UIWidget> Children => _panels.Select(p => p.Children.ElementAt(0));
 
@@ -39,17 +34,15 @@ public class VerticalLayout : UIContainer, IContainer
         {
             var precedingPanelIndex = Children.ToList().FindIndex(c => c == after);
             if (precedingPanelIndex < 0) throw new ArgumentException("Vertical layout element not found");
-            var panel = new Panel(Application);
+            var panel = new Panel(Application, component);
             panel.AutoHeight.Value = AutoSize.Wrap;
-            panel.SetComponent(component);
             AddChildNode(panel, precedingPanelIndex);
             _panels.Insert(precedingPanelIndex + 1, panel);
         }
         else
         {
-            var panel = new Panel(Application);
+            var panel = new Panel(Application, component);
             panel.AutoHeight.Value = AutoSize.Wrap;
-            panel.SetComponent(component);
             _panels.Add(panel);
             AddChildNode(panel);
         }
@@ -69,16 +62,26 @@ public class VerticalLayout : UIContainer, IContainer
         _panels.Clear();
     }
 
+    /// <inheritdoc />
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
+        new(childrenSize.Max(s => s.Width) ?? PixelUnit.Zero,
+            childrenSize.Sum(s => s.Height));
+
+    /// <inheritdoc />
     protected override List<Area?> RepositionChildren(Size availableSpace, IEnumerable<Size> childrenSize)
     {
-        var verticalPosition = PixelUnit.Zero;
+        var availableSpaceAfterPadding = availableSpace.Deflate(Padding.ToMarginStruct());
+        var leftPadding = Padding.Left.Value.IfAuto(PixelUnit.Zero);
+        var topPadding = Padding.Top.Value.IfAuto(PixelUnit.Zero);
+
+        var verticalPosition = topPadding;
         List<Area?> childrenFinalSize = [];
 
         foreach (var childSize in childrenSize)
         {
-            var x = 0;
+            var x = leftPadding;
             var y = verticalPosition;
-            var width = availableSpace.Width;
+            var width = availableSpaceAfterPadding.Width;
             var height = childSize.Height;
             childrenFinalSize.Add(new Area(new Point(x, y), new Size(width, height)));
             verticalPosition += height;

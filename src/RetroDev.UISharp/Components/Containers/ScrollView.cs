@@ -1,10 +1,11 @@
 ﻿using RetroDev.UISharp.Components.Base;
 using RetroDev.UISharp.Components.Core.AutoArea;
 using RetroDev.UISharp.Components.Shapes;
+using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Graphics;
-using RetroDev.UISharp.Core.Graphics.Coordinates;
 using RetroDev.UISharp.Core.Windowing.Events;
 using RetroDev.UISharp.Presentation.Properties;
+using RetroDev.UISharp.Presentation.Themes;
 
 namespace RetroDev.UISharp.Components.Containers;
 
@@ -17,9 +18,8 @@ public class ScrollView : UIContainer, ISingleContainer
     private readonly ScrollBar _verticalScrollBar;
     private readonly ScrollBar _horizontalScrollBar;
 
-    /// <inheritdoc />
-    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
-        childrenSize.FirstOrDefault() ?? Size.Zero;
+    private PixelUnit? _childVerticalPositionDragBegin;
+    private PixelUnit? _childHorizontalPositionDragBegin;
 
     /// <inheritdoc />
     public override IEnumerable<UIWidget> Children => GetChildrenNodes();
@@ -44,21 +44,27 @@ public class ScrollView : UIContainer, ISingleContainer
     {
         ScrollBarColor = new UIProperty<ScrollView, Color>(this, Color.Transparent);
         ScrollBarThickness = new UIProperty<ScrollView, PixelUnit>(this, 15);
-        ScrollBarColor.BindDestinationToSource(Application.Theme.PrimaryColorContrast, c => c.WithAlpha(100));
+
+        BackgroundColor.BindTheme(UISharpColorNames.ScrollViewBackground);
+        ScrollBarColor.BindTheme(UISharpColorNames.ScrollViewBars, c => c.WithAlpha(100));
+        BorderColor.BindTheme(UISharpColorNames.ScrollViewBorder);
 
         _verticalScrollBar = new ScrollBar(application);
         _verticalScrollBar.BackgroundColor.BindDestinationToSource(ScrollBarColor);
         _verticalScrollBar.Width.BindDestinationToSource(ScrollBarThickness);
         _verticalScrollBar.HorizontalAlignment.Value = Alignment.Right;
+        _verticalScrollBar.MouseDragBegin += VerticalScrollBar_MouseDragBegin;
         _verticalScrollBar.MouseDrag += VerticalScrollBar_MouseDrag;
+        _verticalScrollBar.MouseDragEnd += VerticalScrollBar_MouseDragEnd;
         AddChildNode(_verticalScrollBar);
 
         _horizontalScrollBar = new ScrollBar(application);
         _horizontalScrollBar.BackgroundColor.BindDestinationToSource(ScrollBarColor);
         _horizontalScrollBar.Height.BindDestinationToSource(ScrollBarThickness);
         _horizontalScrollBar.VerticalAlignment.Value = Alignment.Bottom;
+        _horizontalScrollBar.MouseDragBegin += HorizontalScrollBar_MouseDragBegin;
         _horizontalScrollBar.MouseDrag += HorizontalScrollBar_MouseDrag;
-
+        _horizontalScrollBar.MouseDragEnd += HorizontalScrollBar_MouseDragEnd;
         AddChildNode(_horizontalScrollBar);
 
         MouseWheel += ScrollView_MouseWheel;
@@ -78,22 +84,50 @@ public class ScrollView : UIContainer, ISingleContainer
         AddChildNode(_child, -1);
     }
 
+    /// <inheritdoc />
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
+        childrenSize.FirstOrDefault() ?? Size.Zero;
+
+    private void VerticalScrollBar_MouseDragBegin(UIComponent sender, MouseEventArgs e)
+    {
+        if (_child == null) return;
+        _childVerticalPositionDragBegin = _child.Y.Value;
+    }
+
     private void VerticalScrollBar_MouseDrag(UIComponent sender, MouseEventArgs e)
     {
         if (_child == null) return;
+
         _child.CaptureActualPosition();
         var delta = _verticalScrollBar.Delta!.Y;
         var childSizeScrollViewRatio = _child.ActualSize.Height / ActualSize.Height;
-        _child.Y.Value -= delta * childSizeScrollViewRatio;
+        _child.Y.Value = _childVerticalPositionDragBegin! - delta * childSizeScrollViewRatio;
+    }
+
+    private void VerticalScrollBar_MouseDragEnd(UIComponent sender, EventArgs e)
+    {
+        _childVerticalPositionDragBegin = null;
+    }
+
+    private void HorizontalScrollBar_MouseDragBegin(UIComponent sender, MouseEventArgs e)
+    {
+        if (_child == null) return;
+        _childHorizontalPositionDragBegin = _child.X.Value;
     }
 
     private void HorizontalScrollBar_MouseDrag(UIComponent sender, MouseEventArgs e)
     {
         if (_child == null) return;
+
         _child.CaptureActualPosition();
         var delta = _horizontalScrollBar.Delta!.X;
         var childSizeScrollViewRatio = _child.ActualSize.Width / ActualSize.Width;
-        _child.X.Value -= delta * childSizeScrollViewRatio;
+        _child.X.Value = _childHorizontalPositionDragBegin! - delta * childSizeScrollViewRatio;
+    }
+
+    private void HorizontalScrollBar_MouseDragEnd(UIComponent sender, EventArgs e)
+    {
+        _childHorizontalPositionDragBegin = null;
     }
 
     private void ScrollView_MouseWheel(UIComponent sender, MouseWheelEventArgs e)
@@ -256,7 +290,6 @@ public class ScrollView : UIContainer, ISingleContainer
         private void ScrollBar_MouseDrag(UIComponent sender, MouseEventArgs e)
         {
             _delta = e.AbsoluteLocation - _mouseDragPosition!;
-            _mouseDragPosition = e.AbsoluteLocation;
         }
 
         private void ScrollBar_MouseDragEnd(UIComponent sender, EventArgs e)
@@ -265,6 +298,7 @@ public class ScrollView : UIContainer, ISingleContainer
             _delta = null;
         }
 
-        protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) => Size.Zero;
+        protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
+            childrenSize.FirstOrDefault() ?? Size.Zero;
     }
 }

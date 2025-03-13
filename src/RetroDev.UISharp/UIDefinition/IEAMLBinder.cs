@@ -20,12 +20,13 @@ public interface IEAMLBinder
     Dictionary<string, object> Instances { get; set; }
 
     /// <summary>
-    /// Sets the <see cref="UIProperty{TParent, TValue}"/> defined by the given <paramref name="propertyInfo"/> to the
+    /// Sets the bindable property defined by the given <paramref name="propertyInfo"/> to the
     /// value defined by the given <paramref name="attribute"/>.
     /// </summary>
-    /// <param name="propertyInfo">The property set. Its type must be <see cref="UIProperty{TParent, TValue}"/>.</param>
+    /// <param name="propertyInfo">The property set. Its type must be either <see cref="BindableProperty{TValue}"/> or <see cref="CompositeBindableProperty{TValue}"/>.</param>
     /// <param name="attribute">The attribute definition.</param>
-    /// <param name="componentInstance">The <see cref="UIComponent"/> owning the <see cref="UIProperty{TParent, TValue}"/> defined by <paramref name="propertyInfo"/>.</param>
+    /// <param name="componentInstance">The <see cref="UIComponent"/> owning the property defined by <paramref name="propertyInfo"/>.</param>
     /// <exception cref="UIDefinitionValidationCompoundException">If something failes during the property assignment.</exception>
-    void SetUIProperty(PropertyInfo propertyInfo, Ast.Attribute attribute, UIComponent componentInstance);
+    /// <exception cref="InvalidOperationException">If the given <paramref name="propertyInfo"/> is not a valid bindable property.</exception>
+    void SetGenericBindableProperty(PropertyInfo propertyInfo, Ast.Attribute attribute, UIComponent componentInstance);
 }

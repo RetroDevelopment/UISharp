@@ -1,9 +1,11 @@
 ﻿using RetroDev.UISharp.Components.Base;
 using RetroDev.UISharp.Components.Shapes;
+using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Graphics;
-using RetroDev.UISharp.Core.Graphics.Coordinates;
+using RetroDev.UISharp.Core.Windowing.Events;
 using RetroDev.UISharp.Presentation.Properties;
 using RetroDev.UISharp.Presentation.Properties.Exceptions;
+using RetroDev.UISharp.Presentation.Themes;
 
 namespace RetroDev.UISharp.Components.Simple;
 
@@ -37,20 +39,18 @@ public class ProgressBar : UIWidget
     /// </summary>
     public UIProperty<ProgressBar, Color> ForegroundColor { get; }
 
-    /// <inheritdoc/>
-    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) => new(100, 20); // TODO: 20 is the common text size, 100 is some value to be big enough. Make sure that the size fits the screen.
-
     /// <summary>
     /// Creates a new label.
     /// </summary>
     /// <param name="application">The application that contain this progress bar.</param>
-    public ProgressBar(Application application) : base(application, isFocusable: false)
+    /// <param name="value">The initial progress value.</param>
+    public ProgressBar(Application application, int value = 0) : base(application, isFocusable: false)
     {
-        Value = new UIProperty<ProgressBar, int>(this, 0);
+        Value = new UIProperty<ProgressBar, int>(this, value);
         MinimumValue = new UIProperty<ProgressBar, int>(this, 0);
         MaximumValue = new UIProperty<ProgressBar, int>(this, 100);
-        ForegroundColor = new UIProperty<ProgressBar, Color>(this, application.Theme.SecondaryColorDisabled, BindingType.DestinationToSource);
-        BackgroundColor.BindDestinationToSource(Application.Theme.PrimaryColor);
+        ForegroundColor = CreateNewColorPropertyFor<ProgressBar>(UISharpColorNames.ProgressBarForeground);
+        BackgroundColor.BindTheme(UISharpColorNames.ProgressBarBackground);
 
         _backgroundRectangle = new Rectangle(application);
         _backgroundRectangle.BackgroundColor.BindDestinationToSource(BackgroundColor);
@@ -72,21 +72,27 @@ public class ProgressBar : UIWidget
         if (MaximumValue.Value < MinimumValue.Value) throw new UIPropertyValidationException($"MaximumValue {MaximumValue.Value} must be greater or equal to {MinimumValue.Value}", this);
     }
 
-    protected override List<Area?> RepositionChildren(Size availableSpace, IEnumerable<Size> childrenSize)
-    {
-        var value = Math.Clamp(Value.Value, MinimumValue.Value, MaximumValue.Value);
-        var percentage = (value - MinimumValue.Value) / (float)(MaximumValue.Value - MinimumValue.Value);
-        var progressRectangleWidth = availableSpace.Width * percentage;
-        return [null, new Area(Point.Zero, new Size(progressRectangleWidth, availableSpace.Height))];
-    }
+    /// <inheritdoc/>
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) => new(100, 20); // TODO: 20 is the common text size, 100 is some value to be big enough. Make sure that the size fits the screen.
 
-    private void ProgressBar_RenderFrame(UIComponent sender, UISharp.Core.Windowing.Events.RenderingEventArgs e)
+    private void ProgressBar_RenderFrame(UIComponent sender, RenderingEventArgs e)
     {
+        var padding = Padding.ToMarginStruct();
+
         _backgroundRectangle.RelativeRenderingArea.Value = e.RenderingAreaSize.Fill();
+        var backgroundCornerRadius = _backgroundRectangle.ComputeCornerRadius(1.0f, _backgroundRectangle.RelativeRenderingArea.Value.Size);
+        _backgroundRectangle.CornerRadiusX.Value = backgroundCornerRadius;
+        _backgroundRectangle.CornerRadiusY.Value = backgroundCornerRadius;
+
         var value = Math.Clamp(Value.Value, MinimumValue.Value, MaximumValue.Value);
         var percentage = (value - MinimumValue.Value) / (float)(MaximumValue.Value - MinimumValue.Value);
-        var progressRectangleWidth = e.RenderingAreaSize.Width * percentage;
-        var progressRecangleSize = new Size(progressRectangleWidth, e.RenderingAreaSize.Height);
-        _progressRectangle.RelativeRenderingArea.Value = progressRecangleSize.FillCenterLeftOf(e.RenderingAreaSize);
+        var paddedRenderingArea = e.RenderingAreaSize.Fill().Clamp(e.RenderingAreaSize, padding);
+        var progressRectangleWidth = paddedRenderingArea.Size.Width * percentage;
+        var progressRecangleSize = new Size(progressRectangleWidth, paddedRenderingArea.Size.Height);
+        _progressRectangle.RelativeRenderingArea.Value = paddedRenderingArea;
+        _progressRectangle.ClipArea.Value = new Area(paddedRenderingArea.TopLeft, progressRecangleSize);
+        var progressCornerRadius = _progressRectangle.ComputeCornerRadius(1.0f, _progressRectangle.RelativeRenderingArea.Value.Size);
+        _progressRectangle.CornerRadiusX.Value = progressCornerRadius;
+        _progressRectangle.CornerRadiusY.Value = progressCornerRadius;
     }
 }

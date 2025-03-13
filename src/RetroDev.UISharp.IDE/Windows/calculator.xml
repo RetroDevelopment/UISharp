@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <window id="calculatorWindow" width="800" height="600">
-    <verticallayout width="230" height="300">
-        <editbox horizontalalignment="center" autowidth="stretch" text="0" />
-        <gridlayout rows="4" columns="4">
+    <verticallayout backgroundcolor="gold">
+        <editbox text="0" />
+        <gridlayout rows="4" columns="4" autowidth="wrap">
             <button text="7" />
             <button text="8" />
             <button text="9" />
@@ -18,7 +18,7 @@
             <button text="C" />
             <button text="0" />
             <button text="=" />
-            <label autowidth="wrap" autoheight="wrap" backgroundcolor="red" horizontalalignment="left" verticalalignment="top" text="g=" />
+            <button text="+" />
         </gridlayout>
     </verticallayout>
 </window>

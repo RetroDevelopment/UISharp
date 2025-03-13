@@ -1,14 +1,26 @@
-<theme>
-    <color key="mainBackground" value="#FFFFFF" />
-    <color key="primaryBackground" value="#CCCCCC" />
-    <color key="primaryColor" value="#DDDDDD" />
-    <color key="primaryColorDisabled" value="#EAEAEA" />
-    <color key="primaryColorContrast" value="#090909" />
-    <color key="secondaryColor" value="#BBDEFB" />
-    <color key="secondaryColorDisabled" value="#90CAF9" />
-    <color key="textColor" value="#333333" />
-    <color key="textColorDisabled" value="#666666" />
-    <color key="borderColor" value="#FF5722" />
-    <color key="overlayBackgroundColor" value="#9999FF" />
-    <color key="overlayForegroundColor" value="#101010" />
+<?xml version="1.0" encoding="utf-8"?>
+
+<theme name="light" include="uisharp-base">
+    <!-- Background Colors -->
+    <mainBackground color="#FAFAFA" />
+    <primaryBackground color="#FFFFFF" />
+    <surfaceBackground color="#EEEEEE" />
+
+    <!-- Actionable Colors -->
+    <actionableBackground color="#82B1FF" />
+    <actionableHover color="#448AFF" />
+    <actionablePressed color="#2979FF" />
+    <actionableDisabled color="#BBBBBB" />
+
+    <!-- Selection Colors -->
+    <selectionBackground color="#90CAF9" />
+    <lightSelectionBackground color="#D6D6D6" />
+
+    <!-- Borders -->
+    <border color="#BDBDBD" />
+    <borderFocus color="#388E3C" />
+
+    <!-- Text Colors -->
+    <text color="#212121" />
+    <textDisabled color="#757575" />
 </theme>

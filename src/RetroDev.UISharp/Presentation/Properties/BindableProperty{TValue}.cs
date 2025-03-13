@@ -11,7 +11,7 @@ namespace RetroDev.UISharp.Presentation.Properties;
 /// <param name="allowedBinding">
 /// The allowed <see cref="BindingType"/> (<see cref="BindingType.TwoWays"/> by default).
 /// </param>
-/// <param name="application">The application owning this property.</param>
+/// <param name="application">The application owing <see langword="this" /> <see cref="BindableProperty{TValue}"/>.</param>
 /// <remarks>
 /// If <paramref name="allowedBinding"/> is <see cref="BindingType.TwoWays"/> it means that bidirectional binding is allowed, including (<see cref="BindingType.SourceToDestination"/> and <see cref="BindingType.DestinationToSource"/>).
 /// </remarks>
@@ -26,7 +26,6 @@ namespace RetroDev.UISharp.Presentation.Properties;
 [DebuggerDisplay("{Value}")]
 public class BindableProperty<TValue>(TValue value, Application? application = null, BindingType allowedBinding = BindingType.TwoWays)
 {
-    private readonly Application? _application = application;
     private TValue _value = value;
     private IBinder? _binder;
 
@@ -37,12 +36,19 @@ public class BindableProperty<TValue>(TValue value, Application? application = n
     public event TypeSafeEventHandler<BindableProperty<TValue>, ValueChangeEventArgs<TValue>>? ValueChange;
 
     /// <summary>
+    /// The application owing <see langword="this" /> <see cref="BindableProperty{TValue}"/>.
+    /// </summary>
+    public Application Application { get; } = application;
+
+    /// <summary>
     /// The property value.
     /// </summary>
     public virtual TValue Value
     {
         set
         {
+            Application?.Dispatcher.ThrowIfNotOnUIThread();
+
             if (!EqualityComparer<TValue>.Default.Equals(_value, value))
             {
                 var previousValue = _value;
@@ -52,7 +58,7 @@ public class BindableProperty<TValue>(TValue value, Application? application = n
         }
         get
         {
-            _application?.Dispatcher?.ThrowIfNotOnUIThread();
+            Application?.Dispatcher?.ThrowIfNotOnUIThread();
             return _value;
         }
     }
@@ -89,6 +95,7 @@ public class BindableProperty<TValue>(TValue value, Application? application = n
     /// </param>
     public void Bind(BindableProperty<TValue> destinationProperty, BindingType bindingType)
     {
+        Application?.Dispatcher.ThrowIfNotOnUIThread();
         _binder?.Unbind();
         _binder = new PropertyBinder<TValue, TValue>(this, destinationProperty, bindingType, x => x, x => x);
     }
@@ -105,6 +112,7 @@ public class BindableProperty<TValue>(TValue value, Application? application = n
     /// <param name="converter">A converter to convert source and destination property so that they match.</param>
     public void Bind<TDestinationValueType>(BindableProperty<TDestinationValueType> destinationProperty, BindingType bindingType, IBindingValueConverter<TValue, TDestinationValueType> converter)
     {
+        Application?.Dispatcher.ThrowIfNotOnUIThread();
         _binder?.Unbind();
         _binder = new PropertyBinder<TValue, TDestinationValueType>(this, destinationProperty, bindingType, converter);
     }
@@ -125,6 +133,7 @@ public class BindableProperty<TValue>(TValue value, Application? application = n
                                             Func<TValue, TDestinationValueType> sourceToDestinationConverter,
                                             Func<TDestinationValueType, TValue> destinationToSourceConverter)
     {
+        Application?.Dispatcher.ThrowIfNotOnUIThread();
         _binder?.Unbind();
         _binder = new PropertyBinder<TValue, TDestinationValueType>(this, destinationProperty, bindingType, sourceToDestinationConverter, destinationToSourceConverter);
     }
@@ -185,7 +194,7 @@ public class BindableProperty<TValue>(TValue value, Application? application = n
     /// The <see cref="BindingType"/> (<see langword="this"/> property is the source property and).
     /// the given <paramref name="destinationProperty" /> is the destination property.
     /// </param>
-    public void BindSourceTwoWays(BindableProperty<TValue> destinationProperty)
+    public void BindTwoWays(BindableProperty<TValue> destinationProperty)
     {
         Bind(destinationProperty, BindingType.TwoWays);
     }
@@ -206,12 +215,12 @@ public class BindableProperty<TValue>(TValue value, Application? application = n
         Bind(destinationProperty, BindingType.TwoWays, sourceToDestinationConverter, destinationToSourceConverter);
     }
 
-
     /// <summary>
     /// Removes a binding if any.
     /// </summary>
     public void RemoveBinding()
     {
+        Application?.Dispatcher.ThrowIfNotOnUIThread();
         _binder?.Unbind();
     }
 }

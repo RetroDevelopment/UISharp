@@ -1,0 +1,161 @@
+﻿using RetroDev.UISharp.Components.Base;
+using RetroDev.UISharp.Components.Core.AutoArea;
+using RetroDev.UISharp.Components.Shapes;
+using RetroDev.UISharp.Core.Coordinates;
+using RetroDev.UISharp.Core.Graphics;
+using RetroDev.UISharp.Core.Windowing.Events;
+using RetroDev.UISharp.Presentation.Properties;
+using RetroDev.UISharp.Presentation.Themes;
+
+namespace RetroDev.UISharp.Components.Simple;
+
+/// <summary>
+/// A toggle button switch to mark with a tick if something is checked.
+/// </summary>
+public class Switch : UIWidget
+{
+    private readonly Rectangle _backgroundRectangle;
+    private readonly Circle _selectionCircle;
+
+    /// <summary>
+    /// Whether the switch is checked.
+    /// </summary>
+    public UIProperty<Switch, bool> Checked { get; }
+
+    /// <summary>
+    /// The color of the check box circle.
+    /// </summary>
+    public UIProperty<Switch, Color> CircleColor { get; }
+
+    /// <summary>
+    /// The background color of the switch when it <see cref="Switch"/> is <see langword="false" />.
+    /// </summary>
+    public UIProperty<Switch, Color> UncheckedBackgroundColor { get; }
+
+    /// <summary>
+    /// The background color when the switch is disabled.
+    /// </summary>
+    public UIProperty<Switch, Color> DisabledBackgroundColor { get; }
+
+    /// <summary>
+    /// The color indicating that the switch is focused.
+    /// </summary>
+    public UIProperty<Switch, Color> FocusColor { get; }
+
+    /// <summary>
+    /// The switch border color.
+    /// </summary>
+    public UIProperty<Switch, Color> BorderColor { get; }
+
+    /// <summary>
+    /// Creates a new switch toggle button.
+    /// </summary>
+    /// <param name="application">The application that contain <see langword="this" /> <see cref="Switch"/>.</param>
+    /// <param name="checked">Whether the initial state is checked.</param>
+    public Switch(Application application, bool @checked = false) : base(application, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
+    {
+        Checked = new UIProperty<Switch, bool>(this, @checked);
+        CircleColor = CreateNewColorPropertyFor<Switch>(UISharpColorNames.SwitchCircleColor);
+        UncheckedBackgroundColor = CreateNewColorPropertyFor<Switch>(UISharpColorNames.SwitchOffBackground);
+        DisabledBackgroundColor = CreateNewColorPropertyFor<Switch>(UISharpColorNames.SwitchDisabled);
+        FocusColor = CreateNewColorPropertyFor<Switch>(UISharpColorNames.SwitchFocusBorder);
+        BorderColor = CreateNewColorPropertyFor<Switch>(UISharpColorNames.SwitchBorder);
+
+        BackgroundColor.BindTheme(UISharpColorNames.SwitchOnBackground);
+
+        Padding.SetAll(5.0f); // TODO: use styles
+
+        _backgroundRectangle = new Rectangle(application);
+        _backgroundRectangle.BorderThickness.Value = 3.0f; // TODO: use styles
+        Canvas.Add(_backgroundRectangle);
+
+        _selectionCircle = new Circle(application);
+        _selectionCircle.BackgroundColor.BindDestinationToSource(CircleColor);
+        Canvas.Add(_selectionCircle);
+
+        MousePress += Switch_MousePress;
+        RenderFrame += Switch_RenderFrame;
+    }
+
+    /// <inheritdoc/>
+    protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize)
+    {
+        var size = Application.DefaultFont.Value.Size;
+        return new Size(size * 3, size);
+    }
+
+    private void Switch_MousePress(UIComponent sender, MouseEventArgs e)
+    {
+        if (e.Button != MouseButton.Left) return;
+        Checked.Value = !Checked.Value;
+        Focus.Value = true;
+    }
+
+    private void Switch_RenderFrame(UIComponent sender, RenderingEventArgs e)
+    {
+        var cornerRadius = _backgroundRectangle.ComputeCornerRadius(1.0f, e.RenderingAreaSize);
+
+        _backgroundRectangle.RelativeRenderingArea.Value = e.RenderingAreaSize.Fill();
+        _backgroundRectangle.CornerRadiusX.Value = cornerRadius;
+        _backgroundRectangle.CornerRadiusY.Value = cornerRadius;
+        UpdateBackgroundRectangleBorder();
+        UpdateBackgroundRectangleColor();
+        UpdateSelectionCirclePosition(e);
+    }
+
+    private void UpdateBackgroundRectangleColor()
+    {
+        if (!Enabled.Value)
+        {
+            _backgroundRectangle.BackgroundColor.Value = DisabledBackgroundColor.Value;
+        }
+        else if (Checked.Value)
+        {
+            _backgroundRectangle.BackgroundColor.Value = BackgroundColor.Value;
+        }
+        else
+        {
+            _backgroundRectangle.BackgroundColor.Value = UncheckedBackgroundColor.Value;
+        }
+    }
+
+    private void UpdateBackgroundRectangleBorder()
+    {
+        if (Focus.Value)
+        {
+            _backgroundRectangle.BorderColor.Value = FocusColor.Value;
+        }
+        else
+        {
+            _backgroundRectangle.BorderColor.Value = BorderColor.Value;
+        }
+    }
+
+    private void UpdateSelectionCirclePosition(RenderingEventArgs args)
+    {
+        var padding = Padding.ToMarginStruct();
+        var maxPadding = Math.Max(padding.Top.IsAuto ? PixelUnit.Min : padding.Top,
+                                  Math.Max(padding.Right.IsAuto ? PixelUnit.Min : padding.Right,
+                                  Math.Max(padding.Bottom.IsAuto ? padding.Bottom : PixelUnit.Min,
+                                           padding.Left.IsAuto ? padding.Left : PixelUnit.Min)));
+        if (padding.IsAuto) maxPadding = PixelUnit.Zero;
+
+        var height = args.RenderingAreaSize.Height - maxPadding * 2.0f;
+        var width = height;
+        var size = new Size(width, height);
+        var area = Area.Empty;
+
+        if (Checked.Value)
+        {
+            area = size.PositionCenterRightOf(args.RenderingAreaSize);
+            area = new Area(new Point(area.TopLeft.X - padding.Right, area.TopLeft.Y), area.Size);
+        }
+        else
+        {
+            area = size.PositionCenterLeftOf(args.RenderingAreaSize);
+            area = new Area(new Point(area.TopLeft.X + padding.Left, area.TopLeft.Y), area.Size);
+        }
+
+        _selectionCircle.RelativeRenderingArea.Value = area;
+    }
+}

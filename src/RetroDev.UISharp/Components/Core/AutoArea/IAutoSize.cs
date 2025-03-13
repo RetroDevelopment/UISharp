@@ -1,4 +1,4 @@
-﻿using RetroDev.UISharp.Core.Graphics.Coordinates;
+﻿using RetroDev.UISharp.Core.Coordinates;
 
 namespace RetroDev.UISharp.Components.Core.AutoArea;
 
@@ -20,6 +20,7 @@ public interface IAutoSize
     /// </summary>
     /// <param name="parentSize">The parent component size.</param>
     /// <param name="wrapSize">The component wrap size.</param>
+
     /// <returns>The component height.</returns>
     PixelUnit ComputeHeight(Size parentSize, Size wrapSize);
 }

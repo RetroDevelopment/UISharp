@@ -73,19 +73,19 @@ internal static class LoggingUtils
     /// <summary>
     /// Logs the status of shader program operations.
     /// </summary>
-    /// <param name="programOpetaion">The shader program operation.</param>
+    /// <param name="programOperation">The shader program operation.</param>
     /// <param name="programId">The id of the opengl shader.</param>
     /// <param name="logger">The logger.</param>
-    public static void LogProgramStatus(string programOpetaion, int programId, ILogger logger)
+    public static void LogProgramStatus(string programOperation, int programId, ILogger logger)
     {
         var programLogOutput = OpenGLCheck(() => GL.GetProgramInfoLog(programId), logger);
         if (string.IsNullOrEmpty(programLogOutput))
         {
-            logger.LogDebug($"Operation {programOpetaion} succeeded!");
+            logger.LogDebug($"Operation {programOperation} succeeded!");
         }
         else
         {
-            logger.LogError($"Error {programOpetaion}: {programLogOutput}");
+            logger.LogError($"Error {programOperation}: {programLogOutput}");
         }
     }
 
