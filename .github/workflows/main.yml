@@ -2,7 +2,7 @@ name: UISharp Pipeline
 
 on:
   push:
-    branches: [ "main", "pipeline-8/create" ]  # Trigger on push to these branches
+    branches: [ "main" ]  # Trigger on push to these branches
   pull_request:
     branches: [ "*" ]  # Automatically trigger for any PR
   workflow_dispatch:
