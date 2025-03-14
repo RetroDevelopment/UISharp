@@ -58,6 +58,6 @@ jobs:
     - name: Create and Push Tag
       if: github.ref == 'refs/heads/feature/9-automatic-versioning'  # Only create a tag when on the main branch
       run: |
-        VERSION=$(dotnet gitversion /output json | jq -r '.SemVer')  # Get the version from Nerdbank.GitVersioning
+        VERSION=$(dotnet gitversion /output json | grep -o '"SemVer": "[^"]*' | awk -F '"SemVer": "' '{print $2}' | tr -d '"')  # Extract version
         git tag "v$VERSION"  # Create a tag based on the version
         git push origin "v$VERSION"  # Push the tag to the remote repository
