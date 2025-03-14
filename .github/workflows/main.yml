@@ -1,12 +1,20 @@
-name: .NET Multi-Platform Build
+name: UISharp Pipeline
 
 on:
+  push:
+    branches: [ "main", "pipeline-8/create" ]  # Trigger on push to these branches
+  pull_request:
+    branches: [ "*" ]  # Automatically trigger for any PR
   workflow_dispatch:
     inputs:
-      branch:
-        description: "Branch to run the workflow on"
+      workflow_type:
+        description: "Select workflow type"
         required: true
-        default: "main"
+        default: "default"
+        type: choice
+        options:
+          - release
+          - default
 
 jobs:
   build:
@@ -41,7 +49,8 @@ jobs:
       run: dotnet publish -c Release -r ${{ matrix.rid }} --self-contained -o publish/${{ matrix.rid }}
 
     - name: Upload Artifact
+      if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/pipeline-8/create') || github.event.inputs.workflow_type == 'release'
       uses: actions/upload-artifact@v4
       with:
-        name: UISharp-IDEs-${{ matrix.rid }}
+        name: UISharp-${{ matrix.rid }}
         path: publish/${{ matrix.rid }}/*
