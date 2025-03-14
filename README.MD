@@ -43,3 +43,7 @@ pull request messages
 "Fixes #100" or "Closes #100" or "Resolves #100" so that pull request merging automatically closes issues.
 "References #100" to link issue to PR.
 DO NOT add these statements in the PR messages or commit messages because they cause confusion. Add them in the description of PRs.
+
+# Main Design choices
+- Do not support backward compatibility because it prevents flexibility
+- UISharp.IDE detects the current referenced UISharp version in the target C# project and runs upgrade scripts if necessary, upgrading the project dependency version and all the UIDefinition files.

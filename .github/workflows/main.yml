@@ -2,7 +2,7 @@ name: UISharp Pipeline
 
 on:
   push:
-    branches: [ "main" ]  # Trigger on push to these branches
+    branches: [ "main" , "feature/9-automatic-versioning"]  # Trigger on push to these branches
   pull_request:
     branches: [ "*" ]  # Automatically trigger for any PR
   workflow_dispatch:
@@ -54,3 +54,10 @@ jobs:
       with:
         name: UISharp-${{ matrix.rid }}
         path: publish/${{ matrix.rid }}/*
+
+    - name: Create and Push Tag
+      if: github.ref == 'refs/heads/feature/9-automatic-versioning'  # Only create a tag when on the main branch
+      run: |
+        VERSION=$(dotnet gitversion /output json | jq -r '.SemVer')  # Get the version from Nerdbank.GitVersioning
+        git tag "v$VERSION"  # Create a tag based on the version
+        git push origin "v$VERSION"  # Push the tag to the remote repository
