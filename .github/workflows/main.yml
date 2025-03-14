@@ -55,10 +55,22 @@ jobs:
         name: UISharp-${{ matrix.rid }}
         path: publish/${{ matrix.rid }}/*
 
-    - name: Create and Push Tag
-      if: github.ref == 'refs/heads/feature/9-automatic-versioning'  # Only create a tag when on the main branch
-      uses: git-tools/git-tag-action@v1
-      with:
-        tag_name: v${{ steps.ui_version.outputs.ui_version }}  # Tag for UISharp based on its version
-        git_user_name: 'GitHub Actions'
-        git_user_email: 'actions@github.com'
+  tag_version:
+    needs: build  # This job runs after the build job completes
+    runs-on: ubuntu-latest  # You can use any runner, the tag creation does not depend on the OS
+
+    steps:
+    - uses: actions/checkout@v4  # Checkout the repo to make sure we can tag it
+
+    - name: Get version from UISharp
+      id: ui_version
+      run: |
+        VERSION=$(dotnet gitversion /output json --working-directory ./UISharp | jq -r '.SemVer')  # Get version from the UISharp project
+        echo "::set-output name=ui_version::$VERSION"
+
+    - name: Create and Push Git Tag for UISharp
+      if: github.ref == 'refs/heads/main'  # Only create and push tag for 'main' branch
+      run: |
+        VERSION=${{ steps.ui_version.outputs.ui_version }}  # Use the version from UISharp
+        git tag "v$VERSION"  # Create a tag based on the version
+        git push origin "v$VERSION"  # Push the tag to the remote repository
