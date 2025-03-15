@@ -65,7 +65,8 @@ jobs:
     - name: Get version from UISharp
       id: ui_version
       run: |
-        VERSION=$(dotnet gitversion /output json --working-directory ./UISharp | jq -r '.SemVer')  # Get version from the UISharp project
+        dotnet tool install --global GitVersion.Tool
+        VERSION=$(dotnet gitversion /output json | jq -r '.SemVer')  # Get version from the UISharp project
         echo "::set-output name=ui_version::$VERSION"
 
     - name: Create and Push Git Tag for UISharp
