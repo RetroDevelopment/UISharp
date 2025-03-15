@@ -48,20 +48,6 @@ jobs:
     - name: Publish
       run: dotnet publish -c Release -r ${{ matrix.rid }} --self-contained -o publish/${{ matrix.rid }}
 
-    - name: Upload Artifact
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event.inputs.workflow_type == 'release'
-      uses: actions/upload-artifact@v4
-      with:
-        name: UISharp-${{ matrix.rid }}
-        path: publish/${{ matrix.rid }}/*
-
-  tag_version:
-    needs: build  # This job runs after the build job completes
-    runs-on: ubuntu-latest  # You can use any runner, the tag creation does not depend on the OS
-
-    steps:
-    - uses: actions/checkout@v4  # Checkout the repo to make sure we can tag it
-
     - name: Get version from UISharp
       id: ui_version
       run: |
@@ -75,3 +61,10 @@ jobs:
         VERSION=${{ steps.ui_version.outputs.ui_version }}  # Use the version from UISharp
         git tag "v$VERSION"  # Create a tag based on the version
         git push origin "v$VERSION"  # Push the tag to the remote repository
+
+    - name: Upload Artifact
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event.inputs.workflow_type == 'release'
+      uses: actions/upload-artifact@v4
+      with:
+        name: UISharp-${{ matrix.rid }}
+        path: publish/${{ matrix.rid }}/*
