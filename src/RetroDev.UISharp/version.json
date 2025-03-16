@@ -1,18 +1,17 @@
 {
-  "version": "0.0",
-  "assemblyVersion": "0.0.0",
+  "version": "0.1",
+  "assemblyVersion": "0.1",
   "publicReleaseRefSpec": [ "refs/heads/main" ],
-  "nuGetPackageVersion": "0.0.$(BuildNumber)",
+  "nuGetPackageVersion": "$(Version)",
   "informationalVersion": "$(Version)-$(CommitId)",
 
   "branches": {
     "main": {
-      "version": "0.0", // Make sure this is updated before releasing
+      "version": "0.1",
       "increment": "Patch",
       "informationalVersion": "$(Version)"
     },
     "*": {
-      "version": "0.0",
       "increment": "Patch",
       "informationalVersion": "$(Version)-$(CommitId)"
     }
