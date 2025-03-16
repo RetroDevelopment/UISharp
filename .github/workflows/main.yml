@@ -43,7 +43,7 @@ jobs:
         echo "ui_version=$VERSION" >> $GITHUB_OUTPUT
 
     - name: Create and Push Git Tag for UISharp
-      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/9-automatic-versioning'
+      if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/9-automatic-versioning') || github.event.inputs.workflow_type == 'release'
       run: |
         VERSION=${{ steps.get_version.outputs.ui_version }}
         git tag "v$VERSION"
@@ -84,7 +84,7 @@ jobs:
       run: dotnet publish -c Release -r ${{ matrix.rid }} --self-contained -o publish/${{ matrix.rid }}
 
     - name: Upload Artifact
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event.inputs.workflow_type == 'release'
+      if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/9-automatic-versioning') || github.event.inputs.workflow_type == 'release'
       uses: actions/upload-artifact@v4
       with:
         name: UISharp-${{ matrix.rid }}
