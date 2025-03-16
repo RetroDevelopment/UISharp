@@ -2,9 +2,9 @@ name: UISharp Pipeline
 
 on:
   push:
-    branches: [ "main", "feature/9-automatic-versioning" ]  # Trigger on push to these branches
+    branches: [ "main" , "feature/9-automatic-versioning"]
   pull_request:
-    branches: [ "*" ]  # Automatically trigger for any PR
+    branches: [ "*" ]
   workflow_dispatch:
     inputs:
       workflow_type:
@@ -17,11 +17,13 @@ on:
           - default
 
 jobs:
-  get-version:
+  versioning:
     runs-on: ubuntu-latest
+    outputs:
+      ui_version: ${{ steps.get_version.outputs.ui_version }}
+    
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0  # Ensure full history for GitVersion
 
@@ -30,31 +32,18 @@ jobs:
       with:
         dotnet-version: 8.0.x
 
-    - name: Restore dependencies
-      run: dotnet restore
-
-    - name: Build
-      run: dotnet build --no-restore --configuration Release
-
     - name: Install GitVersion
       run: dotnet tool install --global GitVersion.Tool
 
     - name: Get version from UISharp
-      id: ui_version
+      id: get_version
       run: |
-        VERSION=$(dotnet gitversion /output json | jq -r '.SemVer')
-        echo "UISharp version: $VERSION"
+        VERSION=$(dotnet gitversion /output json | jq -r '.SemVer')  # Extract version
         echo "ui_version=$VERSION" >> $GITHUB_ENV
-
-    - name: Upload Version File
-      uses: actions/upload-artifact@v4
-      with:
-        name: version
-        path: version.txt
-      run: echo "$UI_VERSION" > version.txt
+        echo "ui_version=$VERSION" >> $GITHUB_OUTPUT
 
   build:
-    needs: get-version  # Ensure we get the version first
+    needs: versioning  # Ensure versioning runs first
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
@@ -88,11 +77,11 @@ jobs:
       run: dotnet publish -c Release -r ${{ matrix.rid }} --self-contained -o publish/${{ matrix.rid }}
 
     - name: Create and Push Git Tag for UISharp
-      if: github.ref == 'refs/heads/main'  # Only create and push tag for 'main' branch
+      if: github.ref == 'refs/heads/main'
       run: |
-        VERSION=${{ env.ui_version }}  # Use the version from the previous step
-        git tag "v$VERSION"  # Create a tag based on the version
-        git push origin "v$VERSION"  # Push the tag to the remote repository
+        VERSION=${{ needs.versioning.outputs.ui_version }}
+        git tag "v$VERSION"
+        git push origin "v$VERSION"
 
     - name: Upload Artifact
       if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event.inputs.workflow_type == 'release'
