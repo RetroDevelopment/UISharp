@@ -42,8 +42,15 @@ jobs:
         echo "ui_version=$VERSION" >> $GITHUB_ENV
         echo "ui_version=$VERSION" >> $GITHUB_OUTPUT
 
+    - name: Create and Push Git Tag for UISharp
+      if: github.ref == 'refs/heads/main'
+      run: |
+        VERSION=${{ steps.get_version.outputs.ui_version }}
+        git tag "v$VERSION"
+        git push origin "v$VERSION"
+
   build:
-    needs: versioning  # Ensure versioning runs first
+    needs: versioning  # Ensures versioning completes first
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
@@ -75,13 +82,6 @@ jobs:
 
     - name: Publish
       run: dotnet publish -c Release -r ${{ matrix.rid }} --self-contained -o publish/${{ matrix.rid }}
-
-    - name: Create and Push Git Tag for UISharp
-      if: github.ref == 'refs/heads/main'
-      run: |
-        VERSION=${{ needs.versioning.outputs.ui_version }}
-        git tag "v$VERSION"
-        git push origin "v$VERSION"
 
     - name: Upload Artifact
       if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event.inputs.workflow_type == 'release'
