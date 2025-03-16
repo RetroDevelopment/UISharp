@@ -38,7 +38,6 @@ jobs:
     - name: Create and Push Git Tag for UISharp
       if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/9-automatic-versioning') || github.event.inputs.workflow_type == 'release'
       run: |
-        VERSION=${{ steps.get_version.outputs.ui_version }}
         nbgv tag
         git push origin --tags
 
