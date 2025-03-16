@@ -12,6 +12,7 @@
       "informationalVersion": "$(Version)"
     },
     "*": {
+      "version": "0.1",
       "increment": "Patch",
       "informationalVersion": "$(Version)-$(CommitId)"
     }
