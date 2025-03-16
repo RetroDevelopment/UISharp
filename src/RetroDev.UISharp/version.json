@@ -1,22 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/dotnet/Nerdbank.GitVersioning/main/src/NerdBank.GitVersioning/version.schema.json",
   "version": "0.1",
-  "assemblyVersion": "0.1",
-  "publicReleaseRefSpec": [ "refs/heads/main" ],
-  "informationalVersion": "$(Version)-$(CommitId)",
-
-  "branches": {
-    "main": {
-      "version": "0.1",
-      "increment": "Patch",
-      "informationalVersion": "$(Version)"
-    },
-    "*": {
-      "version": "0.1",
-      "increment": "Patch",
-      "informationalVersion": "$(Version)-$(CommitId)"
-    }
-  },
-
+  "publicReleaseRefSpec": [ "refs/heads/feature/9-automatic-versioning" ],
   "tagPrefix": "v"
 }
