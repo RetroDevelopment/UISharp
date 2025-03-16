@@ -2,7 +2,7 @@ name: UISharp Pipeline
 
 on:
   push:
-    branches: [ "main" , "feature/9-automatic-versioning"]  # Trigger on push to these branches
+    branches: [ "main", "feature/9-automatic-versioning" ]  # Trigger on push to these branches
   pull_request:
     branches: [ "*" ]  # Automatically trigger for any PR
   workflow_dispatch:
@@ -17,7 +17,44 @@ on:
           - default
 
 jobs:
+  get-version:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Ensure full history for GitVersion
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+
+    - name: Install GitVersion
+      run: dotnet tool install --global GitVersion.Tool
+
+    - name: Get version from UISharp
+      id: ui_version
+      run: |
+        VERSION=$(dotnet gitversion /output json | jq -r '.SemVer')
+        echo "UISharp version: $VERSION"
+        echo "ui_version=$VERSION" >> $GITHUB_ENV
+
+    - name: Upload Version File
+      uses: actions/upload-artifact@v4
+      with:
+        name: version
+        path: version.txt
+      run: echo "$UI_VERSION" > version.txt
+
   build:
+    needs: get-version  # Ensure we get the version first
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
@@ -33,7 +70,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    
+      with:
+        fetch-depth: 0  # Ensure full history for GitVersion
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
@@ -48,18 +87,10 @@ jobs:
     - name: Publish
       run: dotnet publish -c Release -r ${{ matrix.rid }} --self-contained -o publish/${{ matrix.rid }}
 
-    - name: Get version from UISharp
-      id: ui_version
-      run: |
-        dotnet tool install --global GitVersion.Tool
-        ## VERSION=$(dotnet gitversion /output json | jq -r '.SemVer')  # Get version from the UISharp project
-        ## echo "::set-output name=ui_version::$VERSION"
-        dotnet gitversion /output json
-
     - name: Create and Push Git Tag for UISharp
       if: github.ref == 'refs/heads/main'  # Only create and push tag for 'main' branch
       run: |
-        VERSION=${{ steps.ui_version.outputs.ui_version }}  # Use the version from UISharp
+        VERSION=${{ env.ui_version }}  # Use the version from the previous step
         git tag "v$VERSION"  # Create a tag based on the version
         git push origin "v$VERSION"  # Push the tag to the remote repository
 
