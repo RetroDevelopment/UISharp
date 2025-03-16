@@ -35,19 +35,12 @@ jobs:
     - name: Install GitVersion
       run: dotnet tool install --global GitVersion.Tool
 
-    - name: Get version from UISharp
-      id: get_version
-      run: |
-        VERSION=$(dotnet gitversion /output json | jq -r '.SemVer')  # Extract version
-        echo "ui_version=$VERSION" >> $GITHUB_ENV
-        echo "ui_version=$VERSION" >> $GITHUB_OUTPUT
-
     - name: Create and Push Git Tag for UISharp
       if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/9-automatic-versioning') || github.event.inputs.workflow_type == 'release'
       run: |
         VERSION=${{ steps.get_version.outputs.ui_version }}
-        git tag "v$VERSION"
-        git push origin "v$VERSION"
+        nbgv tag
+        git push origin --tags
 
   build:
     needs: versioning  # Ensures versioning completes first
