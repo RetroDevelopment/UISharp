@@ -52,8 +52,9 @@ jobs:
       id: ui_version
       run: |
         dotnet tool install --global GitVersion.Tool
-        VERSION=$(dotnet gitversion /output json )  # Get version from the UISharp project
-        echo "::set-output name=ui_version::$VERSION"
+        ## VERSION=$(dotnet gitversion /output json | jq -r '.SemVer')  # Get version from the UISharp project
+        ## echo "::set-output name=ui_version::$VERSION"
+        dotnet gitversion /output json
 
     - name: Create and Push Git Tag for UISharp
       if: github.ref == 'refs/heads/main'  # Only create and push tag for 'main' branch
