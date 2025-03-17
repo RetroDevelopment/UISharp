@@ -23,6 +23,8 @@ The branches are as follows:
 - `bugfix/*`: critical bug fixes, usually branched to and from `main` directly.
 - Other (enhancement, pipeline, etc.): other branches usually branched from and to release branches.
 
+For now, create beta versions before release in release branches to test. Once stable, merge to main and release.
+
 *Branch name*: type/issue number-description
 *Commit name*: type #issue number: message
 
