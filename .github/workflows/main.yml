@@ -19,6 +19,7 @@ on:
 jobs:
   versioning:
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event.inputs.workflow_type == 'release'
     outputs:
       ui_version: ${{ steps.get_version.outputs.ui_version }}
     
@@ -36,7 +37,6 @@ jobs:
       run: dotnet tool install --global GitVersion.Tool
 
     - name: Create and Push Git Tag for UISharp
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event.inputs.workflow_type == 'release'
       run: |
         cd ./src/RetroDev.UISharp
         nbgv tag
