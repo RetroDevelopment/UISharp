@@ -2,7 +2,7 @@ name: UISharp Pipeline
 
 on:
   push:
-    branches: [ "main" , "feature/9-automatic-versioning" ]
+    branches: [ "main" ]
   pull_request:
     branches: [ "*" ]
   workflow_dispatch:
