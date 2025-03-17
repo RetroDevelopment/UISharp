@@ -2,9 +2,9 @@ name: UISharp Pipeline
 
 on:
   push:
-    branches: [ "main" ]  # Trigger on push to these branches
+    branches: [ "main" ]
   pull_request:
-    branches: [ "*" ]  # Automatically trigger for any PR
+    branches: [ "*" ]
   workflow_dispatch:
     inputs:
       workflow_type:
@@ -17,6 +17,31 @@ on:
           - default
 
 jobs:
+  versioning:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event.inputs.workflow_type == 'release'
+    outputs:
+      ui_version: ${{ steps.get_version.outputs.ui_version }}
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Ensure full history for GitVersion
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Install GitVersion
+      run: dotnet tool install --global GitVersion.Tool
+
+    - name: Create and Push Git Tag for UISharp
+      run: |
+        cd ./src/RetroDev.UISharp
+        nbgv tag
+        git push origin --tags
+
   build:
     strategy:
       matrix:
@@ -33,7 +58,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    
+      with:
+        fetch-depth: 0  # Ensure full history for GitVersion
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
