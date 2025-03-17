@@ -36,7 +36,7 @@ jobs:
       run: dotnet tool install --global GitVersion.Tool
 
     - name: Create and Push Git Tag for UISharp
-      if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/9-automatic-versioning') || github.event.inputs.workflow_type == 'release'
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event.inputs.workflow_type == 'release'
       run: |
         cd ./src/RetroDev.UISharp
         nbgv tag
@@ -77,7 +77,7 @@ jobs:
       run: dotnet publish -c Release -r ${{ matrix.rid }} --self-contained -o publish/${{ matrix.rid }}
 
     - name: Upload Artifact
-      if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/9-automatic-versioning') || github.event.inputs.workflow_type == 'release'
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event.inputs.workflow_type == 'release'
       uses: actions/upload-artifact@v4
       with:
         name: UISharp-${{ matrix.rid }}
