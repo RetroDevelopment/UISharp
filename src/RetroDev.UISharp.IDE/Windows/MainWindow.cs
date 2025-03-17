@@ -76,6 +76,7 @@ internal class MainWindow : Window
         InitializeButtons();
         _astTreeBox.SelectedNode.ValueChange += SelectedNode_ValueChange;
         _components.SelectedItem.ValueChange += SelectedItem_ValueChange;
+        InitializeTitle();
     }
 
     private void InitializeComponentListBox()
@@ -102,6 +103,14 @@ internal class MainWindow : Window
         _addButton.Action += AddButton_Action;
         _removeButton.Action += RemoveButton_Action;
         _darkMode.Checked.ValueChange += Checked_ValueChange;
+    }
+
+    private void InitializeTitle()
+    {
+        var assembly = Assembly.GetExecutingAssembly();
+        var informationalVersion = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+        var cleanVersion = informationalVersion!.Split('+')[0];
+        Title.Value += $" v{cleanVersion}";
     }
 
     private void LoadButton_Action(Button sender, EventArgs e)
