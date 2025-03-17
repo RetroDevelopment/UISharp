@@ -17,7 +17,7 @@ public abstract class UIShape
     /// <summary>
     /// The drawing area relative to the canvas.
     /// </summary>
-    public ShapeProperty<UIShape, Area> RelativeRenderingArea { get; }
+    public UIProperty<Area> RelativeRenderingArea { get; }
 
     /// <summary>
     /// Defines a custom clip area relative to the <see cref="Canvas.Component"/>.
@@ -25,14 +25,14 @@ public abstract class UIShape
     /// In other words, this property does not allow to render outside of the <see cref="Canvas.Component"/> region,
     /// but it allows to restrict its clip area.
     /// </summary>
-    public ShapeProperty<UIShape, Area?> ClipArea { get; }
+    public UIProperty<Area?> ClipArea { get; }
 
     // TODO: include RelativeClipArea property so that it is possible to override the absolute clipping area (useful for progress bar with rounded corners)
 
     /// <summary>
     /// The shape background color.
     /// </summary>
-    public ShapeProperty<UIShape, Color> BackgroundColor { get; }
+    public UIProperty<Color> BackgroundColor { get; }
 
     /// <summary>
     /// Whether the shape is visible.
@@ -41,7 +41,7 @@ public abstract class UIShape
     /// When <see cref="Canvas.Component"/> is not visible, <see langword="this" /> <see cref="UIShape"/> will not be visible
     /// even if <see cref="Visible"/> is <see langword="true" />.
     /// </remarks>
-    public ShapeProperty<UIShape, bool> Visible { get; }
+    public UIProperty<bool> Visible { get; }
 
     /// <summary>
     /// The engine rendering this shape.
@@ -59,7 +59,7 @@ public abstract class UIShape
     /// The rendering order. The shape with index 0 is rendered first, then the other shapes will be rendered in ascending order.
     /// This property value must be unique for each shape.
     /// </summary>
-    internal ShapeProperty<UIShape, uint> ZIndex { get; }
+    internal UIProperty<uint> ZIndex { get; }
 
     /// <summary>
     /// The canvas area owning <see langword="this" /> <see cref="UIShape"/>.
@@ -83,11 +83,11 @@ public abstract class UIShape
     /// <param name="application">The running application.</param>
     protected UIShape(Application application)
     {
-        RelativeRenderingArea = new ShapeProperty<UIShape, Area>(this, application, Area.Empty);
-        ClipArea = new ShapeProperty<UIShape, Area?>(this, application, (Area?)null);
-        BackgroundColor = new ShapeProperty<UIShape, Color>(this, application, Color.Transparent);
-        Visible = new ShapeProperty<UIShape, bool>(this, application, true);
-        ZIndex = new ShapeProperty<UIShape, uint>(this, application, 0);
+        RelativeRenderingArea = new UIProperty<Area>(this, application, Area.Empty);
+        ClipArea = new UIProperty<Area?>(this, application, (Area?)null);
+        BackgroundColor = new UIProperty<Color>(this, application, Color.Transparent);
+        Visible = new UIProperty<bool>(this, application, true);
+        ZIndex = new UIProperty<uint>(this, application, 0);
     }
 
     /// <summary>

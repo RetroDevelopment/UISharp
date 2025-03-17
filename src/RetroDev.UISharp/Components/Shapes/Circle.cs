@@ -15,17 +15,17 @@ public class Circle : UIShape
     /// <summary>
     /// The circle border color.
     /// </summary>
-    public ShapeProperty<Circle, Color> BorderColor { get; }
+    public UIProperty<Color> BorderColor { get; }
 
     /// <summary>
     /// The circle border thickness (0 if not drawing borders).
     /// </summary>
-    public ShapeProperty<Circle, PixelUnit> BorderThickness { get; }
+    public UIProperty<PixelUnit> BorderThickness { get; }
 
     /// <summary>
     /// The circle rotation in radians.
     /// </summary>
-    public ShapeProperty<Circle, float> Rotation { get; }
+    public UIProperty<float> Rotation { get; }
 
     /// <inheritdoc />
     protected override RenderingElement RenderingElement => _circle;
@@ -40,9 +40,9 @@ public class Circle : UIShape
 
         _circle = new UISharp.Core.Graphics.Shapes.Circle(application.Dispatcher);
 
-        BorderColor = new ShapeProperty<Circle, Color>(this, application, Color.Transparent);
-        BorderThickness = new ShapeProperty<Circle, PixelUnit>(this, application, PixelUnit.Zero);
-        Rotation = new ShapeProperty<Circle, float>(this, application, 0.0f);
+        BorderColor = new UIProperty<Color>(this, application, Color.Transparent);
+        BorderThickness = new UIProperty<PixelUnit>(this, application, PixelUnit.Zero);
+        Rotation = new UIProperty<float>(this, application, 0.0f);
     }
 
     /// <summary>

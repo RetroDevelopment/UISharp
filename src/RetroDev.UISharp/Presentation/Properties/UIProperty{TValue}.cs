@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics;
 using RetroDev.UISharp.Components.Base;
+using RetroDev.UISharp.Components.Shapes;
+using RetroDev.UISharp.Core.Graphics.Shapes;
 using RetroDev.UISharp.Core.Windowing.Events;
 
 namespace RetroDev.UISharp.Presentation.Properties;
@@ -104,7 +106,7 @@ public class UIProperty<TValue>
     /// <summary>
     /// Creates a new property.
     /// </summary>
-    /// <param name="parent">The component owning this property.</param>
+    /// <param name="parent">The <see cref="UIComponent"/> owning this property.</param>
     /// <param name="value">The property value.</param>
     /// <param name="allowedBinding">
     /// The allowed <see cref="BindingType"/> (<see cref="BindingType.TwoWays"/> by default).
@@ -120,7 +122,7 @@ public class UIProperty<TValue>
     /// <summary>
     /// Creates a new property.
     /// </summary>
-    /// <param name="parent">The component owning this property.</param>
+    /// <param name="parent">The <see cref="UIComponent"/> owning this property.</param>
     /// <param name="destinationProperty">The destination property to bind.</param>
     /// <param name="bindingType">
     /// The <see cref="BindingType"/> (<see langword="this"/> property is the source property and).
@@ -128,6 +130,39 @@ public class UIProperty<TValue>
     /// </param>
     /// <param name="allowedBinding">The allowed <see cref="BindingType"/> (<see cref="BindingType.TwoWays"/> by default).</param>
     public UIProperty(UIComponent parent, UIProperty<TValue> destinationProperty, BindingType bindingType = BindingType.TwoWays, BindingType allowedBinding = BindingType.TwoWays) : this(parent, destinationProperty.Value, allowedBinding)
+    {
+        Bind(destinationProperty, bindingType);
+    }
+
+    /// <summary>
+    /// Creates a new property.
+    /// </summary>
+    /// <param name="parent">The <see cref="UIShape"/>> owning this property.</param>
+    /// <param name="application">The application in which this property is running.</param>
+    /// <param name="value">The property value.</param>
+    /// <param name="allowedBinding">
+    /// The allowed <see cref="BindingType"/> (<see cref="BindingType.TwoWays"/> by default).
+    /// </param>
+    /// <remarks>
+    /// If <paramref name="allowedBinding"/> is <see cref="BindingType.TwoWays"/> it means that bidirectional binding is allowed, including (<see cref="BindingType.SourceToDestination"/> and <see cref="BindingType.DestinationToSource"/>).
+    /// </remarks>
+    public UIProperty(UIShape parent, Application application, TValue value, BindingType allowedBinding = BindingType.TwoWays) : this(application, value, allowedBinding)
+    {
+        ValueChange += (_, _) => parent.Invalidate();
+    }
+
+    /// <summary>
+    /// Creates a new property.
+    /// </summary>
+    /// <param name="parent">The <see cref="UIShape"/> owning this property.</param>
+    /// <param name="application">The application in which this property is running.</param>
+    /// <param name="destinationProperty">The destination property to bind.</param>
+    /// <param name="bindingType">
+    /// The <see cref="BindingType"/> (<see langword="this"/> property is the source property and).
+    /// the given <paramref name="destinationProperty" /> is the destination property.
+    /// </param>
+    /// <param name="allowedBinding">The allowed <see cref="BindingType"/> (<see cref="BindingType.TwoWays"/> by default).</param>
+    public UIProperty(UIShape parent, Application application, UIProperty<TValue> destinationProperty, BindingType bindingType = BindingType.TwoWays, BindingType allowedBinding = BindingType.TwoWays) : this(parent, application, destinationProperty.Value, allowedBinding)
     {
         Bind(destinationProperty, bindingType);
     }

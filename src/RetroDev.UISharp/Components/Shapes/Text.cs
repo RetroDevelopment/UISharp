@@ -18,33 +18,33 @@ public class Text : UIShape
     /// <summary>
     /// The text color.
     /// </summary>
-    public ShapeProperty<Text, Color> TextColor { get; }
+    public UIProperty<Color> TextColor { get; }
 
     /// <summary>
     /// The text to display.
     /// </summary>
-    public ShapeProperty<Text, string> DisplayText { get; }
+    public UIProperty<string> DisplayText { get; }
 
     /// <summary>
     /// The <see cref="DisplayText"/> <see cref="Font"/>.
     /// </summary>
-    public ShapeProperty<Text, Font> Font { get; }
+    public UIProperty<Font> Font { get; }
 
     /// <summary>
     /// The text horizontal alignment within the text boundaries.
     /// </summary>
-    public ShapeProperty<Text, IHorizontalAlignment> TextHorizontalAlignment { get; }
+    public UIProperty<IHorizontalAlignment> TextHorizontalAlignment { get; }
 
     /// <summary>
     /// The text vertical alignment within the text boundaries.
     /// </summary>
-    public ShapeProperty<Text, IVerticalAlignment> TextVerticalAlignment { get; }
+    public UIProperty<IVerticalAlignment> TextVerticalAlignment { get; }
 
     /// <summary>
     /// An horizontal offset to apply to text after all positioning calculation.
     /// That is useful for implementing scrollable text.
     /// </summary>
-    public ShapeProperty<Text, PixelUnit> HorizontalScroll { get; }
+    public UIProperty<PixelUnit> HorizontalScroll { get; }
 
     /// <inheritdoc />
     protected override RenderingElement RenderingElement => _text;
@@ -59,12 +59,12 @@ public class Text : UIShape
 
         _text = new(application.Dispatcher, application.DefaultFont.Value.ToGraphicsFont());
 
-        TextColor = new ShapeProperty<Text, Color>(this, application, Color.Transparent);
-        DisplayText = new ShapeProperty<Text, string>(this, application, string.Empty);
-        Font = new ShapeProperty<Text, Font>(this, application, application.DefaultFont, BindingType.DestinationToSource);
-        TextHorizontalAlignment = new ShapeProperty<Text, IHorizontalAlignment>(this, application, Alignment.Left);
-        TextVerticalAlignment = new ShapeProperty<Text, IVerticalAlignment>(this, application, Alignment.Center);
-        HorizontalScroll = new ShapeProperty<Text, PixelUnit>(this, application, PixelUnit.Zero);
+        TextColor = new UIProperty<Color>(this, application, Color.Transparent);
+        DisplayText = new UIProperty<string>(this, application, string.Empty);
+        Font = new UIProperty<Font>(this, application, application.DefaultFont, BindingType.DestinationToSource);
+        TextHorizontalAlignment = new UIProperty<IHorizontalAlignment>(this, application, Alignment.Left);
+        TextVerticalAlignment = new UIProperty<IVerticalAlignment>(this, application, Alignment.Center);
+        HorizontalScroll = new UIProperty<PixelUnit>(this, application, PixelUnit.Zero);
     }
 
     /// <summary>

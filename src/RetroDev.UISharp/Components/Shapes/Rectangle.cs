@@ -16,27 +16,27 @@ public class Rectangle : UIShape
     /// <summary>
     /// The rectangle border color.
     /// </summary>
-    public ShapeProperty<Rectangle, Color> BorderColor { get; }
+    public UIProperty<Color> BorderColor { get; }
 
     /// <summary>
     /// The rectangle border thickness (0 if not drawing borders).
     /// </summary>
-    public ShapeProperty<Rectangle, PixelUnit> BorderThickness { get; }
+    public UIProperty<PixelUnit> BorderThickness { get; }
 
     /// <summary>
     /// The rectangle corner x-radius in pixels.
     /// </summary>
-    public ShapeProperty<Rectangle, PixelUnit> CornerRadiusX { get; }
+    public UIProperty<PixelUnit> CornerRadiusX { get; }
 
     /// <summary>
     /// The rectangle corner y-radius in pixels.
     /// </summary>
-    public ShapeProperty<Rectangle, PixelUnit> CornerRadiusY { get; }
+    public UIProperty<PixelUnit> CornerRadiusY { get; }
 
     /// <summary>
     /// The rectangle rotation in radians.
     /// </summary>
-    public ShapeProperty<Rectangle, float> Rotation { get; }
+    public UIProperty<float> Rotation { get; }
 
     /// <inheritdoc />
     protected override RenderingElement RenderingElement => _recangle;
@@ -50,11 +50,11 @@ public class Rectangle : UIShape
         application.Dispatcher.ThrowIfNotOnUIThread();
         _recangle = new(application.Dispatcher);
 
-        BorderColor = new ShapeProperty<Rectangle, Color>(this, application, Color.Transparent);
-        BorderThickness = new ShapeProperty<Rectangle, PixelUnit>(this, application, PixelUnit.Zero);
-        CornerRadiusX = new ShapeProperty<Rectangle, PixelUnit>(this, application, PixelUnit.Zero);
-        CornerRadiusY = new ShapeProperty<Rectangle, PixelUnit>(this, application, PixelUnit.Zero);
-        Rotation = new ShapeProperty<Rectangle, float>(this, application, 0.0f);
+        BorderColor = new UIProperty<Color>(this, application, Color.Transparent);
+        BorderThickness = new UIProperty<PixelUnit>(this, application, PixelUnit.Zero);
+        CornerRadiusX = new UIProperty<PixelUnit>(this, application, PixelUnit.Zero);
+        CornerRadiusY = new UIProperty<PixelUnit>(this, application, PixelUnit.Zero);
+        Rotation = new UIProperty<float>(this, application, 0.0f);
     }
 
     /// <summary>
