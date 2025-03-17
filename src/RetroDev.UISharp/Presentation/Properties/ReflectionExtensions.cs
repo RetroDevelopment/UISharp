@@ -10,7 +10,7 @@ public static class ReflectionExtensions
 {
     /// <summary>
     /// Gets the list of all bindable properties properties defined in <paramref name="this"/> type,
-    /// including <see cref="BindableProperty{TValue}"/> and <see cref="CompositeBindableProperty{TValue}"/>.
+    /// including <see cref="UIProperty{TValue}"/> and <see cref="CompositeBindableProperty{TValue}"/>.
     /// </summary>
     /// <param name="this">The type where to look the properties.</param>
     /// <returns>The list of <see cref="PropertyInfo"/> whose property type is bindable.</returns>
@@ -20,22 +20,22 @@ public static class ReflectionExtensions
              .ToList();
 
     /// <summary>
-    /// Gets the list of <see cref="BindableProperty{TValue}"/> properties defined in <paramref name="this"/> type.
+    /// Gets the list of <see cref="UIProperty{TValue}"/> properties defined in <paramref name="this"/> type.
     /// </summary>
     /// <param name="this">The type where to look the properties.</param>
-    /// <returns>The list of <see cref="PropertyInfo"/> whose property type is assignable to <see cref="BindableProperty{TValue}"/>.</returns>
+    /// <returns>The list of <see cref="PropertyInfo"/> whose property type is assignable to <see cref="UIProperty{TValue}"/>.</returns>
     public static List<PropertyInfo> GetBindableProperties(this Type @this) =>
         @this.GetProperties(BindingFlags.Public | BindingFlags.Instance)
              .Where(IsBindableProperty)
              .ToList();
 
     /// <summary>
-    /// Check whether <paramref name="this"/> property is a <see cref="BindableProperty{TValue}"/>.
+    /// Check whether <paramref name="this"/> property is a <see cref="UIProperty{TValue}"/>.
     /// </summary>
     /// <param name="this">The property to check.</param>
     /// <returns>
     /// <see langword="true" /> if the return type of <paramref name="this"/> property is a subtype of
-    /// <see cref="BindableProperty{TValue}"/>, otherwise <see langword="false" />.
+    /// <see cref="UIProperty{TValue}"/>, otherwise <see langword="false" />.
     /// </returns>
     public static bool IsBindableProperty(this PropertyInfo @this) =>
         @this.PropertyType.IsBindablePropertyType();
@@ -52,15 +52,15 @@ public static class ReflectionExtensions
         @this.PropertyType.IsCompositeBindablePropertyType();
 
     /// <summary>
-    /// Check whether <paramref name="this"/> type is a <see cref="BindableProperty{TValue}"/>.
+    /// Check whether <paramref name="this"/> type is a <see cref="UIProperty{TValue}"/>.
     /// </summary>
     /// <param name="this">The type to check.</param>
     /// <returns>
     /// <see langword="true" /> if <paramref name="this"/> type is a subtype of
-    /// <see cref="BindableProperty{TValue}"/>, otherwise <see langword="false" />.
+    /// <see cref="UIProperty{TValue}"/>, otherwise <see langword="false" />.
     /// </returns>
     public static bool IsBindablePropertyType(this Type @this) =>
-        @this.IsGenericType(typeof(BindableProperty<>));
+        @this.IsGenericType(typeof(UIProperty<>));
 
     /// <summary>
     /// Check whether <paramref name="this"/> type is a <see cref="CompositeBindableProperty{TValue}"/>.
@@ -92,18 +92,18 @@ public static class ReflectionExtensions
 
 
     /// <summary>
-    /// Gets the <see cref="BindableProperty{TValue}"/> value of <paramref name="this"/> <see cref="PropertyInfo"/>
+    /// Gets the <see cref="UIProperty{TValue}"/> value of <paramref name="this"/> <see cref="PropertyInfo"/>
     /// in the given <paramref name="instance"/>.
     /// </summary>
     /// <typeparam name="TValue">The property value type.</typeparam>
     /// <param name="this">The <see cref="PropertyInfo"/> that contains the property definition.</param>
     /// <returns><c>instance.P</c> if <c>P</c> is defined by <paramref name="this"/> <see cref="PropertyInfo"/>.</returns>
-    /// <exception cref="UIPropertyValidationException">If <paramref name="this"/> <see cref="PropertyInfo"/> is not defining a property of type <see cref="BindableProperty{TValue}"/>.</exception>
-    public static BindableProperty<TValue> GetBindableProperty<TValue>(this PropertyInfo @this, object instance)
+    /// <exception cref="UIPropertyValidationException">If <paramref name="this"/> <see cref="PropertyInfo"/> is not defining a property of type <see cref="UIProperty{TValue}"/>.</exception>
+    public static UIProperty<TValue> GetBindableProperty<TValue>(this PropertyInfo @this, object instance)
     {
         var property = @this.GetValue(instance, null);
         if (property == null) throw new UIPropertyValidationException("Bindable property cannot be null");
-        if (property is BindableProperty<TValue> bindableProperty)
+        if (property is UIProperty<TValue> bindableProperty)
         {
             return bindableProperty;
         }
@@ -112,20 +112,20 @@ public static class ReflectionExtensions
     }
 
     /// <summary>
-    /// Gets the type of <paramref name="this"/> property <see cref="BindableProperty{TValue}.Value"/>.
+    /// Gets the type of <paramref name="this"/> property <see cref="UIProperty{TValue}.Value"/>.
     /// </summary>
     /// <param name="this">The property definition for which to lookup the binding type.s</param>
     /// <returns>
-    /// The <see cref="BindableProperty{TValue}.Value"/> type if <paramref name="this"/> <see cref="PropertyInfo"/>
-    /// holds a <see cref="BindableProperty{TValue}"/>.
+    /// The <see cref="UIProperty{TValue}.Value"/> type if <paramref name="this"/> <see cref="PropertyInfo"/>
+    /// holds a <see cref="UIProperty{TValue}"/>.
     /// </returns>
     /// <exception cref="ArgumentException">
-    /// If <paramref name="this"/> <see cref="PropertyInfo"/> does not belong to a <see cref="BindableProperty{TValue}"/>.
+    /// If <paramref name="this"/> <see cref="PropertyInfo"/> does not belong to a <see cref="UIProperty{TValue}"/>.
     /// </exception>
     public static Type GetBindingValueType(this PropertyInfo @this)
     {
         if (!@this.IsBindableProperty()) throw new ArgumentException($"Cannt get a binding value from {@this}: this property does not describe a BindableProperty");
-        var valueProperty = @this.PropertyType.GetProperty(nameof(BindableProperty<object>.Value));
+        var valueProperty = @this.PropertyType.GetProperty(nameof(UIProperty<object>.Value));
         if (valueProperty == null) throw new ArgumentException($"Cannot find value property");
         return valueProperty.PropertyType;
     }

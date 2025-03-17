@@ -18,8 +18,8 @@ public class Button : UIWidget
     private readonly Rectangle _backgroundRectangle;
     private readonly Label _buttonTextLabel;
 
-    private readonly UIProperty<Button, bool> _isMouseHover;
-    private readonly UIProperty<Button, bool> _isAction;
+    private readonly UIProperty<bool> _isMouseHover;
+    private readonly UIProperty<bool> _isAction;
 
     /// <summary>
     /// Raised when clicking on the button.
@@ -29,57 +29,57 @@ public class Button : UIWidget
     /// <summary>
     /// The button text.
     /// </summary>
-    public UIProperty<Button, string> Text { get; }
+    public UIProperty<string> Text { get; }
 
     /// <summary>
     /// The button text font.
     /// </summary>
-    public UIProperty<Button, Font> Font { get; }
+    public UIProperty<Font> Font { get; }
 
     /// <summary>
     /// The text color.
     /// </summary>
-    public UIProperty<Button, Color> TextColor { get; }
+    public UIProperty<Color> TextColor { get; }
 
     /// <summary>
     /// The text color when the button is disabled.
     /// </summary>
-    public UIProperty<Button, Color> DisabledTextColor { get; }
+    public UIProperty<Color> DisabledTextColor { get; }
 
     /// <summary>
     /// The background color when the button is disabled.
     /// </summary>
-    public UIProperty<Button, Color> DisabledBackgroundColor { get; }
+    public UIProperty<Color> DisabledBackgroundColor { get; }
 
     /// <summary>
     /// The color indicating that the button is focused.
     /// </summary>
-    public UIProperty<Button, Color> FocusColor { get; }
+    public UIProperty<Color> FocusColor { get; }
 
     /// <summary>
     /// The button border color.
     /// </summary>
-    public UIProperty<Button, Color> BorderColor { get; }
+    public UIProperty<Color> BorderColor { get; }
 
     /// <summary>
     /// The color when the mouse is within the button.
     /// </summary>
-    public UIProperty<Button, Color> HoverColor { get; }
+    public UIProperty<Color> HoverColor { get; }
 
     /// <summary>
     /// The color when clicking on the button.
     /// </summary>
-    public UIProperty<Button, Color> ActionColor { get; }
+    public UIProperty<Color> ActionColor { get; }
 
     /// <summary>
     /// The button text horizontal alignment.
     /// </summary>
-    public UIProperty<Button, IHorizontalAlignment> TextHorizontalAlignment { get; }
+    public UIProperty<IHorizontalAlignment> TextHorizontalAlignment { get; }
 
     /// <summary>
     /// The button text vertical alignment.
     /// </summary>
-    public UIProperty<Button, IVerticalAlignment> TextVerticalAlignment { get; }
+    public UIProperty<IVerticalAlignment> TextVerticalAlignment { get; }
 
     /// <summary>
     /// Creates a new button.
@@ -88,11 +88,11 @@ public class Button : UIWidget
     /// <param name="text">The button text.</param>
     public Button(Application application, string text = "") : base(application)
     {
-        _isMouseHover = new UIProperty<Button, bool>(this, false);
-        _isAction = new UIProperty<Button, bool>(this, false);
+        _isMouseHover = new UIProperty<bool>(this, false);
+        _isAction = new UIProperty<bool>(this, false);
 
-        Text = new UIProperty<Button, string>(this, text ?? string.Empty);
-        Font = new UIProperty<Button, Font>(this, Application.DefaultFont, BindingType.DestinationToSource);
+        Text = new UIProperty<string>(this, text ?? string.Empty);
+        Font = new UIProperty<Font>(this, Application.DefaultFont, BindingType.DestinationToSource);
         TextColor = CreateNewColorPropertyFor<Button>(UISharpColorNames.ButtonText);
         DisabledTextColor = CreateNewColorPropertyFor<Button>(UISharpColorNames.ButtonDisabledText);
         FocusColor = CreateNewColorPropertyFor<Button>(UISharpColorNames.ButtonFocusBorder);
@@ -100,8 +100,8 @@ public class Button : UIWidget
         BorderColor = CreateNewColorPropertyFor<Button>(UISharpColorNames.ButtonBorder);
         HoverColor = CreateNewColorPropertyFor<Button>(UISharpColorNames.ButtonHover);
         ActionColor = CreateNewColorPropertyFor<Button>(UISharpColorNames.ButtonAction);
-        TextHorizontalAlignment = new UIProperty<Button, IHorizontalAlignment>(this, Alignment.Center);
-        TextVerticalAlignment = new UIProperty<Button, IVerticalAlignment>(this, Alignment.Center);
+        TextHorizontalAlignment = new UIProperty<IHorizontalAlignment>(this, Alignment.Center);
+        TextVerticalAlignment = new UIProperty<IVerticalAlignment>(this, Alignment.Center);
 
         BackgroundColor.BindTheme(UISharpColorNames.ButtonBackground);
 

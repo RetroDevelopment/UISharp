@@ -35,7 +35,7 @@ public class EAMLBinder(TypeMapper typeMapper) : IEAMLBinder
     /// Sets the bindable property defined by the given <paramref name="propertyInfo"/> to the
     /// value defined by the given <paramref name="attribute"/>.
     /// </summary>
-    /// <param name="propertyInfo">The property set. Its type must be either <see cref="BindableProperty{TValue}"/> or <see cref="CompositeBindableProperty{TValue}"/>.</param>
+    /// <param name="propertyInfo">The property set. Its type must be either <see cref="UIProperty{TValue}"/> or <see cref="CompositeBindableProperty{TValue}"/>.</param>
     /// <param name="attribute">The attribute definition.</param>
     /// <param name="componentInstance">The <see cref="UIComponent"/> owning the property defined by <paramref name="propertyInfo"/>.</param>
     /// <exception cref="UIDefinitionValidationCompoundException">If something failes during the property assignment.</exception>
@@ -57,10 +57,10 @@ public class EAMLBinder(TypeMapper typeMapper) : IEAMLBinder
     }
 
     /// <summary>
-    /// Sets the <see cref="BindableProperty{TValue}"/> property defined by the given <paramref name="propertyInfo"/> to the
+    /// Sets the <see cref="UIProperty{TValue}"/> property defined by the given <paramref name="propertyInfo"/> to the
     /// value defined by the given <paramref name="attribute"/>.
     /// </summary>
-    /// <param name="propertyInfo">The property set. Its type must be either <see cref="BindableProperty{TValue}"/>.</param>
+    /// <param name="propertyInfo">The property set. Its type must be either <see cref="UIProperty{TValue}"/>.</param>
     /// <param name="attribute">The attribute definition.</param>
     /// <param name="componentInstance">The instance owning the property defined by <paramref name="propertyInfo"/>.</param>
     /// <exception cref="UIDefinitionValidationCompoundException">If something failes during the property assignment.</exception>
@@ -305,7 +305,7 @@ public class EAMLBinder(TypeMapper typeMapper) : IEAMLBinder
 
     private void RemoveBindingsBeforeAssignment(Type propertyValueType, object propertyValue, Ast.Attribute attribute)
     {
-        var removeBindersName = nameof(BindableProperty<object>.RemoveBinding);
+        var removeBindersName = nameof(UIProperty<object>.RemoveBinding);
         var removeBindingsMethod = propertyValueType.GetMethod(removeBindersName) ?? throw new UIDefinitionValidationException($"Missing method {removeBindersName} in property type {propertyValueType.FullName}", attribute);
         removeBindingsMethod.Invoke(propertyValue, []);
     }

@@ -91,7 +91,7 @@ public class Window : UIRoot
     /// <summary>
     /// Raised when the window manager requests that the window is closed.
     /// Note that this does not necessarily mean that the window will be closed (see <see cref="CloseBehavior"/>).
-    /// If you want to be notified when a window is actually closed (meaning hidden) use the <see cref="UIComponent.Visibility"/> <see cref="BindableProperty{TValue}.ValueChange"/>
+    /// If you want to be notified when a window is actually closed (meaning hidden) use the <see cref="UIComponent.Visibility"/> <see cref="UIProperty{TValue}.ValueChange"/>
     /// event.
     /// </summary>
     public event TypeSafeEventHandler<Window, EventArgs>? WindowCloseRequest;
@@ -102,29 +102,29 @@ public class Window : UIRoot
     /// <summary>
     /// The window title.
     /// </summary>
-    public UIProperty<Window, string> Title { get; }
+    public UIProperty<string> Title { get; }
 
     /// <summary>
     /// Whether the window is re-sizable.
     /// </summary>
-    public UIProperty<Window, bool> Resizable { get; }
+    public UIProperty<bool> Resizable { get; }
 
     /// <summary>
     /// The default action to execute when closing the window.
     /// By default, the first window created has the <see cref="WindowCloseBehavior.QuitApplication"/> and the subsequent
     /// windows have the <see cref="WindowCloseBehavior.HideWindow"/>.
     /// </summary>
-    public UIProperty<Window, WindowCloseBehavior> CloseBehavior { get; }
+    public UIProperty<WindowCloseBehavior> CloseBehavior { get; }
 
     /// <summary>
     /// The special status altering the window rendering area.
     /// </summary>
-    public UIProperty<Window, WindowSizeStatus> SizeStatus { get; }
+    public UIProperty<WindowSizeStatus> SizeStatus { get; }
 
     /// <summary>
     /// Whether the window is displayed in full screen.
     /// </summary>
-    public UIProperty<Window, bool> FullScreen { get; }
+    public UIProperty<bool> FullScreen { get; }
 
     /// <summary>
     /// A <see cref="Window"/> that acts as modal for <see langword="this" /> window.
@@ -163,11 +163,11 @@ public class Window : UIRoot
         application.AddWindow(this);
         _windowId = Application.WindowManager.CreateWindow(RenderingEngine.RenderingContext);
 
-        Title = new UIProperty<Window, string>(this, string.Empty);
-        Resizable = new UIProperty<Window, bool>(this, true);
-        CloseBehavior = new UIProperty<Window, WindowCloseBehavior>(this, application.Windows.Count() > 1 ? WindowCloseBehavior.HideWindow : WindowCloseBehavior.QuitApplication);
-        SizeStatus = new UIProperty<Window, WindowSizeStatus>(this, WindowSizeStatus.None);
-        FullScreen = new UIProperty<Window, bool>(this, false);
+        Title = new UIProperty<string>(this, string.Empty);
+        Resizable = new UIProperty<bool>(this, true);
+        CloseBehavior = new UIProperty<WindowCloseBehavior>(this, application.Windows.Count() > 1 ? WindowCloseBehavior.HideWindow : WindowCloseBehavior.QuitApplication);
+        SizeStatus = new UIProperty<WindowSizeStatus>(this, WindowSizeStatus.None);
+        FullScreen = new UIProperty<bool>(this, false);
 
         //TODO: unregister in dispose?
         Title.ValueChange += Title_ValueChange;
@@ -223,22 +223,22 @@ public class Window : UIRoot
         Height.Value = PixelUnit.Auto;
     }
 
-    private void MinimumWidth_ValueChange(BindableProperty<PixelUnit> sender, ValueChangeEventArgs<PixelUnit> e)
+    private void MinimumWidth_ValueChange(UIProperty<PixelUnit> sender, ValueChangeEventArgs<PixelUnit> e)
     {
         Application.WindowManager.SetWindowMinimumSize(_windowId, new Size(MinimumWidth.Value, MinimumHeight.Value));
     }
 
-    private void MinimumHeight_ValueChange(BindableProperty<PixelUnit> sender, ValueChangeEventArgs<PixelUnit> e)
+    private void MinimumHeight_ValueChange(UIProperty<PixelUnit> sender, ValueChangeEventArgs<PixelUnit> e)
     {
         Application.WindowManager.SetWindowMinimumSize(_windowId, new Size(MinimumWidth.Value, MinimumHeight.Value));
     }
 
-    private void MaximumWidth_ValueChange(BindableProperty<PixelUnit> sender, ValueChangeEventArgs<PixelUnit> e)
+    private void MaximumWidth_ValueChange(UIProperty<PixelUnit> sender, ValueChangeEventArgs<PixelUnit> e)
     {
         Application.WindowManager.SetWindowMaximumSize(_windowId, new Size(MaximumWidth.Value, MaximumHeight.Value));
     }
 
-    private void MaximumHeight_ValueChange(BindableProperty<PixelUnit> sender, ValueChangeEventArgs<PixelUnit> e)
+    private void MaximumHeight_ValueChange(UIProperty<PixelUnit> sender, ValueChangeEventArgs<PixelUnit> e)
     {
         Application.WindowManager.SetWindowMaximumSize(_windowId, new Size(MaximumWidth.Value, MaximumHeight.Value));
     }
@@ -536,17 +536,17 @@ public class Window : UIRoot
         }
     }
 
-    private void Title_ValueChange(BindableProperty<string> sender, ValueChangeEventArgs<string> e)
+    private void Title_ValueChange(UIProperty<string> sender, ValueChangeEventArgs<string> e)
     {
         Application.WindowManager.SetTitle(_windowId, Title.Value);
     }
 
-    private void Resizable_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
+    private void Resizable_ValueChange(UIProperty<bool> sender, ValueChangeEventArgs<bool> e)
     {
         Application.WindowManager.SetResizable(_windowId, Resizable.Value);
     }
 
-    private void SizeStatus_ValueChange(BindableProperty<WindowSizeStatus> sender, ValueChangeEventArgs<WindowSizeStatus> e)
+    private void SizeStatus_ValueChange(UIProperty<WindowSizeStatus> sender, ValueChangeEventArgs<WindowSizeStatus> e)
     {
         switch (SizeStatus.Value)
         {
@@ -564,17 +564,17 @@ public class Window : UIRoot
         }
     }
 
-    private void FullScreen_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
+    private void FullScreen_ValueChange(UIProperty<bool> sender, ValueChangeEventArgs<bool> e)
     {
         //Reset();
     }
 
-    private void BackgroundColor_ValueChange(BindableProperty<Color> sender, ValueChangeEventArgs<Color> e)
+    private void BackgroundColor_ValueChange(UIProperty<Color> sender, ValueChangeEventArgs<Color> e)
     {
         Application.WindowManager.SetOpacity(_windowId, BackgroundColor.Value.AlphaComponent);
     }
 
-    private void Visibility_ValueChange(BindableProperty<ComponentVisibility> sender, ValueChangeEventArgs<ComponentVisibility> e)
+    private void Visibility_ValueChange(UIProperty<ComponentVisibility> sender, ValueChangeEventArgs<ComponentVisibility> e)
     {
         // Reset();
         if (Visibility.Value != ComponentVisibility.Visible)
@@ -587,7 +587,7 @@ public class Window : UIRoot
         }
     }
 
-    private void Focus_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
+    private void Focus_ValueChange(UIProperty<bool> sender, ValueChangeEventArgs<bool> e)
     {
         if (Focus.Value)
         {

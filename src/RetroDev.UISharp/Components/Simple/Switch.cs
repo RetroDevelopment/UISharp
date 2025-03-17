@@ -20,32 +20,32 @@ public class Switch : UIWidget
     /// <summary>
     /// Whether the switch is checked.
     /// </summary>
-    public UIProperty<Switch, bool> Checked { get; }
+    public UIProperty<bool> Checked { get; }
 
     /// <summary>
     /// The color of the check box circle.
     /// </summary>
-    public UIProperty<Switch, Color> CircleColor { get; }
+    public UIProperty<Color> CircleColor { get; }
 
     /// <summary>
     /// The background color of the switch when it <see cref="Switch"/> is <see langword="false" />.
     /// </summary>
-    public UIProperty<Switch, Color> UncheckedBackgroundColor { get; }
+    public UIProperty<Color> UncheckedBackgroundColor { get; }
 
     /// <summary>
     /// The background color when the switch is disabled.
     /// </summary>
-    public UIProperty<Switch, Color> DisabledBackgroundColor { get; }
+    public UIProperty<Color> DisabledBackgroundColor { get; }
 
     /// <summary>
     /// The color indicating that the switch is focused.
     /// </summary>
-    public UIProperty<Switch, Color> FocusColor { get; }
+    public UIProperty<Color> FocusColor { get; }
 
     /// <summary>
     /// The switch border color.
     /// </summary>
-    public UIProperty<Switch, Color> BorderColor { get; }
+    public UIProperty<Color> BorderColor { get; }
 
     /// <summary>
     /// Creates a new switch toggle button.
@@ -54,7 +54,7 @@ public class Switch : UIWidget
     /// <param name="checked">Whether the initial state is checked.</param>
     public Switch(Application application, bool @checked = false) : base(application, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
     {
-        Checked = new UIProperty<Switch, bool>(this, @checked);
+        Checked = new UIProperty<bool>(this, @checked);
         CircleColor = CreateNewColorPropertyFor<Switch>(UISharpColorNames.SwitchCircleColor);
         UncheckedBackgroundColor = CreateNewColorPropertyFor<Switch>(UISharpColorNames.SwitchOffBackground);
         DisabledBackgroundColor = CreateNewColorPropertyFor<Switch>(UISharpColorNames.SwitchDisabled);

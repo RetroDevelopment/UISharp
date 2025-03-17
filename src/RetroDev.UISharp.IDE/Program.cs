@@ -27,7 +27,7 @@ internal class Program
     {
         using var application = new Application();
         application.Logger.Verbosity = Verbosity.Verbose;
-        application.ApplicationStarted += (_, _) => LoadMain(application);
+        application.ApplicationStarted += (_, _) => LoadTest(application);
         application.Run();
     }
 

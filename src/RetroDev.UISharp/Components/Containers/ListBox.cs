@@ -27,12 +27,12 @@ public class ListBox : UIContainer, IContainer
     /// <summary>
     /// The index of the selected element in the list, or <see langword="null" /> if no element is selected.
     /// </summary>
-    public UIProperty<ListBox, uint?> SelectedIndex { get; }
+    public UIProperty<uint?> SelectedIndex { get; }
 
     /// <summary>
     /// The selected element in the list, or <see langword="null" /> if no element is selected.
     /// </summary>
-    public UIProperty<ListBox, UIWidget?> SelectedItem { get; }
+    public UIProperty<UIWidget?> SelectedItem { get; }
 
     /// <inheritdoc />
     public override IEnumerable<UIWidget> Children => _verticalLayout.Children;
@@ -66,10 +66,10 @@ public class ListBox : UIContainer, IContainer
         _verticalLayout.VerticalAlignment.Value = Alignment.Top;
         _verticalLayout.Margin.BindDestinationToSource(Padding);
 
-        SelectedIndex = new UIProperty<ListBox, uint?>(this, (uint?)null);
+        SelectedIndex = new UIProperty<uint?>(this, (uint?)null);
         SelectedIndex.ValueChange += SelectedIndex_ValueChange;
 
-        SelectedItem = new UIProperty<ListBox, UIWidget?>(this, (UIWidget?)null);
+        SelectedItem = new UIProperty<UIWidget?>(this, (UIWidget?)null);
         SelectedItem.ValueChange += SelectedItem_ValueChange;
 
         AddChildNode(_scrollView);
@@ -158,7 +158,7 @@ public class ListBox : UIContainer, IContainer
         }
     }
 
-    private void SelectedIndex_ValueChange(BindableProperty<uint?> sender, ValueChangeEventArgs<uint?> e)
+    private void SelectedIndex_ValueChange(UIProperty<uint?> sender, ValueChangeEventArgs<uint?> e)
     {
         var numberOfItems = _verticalLayout.Children.Count();
         if (e.CurrentValue != null && e.CurrentValue.Value > numberOfItems)
@@ -169,7 +169,7 @@ public class ListBox : UIContainer, IContainer
         SelectedItem.Value = e.CurrentValue != null ? Children.ElementAt((int)e.CurrentValue) : null;
     }
 
-    private void SelectedItem_ValueChange(BindableProperty<UIWidget?> sender, ValueChangeEventArgs<UIWidget?> e)
+    private void SelectedItem_ValueChange(UIProperty<UIWidget?> sender, ValueChangeEventArgs<UIWidget?> e)
     {
         if (e.CurrentValue == null)
         {

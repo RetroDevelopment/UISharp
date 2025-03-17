@@ -10,7 +10,7 @@ namespace RetroDev.UISharp.Presentation.Properties;
 /// <typeparam name="TShape">The shape owning this property.</typeparam>
 /// <typeparam name="TValue">The property value type.</typeparam>
 [DebuggerDisplay("{Value}")]
-public class ShapeProperty<TShape, TValue> : BindableProperty<TValue> where TShape : UIShape
+public class ShapeProperty<TShape, TValue> : UIProperty<TValue> where TShape : UIShape
 {
     /// <summary>
     /// The <see cref="UIShape"/> owning <see langword="this" /> <see cref="ShapeProperty{TComponent, TValue}{TShape, TValue}"/>.
@@ -29,7 +29,7 @@ public class ShapeProperty<TShape, TValue> : BindableProperty<TValue> where TSha
     /// <remarks>
     /// If <paramref name="allowedBinding"/> is <see cref="BindingType.TwoWays"/> it means that bidirectional binding is allowed, including (<see cref="BindingType.SourceToDestination"/> and <see cref="BindingType.DestinationToSource"/>).
     /// </remarks>
-    public ShapeProperty(TShape parent, Application application, TValue value, BindingType allowedBinding = BindingType.TwoWays) : base(value, application, allowedBinding)
+    public ShapeProperty(TShape parent, Application application, TValue value, BindingType allowedBinding = BindingType.TwoWays) : base(application, value, allowedBinding)
     {
         Shape = parent;
         ValueChange += (_, _) => Shape.Invalidate();
@@ -46,7 +46,7 @@ public class ShapeProperty<TShape, TValue> : BindableProperty<TValue> where TSha
     /// the given <paramref name="destinationProperty" /> is the destination property.
     /// </param>
     /// <param name="allowedBinding">The allowed <see cref="BindingType"/> (<see cref="BindingType.TwoWays"/> by default).</param>
-    public ShapeProperty(TShape parent, Application application, BindableProperty<TValue> destinationProperty, BindingType bindingType = BindingType.TwoWays, BindingType allowedBinding = BindingType.TwoWays) : this(parent, application, destinationProperty.Value, allowedBinding)
+    public ShapeProperty(TShape parent, Application application, UIProperty<TValue> destinationProperty, BindingType bindingType = BindingType.TwoWays, BindingType allowedBinding = BindingType.TwoWays) : this(parent, application, destinationProperty.Value, allowedBinding)
     {
         Bind(destinationProperty, bindingType);
     }

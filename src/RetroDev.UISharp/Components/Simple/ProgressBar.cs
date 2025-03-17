@@ -22,22 +22,22 @@ public class ProgressBar : UIWidget
     /// The progress bar will be filled on the percentage that <see cref="Value"/> is with respect to <see cref="MinimumValue"/> and <see cref="MaximumValue"/>.
     /// </summary>
     /// <exception cref="InvalidOperationException">If <see cref="Value"/> is not in the [<see cref="MinimumValue"/>, <see cref="MaximumValue"/>] interval.</exception>
-    public UIProperty<ProgressBar, int> Value { get; }
+    public UIProperty<int> Value { get; }
 
     /// <summary>
     /// The minimum allowed <see cref="Value"/>.
     /// </summary>
-    public UIProperty<ProgressBar, int> MinimumValue { get; }
+    public UIProperty<int> MinimumValue { get; }
 
     /// <summary>
     /// The current progress <see cref="Value"/>.
     /// </summary>
-    public UIProperty<ProgressBar, int> MaximumValue { get; }
+    public UIProperty<int> MaximumValue { get; }
 
     /// <summary>
     /// The color of the bar indicating progress.
     /// </summary>
-    public UIProperty<ProgressBar, Color> ForegroundColor { get; }
+    public UIProperty<Color> ForegroundColor { get; }
 
     /// <summary>
     /// Creates a new label.
@@ -46,9 +46,9 @@ public class ProgressBar : UIWidget
     /// <param name="value">The initial progress value.</param>
     public ProgressBar(Application application, int value = 0) : base(application, isFocusable: false)
     {
-        Value = new UIProperty<ProgressBar, int>(this, value);
-        MinimumValue = new UIProperty<ProgressBar, int>(this, 0);
-        MaximumValue = new UIProperty<ProgressBar, int>(this, 100);
+        Value = new UIProperty<int>(this, value);
+        MinimumValue = new UIProperty<int>(this, 0);
+        MaximumValue = new UIProperty<int>(this, 100);
         ForegroundColor = CreateNewColorPropertyFor<ProgressBar>(UISharpColorNames.ProgressBarForeground);
         BackgroundColor.BindTheme(UISharpColorNames.ProgressBarBackground);
 

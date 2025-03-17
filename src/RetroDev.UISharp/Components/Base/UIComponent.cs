@@ -163,69 +163,69 @@ public abstract class UIComponent
     /// <summary>
     /// The component unique identifier.
     /// </summary>
-    public UIProperty<UIComponent, string> ID { get; }
+    public UIProperty<string> ID { get; }
 
     /// <summary>
     /// The component top-left corner X-coordinate in pixels.
     /// </summary>
     /// <remarks>The X-coordinate is relative to the parent component rendering area.</remarks>
-    public UIProperty<UIComponent, PixelUnit> X { get; }
+    public UIProperty<PixelUnit> X { get; }
 
     /// <summary>
     /// The component top-left corner Y-coordinate in pixels.
     /// </summary>
     /// <remarks>The Y-coordinate is relative to the parent component rendering area.</remarks>
-    public UIProperty<UIComponent, PixelUnit> Y { get; }
+    public UIProperty<PixelUnit> Y { get; }
 
     /// <summary>
     /// The component width in pixels.
     /// </summary>
-    public UIProperty<UIComponent, PixelUnit> Width { get; }
+    public UIProperty<PixelUnit> Width { get; }
 
     /// <summary>
     /// The component height in pixels.
     /// </summary>
-    public UIProperty<UIComponent, PixelUnit> Height { get; }
+    public UIProperty<PixelUnit> Height { get; }
 
     /// <summary>
     /// Whether the component is rendered or not.
     /// </summary>
-    public UIProperty<UIComponent, ComponentVisibility> Visibility { get; }
+    public UIProperty<ComponentVisibility> Visibility { get; }
 
     /// <summary>
     /// Specifies how to automatically specify this component width.
     /// </summary>
-    public UIProperty<UIComponent, IAutoSize> AutoWidth { get; }
+    public UIProperty<IAutoSize> AutoWidth { get; }
 
     /// <summary>
     /// Specifies how to automatically specify this component height.
     /// </summary>
-    public UIProperty<UIComponent, IAutoSize> AutoHeight { get; }
+    public UIProperty<IAutoSize> AutoHeight { get; }
 
     /// <summary>
     /// Specifies the horizontal alignment of this component relative to its parent.
     /// </summary>
-    public UIProperty<UIComponent, IHorizontalAlignment> HorizontalAlignment { get; }
+    public UIProperty<IHorizontalAlignment> HorizontalAlignment { get; }
 
     /// <summary>
     /// Specifies the vertical alignment of this component relative to its parent.
     /// </summary>
-    public UIProperty<UIComponent, IVerticalAlignment> VerticalAlignment { get; }
+    public UIProperty<IVerticalAlignment> VerticalAlignment { get; }
 
     /// <summary>
     /// Whether this component can get focus.
     /// </summary>
-    public UIProperty<UIComponent, bool> Focusable { get; }
+    public UIProperty<bool> Focusable { get; }
 
     /// <summary>
     /// Whether this component has focus.
     /// </summary>
-    public UIProperty<UIComponent, bool> Focus { get; }
+    public UIProperty<bool> Focus { get; }
 
     /// <summary>
     /// Whether this component is enabled and can receive events.
     /// </summary>
-    public UIProperty<UIComponent, bool> Enabled { get; }
+    public UIProperty<bool> Enabled { get; }
 
     /// <summary>
     /// The component background color.
@@ -233,7 +233,7 @@ public abstract class UIComponent
     /// <remarks>
     /// It is the derived class responsibility to decide how to handle the background color.
     /// </remarks>
-    public UIProperty<UIComponent, Color> BackgroundColor { get; }
+    public UIProperty<Color> BackgroundColor { get; }
 
     /// <summary>
     /// The <see cref="UIWidget"/> margin.
@@ -250,28 +250,28 @@ public abstract class UIComponent
     /// This property takes priority over the <see cref="Width"/>, meaning that even if
     /// <see cref="Width"/> is not <see cref="PixelUnit.Auto"/> the minimum width will still be <see cref="MinimumWidth"/>.
     /// </summary>
-    public UIProperty<UIComponent, PixelUnit> MinimumWidth { get; }
+    public UIProperty<PixelUnit> MinimumWidth { get; }
 
     /// <summary>
     /// The minimum height for <see langword="this" /> <see cref="UIComponent"/>.
     /// This property takes priority over the <see cref="Height"/>, meaning that even if
     /// <see cref="Height"/> is not <see cref="PixelUnit.Auto"/> the minimum height will still be <see cref="MinimumHeight"/>.
     /// </summary>
-    public UIProperty<UIComponent, PixelUnit> MinimumHeight { get; }
+    public UIProperty<PixelUnit> MinimumHeight { get; }
 
     /// <summary>
     /// The maximum width for <see langword="this" /> <see cref="UIComponent"/>.
     /// This property takes priority over the <see cref="Width"/>, meaning that even if
     /// <see cref="Width"/> is not <see cref="PixelUnit.Auto"/> the maximum width will still be <see cref="MaximumWidth"/>.
     /// </summary>
-    public UIProperty<UIComponent, PixelUnit> MaximumWidth { get; }
+    public UIProperty<PixelUnit> MaximumWidth { get; }
 
     /// <summary>
     /// The maximum height for <see langword="this" /> <see cref="UIComponent"/>.
     /// This property takes priority over the <see cref="Height"/>, meaning that even if
     /// <see cref="Height"/> is not <see cref="PixelUnit.Auto"/> the maximum height will still be <see cref="MaximumHeight"/>.
     /// </summary>
-    public UIProperty<UIComponent, PixelUnit> MaximumHeight { get; }
+    public UIProperty<PixelUnit> MaximumHeight { get; }
 
     /// <summary>
     /// Creates a new component.
@@ -299,26 +299,26 @@ public abstract class UIComponent
             throw new UIInitializationException($"Cannot create UI element {this}: application must be started. Make sure all UI initialization is within the {nameof(Application.ApplicationStarted)} event");
         }
 
-        ID = new UIProperty<UIComponent, string>(this, string.Empty);
-        X = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Auto);
-        Y = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Auto);
-        Width = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Auto);
-        Height = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Auto);
-        Visibility = new UIProperty<UIComponent, ComponentVisibility>(this, visibility);
-        AutoWidth = new UIProperty<UIComponent, IAutoSize>(this, autoWidth ?? AutoSize.Stretch);
-        AutoHeight = new UIProperty<UIComponent, IAutoSize>(this, autoHeight ?? AutoSize.Stretch);
-        HorizontalAlignment = new UIProperty<UIComponent, IHorizontalAlignment>(this, horizontalAlignment ?? Alignment.Center);
-        VerticalAlignment = new UIProperty<UIComponent, IVerticalAlignment>(this, verticalAlignment ?? Alignment.Center);
-        Focusable = new UIProperty<UIComponent, bool>(this, isFocusable);
-        Focus = new UIProperty<UIComponent, bool>(this, false);
-        Enabled = new UIProperty<UIComponent, bool>(this, true);
-        BackgroundColor = new UIProperty<UIComponent, Color>(this, Color.Transparent);
+        ID = new UIProperty<string>(this, string.Empty);
+        X = new UIProperty<PixelUnit>(this, PixelUnit.Auto);
+        Y = new UIProperty<PixelUnit>(this, PixelUnit.Auto);
+        Width = new UIProperty<PixelUnit>(this, PixelUnit.Auto);
+        Height = new UIProperty<PixelUnit>(this, PixelUnit.Auto);
+        Visibility = new UIProperty<ComponentVisibility>(this, visibility);
+        AutoWidth = new UIProperty<IAutoSize>(this, autoWidth ?? AutoSize.Stretch);
+        AutoHeight = new UIProperty<IAutoSize>(this, autoHeight ?? AutoSize.Stretch);
+        HorizontalAlignment = new UIProperty<IHorizontalAlignment>(this, horizontalAlignment ?? Alignment.Center);
+        VerticalAlignment = new UIProperty<IVerticalAlignment>(this, verticalAlignment ?? Alignment.Center);
+        Focusable = new UIProperty<bool>(this, isFocusable);
+        Focus = new UIProperty<bool>(this, false);
+        Enabled = new UIProperty<bool>(this, true);
+        BackgroundColor = new UIProperty<Color>(this, Color.Transparent);
         Margin = new MarginGroup(application, this);
         Padding = new PaddingGroup(application, this);
-        MinimumWidth = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Zero);
-        MinimumHeight = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Zero);
-        MaximumWidth = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Auto);
-        MaximumHeight = new UIProperty<UIComponent, PixelUnit>(this, PixelUnit.Auto);
+        MinimumWidth = new UIProperty<PixelUnit>(this, PixelUnit.Zero);
+        MinimumHeight = new UIProperty<PixelUnit>(this, PixelUnit.Zero);
+        MaximumWidth = new UIProperty<PixelUnit>(this, PixelUnit.Auto);
+        MaximumHeight = new UIProperty<PixelUnit>(this, PixelUnit.Auto);
 
         Canvas = new Canvas(this);
 
@@ -629,16 +629,16 @@ public abstract class UIComponent
     }
 
     /// <summary>
-    /// Creates a new <see cref="BindableProperty{TValue}"/> and binds it to the theme color with the given <paramref name="id"/>.
+    /// Creates a new <see cref="UIProperty{TValue}"/> and binds it to the theme color with the given <paramref name="id"/>.
     /// </summary>
     /// <param name="id">The theme color id to bind.</param>
     /// <returns>The <see cref="UIProperty{TComponent, TValue}"/> bound to the theme color with the given <paramref name="id"/>.</returns>
     /// <exception cref="ArgumentException">If a color with the given <paramref name="id"/> does not exist in the current theme.</exception>
     /// <typeparam name="TComponent">The component type.</typeparam>
-    protected UIProperty<TComponent, Color> CreateNewColorPropertyFor<TComponent>(string id) where TComponent : UIComponent
+    protected UIProperty<Color> CreateNewColorPropertyFor<TComponent>(string id) where TComponent : UIComponent
     {
         var themeProperty = Application.ThemeManager.GetColorProperty(id);
-        return new UIProperty<TComponent, Color>((TComponent)this, themeProperty, BindingType.DestinationToSource);
+        return new UIProperty<Color>(this, themeProperty, BindingType.DestinationToSource);
     }
 
     internal IEnumerable<UIComponent> GetComponentTreeNodesDepthFirstSearch() =>
@@ -748,7 +748,7 @@ public abstract class UIComponent
         return currentZIndex;
     }
 
-    private void Focus_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
+    private void Focus_ValueChange(UIProperty<bool> sender, ValueChangeEventArgs<bool> e)
     {
         if (e.CurrentValue)
         {
@@ -756,7 +756,7 @@ public abstract class UIComponent
         }
     }
 
-    private void Enabled_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
+    private void Enabled_ValueChange(UIProperty<bool> sender, ValueChangeEventArgs<bool> e)
     {
         if (!e.CurrentValue)
         {

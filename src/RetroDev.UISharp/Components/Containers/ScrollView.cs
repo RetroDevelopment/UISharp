@@ -27,12 +27,12 @@ public class ScrollView : UIContainer, ISingleContainer
     /// <summary>
     /// The color of the horizontal and vertical scroll bars.
     /// </summary>
-    public UIProperty<ScrollView, Color> ScrollBarColor { get; }
+    public UIProperty<Color> ScrollBarColor { get; }
 
     /// <summary>
     /// How big the scroll bars should be.
     /// </summary>
-    public UIProperty<ScrollView, PixelUnit> ScrollBarThickness { get; }
+    public UIProperty<PixelUnit> ScrollBarThickness { get; }
 
     // TODO: scroll interval in pixels (hor and vert)
 
@@ -42,8 +42,8 @@ public class ScrollView : UIContainer, ISingleContainer
     /// <param name="application">The application that contain this scroll view.</param>
     public ScrollView(Application application) : base(application)
     {
-        ScrollBarColor = new UIProperty<ScrollView, Color>(this, Color.Transparent);
-        ScrollBarThickness = new UIProperty<ScrollView, PixelUnit>(this, 15);
+        ScrollBarColor = new UIProperty<Color>(this, Color.Transparent);
+        ScrollBarThickness = new UIProperty<PixelUnit>(this, 15);
 
         BackgroundColor.BindTheme(UISharpColorNames.ScrollViewBackground);
         ScrollBarColor.BindTheme(UISharpColorNames.ScrollViewBars, c => c.WithAlpha(100));

@@ -34,57 +34,57 @@ public class EditBox : UIWidget
     /// <summary>
     /// The edit text.
     /// </summary>
-    public UIProperty<EditBox, string> Text { get; }
+    public UIProperty<string> Text { get; }
 
     /// <summary>
     /// The component text color.
     /// </summary>
-    public UIProperty<EditBox, Color> TextColor { get; }
+    public UIProperty<Color> TextColor { get; }
 
     /// <summary>
     /// The component text color when the edit box is disabled.
     /// </summary>
-    public UIProperty<EditBox, Color> DisabledTextColor { get; }
+    public UIProperty<Color> DisabledTextColor { get; }
 
     /// <summary>
     /// The color of the edit box is focused.
     /// </summary>
-    public UIProperty<EditBox, Color> FocusColor { get; }
+    public UIProperty<Color> FocusColor { get; }
 
     /// <summary>
     /// The background color when the component is disabled.
     /// </summary>
-    public UIProperty<EditBox, Color> DisabledBackgroundColor { get; }
+    public UIProperty<Color> DisabledBackgroundColor { get; }
 
     /// <summary>
     /// The color of the caret line, pointing to the character to insert/delete.
     /// </summary>
-    public UIProperty<EditBox, Color> CaretColor { get; }
+    public UIProperty<Color> CaretColor { get; }
 
     /// <summary>
     /// The text selection color.
     /// </summary>
-    public UIProperty<EditBox, Color> SelectionColor { get; }
+    public UIProperty<Color> SelectionColor { get; }
 
     /// <summary>
     /// The selection color when <see cref="Focus"/> is <see langword="false" />.
     /// </summary>
-    public UIProperty<EditBox, Color> UnfocusedSelectionColor { get; }
+    public UIProperty<Color> UnfocusedSelectionColor { get; }
 
     /// <summary>
     /// The box border color when the component is not focused.
     /// </summary>
-    public UIProperty<EditBox, Color> BorderColor { get; }
+    public UIProperty<Color> BorderColor { get; }
 
     /// <summary>
     /// The font of the edited text.
     /// </summary>
-    public UIProperty<EditBox, Font> Font { get; }
+    public UIProperty<Font> Font { get; }
 
     /// <summary>
     /// The input text vertical alignment.
     /// </summary>
-    public UIProperty<EditBox, IVerticalAlignment> TextVerticalAlignment { get; }
+    public UIProperty<IVerticalAlignment> TextVerticalAlignment { get; }
 
     /// <summary>
     /// Determines the caret position by identifying the index of the character that will be inserted
@@ -96,7 +96,7 @@ public class EditBox : UIWidget
     /// Given the text "ABCD", if <see cref="CaretIndex"/> is <c>2</c> the caret will be before the character with index 2,
     /// so the caret will be displayed as follows "AB&lt;caret&gt;CD".
     /// </remarks>
-    public UIProperty<EditBox, uint> CaretIndex { get; }
+    public UIProperty<uint> CaretIndex { get; }
 
     /// <summary>
     /// Determines the text selection number of characters. If 0, no selection will be displayed,
@@ -105,7 +105,7 @@ public class EditBox : UIWidget
     /// and it will spawn <see cref="SelectionLength"/> characters towards the right (if length is positive)
     /// or towards the left (if length is negative).
     /// </summary>
-    public UIProperty<EditBox, int> SelectionLength { get; }
+    public UIProperty<int> SelectionLength { get; }
 
     /// <summary>
     /// Creates a new edit box to insert text.
@@ -114,19 +114,19 @@ public class EditBox : UIWidget
     /// <param name="text">The initial input text.</param>
     public EditBox(Application application, string text = "") : base(application, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
     {
-        Text = new UIProperty<EditBox, string>(this, text);
-        Font = new UIProperty<EditBox, Font>(this, application.DefaultFont, BindingType.DestinationToSource);
+        Text = new UIProperty<string>(this, text);
+        Font = new UIProperty<Font>(this, application.DefaultFont, BindingType.DestinationToSource);
         TextColor = CreateNewColorPropertyFor<EditBox>(UISharpColorNames.EditBoxText);
         DisabledTextColor = CreateNewColorPropertyFor<EditBox>(UISharpColorNames.EditBoxDisabledText);
         FocusColor = CreateNewColorPropertyFor<EditBox>(UISharpColorNames.EditBoxFocusBorder);
         DisabledBackgroundColor = CreateNewColorPropertyFor<EditBox>(UISharpColorNames.EditBoxDisabled);
-        CaretColor = new UIProperty<EditBox, Color>(this, TextColor, BindingType.DestinationToSource);
+        CaretColor = new UIProperty<Color>(this, TextColor, BindingType.DestinationToSource);
         SelectionColor = CreateNewColorPropertyFor<EditBox>(UISharpColorNames.EditBoxSelection);
         UnfocusedSelectionColor = CreateNewColorPropertyFor<EditBox>(UISharpColorNames.EditBoxUnfocusedSelection);
         BorderColor = CreateNewColorPropertyFor<EditBox>(UISharpColorNames.EditBoxBorder);
-        TextVerticalAlignment = new UIProperty<EditBox, IVerticalAlignment>(this, Alignment.Center);
-        CaretIndex = new UIProperty<EditBox, uint>(this, 0);
-        SelectionLength = new UIProperty<EditBox, int>(this, 0);
+        TextVerticalAlignment = new UIProperty<IVerticalAlignment>(this, Alignment.Center);
+        CaretIndex = new UIProperty<uint>(this, 0);
+        SelectionLength = new UIProperty<int>(this, 0);
         BackgroundColor.BindTheme(UISharpColorNames.EditBoxBackground);
 
         Text.ValueChange += Text_ValueChange;
@@ -197,7 +197,7 @@ public class EditBox : UIWidget
         return new Size(height * estimatedNumberOfCharacters, height);
     }
 
-    private void Text_ValueChange(BindableProperty<string> sender, ValueChangeEventArgs<string> e)
+    private void Text_ValueChange(UIProperty<string> sender, ValueChangeEventArgs<string> e)
     {
         _textSnapshotEnabled = false;
         _textBuffer.TakeHistorySnapshot(e.CurrentValue);
@@ -353,12 +353,12 @@ public class EditBox : UIWidget
         }
     }
 
-    private void Enabled_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
+    private void Enabled_ValueChange(UIProperty<bool> sender, ValueChangeEventArgs<bool> e)
     {
         UpdateTextColorBinding();
     }
 
-    private void Focus_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
+    private void Focus_ValueChange(UIProperty<bool> sender, ValueChangeEventArgs<bool> e)
     {
         UpdateBackgroundRectangleBorder();
     }

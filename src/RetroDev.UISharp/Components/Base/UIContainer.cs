@@ -17,7 +17,7 @@ public abstract class UIContainer : UIWidget, IGenericContainer
     /// <summary>
     /// The control border color.
     /// </summary>
-    public UIProperty<UIContainer, Color> BorderColor { get; }
+    public UIProperty<Color> BorderColor { get; }
 
     /// <summary>
     /// Creates a new container.
@@ -37,7 +37,7 @@ public abstract class UIContainer : UIWidget, IGenericContainer
                           IHorizontalAlignment? horizontalAlignment = null,
                           IVerticalAlignment? verticalAlignment = null) : base(application, visibility, isFocusable, autoWidth, autoHeight, horizontalAlignment, verticalAlignment)
     {
-        BorderColor = new UIProperty<UIContainer, Color>(this, Color.Transparent);
+        BorderColor = new UIProperty<Color>(this, Color.Transparent);
 
         _backgroundRectangle = new Rectangle(application);
         _backgroundRectangle.BackgroundColor.BindDestinationToSource(BackgroundColor);

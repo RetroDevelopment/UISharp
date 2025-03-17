@@ -20,27 +20,27 @@ public class Label : UIWidget
     /// <summary>
     /// The display text.
     /// </summary>
-    public UIProperty<Label, string> Text { get; }
+    public UIProperty<string> Text { get; }
 
     /// <summary>
     /// The text color.
     /// </summary>
-    public UIProperty<Label, Color> TextColor { get; }
+    public UIProperty<Color> TextColor { get; }
 
     /// <summary>
     /// The label font.
     /// </summary>
-    public UIProperty<Label, Font> Font { get; }
+    public UIProperty<Font> Font { get; }
 
     /// <summary>
     /// The text horizontal alignment within the label.
     /// </summary>
-    public UIProperty<Label, IHorizontalAlignment> TextHorizontalAlignment { get; }
+    public UIProperty<IHorizontalAlignment> TextHorizontalAlignment { get; }
 
     /// <summary>
     /// The text vertical alignment within the label.
     /// </summary>
-    public UIProperty<Label, IVerticalAlignment> TextVerticalAlignment { get; }
+    public UIProperty<IVerticalAlignment> TextVerticalAlignment { get; }
 
     /// <summary>
     /// Creates a new label.
@@ -49,11 +49,11 @@ public class Label : UIWidget
     /// <param name="text">The label display text.</param>
     public Label(Application application, string text = "") : base(application, isFocusable: false, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
     {
-        Text = new UIProperty<Label, string>(this, text);
-        Font = new UIProperty<Label, Font>(this, Application.DefaultFont, BindingType.DestinationToSource);
+        Text = new UIProperty<string>(this, text);
+        Font = new UIProperty<Font>(this, Application.DefaultFont, BindingType.DestinationToSource);
         TextColor = CreateNewColorPropertyFor<Label>(UISharpColorNames.LabelText);
-        TextHorizontalAlignment = new UIProperty<Label, IHorizontalAlignment>(this, Alignment.Center);
-        TextVerticalAlignment = new UIProperty<Label, IVerticalAlignment>(this, Alignment.Center);
+        TextHorizontalAlignment = new UIProperty<IHorizontalAlignment>(this, Alignment.Center);
+        TextVerticalAlignment = new UIProperty<IVerticalAlignment>(this, Alignment.Center);
 
         _backgroundRectangle = new Rectangle(application);
         _backgroundRectangle.BackgroundColor.BindDestinationToSource(BackgroundColor);

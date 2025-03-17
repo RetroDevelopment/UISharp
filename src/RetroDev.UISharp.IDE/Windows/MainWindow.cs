@@ -183,7 +183,7 @@ internal class MainWindow : Window
         CreateComponentInstance();
     }
 
-    private void Checked_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
+    private void Checked_ValueChange(UIProperty<bool> sender, ValueChangeEventArgs<bool> e)
     {
         if (e.CurrentValue)
         {
@@ -195,7 +195,7 @@ internal class MainWindow : Window
         }
     }
 
-    private void SelectedNode_ValueChange(BindableProperty<TreeNode?> sender, ValueChangeEventArgs<TreeNode?> e)
+    private void SelectedNode_ValueChange(UIProperty<TreeNode?> sender, ValueChangeEventArgs<TreeNode?> e)
     {
         var listBox = _propertyList;
         listBox.Clear();
@@ -245,7 +245,7 @@ internal class MainWindow : Window
         UpdateAddRemoveButtonState();
     }
 
-    private void SelectedItem_ValueChange(BindableProperty<UIWidget?> sender, ValueChangeEventArgs<UIWidget?> e)
+    private void SelectedItem_ValueChange(UIProperty<UIWidget?> sender, ValueChangeEventArgs<UIWidget?> e)
     {
         UpdateAddRemoveButtonState();
     }

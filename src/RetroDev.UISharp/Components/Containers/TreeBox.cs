@@ -29,7 +29,7 @@ public class TreeBox : UIContainer
 
     public override IEnumerable<UIWidget> Children => _listBox.Children.Cast<GridLayout>().Select(c => c.Children.ElementAt(2));
 
-    public UIProperty<TreeBox, TreeNode?> SelectedNode { get; }
+    public UIProperty<TreeNode?> SelectedNode { get; }
 
     /// <summary>
     /// Creates a new tree box.
@@ -50,7 +50,7 @@ public class TreeBox : UIContainer
         _listBox.Margin.BindDestinationToSource(Padding);
         AddChildNode(_listBox);
 
-        SelectedNode = new UIProperty<TreeBox, TreeNode?>(this, (TreeNode?)null);
+        SelectedNode = new UIProperty<TreeNode?>(this, (TreeNode?)null);
         // TODO SelectedNode can be bound to _listBox.SelectedItem and converters!
         SelectedNode.ValueChange += SelectedNode_ValueChange;
         _listBox.SelectedIndex.ValueChange += SelectedIndex_ValueChange;
@@ -161,7 +161,7 @@ public class TreeBox : UIContainer
     public void Clear() =>
         _nodes.Where(n => n.Parent == null).ToList().ForEach(RemoveTreeNode);
 
-    private void SelectedNode_ValueChange(BindableProperty<TreeNode?> sender, ValueChangeEventArgs<TreeNode?> e)
+    private void SelectedNode_ValueChange(UIProperty<TreeNode?> sender, ValueChangeEventArgs<TreeNode?> e)
     {
         if (e.CurrentValue == null)
         {
@@ -175,7 +175,7 @@ public class TreeBox : UIContainer
         }
     }
 
-    private void SelectedIndex_ValueChange(BindableProperty<uint?> sender, ValueChangeEventArgs<uint?> e)
+    private void SelectedIndex_ValueChange(UIProperty<uint?> sender, ValueChangeEventArgs<uint?> e)
     {
         if (e.CurrentValue == null)
         {

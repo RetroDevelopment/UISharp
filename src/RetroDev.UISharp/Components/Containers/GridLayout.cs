@@ -17,19 +17,19 @@ public class GridLayout : UIContainer, IContainer
     /// <summary>
     /// The number of layout rows.
     /// </summary>
-    public UIProperty<GridLayout, uint> Rows { get; }
+    public UIProperty<uint> Rows { get; }
 
     /// <summary>
     /// The number of layout columns.
     /// </summary>
-    public UIProperty<GridLayout, uint> Columns { get; }
+    public UIProperty<uint> Columns { get; }
 
     // TODO: Use UIPropertyList to enable binding
     // Example rowSizes="40px,*" columnSizes="auto,10.1%,*"
-    public UIProperty<GridLayout, string> RowSizes { get; }
+    public UIProperty<string> RowSizes { get; }
 
     // TODO: Use UIPropertyList to enable binding
-    public UIProperty<GridLayout, string> ColumnSizes { get; }
+    public UIProperty<string> ColumnSizes { get; }
 
     public override IEnumerable<UIWidget> Children => Panels.Select(c => c.Children.First());
 
@@ -46,10 +46,10 @@ public class GridLayout : UIContainer, IContainer
     /// <param name="columns">The number of layout columns.</param>
     public GridLayout(Application application, uint rows = 0, uint columns = 0) : base(application)
     {
-        Rows = new UIProperty<GridLayout, uint>(this, rows);
-        Columns = new UIProperty<GridLayout, uint>(this, columns);
-        RowSizes = new UIProperty<GridLayout, string>(this, string.Empty);
-        ColumnSizes = new UIProperty<GridLayout, string>(this, string.Empty);
+        Rows = new UIProperty<uint>(this, rows);
+        Columns = new UIProperty<uint>(this, columns);
+        RowSizes = new UIProperty<string>(this, string.Empty);
+        ColumnSizes = new UIProperty<string>(this, string.Empty);
     }
 
     /// <summary>

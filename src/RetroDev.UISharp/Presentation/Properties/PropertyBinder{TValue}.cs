@@ -4,19 +4,19 @@ internal class PropertyBinder<TSourceValue, TDestinationValue> : IBinder
 {
     private class LambdaConverter<T, S>(Func<T, S> sourceToDestinationConvert, Func<S, T> destinationToSourceConvert) : IBindingValueConverter<T, S>
     {
-        public T Convert(S value) =>
+        public T ConvertDestinationToSource(S value) =>
             destinationToSourceConvert(value);
 
-        public S Convert(T value) =>
+        public S ConvertSourceToDestination(T value) =>
             sourceToDestinationConvert(value);
     }
 
-    private readonly BindableProperty<TSourceValue> _sourceProperty;
-    private readonly BindableProperty<TDestinationValue> _destinationProperty;
+    private readonly UIProperty<TSourceValue> _sourceProperty;
+    private readonly UIProperty<TDestinationValue> _destinationProperty;
     private readonly IBindingValueConverter<TSourceValue, TDestinationValue> _converter;
 
-    public PropertyBinder(BindableProperty<TSourceValue> sourceProperty,
-                          BindableProperty<TDestinationValue> destinationProperty,
+    public PropertyBinder(UIProperty<TSourceValue> sourceProperty,
+                          UIProperty<TDestinationValue> destinationProperty,
                           BindingType type,
                           IBindingValueConverter<TSourceValue, TDestinationValue> converter)
     {
@@ -30,25 +30,25 @@ internal class PropertyBinder<TSourceValue, TDestinationValue> : IBinder
         {
             case BindingType.SourceToDestination:
                 _sourceProperty.ValueChange += SourceProperty_ValueChange;
-                _destinationProperty.Value = _converter.Convert(_sourceProperty.Value);
+                _destinationProperty.Value = _converter.ConvertSourceToDestination(_sourceProperty.Value);
                 break;
             case BindingType.DestinationToSource:
                 _destinationProperty.ValueChange += DestinationProperty_ValueChange;
-                _sourceProperty.Value = _converter.Convert(_destinationProperty.Value);
+                _sourceProperty.Value = _converter.ConvertDestinationToSource(_destinationProperty.Value);
                 break;
             case BindingType.TwoWays:
                 _sourceProperty.ValueChange += SourceProperty_ValueChange;
-                _destinationProperty.Value = _converter.Convert(_sourceProperty.Value);
+                _destinationProperty.Value = _converter.ConvertSourceToDestination(_sourceProperty.Value);
                 _destinationProperty.ValueChange += DestinationProperty_ValueChange;
-                _sourceProperty.Value = _converter.Convert(_destinationProperty.Value);
+                _sourceProperty.Value = _converter.ConvertDestinationToSource(_destinationProperty.Value);
                 break;
             default:
                 throw new ArgumentException($"Unhandled binding type {type}");
         }
     }
 
-    public PropertyBinder(BindableProperty<TSourceValue> sourceProperty,
-                          BindableProperty<TDestinationValue> destinationProperty,
+    public PropertyBinder(UIProperty<TSourceValue> sourceProperty,
+                          UIProperty<TDestinationValue> destinationProperty,
                           BindingType type,
                           Func<TSourceValue, TDestinationValue> sourceToDestinationConvert,
                           Func<TDestinationValue, TSourceValue> destinationToSourceConvert) : this(sourceProperty,
@@ -64,17 +64,17 @@ internal class PropertyBinder<TSourceValue, TDestinationValue> : IBinder
         _destinationProperty.ValueChange -= DestinationProperty_ValueChange;
     }
 
-    private void SourceProperty_ValueChange(BindableProperty<TSourceValue> sender, ValueChangeEventArgs<TSourceValue> e)
+    private void SourceProperty_ValueChange(UIProperty<TSourceValue> sender, ValueChangeEventArgs<TSourceValue> e)
     {
-        _destinationProperty.Value = _converter.Convert(e.CurrentValue);
+        _destinationProperty.Value = _converter.ConvertSourceToDestination(e.CurrentValue);
     }
 
-    private void DestinationProperty_ValueChange(BindableProperty<TDestinationValue> sender, ValueChangeEventArgs<TDestinationValue> e)
+    private void DestinationProperty_ValueChange(UIProperty<TDestinationValue> sender, ValueChangeEventArgs<TDestinationValue> e)
     {
-        _sourceProperty.Value = _converter.Convert(e.CurrentValue);
+        _sourceProperty.Value = _converter.ConvertDestinationToSource(e.CurrentValue);
     }
 
-    private void CheckValidBinding(BindableProperty<TSourceValue> sourceProperty, BindableProperty<TDestinationValue> destinationProperty, BindingType type)
+    private void CheckValidBinding(UIProperty<TSourceValue> sourceProperty, UIProperty<TDestinationValue> destinationProperty, BindingType type)
     {
         switch (type)
         {

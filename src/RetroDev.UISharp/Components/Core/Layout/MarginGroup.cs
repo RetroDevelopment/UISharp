@@ -12,22 +12,22 @@ public class MarginGroup : CompositeBindableProperty<PixelUnit>
     /// <summary>
     /// Top margin.
     /// </summary>
-    public UIProperty<UIComponent, PixelUnit> Top { get; }
+    public UIProperty<PixelUnit> Top { get; }
 
     /// <summary>
     /// Right margin.
     /// </summary>
-    public UIProperty<UIComponent, PixelUnit> Right { get; }
+    public UIProperty<PixelUnit> Right { get; }
 
     /// <summary>
     /// Bottom margin.
     /// </summary>
-    public UIProperty<UIComponent, PixelUnit> Bottom { get; }
+    public UIProperty<PixelUnit> Bottom { get; }
 
     /// <summary>
     /// Left margin.
     /// </summary>
-    public UIProperty<UIComponent, PixelUnit> Left { get; }
+    public UIProperty<PixelUnit> Left { get; }
 
     /// <summary>
     /// Creates a new <see cref="MarginGroup"/>.
@@ -36,10 +36,10 @@ public class MarginGroup : CompositeBindableProperty<PixelUnit>
     /// <param name="parent">The component owning <see langword="this" /> <see cref="MarginGroup"/>.</param>
     public MarginGroup(Application application, UIComponent parent) : base(application)
     {
-        Top = new UIProperty<UIComponent, PixelUnit>(parent, PixelUnit.Auto);
-        Right = new UIProperty<UIComponent, PixelUnit>(parent, PixelUnit.Auto);
-        Bottom = new UIProperty<UIComponent, PixelUnit>(parent, PixelUnit.Auto);
-        Left = new UIProperty<UIComponent, PixelUnit>(parent, PixelUnit.Auto);
+        Top = new UIProperty<PixelUnit>(parent, PixelUnit.Auto);
+        Right = new UIProperty<PixelUnit>(parent, PixelUnit.Auto);
+        Bottom = new UIProperty<PixelUnit>(parent, PixelUnit.Auto);
+        Left = new UIProperty<PixelUnit>(parent, PixelUnit.Auto);
     }
 
     /// <summary>
