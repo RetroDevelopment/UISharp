@@ -7,7 +7,7 @@ namespace RetroDev.UISharp.Components.Core.Layout;
 /// <summary>
 /// Contains margin information.
 /// </summary>
-public class MarginGroup : CompositeBindableProperty<PixelUnit>
+public class MarginGroup : UICompositeProperty<PixelUnit>
 {
     /// <summary>
     /// Top margin.

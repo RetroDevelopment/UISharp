@@ -9,30 +9,30 @@ namespace RetroDev.UISharp.Presentation.Properties;
 /// The properties value type.
 /// All <see cref="UIProperty{TValue}"/> value type must be equal to<typeparamref name="TValue"/>.
 /// </typeparam>
-public abstract class CompositeBindableProperty<TValue>
+public abstract class UICompositeProperty<TValue>
 {
     private readonly Application _application;
     private readonly IEnumerable<UIProperty<TValue>> _properties;
 
     /// <summary>
-    /// Creates a new <see cref="CompositeBindableProperty{TValue}"/>.
+    /// Creates a new <see cref="UICompositeProperty{TValue}"/>.
     /// </summary>
-    /// <param name="application">The applicaciont in which this property runs.</param>
+    /// <param name="application">The application in which this property runs.</param>
     /// <exception cref="UIPropertyValidationException">
     /// If one or more <see cref="UIProperty{TValue}"/> value does not match <typeparamref name="TValue"/>.
     /// </exception>
-    protected CompositeBindableProperty(Application application)
+    protected UICompositeProperty(Application application)
     {
         application.Dispatcher.ThrowIfNotOnUIThread();
         _application = application;
-        var propertyInfos = GetType().GetBindableProperties();
+        var propertyInfos = GetType().GetUIProperties();
 
         if (propertyInfos.Any(p => p.GetBindingValueType() != typeof(TValue)))
         {
-            throw new UIPropertyValidationException($"Composite property of type {typeof(TValue)} must only have bindable properties of that type");
+            throw new UIPropertyValidationException($"Composite property of type {typeof(TValue)} must only have properties of that type");
         }
 
-        _properties = propertyInfos.Select(p => p.GetBindableProperty<TValue>(this));
+        _properties = propertyInfos.Select(p => p.GetUIProperty<TValue>(this));
     }
 
     /// <summary>
@@ -60,14 +60,14 @@ public abstract class CompositeBindableProperty<TValue>
     /// If binding is invalid. That happens when source and destination composite properties do not have the same properties
     /// with the same name.
     /// </exception>
-    public void Bind(CompositeBindableProperty<TValue> destinationProperty, BindingType bindingType)
+    public void Bind(UICompositeProperty<TValue> destinationProperty, BindingType bindingType)
     {
-        var sourceProperties = GetType().GetBindableProperties();
-        var destinationProperties = destinationProperty.GetType().GetBindableProperties();
+        var sourceProperties = GetType().GetUIProperties();
+        var destinationProperties = destinationProperty.GetType().GetUIProperties();
 
         if (sourceProperties.Count != destinationProperties.Count)
         {
-            throw new UIPropertyValidationException($"Composite property binding requires source and destination property to have the same number of bindable properties, but source property has {sourceProperties.Count} properties, destination property has {destinationProperties.Count} properties.");
+            throw new UIPropertyValidationException($"Composite property binding requires source and destination property to have the same number of properties, but source property has {sourceProperties.Count} properties, destination property has {destinationProperties.Count} properties.");
         }
 
         var count = sourceProperties.Count;
@@ -78,10 +78,10 @@ public abstract class CompositeBindableProperty<TValue>
             var destination = destinationProperties[i];
             if (source.Name != destination.Name)
             {
-                throw new UIPropertyValidationException($"Composite property binding requires source and destination properties to have the same property names in the same order. Source property {source.PropertyType.Name} name missmatch with {destination.PropertyType.Name}");
+                throw new UIPropertyValidationException($"Composite property binding requires source and destination properties to have the same property names in the same order. Source property {source.PropertyType.Name} name mismatch with {destination.PropertyType.Name}");
             }
 
-            source.GetBindableProperty<TValue>(this).Bind(destination.GetBindableProperty<TValue>(destinationProperty), bindingType);
+            source.GetUIProperty<TValue>(this).Bind(destination.GetUIProperty<TValue>(destinationProperty), bindingType);
         }
     }
 
@@ -92,7 +92,7 @@ public abstract class CompositeBindableProperty<TValue>
     /// The <see cref="BindingType"/> (<see langword="this"/> property is the source property and).
     /// the given <paramref name="destinationProperty" /> is the destination property.
     /// </param>
-    public void BindDestinationToSource(CompositeBindableProperty<TValue> destinationProperty)
+    public void BindDestinationToSource(UICompositeProperty<TValue> destinationProperty)
     {
         Bind(destinationProperty, BindingType.DestinationToSource);
     }
@@ -104,7 +104,7 @@ public abstract class CompositeBindableProperty<TValue>
     /// The <see cref="BindingType"/> (<see langword="this"/> property is the source property and).
     /// the given <paramref name="destinationProperty" /> is the destination property.
     /// </param>
-    public void BindSourceToDestination(CompositeBindableProperty<TValue> destinationProperty)
+    public void BindSourceToDestination(UICompositeProperty<TValue> destinationProperty)
     {
         Bind(destinationProperty, BindingType.SourceToDestination);
     }
@@ -116,7 +116,7 @@ public abstract class CompositeBindableProperty<TValue>
     /// The <see cref="BindingType"/> (<see langword="this"/> property is the source property and).
     /// the given <paramref name="destinationProperty" /> is the destination property.
     /// </param>
-    public void BindTwoWays(CompositeBindableProperty<TValue> destinationProperty)
+    public void BindTwoWays(UICompositeProperty<TValue> destinationProperty)
     {
         Bind(destinationProperty, BindingType.TwoWays);
     }

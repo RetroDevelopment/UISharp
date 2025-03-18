@@ -127,7 +127,7 @@ public class TypeMapper
 
         foreach (var type in uiComponentTypes)
         {
-            var uiProperties = type.GetAllBindableProperties();
+            var uiProperties = type.GetAllUIProperties();
             result[type] = uiProperties;
         }
 

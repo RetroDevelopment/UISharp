@@ -35,18 +35,18 @@ public class EAMLBinder(TypeMapper typeMapper) : IEAMLBinder
     /// Sets the bindable property defined by the given <paramref name="propertyInfo"/> to the
     /// value defined by the given <paramref name="attribute"/>.
     /// </summary>
-    /// <param name="propertyInfo">The property set. Its type must be either <see cref="UIProperty{TValue}"/> or <see cref="CompositeBindableProperty{TValue}"/>.</param>
+    /// <param name="propertyInfo">The property set. Its type must be either <see cref="UIProperty{TValue}"/> or <see cref="UICompositeProperty{TValue}"/>.</param>
     /// <param name="attribute">The attribute definition.</param>
     /// <param name="componentInstance">The <see cref="UIComponent"/> owning the property defined by <paramref name="propertyInfo"/>.</param>
     /// <exception cref="UIDefinitionValidationCompoundException">If something failes during the property assignment.</exception>
     /// <exception cref="InvalidOperationException">If the given <paramref name="propertyInfo"/> is not a valid bindable property.</exception>
     public virtual void SetGenericBindableProperty(PropertyInfo propertyInfo, Ast.Attribute attribute, UIComponent componentInstance)
     {
-        if (propertyInfo.IsBindableProperty())
+        if (propertyInfo.IsUIProperty())
         {
             SetBindableProperty(propertyInfo, attribute, componentInstance);
         }
-        else if (propertyInfo.IsCompositeBindableProperty())
+        else if (propertyInfo.IsUICompositeProperty())
         {
             SetCompositeBindableProperty(propertyInfo, attribute, componentInstance);
         }
@@ -77,10 +77,10 @@ public class EAMLBinder(TypeMapper typeMapper) : IEAMLBinder
     }
 
     /// <summary>
-    /// Sets the <see cref="CompositeBindableProperty{TValue}"/> property defined by the given <paramref name="propertyInfo"/> to the
+    /// Sets the <see cref="UICompositeProperty{TValue}"/> property defined by the given <paramref name="propertyInfo"/> to the
     /// value defined by the given <paramref name="attribute"/>.
     /// </summary>
-    /// <param name="propertyInfo">The property set. Its type must be either <see cref="CompositeBindableProperty{TValue}"/>.</param>
+    /// <param name="propertyInfo">The property set. Its type must be either <see cref="UICompositeProperty{TValue}"/>.</param>
     /// <param name="attribute">The attribute definition.</param>
     /// <param name="componentInstance">The <see cref="UIComponent"/> owning the property defined by <paramref name="propertyInfo"/>.</param>
     /// <exception cref="UIDefinitionValidationCompoundException">If something failes during the property assignment.</exception>
@@ -88,7 +88,7 @@ public class EAMLBinder(TypeMapper typeMapper) : IEAMLBinder
     protected virtual void SetCompositeBindableProperty(PropertyInfo propertyInfo, Ast.Attribute attribute, UIComponent componentInstance)
     {
         var propertyValueType = propertyInfo.PropertyType;
-        var propertyInfos = propertyValueType.GetBindableProperties();
+        var propertyInfos = propertyValueType.GetUIProperties();
         var attributes = ToAttributeList(attribute.Value);
         var propertyValue = propertyInfo.GetValue(componentInstance) ?? throw new UIDefinitionValidationException("Property value cannot be null", attribute);
 

@@ -7,7 +7,7 @@ namespace RetroDev.UISharp.Components.Core.Layout;
 /// <summary>
 /// Contains padding information.
 /// </summary>
-public class PaddingGroup : CompositeBindableProperty<PixelUnit>
+public class PaddingGroup : UICompositeProperty<PixelUnit>
 {
     /// <summary>
     /// Top padding.

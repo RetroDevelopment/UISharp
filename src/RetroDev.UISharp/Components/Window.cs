@@ -107,7 +107,7 @@ public class Window : UIRoot
     /// <summary>
     /// Whether the window is re-sizable.
     /// </summary>
-    public UIProperty<bool> Resizable { get; }
+    public UIProperty<bool> ReSizable { get; }
 
     /// <summary>
     /// The default action to execute when closing the window.
@@ -164,14 +164,14 @@ public class Window : UIRoot
         _windowId = Application.WindowManager.CreateWindow(RenderingEngine.RenderingContext);
 
         Title = new UIProperty<string>(this, string.Empty);
-        Resizable = new UIProperty<bool>(this, true);
+        ReSizable = new UIProperty<bool>(this, true);
         CloseBehavior = new UIProperty<WindowCloseBehavior>(this, application.Windows.Count() > 1 ? WindowCloseBehavior.HideWindow : WindowCloseBehavior.QuitApplication);
         SizeStatus = new UIProperty<WindowSizeStatus>(this, WindowSizeStatus.None);
         FullScreen = new UIProperty<bool>(this, false);
 
         //TODO: unregister in dispose?
         Title.ValueChange += Title_ValueChange;
-        Resizable.ValueChange += Resizable_ValueChange;
+        ReSizable.ValueChange += Resizable_ValueChange;
         CloseBehavior.ValueChange += (_, _) => UpdateCloseBehavior();
         SizeStatus.ValueChange += SizeStatus_ValueChange;
         FullScreen.ValueChange += FullScreen_ValueChange;
@@ -543,7 +543,7 @@ public class Window : UIRoot
 
     private void Resizable_ValueChange(UIProperty<bool> sender, ValueChangeEventArgs<bool> e)
     {
-        Application.WindowManager.SetResizable(_windowId, Resizable.Value);
+        Application.WindowManager.SetResizable(_windowId, ReSizable.Value);
     }
 
     private void SizeStatus_ValueChange(UIProperty<WindowSizeStatus> sender, ValueChangeEventArgs<WindowSizeStatus> e)
@@ -603,7 +603,7 @@ public class Window : UIRoot
     {
         Application.WindowManager.SetTitle(_windowId, Title.Value);
         Application.WindowManager.SetOpacity(_windowId, BackgroundColor.Value.AlphaComponent);
-        Application.WindowManager.SetResizable(_windowId, Resizable.Value);
+        Application.WindowManager.SetResizable(_windowId, ReSizable.Value);
 
         switch (SizeStatus.Value)
         {

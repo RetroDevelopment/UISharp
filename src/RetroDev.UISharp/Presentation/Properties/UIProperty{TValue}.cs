@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 using RetroDev.UISharp.Components.Base;
 using RetroDev.UISharp.Components.Shapes;
-using RetroDev.UISharp.Core.Graphics.Shapes;
 using RetroDev.UISharp.Core.Windowing.Events;
 
 namespace RetroDev.UISharp.Presentation.Properties;
@@ -286,11 +285,9 @@ public class UIProperty<TValue>
     /// </summary>
     /// <typeparam name="TDestinationValueType">The <paramref name="destinationProperty"/> value type.</typeparam>
     /// <param name="destinationProperty">The destination property to bind.</param>
-    /// <param name="bindingType">
     /// <param name="sourceToDestinationConverter">The function converting from source property value to destination property value.</param>
     /// <param name="destinationToSourceConverter">The function converting from destination property value to source property value.</param>
     public void BindTwoWays<TDestinationValueType>(UIProperty<TDestinationValueType> destinationProperty,
-                                                   BindingType bindingType,
                                                    Func<TValue, TDestinationValueType> sourceToDestinationConverter,
                                                    Func<TDestinationValueType, TValue> destinationToSourceConverter)
     {

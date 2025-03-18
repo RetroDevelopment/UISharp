@@ -25,7 +25,6 @@ public class EditBox : UIWidget
     private readonly Rectangle _caretRectangle;
 
     private uint? _dragStartIndex;
-    private bool _textSnapshotEnabled = true;
 
     private bool _shiftPressed = false;
     private bool _ctrlPressed = false;
@@ -199,9 +198,7 @@ public class EditBox : UIWidget
 
     private void Text_ValueChange(UIProperty<string> sender, ValueChangeEventArgs<string> e)
     {
-        _textSnapshotEnabled = false;
         _textBuffer.TakeHistorySnapshot(e.CurrentValue);
-        _textSnapshotEnabled = true;
     }
 
 
