@@ -86,18 +86,6 @@ public abstract class UICompositeProperty<TValue>
     }
 
     /// <summary>
-    /// Binds <see langword="this" /> property to the given <paramref name="destinationProperty"/> using <see cref="BindingType.DestinationToSource"/> binding and removes every existing binding.
-    /// </summary>
-    /// <param name="destinationProperty">The destination property to bind.</param>
-    /// The <see cref="BindingType"/> (<see langword="this"/> property is the source property and).
-    /// the given <paramref name="destinationProperty" /> is the destination property.
-    /// </param>
-    public void BindDestinationToSource(UICompositeProperty<TValue> destinationProperty)
-    {
-        Bind(destinationProperty, BindingType.DestinationToSource);
-    }
-
-    /// <summary>
     /// Binds <see langword="this" /> property to the given <paramref name="destinationProperty"/> using <see cref="BindingType.SourceToDestination"/> binding and removes every existing binding.
     /// </summary>
     /// <param name="destinationProperty">The destination property to bind.</param>
@@ -107,6 +95,18 @@ public abstract class UICompositeProperty<TValue>
     public void BindSourceToDestination(UICompositeProperty<TValue> destinationProperty)
     {
         Bind(destinationProperty, BindingType.SourceToDestination);
+    }
+
+    /// <summary>
+    /// Binds <see langword="this" /> property to the given <paramref name="destinationProperty"/> using <see cref="BindingType.DestinationToSource"/> binding and removes every existing binding.
+    /// </summary>
+    /// <param name="destinationProperty">The destination property to bind.</param>
+    /// The <see cref="BindingType"/> (<see langword="this"/> property is the source property and).
+    /// the given <paramref name="destinationProperty" /> is the destination property.
+    /// </param>
+    public void BindDestinationToSrouce(UICompositeProperty<TValue> destinationProperty)
+    {
+        Bind(destinationProperty, BindingType.DestinationToSource);
     }
 
     /// <summary>

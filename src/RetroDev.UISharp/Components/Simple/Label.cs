@@ -50,21 +50,21 @@ public class Label : UIWidget
     public Label(Application application, string text = "") : base(application, isFocusable: false, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
     {
         Text = new UIProperty<string>(this, text);
-        Font = new UIProperty<Font>(this, Application.DefaultFont, BindingType.DestinationToSource);
+        Font = new UIProperty<Font>(this, Application.DefaultFont, BindingType.SourceToDestination);
         TextColor = CreateNewColorPropertyFor<Label>(UISharpColorNames.LabelText);
         TextHorizontalAlignment = new UIProperty<IHorizontalAlignment>(this, Alignment.Center);
         TextVerticalAlignment = new UIProperty<IVerticalAlignment>(this, Alignment.Center);
 
         _backgroundRectangle = new Rectangle(application);
-        _backgroundRectangle.BackgroundColor.BindDestinationToSource(BackgroundColor);
+        _backgroundRectangle.BackgroundColor.BindSourceToDestination(BackgroundColor);
         Canvas.Add(_backgroundRectangle);
 
         _text = new Text(application);
-        _text.TextColor.BindDestinationToSource(TextColor);
-        _text.DisplayText.BindDestinationToSource(Text);
-        _text.Font.BindDestinationToSource(Font);
-        _text.TextHorizontalAlignment.BindDestinationToSource(TextHorizontalAlignment);
-        _text.TextVerticalAlignment.BindDestinationToSource(TextVerticalAlignment);
+        _text.TextColor.BindSourceToDestination(TextColor);
+        _text.DisplayText.BindSourceToDestination(Text);
+        _text.Font.BindSourceToDestination(Font);
+        _text.TextHorizontalAlignment.BindSourceToDestination(TextHorizontalAlignment);
+        _text.TextVerticalAlignment.BindSourceToDestination(TextVerticalAlignment);
         Canvas.Add(_text);
 
         RenderFrame += Label_RenderFrame;

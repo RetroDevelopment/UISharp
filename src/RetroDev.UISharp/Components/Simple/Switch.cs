@@ -70,7 +70,7 @@ public class Switch : UIWidget
         Canvas.Add(_backgroundRectangle);
 
         _selectionCircle = new Circle(application);
-        _selectionCircle.BackgroundColor.BindDestinationToSource(CircleColor);
+        _selectionCircle.BackgroundColor.BindSourceToDestination(CircleColor);
         Canvas.Add(_selectionCircle);
 
         MousePress += Switch_MousePress;

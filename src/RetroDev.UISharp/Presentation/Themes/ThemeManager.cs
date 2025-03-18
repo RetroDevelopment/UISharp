@@ -167,7 +167,7 @@ public class ThemeManager(Application application, ITextResources themeResources
         {
             if (!_colorProperties.ContainsKey(idColorBinding.Key))
             {
-                _colorProperties.Add(idColorBinding.Key, new UIProperty<Color>(_application, idColorBinding.Value, BindingType.SourceToDestination));
+                _colorProperties.Add(idColorBinding.Key, new UIProperty<Color>(_application, idColorBinding.Value, canReceiveBindingUpdates: false));
             }
             else
             {

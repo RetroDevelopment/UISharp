@@ -115,12 +115,12 @@ public class EditBox : UIWidget
     public EditBox(Application application, string text = "") : base(application, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
     {
         Text = new UIProperty<string>(this, text);
-        Font = new UIProperty<Font>(this, application.DefaultFont, BindingType.DestinationToSource);
+        Font = new UIProperty<Font>(this, application.DefaultFont, BindingType.SourceToDestination);
         TextColor = CreateNewColorPropertyFor<EditBox>(UISharpColorNames.EditBoxText);
         DisabledTextColor = CreateNewColorPropertyFor<EditBox>(UISharpColorNames.EditBoxDisabledText);
         FocusColor = CreateNewColorPropertyFor<EditBox>(UISharpColorNames.EditBoxFocusBorder);
         DisabledBackgroundColor = CreateNewColorPropertyFor<EditBox>(UISharpColorNames.EditBoxDisabled);
-        CaretColor = new UIProperty<Color>(this, TextColor, BindingType.DestinationToSource);
+        CaretColor = new UIProperty<Color>(this, TextColor, BindingType.SourceToDestination);
         SelectionColor = CreateNewColorPropertyFor<EditBox>(UISharpColorNames.EditBoxSelection);
         UnfocusedSelectionColor = CreateNewColorPropertyFor<EditBox>(UISharpColorNames.EditBoxUnfocusedSelection);
         BorderColor = CreateNewColorPropertyFor<EditBox>(UISharpColorNames.EditBoxBorder);
@@ -139,14 +139,14 @@ public class EditBox : UIWidget
         Canvas.Add(_selectionRectangle);
 
         _inputText = new Text(application);
-        _inputText.Font.BindDestinationToSource(Font);
-        _inputText.DisplayText.BindDestinationToSource(Text);
+        _inputText.Font.BindSourceToDestination(Font);
+        _inputText.DisplayText.BindSourceToDestination(Text);
         _inputText.TextHorizontalAlignment.Value = Alignment.Left;
-        _inputText.TextVerticalAlignment.BindDestinationToSource(TextVerticalAlignment);
+        _inputText.TextVerticalAlignment.BindSourceToDestination(TextVerticalAlignment);
         Canvas.Add(_inputText);
 
         _caretRectangle = new Rectangle(application);
-        _caretRectangle.BackgroundColor.BindDestinationToSource(CaretColor);
+        _caretRectangle.BackgroundColor.BindSourceToDestination(CaretColor);
         Canvas.Add(_caretRectangle);
 
         _textBuffer = new EditableTextBuffer(application);
@@ -348,11 +348,11 @@ public class EditBox : UIWidget
     {
         if (enabled)
         {
-            _inputText.TextColor.BindDestinationToSource(TextColor);
+            _inputText.TextColor.BindSourceToDestination(TextColor);
         }
         else
         {
-            _inputText.TextColor.BindDestinationToSource(DisabledTextColor);
+            _inputText.TextColor.BindSourceToDestination(DisabledTextColor);
         }
     }
 
@@ -418,8 +418,8 @@ public class EditBox : UIWidget
         _selectionRectangle.Visible.Value = SelectionLength.Value != 0;
         if (!_selectionRectangle.Visible.Value) return;
 
-        if (Focus.Value) _selectionRectangle.BackgroundColor.BindDestinationToSource(SelectionColor);
-        else _selectionRectangle.BackgroundColor.BindDestinationToSource(UnfocusedSelectionColor);
+        if (Focus.Value) _selectionRectangle.BackgroundColor.BindSourceToDestination(SelectionColor);
+        else _selectionRectangle.BackgroundColor.BindSourceToDestination(UnfocusedSelectionColor);
 
         var padding = Padding.ToMarginStruct();
         var textLeftBoundingBox = _inputText.RelativeRenderingArea.Value.TopLeft.X;
@@ -450,11 +450,11 @@ public class EditBox : UIWidget
     {
         if (focus)
         {
-            _backgroundRectangle.BorderColor.BindDestinationToSource(FocusColor);
+            _backgroundRectangle.BorderColor.BindSourceToDestination(FocusColor);
         }
         else
         {
-            _backgroundRectangle.BorderColor.BindDestinationToSource(BorderColor);
+            _backgroundRectangle.BorderColor.BindSourceToDestination(BorderColor);
         }
     }
 

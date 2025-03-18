@@ -117,7 +117,7 @@ public class Application : IDisposable
         ThemeManager = new ThemeManager(this, ResourceManager.Themes);
         LifeCycle.CurrentState = LifeCycle.State.INIT;
         var font = new Font(this, "LiberationSans", 16, FontType.Regular);
-        DefaultFont = new UIProperty<Font>(this, font, BindingType.SourceToDestination);
+        DefaultFont = new UIProperty<Font>(this, font, canReceiveBindingUpdates: false);
 
         ThemeManager.LoadTheme("uisharp-dark");
         WindowManager.Initialize();

@@ -17,7 +17,7 @@ public static class ThemeExtensions
     public static void BindTheme(this UIProperty<Color> @this, string id)
     {
         var property = @this.Application.ThemeManager.GetColorProperty(id);
-        @this.BindDestinationToSource(property);
+        @this.BindSourceToDestination(property);
     }
 
     /// <summary>
@@ -30,6 +30,6 @@ public static class ThemeExtensions
     public static void BindTheme<TSource>(this UIProperty<TSource> @this, string id, Func<Color, TSource> converter)
     {
         var property = @this.Application.ThemeManager.GetColorProperty(id);
-        @this.BindDestinationToSource(property, converter);
+        @this.BindSourceToDestination(property, converter);
     }
 }

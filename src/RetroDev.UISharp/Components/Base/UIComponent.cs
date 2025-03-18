@@ -639,7 +639,7 @@ public abstract class UIComponent
     protected UIProperty<Color> CreateNewColorPropertyFor<TComponent>(string id) where TComponent : UIComponent
     {
         var themeProperty = Application.ThemeManager.GetColorProperty(id);
-        return new UIProperty<Color>(this, themeProperty, BindingType.DestinationToSource);
+        return new UIProperty<Color>(this, themeProperty, BindingType.SourceToDestination);
     }
 
     internal IEnumerable<UIComponent> GetComponentTreeNodesDepthFirstSearch() =>

@@ -47,7 +47,7 @@ public class TreeBox : UIContainer
         _listBox.BorderColor.RemoveBinding();
         _listBox.BackgroundColor.Value = Color.Transparent;
         _listBox.BorderColor.Value = Color.Transparent;
-        _listBox.Margin.BindDestinationToSource(Padding);
+        _listBox.Margin.BindSourceToDestination(Padding);
         AddChildNode(_listBox);
 
         SelectedNode = new UIProperty<TreeNode?>(this, (TreeNode?)null);

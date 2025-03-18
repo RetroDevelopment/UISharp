@@ -50,8 +50,8 @@ public class ScrollView : UIContainer, ISingleContainer
         BorderColor.BindTheme(UISharpColorNames.ScrollViewBorder);
 
         _verticalScrollBar = new ScrollBar(application);
-        _verticalScrollBar.BackgroundColor.BindDestinationToSource(ScrollBarColor);
-        _verticalScrollBar.Width.BindDestinationToSource(ScrollBarThickness);
+        _verticalScrollBar.BackgroundColor.BindSourceToDestination(ScrollBarColor);
+        _verticalScrollBar.Width.BindSourceToDestination(ScrollBarThickness);
         _verticalScrollBar.HorizontalAlignment.Value = Alignment.Right;
         _verticalScrollBar.MouseDragBegin += VerticalScrollBar_MouseDragBegin;
         _verticalScrollBar.MouseDrag += VerticalScrollBar_MouseDrag;
@@ -59,8 +59,8 @@ public class ScrollView : UIContainer, ISingleContainer
         AddChildNode(_verticalScrollBar);
 
         _horizontalScrollBar = new ScrollBar(application);
-        _horizontalScrollBar.BackgroundColor.BindDestinationToSource(ScrollBarColor);
-        _horizontalScrollBar.Height.BindDestinationToSource(ScrollBarThickness);
+        _horizontalScrollBar.BackgroundColor.BindSourceToDestination(ScrollBarColor);
+        _horizontalScrollBar.Height.BindSourceToDestination(ScrollBarThickness);
         _horizontalScrollBar.VerticalAlignment.Value = Alignment.Bottom;
         _horizontalScrollBar.MouseDragBegin += HorizontalScrollBar_MouseDragBegin;
         _horizontalScrollBar.MouseDrag += HorizontalScrollBar_MouseDrag;
@@ -265,7 +265,7 @@ public class ScrollView : UIContainer, ISingleContainer
         public ScrollBar(Application application) : base(application)
         {
             _barRectangle = new Rectangle(application);
-            _barRectangle.BackgroundColor.BindDestinationToSource(BackgroundColor);
+            _barRectangle.BackgroundColor.BindSourceToDestination(BackgroundColor);
             Canvas.Add(_barRectangle);
 
             MouseDragBegin += ScrollBar_MouseDragBegin;

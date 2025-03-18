@@ -64,7 +64,7 @@ public class ListBox : UIContainer, IContainer
         _verticalLayout.AutoWidth.Value = AutoSize.Stretch;
         _verticalLayout.HorizontalAlignment.Value = Alignment.Left;
         _verticalLayout.VerticalAlignment.Value = Alignment.Top;
-        _verticalLayout.Margin.BindDestinationToSource(Padding);
+        _verticalLayout.Margin.BindSourceToDestination(Padding);
 
         SelectedIndex = new UIProperty<uint?>(this, (uint?)null);
         SelectedItem = new UIProperty<UIWidget?>(this, (UIWidget?)null);

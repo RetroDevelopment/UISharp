@@ -92,7 +92,7 @@ public class Button : UIWidget
         _isAction = new UIProperty<bool>(this, false);
 
         Text = new UIProperty<string>(this, text ?? string.Empty);
-        Font = new UIProperty<Font>(this, Application.DefaultFont, BindingType.DestinationToSource);
+        Font = new UIProperty<Font>(this, Application.DefaultFont, BindingType.SourceToDestination);
         TextColor = CreateNewColorPropertyFor<Button>(UISharpColorNames.ButtonText);
         DisabledTextColor = CreateNewColorPropertyFor<Button>(UISharpColorNames.ButtonDisabledText);
         FocusColor = CreateNewColorPropertyFor<Button>(UISharpColorNames.ButtonFocusBorder);
@@ -110,12 +110,12 @@ public class Button : UIWidget
         Canvas.Add(_backgroundRectangle);
 
         _buttonTextLabel = new Label(application);
-        _buttonTextLabel.Text.BindDestinationToSource(Text);
-        _buttonTextLabel.Font.BindDestinationToSource(Font);
-        _buttonTextLabel.TextColor.BindDestinationToSource(TextColor);
-        _buttonTextLabel.HorizontalAlignment.BindDestinationToSource(TextHorizontalAlignment);
-        _buttonTextLabel.VerticalAlignment.BindDestinationToSource(TextVerticalAlignment);
-        _buttonTextLabel.Margin.BindDestinationToSource(Padding);
+        _buttonTextLabel.Text.BindSourceToDestination(Text);
+        _buttonTextLabel.Font.BindSourceToDestination(Font);
+        _buttonTextLabel.TextColor.BindSourceToDestination(TextColor);
+        _buttonTextLabel.HorizontalAlignment.BindSourceToDestination(TextHorizontalAlignment);
+        _buttonTextLabel.VerticalAlignment.BindSourceToDestination(TextVerticalAlignment);
+        _buttonTextLabel.Margin.BindSourceToDestination(Padding);
         AddChildNode(_buttonTextLabel);
 
         KeyPress += Button_KeyPress;
@@ -222,11 +222,11 @@ public class Button : UIWidget
     {
         if (Focus.Value)
         {
-            _backgroundRectangle.BorderColor.BindDestinationToSource(FocusColor);
+            _backgroundRectangle.BorderColor.BindSourceToDestination(FocusColor);
         }
         else
         {
-            _backgroundRectangle.BorderColor.BindDestinationToSource(BorderColor);
+            _backgroundRectangle.BorderColor.BindSourceToDestination(BorderColor);
         }
     }
 }

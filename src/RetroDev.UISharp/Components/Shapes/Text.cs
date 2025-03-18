@@ -61,7 +61,7 @@ public class Text : UIShape
 
         TextColor = new UIProperty<Color>(this, application, Color.Transparent);
         DisplayText = new UIProperty<string>(this, application, string.Empty);
-        Font = new UIProperty<Font>(this, application, application.DefaultFont, BindingType.DestinationToSource);
+        Font = new UIProperty<Font>(this, application, application.DefaultFont, BindingType.SourceToDestination);
         TextHorizontalAlignment = new UIProperty<IHorizontalAlignment>(this, application, Alignment.Left);
         TextVerticalAlignment = new UIProperty<IVerticalAlignment>(this, application, Alignment.Center);
         HorizontalScroll = new UIProperty<PixelUnit>(this, application, PixelUnit.Zero);

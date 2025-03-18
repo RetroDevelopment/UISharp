@@ -53,11 +53,11 @@ public class ProgressBar : UIWidget
         BackgroundColor.BindTheme(UISharpColorNames.ProgressBarBackground);
 
         _backgroundRectangle = new Rectangle(application);
-        _backgroundRectangle.BackgroundColor.BindDestinationToSource(BackgroundColor);
+        _backgroundRectangle.BackgroundColor.BindSourceToDestination(BackgroundColor);
         Canvas.Add(_backgroundRectangle);
 
         _progressRectangle = new Rectangle(application);
-        _progressRectangle.BackgroundColor.BindDestinationToSource(ForegroundColor);
+        _progressRectangle.BackgroundColor.BindSourceToDestination(ForegroundColor);
         Canvas.Add(_progressRectangle);
 
         RenderFrame += ProgressBar_RenderFrame;

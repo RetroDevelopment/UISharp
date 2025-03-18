@@ -40,8 +40,8 @@ public abstract class UIContainer : UIWidget, IGenericContainer
         BorderColor = new UIProperty<Color>(this, Color.Transparent);
 
         _backgroundRectangle = new Rectangle(application);
-        _backgroundRectangle.BackgroundColor.BindDestinationToSource(BackgroundColor);
-        _backgroundRectangle.BorderColor.BindDestinationToSource(BorderColor);
+        _backgroundRectangle.BackgroundColor.BindSourceToDestination(BackgroundColor);
+        _backgroundRectangle.BorderColor.BindSourceToDestination(BorderColor);
         _backgroundRectangle.BorderThickness.Value = 2.0f; // TODO: use styles
         Canvas.Add(_backgroundRectangle);
         RenderFrame += UIContainer_RenderFrame;
