@@ -177,7 +177,7 @@ public class SDLWindowManager : IWindowManager
     /// </summary>
     /// <param name="windowId">The identifier of the window for which to set if it is resizable.</param>
     /// <param name="resizable"><see langword="true" /> if the window is resizable, otherwise <see langword="false" />.</param>
-    public void SetResizable(IWindowId windowId, bool resizable) =>
+    public void SetReSizable(IWindowId windowId, bool resizable) =>
         ExecuteOnWindow(windowId, id => SDL_SetWindowResizable(id.Handle, resizable ? SDL_bool.SDL_TRUE : SDL_bool.SDL_FALSE));
 
     /// <summary>

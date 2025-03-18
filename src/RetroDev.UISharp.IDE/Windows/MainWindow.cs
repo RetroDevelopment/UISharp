@@ -74,8 +74,8 @@ internal class MainWindow : Window
     {
         InitializeComponentListBox();
         InitializeButtons();
-        _astTreeBox.SelectedNode.ValueChange += SelectedNode_ValueChange;
-        _components.SelectedItem.ValueChange += SelectedItem_ValueChange;
+        _astTreeBox.SelectedNode.ValueChange.Subscribe(OnTreeNodeChange);
+        _components.SelectedItem.ValueChange.Subscribe(_ => UpdateAddRemoveButtonState());
         InitializeTitle();
     }
 
@@ -102,7 +102,7 @@ internal class MainWindow : Window
         _refreshButton.Action += RefreshButton_Action;
         _addButton.Action += AddButton_Action;
         _removeButton.Action += RemoveButton_Action;
-        _darkMode.Checked.ValueChange += Checked_ValueChange;
+        _darkMode.Checked.ValueChange.Subscribe(OnCheckedChange);
     }
 
     private void InitializeTitle()
@@ -183,9 +183,9 @@ internal class MainWindow : Window
         CreateComponentInstance();
     }
 
-    private void Checked_ValueChange(UIProperty<bool> sender, ValueChangeEventArgs<bool> e)
+    private void OnCheckedChange(bool @checked)
     {
-        if (e.CurrentValue)
+        if (@checked)
         {
             Application.ThemeManager.LoadTheme("uisharp-dark");
         }
@@ -195,18 +195,18 @@ internal class MainWindow : Window
         }
     }
 
-    private void SelectedNode_ValueChange(UIProperty<TreeNode?> sender, ValueChangeEventArgs<TreeNode?> e)
+    private void OnTreeNodeChange(TreeNode? node)
     {
         var listBox = _propertyList;
         listBox.Clear();
 
-        if (e.CurrentValue == null)
+        if (node == null)
         {
             UpdateAddRemoveButtonState();
             return;
         }
 
-        var selectedAstNode = _treeNodeAstMap[e.CurrentValue];
+        var selectedAstNode = _treeNodeAstMap[node];
         var typeMapper = Application.UIDefinitionManager.TypeMapper;
         var type = typeMapper.GetUIComponent(selectedAstNode.Name);
         var properties = typeMapper.GetProperties(type!);
@@ -234,7 +234,7 @@ internal class MainWindow : Window
                 attribute = new Attribute(property.Name, string.Empty);
             }
 
-            editBox.Text.ValueChange += (_, e) => OnAttributeChange(selectedAstNode, attribute, e.CurrentValue);
+            editBox.Text.ValueChange.Subscribe(text => OnAttributeChange(selectedAstNode, attribute, text));
 
             gridLayout.AddComponent(header);
             gridLayout.AddComponent(editBox);
@@ -242,11 +242,6 @@ internal class MainWindow : Window
             listBox.AddComponent(gridLayout);
         }
 
-        UpdateAddRemoveButtonState();
-    }
-
-    private void SelectedItem_ValueChange(UIProperty<UIWidget?> sender, ValueChangeEventArgs<UIWidget?> e)
-    {
         UpdateAddRemoveButtonState();
     }
 

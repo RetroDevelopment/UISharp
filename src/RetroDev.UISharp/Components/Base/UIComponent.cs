@@ -1,4 +1,5 @@
-﻿using RetroDev.UISharp.Components.Core;
+﻿using System;
+using RetroDev.UISharp.Components.Core;
 using RetroDev.UISharp.Components.Core.AutoArea;
 using RetroDev.UISharp.Components.Core.Layout;
 using RetroDev.UISharp.Components.Shapes;
@@ -327,11 +328,11 @@ public abstract class UIComponent
         _absoluteDrawingArea = Area.Empty;
         _clipArea = Area.Empty;
 
-        Focus.ValueChange += Focus_ValueChange;
-        Enabled.ValueChange += Enabled_ValueChange;
+        Focus.ValueChange.Subscribe(OnFocusChange);
+        Enabled.ValueChange.Subscribe(OnEnabledChange);
 
         UpdateVisibility();
-        Visibility.ValueChange += (_, _) => UpdateVisibility();
+        Visibility.ValueChange.Subscribe(v => UpdateVisibility());
     }
 
     /// <summary>
@@ -748,17 +749,17 @@ public abstract class UIComponent
         return currentZIndex;
     }
 
-    private void Focus_ValueChange(UIProperty<bool> sender, ValueChangeEventArgs<bool> e)
+    private void OnFocusChange(bool focus)
     {
-        if (e.CurrentValue)
+        if (focus)
         {
             RequestFocusFor(this);
         }
     }
 
-    private void Enabled_ValueChange(UIProperty<bool> sender, ValueChangeEventArgs<bool> e)
+    private void OnEnabledChange(bool enabled)
     {
-        if (!e.CurrentValue)
+        if (!enabled)
         {
             Focus.Value = false;
         }

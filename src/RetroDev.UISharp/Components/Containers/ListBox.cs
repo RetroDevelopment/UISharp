@@ -67,10 +67,9 @@ public class ListBox : UIContainer, IContainer
         _verticalLayout.Margin.BindDestinationToSource(Padding);
 
         SelectedIndex = new UIProperty<uint?>(this, (uint?)null);
-        SelectedIndex.ValueChange += SelectedIndex_ValueChange;
-
         SelectedItem = new UIProperty<UIWidget?>(this, (UIWidget?)null);
-        SelectedItem.ValueChange += SelectedItem_ValueChange;
+        SelectedIndex.ValueChange.Subscribe(OnSelectedIndexChange);
+        SelectedItem.ValueChange.Subscribe(OnSelectedItemChange);
 
         AddChildNode(_scrollView);
     }
@@ -158,26 +157,26 @@ public class ListBox : UIContainer, IContainer
         }
     }
 
-    private void SelectedIndex_ValueChange(UIProperty<uint?> sender, ValueChangeEventArgs<uint?> e)
+    private void OnSelectedIndexChange(uint? index)
     {
         var numberOfItems = _verticalLayout.Children.Count();
-        if (e.CurrentValue != null && e.CurrentValue.Value > numberOfItems)
+        if (index != null && index > numberOfItems)
         {
-            throw new InvalidOperationException($"Cannot select ListBox item with index {e.CurrentValue}: the ListBox has {numberOfItems} elements");
+            throw new InvalidOperationException($"Cannot select ListBox item with index {index}: the ListBox has {numberOfItems} elements");
         }
 
-        SelectedItem.Value = e.CurrentValue != null ? Children.ElementAt((int)e.CurrentValue) : null;
+        SelectedItem.Value = index != null ? Children.ElementAt((int)index) : null;
     }
 
-    private void SelectedItem_ValueChange(UIProperty<UIWidget?> sender, ValueChangeEventArgs<UIWidget?> e)
+    private void OnSelectedItemChange(UIWidget? item)
     {
-        if (e.CurrentValue == null)
+        if (item == null)
         {
             SelectedIndex.Value = null;
             return;
         }
 
-        var selectedIndex = _verticalLayout.Children.ToList().IndexOf(e.CurrentValue);
+        var selectedIndex = _verticalLayout.Children.ToList().IndexOf(item);
         if (selectedIndex == -1) throw new InvalidOperationException("ListBox selected element not found");
         SelectedIndex.Value = (uint)selectedIndex;
     }

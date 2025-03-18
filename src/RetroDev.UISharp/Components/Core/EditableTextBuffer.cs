@@ -53,7 +53,7 @@ public class EditableTextBuffer
         CaretIndex = new UIProperty<uint>(application, 0);
         SelectionLength = new UIProperty<int>(application, 0);
 
-        Text.ValueChange += Text_ValueChange;
+        Text.ValueChange.Subscribe(OnTextValueChange);
         _history.Add(Text.Value);
         _historyIndex = 0;
     }
@@ -332,10 +332,10 @@ public class EditableTextBuffer
         }
     }
 
-    private void Text_ValueChange(UIProperty<string> sender, ValueChangeEventArgs<string> e)
+    private void OnTextValueChange(string text)
     {
-        CaretIndex.Value = (uint)Math.Clamp(CaretIndex.Value, 0, Text.Value.Length);
-        SelectionLength.Value = Math.Clamp(SelectionLength.Value, -(int)CaretIndex.Value, Text.Value.Length - (int)CaretIndex.Value);
+        CaretIndex.Value = (uint)Math.Clamp(CaretIndex.Value, 0, text.Length);
+        SelectionLength.Value = Math.Clamp(SelectionLength.Value, -(int)CaretIndex.Value, text.Length - (int)CaretIndex.Value);
         RefreshTokenList();
     }
 }

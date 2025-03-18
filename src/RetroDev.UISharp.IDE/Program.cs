@@ -39,8 +39,8 @@ internal class Program
     private static void LoadTest(Application application)
     {
         Window w = new Window(application);
-        w.X.ValueChange += (_, _) => application.Logger.LogError("X = " + w.X.Value);
-        w.Width.ValueChange += (_, _) => application.Logger.LogError("WIDTH = " + w.Width.Value);
+        w.X.ValueChange.Subscribe(_ => application.Logger.LogError("X = " + w.X.Value));
+        w.Width.ValueChange.Subscribe(_ => application.Logger.LogError("WIDTH = " + w.Width.Value));
         w.MinimumWidth.Value = 100;
         w.MaximumWidth.Value = 400;
         w.MinimumHeight.Value = 100;
@@ -70,7 +70,6 @@ internal class Program
             var b = new Button(application, "Done");
             b.Action += (_, _) => Close("<CLOSED>");
             b.Margin.SetAll(30);
-            FullScreen.Value = true;
             AddComponent(b);
             es = e;
         }

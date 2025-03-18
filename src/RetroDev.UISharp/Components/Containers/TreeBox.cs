@@ -52,8 +52,8 @@ public class TreeBox : UIContainer
 
         SelectedNode = new UIProperty<TreeNode?>(this, (TreeNode?)null);
         // TODO SelectedNode can be bound to _listBox.SelectedItem and converters!
-        SelectedNode.ValueChange += SelectedNode_ValueChange;
-        _listBox.SelectedIndex.ValueChange += SelectedIndex_ValueChange;
+        SelectedNode.ValueChange.Subscribe(OnSelectedNodeChange);
+        _listBox.SelectedIndex.ValueChange.Subscribe(OnSelectedIndexChange);
     }
 
     public void AddTreeNode(TreeNode component)
@@ -128,8 +128,7 @@ public class TreeBox : UIContainer
             AddTreeNode(child, component);
         }
 
-        UpdateCollapseState(component);
-        component.Collapsed.ValueChange += (_, _) => UpdateCollapseState(component);
+        component.Collapsed.ValueChange.Subscribe(_ => UpdateCollapseState(component));
     }
 
     public void RemoveTreeNode(TreeNode node)
@@ -161,29 +160,29 @@ public class TreeBox : UIContainer
     public void Clear() =>
         _nodes.Where(n => n.Parent == null).ToList().ForEach(RemoveTreeNode);
 
-    private void SelectedNode_ValueChange(UIProperty<TreeNode?> sender, ValueChangeEventArgs<TreeNode?> e)
+    private void OnSelectedNodeChange(TreeNode? node)
     {
-        if (e.CurrentValue == null)
+        if (node == null)
         {
             _listBox.SelectedIndex.Value = null;
         }
         else
         {
-            var selectedIndex = Children.ToList().FindIndex(c => c == e.CurrentValue.Content.Value);
+            var selectedIndex = Children.ToList().FindIndex(c => c == node.Content.Value);
             if (selectedIndex < 0) throw new ArgumentException("Selected node not found");
             _listBox.SelectedIndex.Value = (uint)selectedIndex;
         }
     }
 
-    private void SelectedIndex_ValueChange(UIProperty<uint?> sender, ValueChangeEventArgs<uint?> e)
+    private void OnSelectedIndexChange(uint? index)
     {
-        if (e.CurrentValue == null)
+        if (index == null)
         {
             SelectedNode.Value = null;
         }
         else
         {
-            var selectedNode = _nodes[(int)e.CurrentValue.Value];
+            var selectedNode = _nodes[(int)index];
             SelectedNode.Value = selectedNode;
         }
     }

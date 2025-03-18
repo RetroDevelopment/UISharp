@@ -1,4 +1,5 @@
-﻿using RetroDev.UISharp.Components.Base;
+﻿using System;
+using RetroDev.UISharp.Components.Base;
 using RetroDev.UISharp.Components.Core;
 using RetroDev.UISharp.Components.Core.AutoArea;
 using RetroDev.UISharp.Components.Shapes;
@@ -128,8 +129,6 @@ public class EditBox : UIWidget
         SelectionLength = new UIProperty<int>(this, 0);
         BackgroundColor.BindTheme(UISharpColorNames.EditBoxBackground);
 
-        Text.ValueChange += Text_ValueChange;
-
         Padding.SetAll(5.0f);
 
         _backgroundRectangle = new Rectangle(application);
@@ -144,7 +143,6 @@ public class EditBox : UIWidget
         _inputText.DisplayText.BindDestinationToSource(Text);
         _inputText.TextHorizontalAlignment.Value = Alignment.Left;
         _inputText.TextVerticalAlignment.BindDestinationToSource(TextVerticalAlignment);
-        UpdateTextColorBinding();
         Canvas.Add(_inputText);
 
         _caretRectangle = new Rectangle(application);
@@ -157,6 +155,10 @@ public class EditBox : UIWidget
         _textBuffer.SelectionLength.BindTwoWays(SelectionLength);
         _textBuffer.Text.Value = text;
 
+        Text.ValueChange.Subscribe(v => _textBuffer.TakeHistorySnapshot(v));
+        Enabled.ValueChange.Subscribe(UpdateTextColorBinding);
+        Focus.ValueChange.Subscribe(UpdateBackgroundRectangleBorder);
+
         MousePress += EditBox_MousePress;
         KeyPress += EditBox_KeyPress;
         KeyRelease += EditBox_KeyRelease;
@@ -166,8 +168,6 @@ public class EditBox : UIWidget
         MouseEnter += EditBox_MouseEnter;
         MouseMove += EditBox_MouseEnter;
         MouseLeave += EditBox_MouseLeave;
-        Enabled.ValueChange += Enabled_ValueChange;
-        Focus.ValueChange += Focus_ValueChange;
         RenderFrame += EditBox_RenderFrame;
     }
 
@@ -195,12 +195,6 @@ public class EditBox : UIWidget
         var estimatedNumberOfCharacters = 10;
         return new Size(height * estimatedNumberOfCharacters, height);
     }
-
-    private void Text_ValueChange(UIProperty<string> sender, ValueChangeEventArgs<string> e)
-    {
-        _textBuffer.TakeHistorySnapshot(e.CurrentValue);
-    }
-
 
     private void EditBox_KeyPress(UIComponent sender, KeyEventArgs e)
     {
@@ -350,19 +344,9 @@ public class EditBox : UIWidget
         }
     }
 
-    private void Enabled_ValueChange(UIProperty<bool> sender, ValueChangeEventArgs<bool> e)
+    private void UpdateTextColorBinding(bool enabled)
     {
-        UpdateTextColorBinding();
-    }
-
-    private void Focus_ValueChange(UIProperty<bool> sender, ValueChangeEventArgs<bool> e)
-    {
-        UpdateBackgroundRectangleBorder();
-    }
-
-    private void UpdateTextColorBinding()
-    {
-        if (Enabled.Value)
+        if (enabled)
         {
             _inputText.TextColor.BindDestinationToSource(TextColor);
         }
@@ -387,7 +371,7 @@ public class EditBox : UIWidget
         _backgroundRectangle.CornerRadiusX.Value = cornerRadius;
         _backgroundRectangle.CornerRadiusY.Value = cornerRadius;
         UpdateBackgroundRectangleColor();
-        UpdateBackgroundRectangleBorder();
+        UpdateBackgroundRectangleBorder(Focus.Value);
     }
 
     private void UpdateInputText(Size renderingAreaSize)
@@ -462,9 +446,9 @@ public class EditBox : UIWidget
         }
     }
 
-    private void UpdateBackgroundRectangleBorder()
+    private void UpdateBackgroundRectangleBorder(bool focus)
     {
-        if (Focus.Value)
+        if (focus)
         {
             _backgroundRectangle.BorderColor.BindDestinationToSource(FocusColor);
         }

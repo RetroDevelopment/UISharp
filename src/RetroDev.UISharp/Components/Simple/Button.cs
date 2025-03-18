@@ -116,7 +116,6 @@ public class Button : UIWidget
         _buttonTextLabel.HorizontalAlignment.BindDestinationToSource(TextHorizontalAlignment);
         _buttonTextLabel.VerticalAlignment.BindDestinationToSource(TextVerticalAlignment);
         _buttonTextLabel.Margin.BindDestinationToSource(Padding);
-        UpdateTextColor();
         AddChildNode(_buttonTextLabel);
 
         KeyPress += Button_KeyPress;
@@ -125,7 +124,7 @@ public class Button : UIWidget
         MouseLeave += Button_MouseLeave;
         MouseDragEnd += Button_MouseDragEnd;
         RenderFrame += Button_RenderFrame;
-        Enabled.ValueChange += (_, _) => UpdateTextColor();
+        Enabled.ValueChange.Subscribe(_ => UpdateTextColor());
     }
 
     /// <summary>

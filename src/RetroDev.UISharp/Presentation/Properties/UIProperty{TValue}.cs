@@ -1,9 +1,12 @@
 ﻿using System.Diagnostics;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using RetroDev.UISharp.Components.Base;
 using RetroDev.UISharp.Components.Shapes;
-using RetroDev.UISharp.Core.Windowing.Events;
 
 namespace RetroDev.UISharp.Presentation.Properties;
+
+// TODO: implement IDisposable
 
 /// <summary>
 /// A property wrapper that allows for dynamic one or two way binding.
@@ -24,14 +27,15 @@ namespace RetroDev.UISharp.Presentation.Properties;
 public class UIProperty<TValue>
 {
     private readonly bool _lockSetter;
+    private readonly BehaviorSubject<TValue> _valueChangeSubject;
+
     private TValue _value;
     private IBinder? _binder;
 
     /// <summary>
-    /// Triggers then the <see cref="Value"/> changes. Setting <see cref="Value"/> to the same value
-    /// does not trigger this event, only modifying the value does.
+    /// Allows to be notified whenever the <see cref="Value"/> property changes.
     /// </summary>
-    public event TypeSafeEventHandler<UIProperty<TValue>, ValueChangeEventArgs<TValue>>? ValueChange;
+    public IObservable<TValue> ValueChange { get; }
 
     /// <summary>
     /// The application owing <see langword="this" /> <see cref="UIProperty{TValue}"/>.
@@ -49,9 +53,8 @@ public class UIProperty<TValue>
 
             if (!EqualityComparer<TValue>.Default.Equals(_value, value))
             {
-                var previousValue = _value;
                 _value = value;
-                ValueChange?.Invoke(this, new ValueChangeEventArgs<TValue>(previousValue, value));
+                _valueChangeSubject.OnNext(value);
             }
         }
         get
@@ -80,6 +83,8 @@ public class UIProperty<TValue>
     public UIProperty(Application application, TValue value, BindingType allowedBinding = BindingType.TwoWays, bool lockSetter = false)
     {
         application.Dispatcher.ThrowIfNotOnUIThread();
+        _valueChangeSubject = new BehaviorSubject<TValue>(value);
+        ValueChange = _valueChangeSubject.AsObservable();
         Application = application;
         _value = value;
         AllowedBinding = allowedBinding;
@@ -115,7 +120,7 @@ public class UIProperty<TValue>
     /// </remarks>
     public UIProperty(UIComponent parent, TValue value, BindingType allowedBinding = BindingType.TwoWays) : this(parent.Application, value, allowedBinding, lockSetter: true)
     {
-        ValueChange += (_, _) => parent.Invalidate();
+        ValueChange.Subscribe(v => parent.Invalidate());
     }
 
     /// <summary>
@@ -147,7 +152,7 @@ public class UIProperty<TValue>
     /// </remarks>
     public UIProperty(UIShape parent, Application application, TValue value, BindingType allowedBinding = BindingType.TwoWays) : this(application, value, allowedBinding)
     {
-        ValueChange += (_, _) => parent.Invalidate();
+        ValueChange.Subscribe(v => parent.Invalidate());
     }
 
     /// <summary>
@@ -169,6 +174,23 @@ public class UIProperty<TValue>
     /// <summary>
     /// Binds <see langword="this" /> property to the given <paramref name="destinationProperty"/> and removes every existing binding.
     /// </summary>
+    /// <typeparam name="TDestination">The <paramref name="destinationProperty"/> value type.</typeparam>
+    /// <param name="destinationProperty">The destination property to bind.</param>
+    /// <param name="bindingType">
+    /// The <see cref="BindingType"/> (<see langword="this"/> property is the source property and).
+    /// the given <paramref name="destinationProperty" /> is the destination property.
+    /// </param>
+    /// <param name="converter">A converter to convert source and destination property so that they match.</param>
+    public void Bind<TDestination>(UIProperty<TDestination> destinationProperty, BindingType bindingType, IBindingValueConverter<TValue, TDestination> converter)
+    {
+        ThrowIfSetNotAllowed();
+        _binder?.Unbind();
+        _binder = new PropertyBinder<TValue, TDestination>(this, destinationProperty, bindingType, converter);
+    }
+
+    /// <summary>
+    /// Binds <see langword="this" /> property to the given <paramref name="destinationProperty"/> and removes every existing binding.
+    /// </summary>
     /// <param name="destinationProperty">The destination property to bind.</param>
     /// <param name="bindingType">
     /// The <see cref="BindingType"/> (<see langword="this"/> property is the source property and).
@@ -176,26 +198,7 @@ public class UIProperty<TValue>
     /// </param>
     public void Bind(UIProperty<TValue> destinationProperty, BindingType bindingType)
     {
-        ThrowIfSetNotAllowed();
-        _binder?.Unbind();
-        _binder = new PropertyBinder<TValue, TValue>(this, destinationProperty, bindingType, x => x, x => x);
-    }
-
-    /// <summary>
-    /// Binds <see langword="this" /> property to the given <paramref name="destinationProperty"/> and removes every existing binding.
-    /// </summary>
-    /// <typeparam name="TDestinationValueType">The <paramref name="destinationProperty"/> value type.</typeparam>
-    /// <param name="destinationProperty">The destination property to bind.</param>
-    /// <param name="bindingType">
-    /// The <see cref="BindingType"/> (<see langword="this"/> property is the source property and).
-    /// the given <paramref name="destinationProperty" /> is the destination property.
-    /// </param>
-    /// <param name="converter">A converter to convert source and destination property so that they match.</param>
-    public void Bind<TDestinationValueType>(UIProperty<TDestinationValueType> destinationProperty, BindingType bindingType, IBindingValueConverter<TValue, TDestinationValueType> converter)
-    {
-        ThrowIfSetNotAllowed();
-        _binder?.Unbind();
-        _binder = new PropertyBinder<TValue, TDestinationValueType>(this, destinationProperty, bindingType, converter);
+        Bind(destinationProperty, bindingType, ValueConverterFactory.Identity<TValue>());
     }
 
     /// <summary>
@@ -214,9 +217,7 @@ public class UIProperty<TValue>
                                             Func<TValue, TDestinationValueType> sourceToDestinationConverter,
                                             Func<TDestinationValueType, TValue> destinationToSourceConverter)
     {
-        ThrowIfSetNotAllowed();
-        _binder?.Unbind();
-        _binder = new PropertyBinder<TValue, TDestinationValueType>(this, destinationProperty, bindingType, sourceToDestinationConverter, destinationToSourceConverter);
+        Bind(destinationProperty, bindingType, ValueConverterFactory.FromLambda(sourceToDestinationConverter, destinationToSourceConverter));
     }
 
     /// <summary>
