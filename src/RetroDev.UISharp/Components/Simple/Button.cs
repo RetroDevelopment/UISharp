@@ -108,7 +108,7 @@ public class Button : UIWidget
 
         _backgroundRectangle = new Rectangle(application);
         _backgroundRectangle.BorderThickness.Value = 3.0f; // TODO: use styles
-        Canvas.Add(_backgroundRectangle);
+        Canvas.Shapes.Add(_backgroundRectangle);
 
         _buttonTextLabel = new Label(application);
         _buttonTextLabel.Text.BindSourceToDestination(Text);

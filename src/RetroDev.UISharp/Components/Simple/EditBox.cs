@@ -134,21 +134,21 @@ public class EditBox : UIWidget
 
         _backgroundRectangle = new Rectangle(application);
         _backgroundRectangle.BorderThickness.Value = 3.0f; // TODO: use styles
-        Canvas.Add(_backgroundRectangle);
+        Canvas.Shapes.Add(_backgroundRectangle);
 
         _selectionRectangle = new Rectangle(application);
-        Canvas.Add(_selectionRectangle);
+        Canvas.Shapes.Add(_selectionRectangle);
 
         _inputText = new Text(application);
         _inputText.Font.BindSourceToDestination(Font);
         _inputText.DisplayText.BindSourceToDestination(Text);
         _inputText.TextHorizontalAlignment.Value = Alignment.Left;
         _inputText.TextVerticalAlignment.BindSourceToDestination(TextVerticalAlignment);
-        Canvas.Add(_inputText);
+        Canvas.Shapes.Add(_inputText);
 
         _caretRectangle = new Rectangle(application);
         _caretRectangle.BackgroundColor.BindSourceToDestination(CaretColor);
-        Canvas.Add(_caretRectangle);
+        Canvas.Shapes.Add(_caretRectangle);
 
         _textBuffer = new EditableTextBuffer(application);
         _textBuffer.Text.BindTwoWays(Text);

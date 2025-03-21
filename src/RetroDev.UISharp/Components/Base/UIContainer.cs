@@ -43,7 +43,7 @@ public abstract class UIContainer : UIWidget, IGenericContainer
         _backgroundRectangle.BackgroundColor.BindSourceToDestination(BackgroundColor);
         _backgroundRectangle.BorderColor.BindSourceToDestination(BorderColor);
         _backgroundRectangle.BorderThickness.Value = 2.0f; // TODO: use styles
-        Canvas.Add(_backgroundRectangle);
+        Canvas.Shapes.Add(_backgroundRectangle);
         RenderFrame += UIContainer_RenderFrame;
     }
 

@@ -266,7 +266,7 @@ public class ScrollView : UIContainer, ISingleContainer
         {
             _barRectangle = new Rectangle(application);
             _barRectangle.BackgroundColor.BindSourceToDestination(BackgroundColor);
-            Canvas.Add(_barRectangle);
+            Canvas.Shapes.Add(_barRectangle);
 
             MouseDragBegin += ScrollBar_MouseDragBegin;
             MouseDrag += ScrollBar_MouseDrag;

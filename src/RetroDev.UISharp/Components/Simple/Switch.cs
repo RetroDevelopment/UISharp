@@ -67,11 +67,11 @@ public class Switch : UIWidget
 
         _backgroundRectangle = new Rectangle(application);
         _backgroundRectangle.BorderThickness.Value = 3.0f; // TODO: use styles
-        Canvas.Add(_backgroundRectangle);
+        Canvas.Shapes.Add(_backgroundRectangle);
 
         _selectionCircle = new Circle(application);
         _selectionCircle.BackgroundColor.BindSourceToDestination(CircleColor);
-        Canvas.Add(_selectionCircle);
+        Canvas.Shapes.Add(_selectionCircle);
 
         MousePress += Switch_MousePress;
         RenderFrame += Switch_RenderFrame;

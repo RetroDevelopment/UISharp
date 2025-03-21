@@ -58,7 +58,7 @@ public class Label : UIWidget
 
         _backgroundRectangle = new Rectangle(application);
         _backgroundRectangle.BackgroundColor.BindSourceToDestination(BackgroundColor);
-        Canvas.Add(_backgroundRectangle);
+        Canvas.Shapes.Add(_backgroundRectangle);
 
         _text = new Text(application);
         _text.TextColor.BindSourceToDestination(TextColor);
@@ -66,7 +66,7 @@ public class Label : UIWidget
         _text.Font.BindSourceToDestination(Font);
         _text.TextHorizontalAlignment.BindSourceToDestination(TextHorizontalAlignment);
         _text.TextVerticalAlignment.BindSourceToDestination(TextVerticalAlignment);
-        Canvas.Add(_text);
+        Canvas.Shapes.Add(_text);
 
         RenderFrame += Label_RenderFrame;
     }

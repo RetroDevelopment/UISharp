@@ -1,7 +1,9 @@
 ﻿using RetroDev.UISharp.Components.Base;
 using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Graphics;
+using RetroDev.UISharp.Core.Graphics.Shapes;
 using RetroDev.UISharp.Core.Logging;
+using RetroDev.UISharp.Presentation.Properties;
 
 namespace RetroDev.UISharp.Components.Shapes;
 
@@ -11,11 +13,15 @@ namespace RetroDev.UISharp.Components.Shapes;
 public class Canvas
 {
     private readonly ILogger _logger;
-    public readonly List<UIShape> _shapes = [];
     public readonly HashSet<UIShape> _invalidatedShapes = [];
 
     /// <summary>
-    /// The <see cref="UIComponent"/> owining <see langword="this" /> <see cref="Canvas"/>.
+    /// The list of shapes rendered in <see langword="this" /> <see cref="Canvas"/>.
+    /// </summary>
+    public UIPropertyCollection<UIShape> Shapes { get; }
+
+    /// <summary>
+    /// The <see cref="UIComponent"/> owning <see langword="this" /> <see cref="Canvas"/>.
     /// </summary>
     public UIComponent Component { get; set; }
 
@@ -37,41 +43,17 @@ public class Canvas
     internal Canvas(UIComponent component)
     {
         Component = component;
+        Shapes = new UIPropertyCollection<UIShape>(component.Application);
+        Shapes.ValueAdd.Subscribe(OnShapeAdd);
+        Shapes.ValueRemove.Subscribe(OnShapeRemove);
         _logger = component.Application.Logger;
-    }
-
-    /// <summary>
-    /// Adds thie given <paramref name="shape"/> to <see langword="this" /> <see cref="Canvas"/>.
-    /// </summary>
-    /// <param name="shape">The shape to add.</param>
-    public void Add(UIShape shape)
-    {
-        _logger.LogVerbose($"Adding shape {shape}");
-        _shapes.Add(shape);
-        shape.Canvas = this;
-        shape.AddShapeToRenderingEngine();
-        shape.Invalidate();
-    }
-
-    /// <summary>
-    /// Removes the given <paramref name="shape"/> to from <see langword="this" /> <see cref="Canvas"/>.
-    /// </summary>
-    /// <param name="shape">The shape to add.</param>
-    public void Remove(UIShape shape)
-    {
-        _logger.LogVerbose($"Removing shape {shape}");
-        _shapes.Remove(shape);
-        shape.Canvas = null;
-        _invalidatedShapes.Remove(shape);
-        shape.Canvas = null;
-        shape.RemoveShapeFromRenderingEngine();
     }
 
     internal void Attach(IRenderingEngine renderingEngine)
     {
         Detach();
         RenderingEngine = renderingEngine;
-        foreach (var shape in _shapes)
+        foreach (var shape in Shapes)
         {
             shape.AddShapeToRenderingEngine();
         }
@@ -110,7 +92,7 @@ public class Canvas
 
     internal void UpdateVisibility(bool canRender)
     {
-        foreach (var shape in _shapes)
+        foreach (var shape in Shapes)
         {
             shape.CanRender = canRender;
         }
@@ -120,12 +102,31 @@ public class Canvas
     {
         var currentZIndex = baseZIndex;
 
-        foreach (var shape in _shapes)
+        foreach (var shape in Shapes)
         {
             shape.ZIndex.Value = currentZIndex;
             currentZIndex++;
         }
 
         return currentZIndex;
+    }
+
+    private void OnShapeAdd(int index)
+    {
+        var shape = Shapes[index];
+        _logger.LogVerbose($"Adding shape {shape}");
+        shape.Canvas = this;
+        shape.AddShapeToRenderingEngine();
+        shape.Invalidate();
+    }
+
+    private void OnShapeRemove(int index)
+    {
+        var shape = Shapes[index];
+        _logger.LogVerbose($"Removing shape {shape}");
+        shape.Canvas = null;
+        _invalidatedShapes.Remove(shape);
+        shape.Canvas = null;
+        shape.RemoveShapeFromRenderingEngine();
     }
 }
