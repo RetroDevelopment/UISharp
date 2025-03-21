@@ -1,0 +1,130 @@
+﻿using RetroDev.UISharp.Presentation.Properties.Exceptions;
+
+namespace RetroDev.UISharp.Presentation.Properties.Binding;
+
+internal class UIPropertyBinder<TSource, TDestination> : IDisposable
+{
+    private readonly UIProperty<TSource> _sourceProperty;
+    private readonly UIProperty<TDestination> _destinationProperty;
+    private readonly BindingType _bindingType;
+
+    private readonly List<IDisposable> _subscriptions = [];
+    private bool _disposedValue;
+
+    public UIPropertyBinder(UIProperty<TSource> sourceProperty,
+                            UIProperty<TDestination> destinationProperty,
+                            BindingType bindingType,
+                            IBindingValueConverter<TSource, TDestination> converter)
+    {
+        _sourceProperty = sourceProperty;
+        _destinationProperty = destinationProperty;
+        _bindingType = bindingType;
+
+        CheckValidBinding();
+
+        switch (bindingType)
+        {
+            case BindingType.SourceToDestination:
+                BindSourceToDestination(converter);
+                break;
+            case BindingType.DestinationToSource:
+                BindDestinationToSource(converter);
+                break;
+            case BindingType.TwoWays:
+                BindSourceToDestination(converter);
+                BindDestinationToSource(converter);
+                break;
+            default:
+                throw new ArgumentException($"Unhandled binding type {bindingType}");
+        }
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposedValue)
+        {
+            if (disposing)
+            {
+                switch (_bindingType)
+                {
+                    case BindingType.SourceToDestination:
+                        _destinationProperty.IsBindingTarget = false;
+                        break;
+                    case BindingType.DestinationToSource:
+                        _sourceProperty.IsBindingTarget = false;
+                        break;
+                    case BindingType.TwoWays:
+                        _sourceProperty.IsBindingTarget = false;
+                        _destinationProperty.IsBindingTarget = false;
+                        break;
+                    default:
+                        throw new ArgumentException($"Unhandled binding type {_bindingType}");
+                }
+
+                _subscriptions.ForEach(subscription => subscription.Dispose());
+                _subscriptions.Clear();
+            }
+
+            _disposedValue = true;
+        }
+    }
+    private void CheckValidBinding()
+    {
+        switch (_bindingType)
+        {
+            case BindingType.SourceToDestination:
+                ValidateSourceToDestinationBinding();
+                break;
+            case BindingType.DestinationToSource:
+                ValidateDestinationToSourceBinding();
+                break;
+            case BindingType.TwoWays:
+                ValidateSourceToDestinationBinding();
+                ValidateDestinationToSourceBinding();
+                break;
+            default:
+                throw new ArgumentException($"Unhandled binding type {_bindingType}");
+        }
+    }
+
+    private void ValidateSourceToDestinationBinding()
+    {
+        if (!_destinationProperty.CanReceiveBindingUpdates) throw new UIPropertyValidationException($"Invalid binding {_sourceProperty} -> {_destinationProperty}: destination property does not allow to receive binding updates.");
+        if (_destinationProperty.IsBindingTarget) throw new UIPropertyValidationException($"Invalid binding {_sourceProperty} -> {_destinationProperty}: destination property is already a target of another binding");
+    }
+
+    private void ValidateDestinationToSourceBinding()
+    {
+        if (!_sourceProperty.CanReceiveBindingUpdates) throw new UIPropertyValidationException($"Invalid binding {_sourceProperty} <- {_destinationProperty}: source property does not allow to receive binding updates.");
+        if (_sourceProperty.IsBindingTarget) throw new UIPropertyValidationException($"Invalid binding {_sourceProperty} <- {_destinationProperty}: source property is already a target of another binding");
+    }
+
+    private void BindSourceToDestination(IBindingValueConverter<TSource, TDestination> converter)
+    {
+        var subscription = _sourceProperty
+            .ValueChange
+            .Subscribe(v => _destinationProperty.Value = converter.ConvertSourceToDestination(v));
+        _subscriptions.Add(subscription);
+        _destinationProperty.IsBindingTarget = true;
+    }
+
+    private void BindDestinationToSource(IBindingValueConverter<TSource, TDestination> converter)
+    {
+        var subscription = _destinationProperty
+            .ValueChange
+            .Subscribe(v => _sourceProperty.Value = converter.ConvertDestinationToSource(v));
+        _subscriptions.Add(subscription);
+        _sourceProperty.IsBindingTarget = true;
+    }
+
+    ~UIPropertyBinder()
+    {
+        Dispose(disposing: false);
+    }
+}

@@ -1,4 +1,5 @@
-﻿using RetroDev.UISharp.Presentation.Properties.Exceptions;
+﻿using RetroDev.UISharp.Presentation.Properties.Binding;
+using RetroDev.UISharp.Presentation.Properties.Exceptions;
 
 namespace RetroDev.UISharp.Presentation.Properties;
 

@@ -1,4 +1,4 @@
-﻿namespace RetroDev.UISharp.Presentation.Properties;
+﻿namespace RetroDev.UISharp.Presentation.Properties.Binding;
 
 /// <summary>
 /// A value converter factory class.

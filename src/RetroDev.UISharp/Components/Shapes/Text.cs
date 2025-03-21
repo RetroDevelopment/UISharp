@@ -5,6 +5,7 @@ using RetroDev.UISharp.Core.Graphics;
 using RetroDev.UISharp.Core.Graphics.Shapes;
 using RetroDev.UISharp.Presentation;
 using RetroDev.UISharp.Presentation.Properties;
+using RetroDev.UISharp.Presentation.Properties.Binding;
 
 namespace RetroDev.UISharp.Components.Shapes;
 

@@ -1,4 +1,4 @@
-﻿namespace RetroDev.UISharp.Presentation.Properties;
+﻿namespace RetroDev.UISharp.Presentation.Properties.Binding;
 
 /// <summary>
 /// This class converts values of type <typeparamref name="TSource"/> into values of type <typeparamref name="TDestination"/>

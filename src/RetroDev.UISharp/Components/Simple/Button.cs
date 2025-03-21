@@ -6,6 +6,7 @@ using RetroDev.UISharp.Core.Graphics;
 using RetroDev.UISharp.Core.Windowing.Events;
 using RetroDev.UISharp.Presentation;
 using RetroDev.UISharp.Presentation.Properties;
+using RetroDev.UISharp.Presentation.Properties.Binding;
 using RetroDev.UISharp.Presentation.Themes;
 
 namespace RetroDev.UISharp.Components.Simple;

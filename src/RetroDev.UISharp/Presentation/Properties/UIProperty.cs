@@ -3,6 +3,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using RetroDev.UISharp.Components.Base;
 using RetroDev.UISharp.Components.Shapes;
+using RetroDev.UISharp.Presentation.Properties.Binding;
 using RetroDev.UISharp.Presentation.Properties.Exceptions;
 
 namespace RetroDev.UISharp.Presentation.Properties;
@@ -31,7 +32,7 @@ public class UIProperty<TValue>
     private readonly BehaviorSubject<TValue> _valueChangeSubject;
 
     private TValue _value;
-    private IBinder? _binder;
+    private IDisposable? _binder;
 
     /// <summary>
     /// Allows to be notified whenever the <see cref="Value"/> property changes.
@@ -214,8 +215,8 @@ public class UIProperty<TValue>
     public void Bind<TSource>(UIProperty<TSource> sourceProperty, BindingType bindingType, IBindingValueConverter<TSource, TValue> converter)
     {
         ThrowIfSetNotAllowed();
-        _binder?.Unbind();
-        _binder = new PropertyBinder<TSource, TValue>(sourceProperty, this, bindingType, converter);
+        _binder?.Dispose();
+        _binder = new UIPropertyBinder<TSource, TValue>(sourceProperty, this, bindingType, converter);
     }
 
     /// <summary>
@@ -331,7 +332,7 @@ public class UIProperty<TValue>
     public void RemoveBinding()
     {
         Application?.Dispatcher.ThrowIfNotOnUIThread();
-        _binder?.Unbind();
+        _binder?.Dispose();
     }
 
     private void ThrowIfSetNotAllowed()

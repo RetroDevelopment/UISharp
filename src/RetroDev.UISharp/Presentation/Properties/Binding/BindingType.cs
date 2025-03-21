@@ -1,4 +1,4 @@
-﻿namespace RetroDev.UISharp.Presentation.Properties;
+﻿namespace RetroDev.UISharp.Presentation.Properties.Binding;
 
 /// <summary>
 /// Specifies how a binding occurs between a source property to a destination binder.

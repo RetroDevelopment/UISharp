@@ -8,6 +8,7 @@ using RetroDev.UISharp.Core.Exceptions;
 using RetroDev.UISharp.Core.Graphics;
 using RetroDev.UISharp.Core.Windowing.Events;
 using RetroDev.UISharp.Presentation.Properties;
+using RetroDev.UISharp.Presentation.Properties.Binding;
 using RetroDev.UISharp.Presentation.Properties.Exceptions;
 
 namespace RetroDev.UISharp.Components.Base;
