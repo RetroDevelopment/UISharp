@@ -156,7 +156,7 @@ public class Application : IDisposable
 
     /// <summary>
     /// Creates and shows the window with type <typeparamref name="TWindow"/>.
-    /// If <typeparamref name="TWindow"/> is FooWindow, creates an insteance of FooWindow and initializes it
+    /// If <typeparamref name="TWindow"/> is FooWindow, creates an instance of FooWindow and initializes it
     /// with the value provided in ResourceManager["foo"], which is expected to start with the fooWindow tag.
     /// </summary>
     /// <typeparam name="TWindow">The type of the window to show.</typeparam>

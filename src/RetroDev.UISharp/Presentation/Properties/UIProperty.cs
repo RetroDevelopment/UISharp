@@ -79,6 +79,11 @@ public class UIProperty<TValue>
     public bool CanReceiveBindingUpdates { get; }
 
     /// <summary>
+    /// Whether it is the target of a binding, e.g., the source of a <see cref="BindingType.DestinationToSource"/> or the destination of a <see cref="BindingType.SourceToDestination"/>.
+    /// </summary>
+    public bool IsBindingTarget { get; internal set; } = false;
+
+    /// <summary>
     /// Creates a new property.
     /// </summary>
     /// <param name="application">The application owing <see langword="this" /> <see cref="UIProperty{TValue}"/>.</param>

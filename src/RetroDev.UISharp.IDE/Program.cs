@@ -3,6 +3,7 @@ using RetroDev.UISharp.Components.Simple;
 using RetroDev.UISharp.Core.Graphics;
 using RetroDev.UISharp.Core.Logging;
 using RetroDev.UISharp.IDE.Windows;
+using RetroDev.UISharp.Presentation.Properties;
 
 namespace RetroDev.UISharp.IDE;
 
@@ -34,6 +35,22 @@ internal class Program
     private static void LoadMain(Application application)
     {
         application.ShowWindow<MainWindow>();
+        var names = new UIPropertyCollection<string>(application);
+        var items = new UIPropertyCollection<Label>(application);
+        names.ValueAdd.Subscribe(v => items.Insert(v, new Label(application, names[v])));
+        names.ValueRemove.Subscribe(v => items.RemoveAt(v));
+        names.ValueChange.Subscribe(v => items[v].Text.Value = names[v]);
+        names.Add("First");
+        names.Add("Second");
+        names.Add("Third");
+        names.Remove("Second");
+        names.Insert(1, "2");
+        names[0] = "1";
+        names[2] = "3";
+        foreach (var i in items)
+        {
+            Console.WriteLine(i.Text.Value);
+        }
     }
 
     private static void LoadTest(Application application)
