@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 using System.Text.RegularExpressions;
-using RetroDev.UISharp.Components.Base;
+using RetroDev.UISharp.Components.Core.Base;
 using RetroDev.UISharp.Presentation.Properties;
 using RetroDev.UISharp.UIDefinition.Exceptions;
 
@@ -139,7 +139,7 @@ public class EAMLBinder(TypeMapper typeMapper) : IEAMLBinder
         try
         {
             var converter = System.ComponentModel.TypeDescriptor.GetConverter(propertyType);
-            if (converter != null && converter.IsValid(attribute.Value))
+            if (converter is not null && converter.IsValid(attribute.Value))
             {
                 value = converter.ConvertFromInvariantString(attribute.Value);
                 return true;

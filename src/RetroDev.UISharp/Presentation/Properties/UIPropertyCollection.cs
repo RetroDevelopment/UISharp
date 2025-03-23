@@ -1,8 +1,8 @@
 ﻿using System.Collections;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using RetroDev.UISharp.Components.Base;
-using RetroDev.UISharp.Components.Shapes;
+using RetroDev.UISharp.Components.Core.Base;
+using RetroDev.UISharp.Components.Core.Shapes;
 using RetroDev.UISharp.Presentation.Properties.Binding;
 using RetroDev.UISharp.Presentation.Properties.Exceptions;
 
@@ -225,7 +225,7 @@ public class UIPropertyCollection<TValue> : IList<TValue>
     /// the given <paramref name="sourceProperty" /> is the binding source property.
     /// </param>
     /// <param name="converter">A converter to convert source and destination property so that they match.</param>
-    public void Bind<TSource>(UIPropertyCollection<TSource> sourceProperty, BindingType bindingType, IBindingValueConverter<TSource, TValue> converter)
+    public virtual void Bind<TSource>(UIPropertyCollection<TSource> sourceProperty, BindingType bindingType, IBindingValueConverter<TSource, TValue> converter)
     {
         ThrowIfChangesNotAllowed();
         _binder?.Dispose();
@@ -240,7 +240,7 @@ public class UIPropertyCollection<TValue> : IList<TValue>
     /// The <see cref="BindingType"/> (<see langword="this"/> property is the source property and).
     /// the given <paramref name="sourceProperty" /> is the source property.
     /// </param>
-    public void Bind(UIPropertyCollection<TValue> sourceProperty, BindingType bindingType)
+    public virtual void Bind(UIPropertyCollection<TValue> sourceProperty, BindingType bindingType)
     {
         Bind(sourceProperty, bindingType, ValueConverterFactory.Identity<TValue>());
     }
@@ -256,10 +256,10 @@ public class UIPropertyCollection<TValue> : IList<TValue>
     /// </param>
     /// <param name="sourceToDestinationConverter">The function converting from source property value to destination property value.</param>
     /// <param name="destinationToSourceConverter">The function converting from destination property value to source property value.</param>
-    public void Bind<TSource>(UIPropertyCollection<TSource> sourceProperty,
-                              BindingType bindingType,
-                              Func<TSource, TValue> sourceToDestinationConverter,
-                              Func<TValue, TSource> destinationToSourceConverter)
+    public virtual void Bind<TSource>(UIPropertyCollection<TSource> sourceProperty,
+                                      BindingType bindingType,
+                                      Func<TSource, TValue> sourceToDestinationConverter,
+                                      Func<TValue, TSource> destinationToSourceConverter)
     {
         Bind(sourceProperty, bindingType, ValueConverterFactory.FromLambda(sourceToDestinationConverter, destinationToSourceConverter));
     }
@@ -271,7 +271,7 @@ public class UIPropertyCollection<TValue> : IList<TValue>
     /// The <see cref="BindingType"/> (<see langword="this"/> property is the source property and).
     /// the given <paramref name="sourceProperty" /> is the source property.
     /// </param>
-    public void BindDestinationToSource(UIPropertyCollection<TValue> sourceProperty)
+    public virtual void BindDestinationToSource(UIPropertyCollection<TValue> sourceProperty)
     {
         Bind(sourceProperty, BindingType.DestinationToSource);
     }
@@ -282,7 +282,7 @@ public class UIPropertyCollection<TValue> : IList<TValue>
     /// <typeparam name="TSource">The <paramref name="sourceProperty"/> value type.</typeparam>
     /// <param name="sourceProperty">The source property to bind.</param>
     /// <param name="sourceToDestinationConverter">The function converting from source property value to source property value.</param>
-    public void BindDestinationToSource<TSource>(UIPropertyCollection<TSource> sourceProperty,
+    public virtual void BindDestinationToSource<TSource>(UIPropertyCollection<TSource> sourceProperty,
                                                  Func<TSource, TValue> sourceToDestinationConverter)
     {
         Bind(sourceProperty, BindingType.DestinationToSource, sourceToDestinationConverter, _ => throw new InvalidOperationException());
@@ -295,7 +295,7 @@ public class UIPropertyCollection<TValue> : IList<TValue>
     /// The <see cref="BindingType"/> (<see langword="this"/> property is the source property and).
     /// the given <paramref name="sourceProperty" /> is the source property.
     /// </param>
-    public void BindSourceToDestination(UIPropertyCollection<TValue> sourceProperty)
+    public virtual void BindSourceToDestination(UIPropertyCollection<TValue> sourceProperty)
     {
         Bind(sourceProperty, BindingType.SourceToDestination);
     }
@@ -306,12 +306,11 @@ public class UIPropertyCollection<TValue> : IList<TValue>
     /// <typeparam name="TSource">The <paramref name="sourceProperty"/> value type.</typeparam>
     /// <param name="sourceProperty">The source property to bind.</param>
     /// <param name="sourceToDestinationConverter">The function converting from source property value to source property value.</param>
-    public void BindSourceToDestination<TSource>(UIPropertyCollection<TSource> sourceProperty,
-                                                 Func<TSource, TValue> sourceToDestinationConverter)
+    public virtual void BindSourceToDestination<TSource>(UIPropertyCollection<TSource> sourceProperty,
+                                                         Func<TSource, TValue> sourceToDestinationConverter)
     {
         Bind(sourceProperty, BindingType.SourceToDestination, ValueConverterFactory.FromLambda(sourceToDestinationConverter));
     }
-
 
     /// <summary>
     /// Binds <see langword="this" /> property to the given <paramref name="sourceProperty"/> using <see cref="BindingType.TwoWays"/> binding and removes every existing binding.
@@ -320,7 +319,7 @@ public class UIPropertyCollection<TValue> : IList<TValue>
     /// The <see cref="BindingType"/> (<see langword="this"/> property is the source property and).
     /// the given <paramref name="sourceProperty" /> is the destination property.
     /// </param>
-    public void BindTwoWays(UIPropertyCollection<TValue> sourceProperty)
+    public virtual void BindTwoWays(UIPropertyCollection<TValue> sourceProperty)
     {
         Bind(sourceProperty, BindingType.TwoWays);
     }
@@ -332,7 +331,7 @@ public class UIPropertyCollection<TValue> : IList<TValue>
     /// <param name="sourceProperty">The destination property to bind.</param>
     /// <param name="sourceToDestinationConverter">The function converting from source property value to destination property value.</param>
     /// <param name="destinationToSourceConverter">The function converting from destination property value to source property value.</param>
-    public void BindTwoWays<TSource>(UIPropertyCollection<TSource> sourceProperty,
+    public virtual void BindTwoWays<TSource>(UIPropertyCollection<TSource> sourceProperty,
                                      Func<TSource, TValue> sourceToDestinationConverter,
                                      Func<TValue, TSource> destinationToSourceConverter)
     {
@@ -342,7 +341,7 @@ public class UIPropertyCollection<TValue> : IList<TValue>
     /// <summary>
     /// Removes a binding if any.
     /// </summary>
-    public void RemoveBinding()
+    public virtual void RemoveBinding()
     {
         Application?.Dispatcher.ThrowIfNotOnUIThread();
         _binder?.Dispose();

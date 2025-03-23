@@ -52,7 +52,7 @@ public abstract class EmbeddedResourcesBase(string resourceLocation)
         foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
         {
             var resource = GetEmbeddedResourceStream(resourceName, assembly);
-            if (resource != null) return resource;
+            if (resource is not null) return resource;
         }
 
         throw new FileNotFoundException($"Cannot find resource {_resourceLocation}.{resourceName}");

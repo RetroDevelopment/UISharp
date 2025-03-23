@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using RetroDev.UISharp.Presentation.Properties;
-using RetroDev.UISharp.Components.Base;
 using RetroDev.UISharp.UIDefinition.Exceptions;
+using RetroDev.UISharp.Components.Core.Base;
 
 namespace RetroDev.UISharp.UIDefinition;
 

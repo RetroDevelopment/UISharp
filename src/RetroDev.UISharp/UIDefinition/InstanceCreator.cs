@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
-using RetroDev.UISharp.Components;
-using RetroDev.UISharp.Components.Base;
+using RetroDev.UISharp.Components.Core.Base;
 using RetroDev.UISharp.UIDefinition.Exceptions;
+using RetroDev.UISharp.Windows;
 using Component = RetroDev.UISharp.UIDefinition.Ast.Component;
 
 namespace RetroDev.UISharp.UIDefinition;
@@ -59,7 +59,7 @@ public class InstanceCreator(Application application, TypeMapper typeMapper, IEA
             {
                 var matchArgument = components.Where(c => c.GetType() == parameter.ParameterType && c.ID.Value.ToLower() == parameter.Name?.ToLower())
                                               .FirstOrDefault();
-                if (matchArgument != null)
+                if (matchArgument is not null)
                 {
                     arguments[i] = matchArgument;
                 }

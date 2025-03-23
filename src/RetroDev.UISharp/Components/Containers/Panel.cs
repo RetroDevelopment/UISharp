@@ -1,4 +1,4 @@
-﻿using RetroDev.UISharp.Components.Base;
+﻿using RetroDev.UISharp.Components.Core.Base;
 using RetroDev.UISharp.Core.Coordinates;
 
 namespace RetroDev.UISharp.Components.Containers;
@@ -22,7 +22,7 @@ public class Panel : UISingleContainer
     /// <inheritdoc />
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize)
     {
-        if (Item.Value != null)
+        if (Item.Value is not null)
         {
             return childrenSize.First().Inflate(Item.Value.Margin.ToMarginStruct());
         }
@@ -33,10 +33,6 @@ public class Panel : UISingleContainer
     private void OnChildChange(UIWidget? child)
     {
         Children.Clear();
-
-        if (child != null)
-        {
-            Children.Add(child);
-        }
+        if (child is not null) Children.Add(child);
     }
 }

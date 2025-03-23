@@ -1,5 +1,4 @@
-﻿using RetroDev.UISharp.Components;
-using RetroDev.UISharp.Components.Base;
+﻿using RetroDev.UISharp.Components.Core.Base;
 using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Exceptions;
 using RetroDev.UISharp.Core.Logging;
@@ -11,6 +10,7 @@ using RetroDev.UISharp.Presentation.Properties;
 using RetroDev.UISharp.Presentation.Resources;
 using RetroDev.UISharp.Presentation.Themes;
 using RetroDev.UISharp.UIDefinition;
+using RetroDev.UISharp.Windows;
 
 namespace RetroDev.UISharp;
 

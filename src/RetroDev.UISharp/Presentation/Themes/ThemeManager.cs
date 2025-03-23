@@ -116,7 +116,7 @@ public class ThemeManager(Application application, ITextResources themeResources
             var include = document.Root.GetAttributeIgnoreCase(IncludeAttribute);
             ColorDictionary themeDictionary = [];
 
-            if (include != null)
+            if (include is not null)
             {
                 var includedXml = ThemeResources[include];
                 themeDictionary = InternalParseTheme(includedXml, links);
@@ -138,12 +138,12 @@ public class ThemeManager(Application application, ITextResources themeResources
         var hexColor = element.GetAttributeIgnoreCase(ColorAttribute);
         var link = element.GetAttributeIgnoreCase(LinkAttribute);
 
-        if (link != null)
+        if (link is not null)
         {
             links.Add(key, link);
             return new KeyValuePair<string, Color>(key, Color.Transparent);
         }
-        else if (hexColor != null)
+        else if (hexColor is not null)
         {
             links.Remove(key);
             return new KeyValuePair<string, Color>(key, new Color(hexColor));

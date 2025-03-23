@@ -1,14 +1,16 @@
 ﻿using System.Reflection;
-using RetroDev.UISharp.Components;
-using RetroDev.UISharp.Components.Base;
+using RetroDev.UISharp.Components.Collections;
 using RetroDev.UISharp.Components.Containers;
 using RetroDev.UISharp.Components.Core;
 using RetroDev.UISharp.Components.Core.AutoArea;
+using RetroDev.UISharp.Components.Core.Base;
+using RetroDev.UISharp.Components.Layouts;
 using RetroDev.UISharp.Components.Simple;
 using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.IDE.Components;
 using RetroDev.UISharp.Presentation.Properties;
 using RetroDev.UISharp.UIDefinition.Ast;
+using RetroDev.UISharp.Windows;
 using Attribute = RetroDev.UISharp.UIDefinition.Ast.Attribute;
 
 namespace RetroDev.UISharp.IDE.Windows;
@@ -144,7 +146,7 @@ internal class MainWindow : Window
         var childNode = CreateNode(componentName);
         var astChildNode = new Component(componentName, [], []);
         var parent = selectedNode.Value;
-        if (parent != null)
+        if (parent is not null)
         {
             var astParent = _treeNodeAstMap[parent];
             astParent.Components.Add(astChildNode);
@@ -166,7 +168,7 @@ internal class MainWindow : Window
         var parent = selectedNode!.Parent;
         var astSelectedNode = _treeNodeAstMap[selectedNode];
 
-        if (parent != null)
+        if (parent is not null)
         {
             var astParent = _treeNodeAstMap[parent];
             astParent.Components.Remove(astSelectedNode);
@@ -225,7 +227,7 @@ internal class MainWindow : Window
             editBox.AutoWidth.Value = AutoSize.Stretch;
 
             var attribute = selectedAstNode.Attributes.Where(c => c.Name.Equals(property.Name, StringComparison.CurrentCultureIgnoreCase)).FirstOrDefault();
-            if (attribute != null)
+            if (attribute is not null)
             {
                 editBox.Text.Value = attribute.Value;
             }
@@ -295,7 +297,7 @@ internal class MainWindow : Window
         var node = CreateNode(astNode.Name);
         _treeNodeAstMap.Add(node, astNode);
 
-        if (parent != null)
+        if (parent is not null)
         {
             parent.Children.Add(node);
         }
@@ -309,9 +311,9 @@ internal class MainWindow : Window
 
     private void UpdateAddRemoveButtonState()
     {
-        _removeButton.Enabled.Value = _astTreeBox.SelectedNode.Value != null;
+        _removeButton.Enabled.Value = _astTreeBox.SelectedNode.Value is not null;
 
-        if (_astTreeBox.SelectedNode.Value != null && _components.SelectedItem.Value != null)
+        if (_astTreeBox.SelectedNode.Value is not null && _components.SelectedItem.Value is not null)
         {
             var name = ((Label)(_astTreeBox.SelectedNode.Value.Component.Value)).Text.Value;
             var type = Application.UIDefinitionManager.TypeMapper.GetUIComponent(name);

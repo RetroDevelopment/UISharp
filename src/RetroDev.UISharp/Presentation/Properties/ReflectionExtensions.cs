@@ -82,7 +82,7 @@ public static class ReflectionExtensions
 
         var baseType = @this.BaseType;
 
-        if (baseType != null)
+        if (baseType is not null)
         {
             return baseType.IsGenericType(type);
         }

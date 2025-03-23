@@ -1,4 +1,4 @@
-﻿using RetroDev.UISharp.Components.Base;
+﻿using RetroDev.UISharp.Components.Core.Base;
 using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Presentation.Properties;
 

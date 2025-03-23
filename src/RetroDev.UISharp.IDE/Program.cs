@@ -1,9 +1,9 @@
-﻿using RetroDev.UISharp.Components;
-using RetroDev.UISharp.Components.Simple;
+﻿using RetroDev.UISharp.Components.Simple;
 using RetroDev.UISharp.Core.Graphics;
 using RetroDev.UISharp.Core.Logging;
 using RetroDev.UISharp.IDE.Windows;
 using RetroDev.UISharp.Presentation.Properties;
+using RetroDev.UISharp.Windows;
 
 namespace RetroDev.UISharp.IDE;
 
@@ -34,6 +34,10 @@ internal class Program
 
     private static void LoadMain(Application application)
     {
+        UIProperty<int> p1 = new UIProperty<int>(application, 0);
+        UIProperty<int> p2 = new UIProperty<int>(application, 0);
+        p1.BindSourceToDestination(p2);
+
         application.ShowWindow<MainWindow>();
     }
 

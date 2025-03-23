@@ -1,5 +1,4 @@
-﻿using RetroDev.UISharp.Components.Base;
-using RetroDev.UISharp.Core.Graphics;
+﻿using RetroDev.UISharp.Core.Graphics;
 using RetroDev.UISharp.Presentation.Properties;
 
 namespace RetroDev.UISharp.Presentation.Themes;

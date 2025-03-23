@@ -1,6 +1,6 @@
-﻿using RetroDev.UISharp.Components.Base;
-using RetroDev.UISharp.Components.Core.AutoArea;
-using RetroDev.UISharp.Components.Shapes;
+﻿using RetroDev.UISharp.Components.Core.AutoArea;
+using RetroDev.UISharp.Components.Core.Base;
+using RetroDev.UISharp.Components.Core.Shapes;
 using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Graphics;
 using RetroDev.UISharp.Core.Windowing.Events;
@@ -258,7 +258,7 @@ public class ScrollView : UISingleContainer
     private void OnChildChange(UIWidget? child)
     {
         if (_hasChild) Children.RemoveAt(0);
-        if (child != null) Children.Insert(0, child);
+        if (child is not null) Children.Insert(0, child);
         _hasChild = child is not null;
     }
 
