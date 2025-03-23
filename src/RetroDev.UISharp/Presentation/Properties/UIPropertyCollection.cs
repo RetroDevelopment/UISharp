@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Reflection;
 using RetroDev.UISharp.Components.Base;
 using RetroDev.UISharp.Components.Shapes;
 using RetroDev.UISharp.Presentation.Properties.Binding;
@@ -19,7 +18,6 @@ public class UIPropertyCollection<TValue> : IList<TValue>
     private readonly List<TValue> _values = [];
     private readonly Subject<int> _valueAddSubject;
     private readonly Subject<int> _valueRemoveSubject;
-    private readonly Subject<int> _valueChangeSubject;
 
     IDisposable? _binder;
 
@@ -37,8 +35,9 @@ public class UIPropertyCollection<TValue> : IList<TValue>
             var currentValue = _values[index];
             if (!EqualityComparer<TValue>.Default.Equals(currentValue, value))
             {
+                _valueRemoveSubject.OnNext(index);
                 _values[index] = value;
-                _valueChangeSubject.OnNext(index);
+                _valueAddSubject.OnNext(index);
             }
         }
     }
@@ -75,11 +74,6 @@ public class UIPropertyCollection<TValue> : IList<TValue>
     public IObservable<int> ValueRemove { get; }
 
     /// <summary>
-    /// Notifies when a value is changed in the list an sends the zero-based index at which the item is located in the collection.
-    /// </summary>
-    public IObservable<int> ValueChange { get; }
-
-    /// <summary>
     /// Whether <see langword="this" /> <see cref="UIPropertyCollection{TValue}"/> can receive binding updates, meaning that
     /// if this is the binding destination, <see cref="BindingType.SourceToDestination"/> is allowed, if it is the binding
     /// source, <see cref="BindingType.DestinationToSource"/> is allowed. If <see langword="false" /> the mentioned bindings will result in
@@ -108,11 +102,9 @@ public class UIPropertyCollection<TValue> : IList<TValue>
         Application = application;
         _valueAddSubject = new Subject<int>();
         _valueRemoveSubject = new Subject<int>();
-        _valueChangeSubject = new Subject<int>();
 
         ValueAdd = _valueAddSubject.AsObservable();
         ValueRemove = _valueRemoveSubject.AsObservable();
-        ValueChange = _valueChangeSubject.AsObservable();
         _lockChanges = lockChanges;
         IsReadOnly = false;
         CanReceiveBindingUpdates = true;
@@ -128,7 +120,6 @@ public class UIPropertyCollection<TValue> : IList<TValue>
     {
         ValueAdd.Subscribe(_ => component.Invalidate());
         ValueRemove.Subscribe(_ => component.Invalidate());
-        ValueChange.Subscribe(_ => component.Invalidate());
     }
 
     /// <summary>
@@ -140,7 +131,6 @@ public class UIPropertyCollection<TValue> : IList<TValue>
     {
         ValueAdd.Subscribe(_ => shape.Invalidate());
         ValueRemove.Subscribe(_ => shape.Invalidate());
-        ValueChange.Subscribe(_ => shape.Invalidate());
     }
 
     /// <inheritdoc />

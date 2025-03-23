@@ -3,9 +3,9 @@
 namespace RetroDev.UISharp.Components.Base;
 
 /// <summary>
-/// All containers containing multiple child must implement this interface.
+/// All hierarchical containers must implement this interface.
 /// </summary>
-public interface IContainer
+public interface IHierarchicalContainer
 {
     /// <summary>
     /// The list of logical children of a container. Note that this differs from <see cref="UIComponent.Children"/> which is the
@@ -19,5 +19,5 @@ public interface IContainer
     /// The distinction between actual children and logical children is made to abstract away from implementation details and from those UI children which
     /// must not be publicly exposed.
     /// </remarks>
-    UIPropertyCollection<UIWidget> Items { get; }
+    UIPropertyCollection<UINode> Items { get; }
 }

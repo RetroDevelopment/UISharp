@@ -20,7 +20,7 @@ internal class Container : UIComponent
 {
     public Container(Application application, List<UIWidget> children) : base(application)
     {
-        children.ForEach(c => AddChildNode(c));
+        children.ForEach(Children.Add);
     }
 
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) => new(100, 100);
@@ -91,7 +91,7 @@ internal class MainWindow : Window
             label.AutoHeight.Value = AutoSize.Wrap;
             label.HorizontalAlignment.Value = Alignment.Left;
             label.VerticalAlignment.Value = Alignment.Top;
-            _components.AddComponent(label);
+            _components.Items.Add(label);
         }
     }
 
@@ -170,11 +170,11 @@ internal class MainWindow : Window
         {
             var astParent = _treeNodeAstMap[parent];
             astParent.Components.Remove(astSelectedNode);
-            parent.RemoveChild(selectedNode);
+            parent.Children.Remove(selectedNode);
         }
         else
         {
-            _astTreeBox.RemoveTreeNode(selectedNode);
+            _astTreeBox.Items.Remove(selectedNode);
             _rootNode!.Components.Remove(astSelectedNode);
             _treeNodeAstMap.Remove(selectedNode);
         }
@@ -198,7 +198,7 @@ internal class MainWindow : Window
     private void OnTreeNodeChange(TreeNode? node)
     {
         var listBox = _propertyList;
-        listBox.Clear();
+        listBox.Items.Clear();
 
         if (node == null)
         {
@@ -236,10 +236,10 @@ internal class MainWindow : Window
 
             editBox.Text.ValueChange.Subscribe(text => OnAttributeChange(selectedAstNode, attribute, text));
 
-            gridLayout.AddComponent(header);
-            gridLayout.AddComponent(editBox);
+            gridLayout.Items.Add(header);
+            gridLayout.Items.Add(editBox);
             gridLayout.Height.Value = 30;
-            listBox.AddComponent(gridLayout);
+            listBox.Items.Add(gridLayout);
         }
 
         UpdateAddRemoveButtonState();
@@ -280,7 +280,7 @@ internal class MainWindow : Window
     {
         var components = _rootNode!.Components.Select(Application.UIDefinitionManager.InstanceCreator.CreateUIComponent).Cast<UIWidget>().ToList();
         var container = new UIPreview(Application, components);
-        _mainLayout.GetComponent<ScrollView>("preview").SetComponent(container);
+        _mainLayout.GetComponent<ScrollView>("preview").Item.Value = container;
     }
 
     private TreeNode CreateNode(string text)
@@ -297,11 +297,11 @@ internal class MainWindow : Window
 
         if (parent != null)
         {
-            parent.AddChild(node);
+            parent.Children.Add(node);
         }
         else
         {
-            _astTreeBox.AddTreeNode(node);
+            _astTreeBox.Items.Add(node);
         }
 
         astNode.Components.ForEach(child => { AddNode(node, child); });
@@ -313,10 +313,10 @@ internal class MainWindow : Window
 
         if (_astTreeBox.SelectedNode.Value != null && _components.SelectedItem.Value != null)
         {
-            var name = ((Label)(_astTreeBox.SelectedNode.Value.Content.Value)).Text.Value;
+            var name = ((Label)(_astTreeBox.SelectedNode.Value.Component.Value)).Text.Value;
             var type = Application.UIDefinitionManager.TypeMapper.GetUIComponent(name);
             if (type == null) throw new Exception($"Cannot find type for component {name} to add.");
-            _addButton.Enabled.Value = (type.GetInterfaces().Contains(typeof(IGenericContainer)));
+            _addButton.Enabled.Value = (type.GetInterfaces().Contains(typeof(IContainer)));
         }
     }
 

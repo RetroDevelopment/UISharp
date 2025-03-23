@@ -49,12 +49,12 @@ internal class Program
         var edit = new EditBox(application, "0123456789 0123456789 0123456789 0123456789");
         edit.CaretIndex.Value = 3;
         edit.SelectionLength.Value = 7;
-        w.AddComponent(edit);
+        w.Items.Add(edit);
 
         var b = new Button(application, "Click");
         b.Y.Value = 100;
         b.Height.Value = 30;
-        w.AddComponent(b);
+        w.Items.Add(b);
         w.Title.Value = "Hello title!";
         b.Action += (_, _) => b.Text.Value = new MD(application, edit).ShowDialog(w).ToString();
 
@@ -71,7 +71,7 @@ internal class Program
             var b = new Button(application, "Done");
             b.Action += (_, _) => Close("<CLOSED>");
             b.Margin.SetAll(30);
-            AddComponent(b);
+            Children.Add(b);
             es = e;
         }
 

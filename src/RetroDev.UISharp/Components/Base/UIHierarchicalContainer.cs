@@ -8,12 +8,12 @@ namespace RetroDev.UISharp.Components.Base;
 /// <summary>
 /// Abstract class for all containers, which lay out multiple <see cref="UIComponent"/> instances.
 /// </summary>
-public abstract class UIContainer : UIWidget, IContainer
+public abstract class UIHierarchicalContainer : UIWidget, IHierarchicalContainer
 {
     private readonly Rectangle _backgroundRectangle;
 
     /// <inheritdoc />
-    public UIPropertyCollection<UIWidget> Items { get; }
+    public UIPropertyCollection<UINode> Items { get; }
 
     /// <summary>
     /// The control border color.
@@ -30,15 +30,15 @@ public abstract class UIContainer : UIWidget, IContainer
     /// <param name="autoHeight">How to automatically determine this component height.</param>
     /// <param name="horizontalAlignment">The component horizontal alignment (relative to its <see cref="Parent"/>).</param>
     /// <param name="verticalAlignment">The component vertical alignment (relative to its <see cref="Parent"/>).</param>
-    protected UIContainer(Application application,
-                          ComponentVisibility visibility = ComponentVisibility.Visible,
-                          bool isFocusable = false,
-                          IAutoSize? autoWidth = null,
-                          IAutoSize? autoHeight = null,
-                          IHorizontalAlignment? horizontalAlignment = null,
-                          IVerticalAlignment? verticalAlignment = null) : base(application, visibility, isFocusable, autoWidth, autoHeight, horizontalAlignment, verticalAlignment)
+    protected UIHierarchicalContainer(Application application,
+                                      ComponentVisibility visibility = ComponentVisibility.Visible,
+                                      bool isFocusable = false,
+                                      IAutoSize? autoWidth = null,
+                                      IAutoSize? autoHeight = null,
+                                      IHorizontalAlignment? horizontalAlignment = null,
+                                      IVerticalAlignment? verticalAlignment = null) : base(application, visibility, isFocusable, autoWidth, autoHeight, horizontalAlignment, verticalAlignment)
     {
-        Items = new UIPropertyCollection<UIWidget>(application);
+        Items = new UIPropertyCollection<UINode>(application, lockChanges: true);
         BorderColor = new UIProperty<Color>(this, Color.Transparent);
 
         _backgroundRectangle = new Rectangle(application);
@@ -58,7 +58,7 @@ public abstract class UIContainer : UIWidget, IContainer
     /// <exception cref="InvalidCastException">If the component was found but with a type not assignable to <typeparamref name="TComponent"/>.</exception>
     public TComponent GetComponent<TComponent>(string id) where TComponent : UIWidget
     {
-        var children = Items.Where(c => c.ID.Value == id);
+        var children = Children.Where(c => c.ID.Value == id);
         if (!children.Any()) throw new ArgumentException($"Child with ID {id} not found in component with id {ID.Value}");
         return (TComponent)children.First();
     }

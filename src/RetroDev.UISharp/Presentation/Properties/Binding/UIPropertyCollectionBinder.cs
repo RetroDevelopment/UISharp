@@ -124,11 +124,6 @@ internal class UIPropertyCollectionBinder<TSource, TDestination> : IDisposable
             _sourceProperty.ValueRemove,
             _destinationProperty,
             _destinationProperty.RemoveAt);
-
-        SubscribeAllowingEdits(
-            _sourceProperty.ValueChange,
-            _destinationProperty,
-            i => _destinationProperty[i] = converter.ConvertSourceToDestination(_sourceProperty[i]));
     }
 
     private void BindDestinationToSource(IBindingValueConverter<TSource, TDestination> converter)
@@ -144,11 +139,6 @@ internal class UIPropertyCollectionBinder<TSource, TDestination> : IDisposable
             _destinationProperty.ValueRemove,
             _sourceProperty,
             _sourceProperty.RemoveAt);
-
-        SubscribeAllowingEdits(
-            _destinationProperty.ValueChange,
-            _sourceProperty,
-            i => _sourceProperty[i] = converter.ConvertDestinationToSource(_destinationProperty[i]));
     }
 
     // This method allow temporarily disabling read only constraints to allow for binding. Usually the binding target is

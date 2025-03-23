@@ -96,9 +96,6 @@ public class Window : UIRoot
     /// </summary>
     public event TypeSafeEventHandler<Window, EventArgs>? WindowCloseRequest;
 
-    /// <inheritdoc/>
-    public override IEnumerable<UIWidget> Children => GetChildrenNodes();
-
     /// <summary>
     /// The window title.
     /// </summary>
@@ -228,18 +225,6 @@ public class Window : UIRoot
     private void UpdateMaximumSize()
     {
         Application.WindowManager.SetWindowMaximumSize(_windowId, new Size(MaximumWidth.Value, MaximumHeight.Value));
-    }
-
-    /// <summary>
-    /// Removes a component from this window.
-    /// </summary>
-    /// <param name="component">The component to remove.</param>
-    /// <returns><see langword="true" /> if the component has been successfully removed, otherwise <see langword="false"/>
-    /// (for example, if the component has never been added).
-    /// </returns>
-    public bool RemoveComponent(UIWidget component)
-    {
-        return RemoveChildNode(component);
     }
 
     /// <summary>

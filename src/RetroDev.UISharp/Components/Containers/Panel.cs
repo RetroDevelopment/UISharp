@@ -6,14 +6,8 @@ namespace RetroDev.UISharp.Components.Containers;
 /// <summary>
 /// A basic container that contains one object.
 /// </summary>
-public class Panel : UIContainer, ISingleContainer // TODO: ISingleContainer should have a property not SetComponent() and GetChildren does not apply
+public class Panel : UISingleContainer
 {
-    private UIWidget? _child;
-
-    /// <inheritdoc />
-
-    public override IEnumerable<UIWidget> Children => [GetChildrenNodes().First()];
-
     /// <summary>
     /// Creates a new panel.
     /// </summary>
@@ -21,28 +15,28 @@ public class Panel : UIContainer, ISingleContainer // TODO: ISingleContainer sho
     /// <param name="component">The component to be inserted in <see langword="this" /> <see cref="Panel"/>.</param>
     public Panel(Application application, UIWidget? component = null) : base(application)
     {
-        if (component != null) SetComponent(component);
+        Item.Value = component;
+        Item.ValueChange.Subscribe(OnChildChange);
     }
 
     /// <inheritdoc />
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize)
     {
-        if (_child != null)
+        if (Item.Value != null)
         {
-            return childrenSize.First().Inflate(_child.Margin.ToMarginStruct());
+            return childrenSize.First().Inflate(Item.Value.Margin.ToMarginStruct());
         }
 
         return Size.Zero;
     }
 
-    /// <summary>
-    /// Sets the component to be inserted in <see langword="this" /> <see cref="Panel"/>.
-    /// </summary>
-    /// <param name="component">The component to be inserted in <see langword="this" /> panel.</param>
-    public void SetComponent(UIWidget component)
+    private void OnChildChange(UIWidget? child)
     {
-        if (_child != null) RemoveChildNode(_child);
-        _child = component;
-        AddChildNode(_child);
+        Children.Clear();
+
+        if (child != null)
+        {
+            Children.Add(child);
+        }
     }
 }

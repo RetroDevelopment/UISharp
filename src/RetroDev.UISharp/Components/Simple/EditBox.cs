@@ -291,7 +291,6 @@ public class EditBox : UIWidget
     private void EditBox_TextInput(UIComponent sender, TextInputEventArgs e)
     {
         _textBuffer.AddText(e.Text);
-
     }
 
     private void EditBox_MouseDragBegin(UIComponent sender, MouseEventArgs e)

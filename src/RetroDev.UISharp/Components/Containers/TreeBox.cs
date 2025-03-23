@@ -10,7 +10,6 @@ using RetroDev.UISharp.Presentation.Themes;
 namespace RetroDev.UISharp.Components.Containers;
 
 // TODO: optimize. There are too many Linq queries. Cache them.
-// TODO: maybe create a Mapper class mapping TreeNode into ListBox elements.
 
 /// <summary>
 /// A hierarchical list of items.
@@ -19,15 +18,13 @@ namespace RetroDev.UISharp.Components.Containers;
 /// Although list boxes are typically used to list text in order to allow selecting one or more options,
 /// the <see cref="TreeBox"/> class allows to list not only text but any <see cref="UIComponent"/>.
 /// </remarks>
-public class TreeBox : UIContainer
+public class TreeBox : UIHierarchicalContainer
 {
     private static readonly PixelUnit FoldUnfoldButtonSize = 20;
     private static readonly PixelUnit IndentationSize = 20;
 
     private readonly ListBox _listBox;
     private readonly List<TreeNode> _nodes = [];
-
-    public override IEnumerable<UIWidget> Children => _listBox.Children.Cast<GridLayout>().Select(c => c.Children.ElementAt(2));
 
     public UIProperty<TreeNode?> SelectedNode { get; }
 
@@ -48,17 +45,15 @@ public class TreeBox : UIContainer
         _listBox.BackgroundColor.Value = Color.Transparent;
         _listBox.BorderColor.Value = Color.Transparent;
         _listBox.Margin.BindSourceToDestination(Padding);
-        AddChildNode(_listBox);
+        Children.Add(_listBox);
+
+        Items.ValueAdd.Subscribe(index => AddTreeNode((TreeNode)Items[index]));
+        Items.ValueRemove.Subscribe(index => InternalRemoveTreeNode((TreeNode)Items[index]));
 
         SelectedNode = new UIProperty<TreeNode?>(this, (TreeNode?)null);
         // TODO SelectedNode can be bound to _listBox.SelectedItem and converters!
         SelectedNode.ValueChange.Subscribe(OnSelectedNodeChange);
         _listBox.SelectedIndex.ValueChange.Subscribe(OnSelectedIndexChange);
-    }
-
-    public void AddTreeNode(TreeNode component)
-    {
-        AddTreeNode(component, null);
     }
 
     /// <inheritdoc />
@@ -85,9 +80,9 @@ public class TreeBox : UIContainer
         gridLayout.Rows.Value = 1;
         gridLayout.Columns.Value = 3u;
         gridLayout.ColumnSizes.Value = $"{IndentationSize * component.Indentation}px,{FoldUnfoldButtonSize}px,*";
-        gridLayout.AddComponent(panel);
-        gridLayout.AddComponent(foldUnfoldButton);
-        gridLayout.AddComponent(component.Content.Value);
+        gridLayout.Items.Add(panel);
+        gridLayout.Items.Add(foldUnfoldButton);
+        gridLayout.Items.Add(component.Component.Value);
 
         gridLayout.AutoWidth.Value = AutoSize.Wrap;
         gridLayout.AutoHeight.Value = AutoSize.Wrap;
@@ -98,67 +93,56 @@ public class TreeBox : UIContainer
 
         if (after != null)
         {
-            afterComponent = after.Content.Value;
+            afterComponent = after.Component.Value;
             foreach (var child in after.GetRecursiveChildren())
             {
-                if (Children.Any(c => c == child.Content.Value))
+                if (Children.Any(c => c == child.Component.Value))
                 {
-                    afterComponent = child.Content.Value;
+                    afterComponent = child.Component.Value;
                 }
             }
 
-            var afterGridLayout = _listBox.Children
+            var afterGridLayout = _listBox.Items
                                           .Cast<GridLayout>()
-                                          .First(c => c.Children.ElementAt(2) == afterComponent);
-            _listBox.AddComponent(gridLayout, afterGridLayout);
-            var index = _listBox.Children.Cast<GridLayout>().ToList().FindIndex(c => c == afterGridLayout);
-            if (index + 1 < _listBox.Children.Count()) _nodes.Insert(index + 1, component);
+                                          .First(c => c.Items[2] == afterComponent);
+            var index1 = _listBox.Items.IndexOf(afterGridLayout);
+            _listBox.Items.Insert(index1, gridLayout);
+            var index = _listBox.Items.Cast<GridLayout>().ToList().FindIndex(c => c == afterGridLayout);
+            if (index + 1 < _listBox.Items.Count) _nodes.Insert(index + 1, component);
             else _nodes.Add(component);
 
             UpdateCollapseState(after);
         }
         else
         {
-            _listBox.AddComponent(gridLayout);
+            _listBox.Items.Add(gridLayout);
             _nodes.Add(component);
         }
 
-        foreach (var child in component._children)
+        foreach (var child in component.Children)
         {
-            AddTreeNode(child, component);
+            AddTreeNode((TreeNode)child, component);
         }
 
         component.Collapsed.ValueChange.Subscribe(_ => UpdateCollapseState(component));
     }
 
-    public void RemoveTreeNode(TreeNode node)
+    internal void InternalRemoveTreeNode(TreeNode node)
     {
-        if (node.Parent != null)
-        {
-            node.Parent.RemoveChild(node);
-        }
-        else
-        {
-            InternalRemoveTreeNode(node);
-        }
-    }
-
-    public void InternalRemoveTreeNode(TreeNode node)
-    {
-        var elementIndex = Children.ToList().FindIndex(c => c == node.Content.Value);
+        var elementIndex = Children.ToList().FindIndex(c => c == node.Component.Value);
         if (elementIndex < 0) throw new ArgumentException("Element not found in tree box");
-        _listBox.RemoveComponent((uint)elementIndex);
+        _listBox.Items.RemoveAt(elementIndex);
         _nodes.Remove(node);
 
-        var childrenCopy = new List<TreeNode>(node._children);
+        var childrenCopy = new List<TreeNode>(node.Children.Cast<TreeNode>());
         foreach (var child in childrenCopy)
         {
-            node.RemoveChild(child);
+            node.Children.Remove(child);
         }
     }
 
     public void Clear() =>
-        _nodes.Where(n => n.Parent == null).ToList().ForEach(RemoveTreeNode);
+        _nodes.Where(n => n.Parent == null).ToList().ForEach(InternalRemoveTreeNode);
 
     private void OnSelectedNodeChange(TreeNode? node)
     {
@@ -168,7 +152,7 @@ public class TreeBox : UIContainer
         }
         else
         {
-            var selectedIndex = Children.ToList().FindIndex(c => c == node.Content.Value);
+            var selectedIndex = Children.ToList().FindIndex(c => c == node.Component.Value);
             if (selectedIndex < 0) throw new ArgumentException("Selected node not found");
             _listBox.SelectedIndex.Value = (uint)selectedIndex;
         }
@@ -189,15 +173,15 @@ public class TreeBox : UIContainer
 
     private void UpdateCollapseState(TreeNode node, bool recursive = false)
     {
-        var gridLayout = _listBox.Children.Cast<GridLayout>().ToList().Find(c => c.Children.ElementAt(2) == node.Content.Value) ?? throw new ArgumentException("Cannot find node to expand in tree box");
-        var collapseButton = (Button)gridLayout.Children.ElementAt(1);
+        var gridLayout = _listBox.Items.Cast<GridLayout>().ToList().Find(c => c.Items.ElementAt(2) == node.Component.Value) ?? throw new ArgumentException("Cannot find node to expand in tree box");
+        var collapseButton = (Button)gridLayout.Items[1];
 
         // TODO: when using column and row sizes as lists instead of strings no need to use regex
         string pattern = @"(?<=^.*?,)(\d+)px";
         string zeroPixelReplacement = "0px";
         string buttonSizeReplacement = $"{FoldUnfoldButtonSize}px";
 
-        if (node._children.Count == 0)
+        if (node.Children.Count == 0)
         {
             collapseButton.Visibility.Value = ComponentVisibility.Hidden;
             gridLayout.ColumnSizes.Value = Regex.Replace(gridLayout.ColumnSizes.Value, pattern, zeroPixelReplacement);
@@ -226,7 +210,10 @@ public class TreeBox : UIContainer
 
         if (recursive)
         {
-            node._children.ForEach(c => UpdateCollapseState(c, true));
+            foreach (var child in node.Children)
+            {
+                UpdateCollapseState((TreeNode)child, true);
+            }
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿using System;
-using RetroDev.UISharp.Components.Core;
+﻿using RetroDev.UISharp.Components.Core;
 using RetroDev.UISharp.Components.Core.AutoArea;
 using RetroDev.UISharp.Components.Core.Layout;
 using RetroDev.UISharp.Components.Shapes;
@@ -44,7 +43,6 @@ public abstract class UIComponent
 
     // The visual children, part of the actual hierarchy.
     // TODO: use a UIComponentCollection<UINode> to manage bindings etc.
-    internal readonly List<UIWidget> _childNodes = [];
     internal int _level = 0;
     private UIComponent? _focusedComponent;
 
@@ -52,7 +50,6 @@ public abstract class UIComponent
     private bool _hasMouse = false;
 
     // Sizes
-
     private Size _wrapSize; // The size with auto size to wrap.
     private Area? _relativeDrawingAreaOverride = null; // Memorizes the latest parameter used in RecomputeDrawingArea()
     private Area _relativeDrawingArea; // Area relative to the parent. So (0, 0) is top left of parent.
@@ -276,6 +273,11 @@ public abstract class UIComponent
     public UIProperty<PixelUnit> MaximumHeight { get; }
 
     /// <summary>
+    /// The list of children of <see langword="this" /> <see cref="UIComponent"/>.
+    /// </summary>
+    protected UIPropertyCollection<UIWidget> Children { get; }
+
+    /// <summary>
     /// Creates a new component.
     /// </summary>
     /// <param name="application">The application owning this component.</param>
@@ -323,6 +325,9 @@ public abstract class UIComponent
         MaximumHeight = new UIProperty<PixelUnit>(this, PixelUnit.Auto);
 
         Canvas = new Canvas(this);
+        Children = new UIPropertyCollection<UIWidget>(application, lockChanges: true);
+        Children.ValueAdd.Subscribe(OnChildAdd);
+        Children.ValueRemove.Subscribe(OnChildRemove);
 
         _wrapSize = Size.Zero;
         _relativeDrawingArea = Area.Empty;
@@ -444,59 +449,6 @@ public abstract class UIComponent
     /// </returns>
     protected virtual List<Area?> RepositionChildren(Size availableSpace, IEnumerable<Size> sizeHints) => [];
 
-    /// <summary>
-    /// Adds a child to <see langword="this" /> component.
-    /// </summary>
-    /// <param name="component">The child component to add.</param>
-    /// <param name="index">
-    /// The index where to insert the <paramref name="component"/>. If <see langword="null" /> the <paramref name="component"/> is
-    /// appended to the children list.</param>
-    /// <exception cref="ArgumentException">
-    /// If a child with the same <see cref="ID"/> as the given <paramref name="component"/> already exists.
-    /// </exception>
-    protected virtual void AddChildNode(UIWidget component, int? index = null)
-    {
-        Application.LifeCycle.ThrowIfPropertyCannotBeSet();
-        if (Root != null) Root.Invalidator.NeedZIndexUpdate = true;
-        component.Parent?.RemoveChildNode(component);
-        component.Parent = this;
-        component.RecomputeLevel();
-        component.InvalidateAll();
-        component.AttachCanvas();
-        Invalidate();
-        if (index == null) _childNodes.Add(component);
-        else if (index + 1 < _childNodes.Count) _childNodes.Insert((int)index + 1, component);
-        else _childNodes.Add(component);
-        UpdateVisibility();
-    }
-
-    /// <summary>
-    /// Gets all the child components of <see cref="this"/> component.
-    /// </summary>
-    /// <returns>The list of child component.</returns>
-    protected virtual IEnumerable<UIWidget> GetChildrenNodes() =>
-        new List<UIWidget>(_childNodes);
-
-    /// <summary>
-    /// Removes the given child <paramref name="component"/> from <see cref="this"/> component.
-    /// </summary>
-    /// <param name="component">The child component to remove.</param>
-    /// <returns><see langword="true" /> if successfully removed, otherwise <see langword="false" />.</returns>
-    protected bool RemoveChildNode(UIWidget component)
-    {
-        Application.LifeCycle.ThrowIfPropertyCannotBeSet();
-        if (Root != null) Root.Invalidator.NeedZIndexUpdate = true;
-        Invalidate();
-
-        if (component.Parent == this)
-        {
-            component.Cleanup();
-            component.Parent = null;
-        }
-
-        return _childNodes.Remove(component);
-    }
-
     protected void OnMousePress(MouseEventArgs mouseEventArgs)
     {
         MousePress?.Invoke(this, mouseEventArgs);
@@ -506,7 +458,7 @@ public abstract class UIComponent
             Root?.GlobalEventInformation.MarkComponentAsDragged(this);
         }
 
-        foreach (var child in _childNodes.Reverse<UIWidget>())
+        foreach (var child in Children.Reverse())
         {
             if (child.ShouldPropagateMouseEvent(mouseEventArgs.AbsoluteLocation))
             {
@@ -522,7 +474,7 @@ public abstract class UIComponent
     {
         MouseRelease?.Invoke(this, mouseEventArgs);
 
-        foreach (var child in _childNodes.Reverse<UIWidget>())
+        foreach (var child in Children.Reverse())
         {
             if (child.ShouldPropagateMouseEvent(mouseEventArgs.AbsoluteLocation))
             {
@@ -540,7 +492,7 @@ public abstract class UIComponent
 
         var childHit = false;
 
-        foreach (var child in _childNodes.Reverse<UIWidget>())
+        foreach (var child in Children.Reverse())
         {
             if (child.ShouldPropagateMouseEvent(mouseEventArgs.AbsoluteLocation) && !childHit)
             {
@@ -572,7 +524,7 @@ public abstract class UIComponent
         // TODO: looping through all the tree is unnecessary. Just detect the focused elements in the list and trigger events for that
         KeyPress?.Invoke(this, keyEventArgs);
 
-        foreach (var child in _childNodes)
+        foreach (var child in Children)
         {
             if (child.Visibility.Value == ComponentVisibility.Visible && (child.Focus.Value || !child.Focusable.Value))
             {
@@ -586,9 +538,9 @@ public abstract class UIComponent
         // TODO: looping through all the tree is unnecessary. Just detect the focused elements in the list and trigger events for that
         KeyRelease?.Invoke(this, keyEventArgs);
 
-        foreach (var child in _childNodes)
+        foreach (var child in Children)
         {
-            if (child.Visibility.Value == ComponentVisibility.Visible && (child.Focus.Value || child is UIContainer))
+            if (child.Visibility.Value == ComponentVisibility.Visible && (child.Focus.Value || !child.Focusable.Value))
             {
                 child.OnKeyRelease(keyEventArgs);
             }
@@ -600,9 +552,9 @@ public abstract class UIComponent
         // TODO: looping through all the tree is unnecessary. Just detect the focused elements in the list and trigger events for that
         TextInput?.Invoke(this, textInputEventArgs);
 
-        foreach (var child in _childNodes)
+        foreach (var child in Children)
         {
-            if (child.Visibility.Value == ComponentVisibility.Visible && (child.Focus.Value || child is UIContainer))
+            if (child.Visibility.Value == ComponentVisibility.Visible && (child.Focus.Value || !child.Focusable.Value))
             {
                 child.OnTextInput(textInputEventArgs);
             }
@@ -613,7 +565,7 @@ public abstract class UIComponent
     {
         MouseWheel?.Invoke(this, mouseWheelEventArgs);
 
-        foreach (var child in _childNodes.Reverse<UIWidget>())
+        foreach (var child in Children.Reverse())
         {
             if (child.ShouldPropagateMouseEvent(mouseWheelEventArgs.AbsoluteLocation))
             {
@@ -644,7 +596,7 @@ public abstract class UIComponent
     }
 
     internal IEnumerable<UIComponent> GetComponentTreeNodesDepthFirstSearch() =>
-        _childNodes.Union(_childNodes.SelectMany(c => c.GetComponentTreeNodesDepthFirstSearch()));
+        Children.Union(Children.SelectMany(c => c.GetComponentTreeNodesDepthFirstSearch()));
 
     internal void OnRenderFrame()
     {
@@ -664,7 +616,7 @@ public abstract class UIComponent
     /// </returns>
     internal bool ReComputeWrapSize()
     {
-        var childrenSize = _childNodes.Select(c => c._wrapSize);
+        var childrenSize = Children.Select(c => c._wrapSize);
         var minimalOptimalSize = ComputeMinimumOptimalSize(childrenSize);
         var width = Width.Value.IfAuto(minimalOptimalSize.Width);
         var height = Height.Value.IfAuto(minimalOptimalSize.Height);
@@ -694,7 +646,7 @@ public abstract class UIComponent
         _absoluteDrawingArea = ComputeAbsoluteDrawingArea(ref renderingAreaChanged);
         _clipArea = ComputeClipArea(ref renderingAreaChanged);
 
-        var childrenAreas = RepositionChildren(_relativeDrawingArea.Size, _childNodes.Select(c => c._wrapSize));
+        var childrenAreas = RepositionChildren(_relativeDrawingArea.Size, Children.Select(c => c._wrapSize));
 
         // If rendering area has not changed and children area has not changed, no need to proceed.
         if (childrenAreas.Count == 0 && !renderingAreaChanged)
@@ -703,9 +655,9 @@ public abstract class UIComponent
             return;
         }
 
-        if (childrenAreas.Count != 0 && _childNodes.Count != 0 && childrenAreas.Count != _childNodes.Count)
+        if (childrenAreas.Count != 0 && Children.Count != 0 && childrenAreas.Count != Children.Count)
         {
-            throw new InvalidOperationException($"{nameof(RepositionChildren)} must return the same number of elements as the number of children or be empty: {childrenAreas.Count()} provided but {_childNodes.Count} exist");
+            throw new InvalidOperationException($"{nameof(RepositionChildren)} must return the same number of elements as the number of children or be empty: {childrenAreas.Count()} provided but {Children.Count} exist");
         }
 
         // If rendering area has changed, ensure the component is invalidated.
@@ -713,16 +665,16 @@ public abstract class UIComponent
 
         if (childrenAreas.Count != 0)
         {
-            for (var i = 0; i < _childNodes.Count; i++)
+            for (var i = 0; i < Children.Count; i++)
             {
-                var child = _childNodes[i];
+                var child = Children[i];
                 var childArea = childrenAreas[i];
                 child.ComputeDrawingAreas(childArea);
             }
         }
         else
         {
-            foreach (var child in _childNodes)
+            foreach (var child in Children)
             {
                 child.ComputeDrawingAreas();
             }
@@ -742,7 +694,7 @@ public abstract class UIComponent
     {
         // TODO: optimize traversal only for affected z indexes!
         var currentZIndex = Canvas.UpdateZIndices(baseZIndex);
-        foreach (var child in _childNodes)
+        foreach (var child in Children)
         {
             currentZIndex = child.UpdateZIndices(currentZIndex);
         }
@@ -859,21 +811,21 @@ public abstract class UIComponent
             _level = 0;
         }
 
-        _childNodes.ForEach(c => c.RecomputeLevel());
+        foreach (var child in Children) child.RecomputeLevel();
     }
 
     private void InvalidateAll()
     {
         if (Root == null) return;
         Invalidate();
-        _childNodes.ForEach(c => c.InvalidateAll());
+        foreach (var child in Children) child.InvalidateAll();
     }
 
     private void CancelInvalidationAll()
     {
         if (Root == null) return;
         CancelInvalidation();
-        _childNodes.ForEach(c => c.CancelInvalidation());
+        foreach (var child in Children) child.CancelInvalidationAll();
     }
 
     private void AttachCanvas()
@@ -882,7 +834,7 @@ public abstract class UIComponent
         if (renderingEngine != null)
         {
             Canvas.Attach(renderingEngine);
-            foreach (var child in _childNodes)
+            foreach (var child in Children)
             {
                 child.AttachCanvas();
             }
@@ -893,11 +845,7 @@ public abstract class UIComponent
     {
         Canvas.Detach();
         CancelInvalidation();
-
-        foreach (var child in _childNodes)
-        {
-            child.Cleanup();
-        }
+        foreach (var child in Children) child.Cleanup();
     }
 
     private void UpdateVisibility(bool? canInvalidatedParentRender = null)
@@ -906,10 +854,7 @@ public abstract class UIComponent
         if (canInvalidatedParentRender != null) canRender &= canInvalidatedParentRender.Value;
         Invalidate();
         Canvas.UpdateVisibility(canRender);
-        foreach (var child in _childNodes)
-        {
-            child.UpdateVisibility(canRender);
-        }
+        foreach (var child in Children) child.UpdateVisibility(canRender);
     }
 
     private void NotifyMouseInside()
@@ -927,13 +872,38 @@ public abstract class UIComponent
         {
             _hasMouse = false;
             MouseLeave?.Invoke(this, EventArgs.Empty);
-            foreach (var child in _childNodes)
-            {
-                child.NotifyMouseOutside();
-            }
+            foreach (var child in Children) child.NotifyMouseOutside();
         }
     }
 
     private bool ShouldPropagateMouseEvent(Point mouseAbsoluteLocation) =>
         mouseAbsoluteLocation.IsWithin(_absoluteDrawingArea) && Visibility.Value == ComponentVisibility.Visible && Enabled.Value;
+
+    private void OnChildAdd(int index)
+    {
+        var component = Children[index];
+        Application.LifeCycle.ThrowIfPropertyCannotBeSet();
+        if (Root != null) Root.Invalidator.NeedZIndexUpdate = true;
+        component.Parent?.Children.Remove(component);
+        component.Parent = this;
+        component.RecomputeLevel();
+        component.InvalidateAll();
+        component.AttachCanvas();
+        Invalidate();
+        UpdateVisibility();
+    }
+
+    private void OnChildRemove(int index)
+    {
+        var component = Children[index];
+        Application.LifeCycle.ThrowIfPropertyCannotBeSet();
+        if (Root != null) Root.Invalidator.NeedZIndexUpdate = true;
+        Invalidate();
+
+        if (component.Parent == this)
+        {
+            component.Cleanup();
+            component.Parent = null;
+        }
+    }
 }

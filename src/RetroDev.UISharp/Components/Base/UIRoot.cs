@@ -5,7 +5,6 @@ using RetroDev.UISharp.Core.Graphics;
 using RetroDev.UISharp.Core.Graphics.OpenGL;
 using RetroDev.UISharp.Core.Windowing.Events;
 using RetroDev.UISharp.Core.Windowing.SDL;
-using RetroDev.UISharp.UIDefinition.Ast;
 
 namespace RetroDev.UISharp.Components.Base;
 
@@ -13,7 +12,7 @@ namespace RetroDev.UISharp.Components.Base;
 /// The root of a UI component hierarchy. This is typically a rendering unit, such as, a window or a mobile
 /// device activity.
 /// </summary>
-public abstract class UIRoot : UIComponent, IContainer
+public abstract class UIRoot : UIContainer
 {
     /// <summary>
     /// The object that manages <see cref="UIComponent"/> invalidation for the component tree rooted by <see langword="this" />
@@ -29,7 +28,7 @@ public abstract class UIRoot : UIComponent, IContainer
     protected MeasureProvider MeasureProvider { get; }
 
     /// <summary>
-    /// The object that performes retained mode rendering of all <see cref="UIComponent"/> components in the component tree rooted by <see langword="this" />
+    /// The object that performs retained mode rendering of all <see cref="UIComponent"/> components in the component tree rooted by <see langword="this" />
     /// component.
     /// </summary>
     protected RenderProvider RenderProvider { get; }
@@ -43,8 +42,6 @@ public abstract class UIRoot : UIComponent, IContainer
     /// Useful informations for event handling.
     /// </summary>
     internal GlobalEventInformation GlobalEventInformation { get; } = new GlobalEventInformation();
-
-    public abstract IEnumerable<UIWidget> Children { get; }
 
     /// <summary>
     /// Creates a new root component.
@@ -74,31 +71,10 @@ public abstract class UIRoot : UIComponent, IContainer
         RenderProvider = new RenderProvider(Invalidator);
         RenderingEngine = renderingEngine ?? new OpenGLRenderingEngine(application.Dispatcher, application.Logger, new SDLOpenGLRenderingContext(application.Logger));
 
+        Children.BindSourceToDestination(Items);
+
         MouseMove += UIRoot_MouseMove;
         MouseRelease += UIRoot_MouseRelease;
-    }
-
-    /// <summary>
-    /// Adds a <see cref="UIWidget"/> component to <see langword="this" /> root component.
-    /// </summary>
-    /// <param name="component">The component to add.</param>
-    public void AddComponent(UIWidget component)
-    {
-        AddChildNode(component);
-    }
-
-    /// <summary>
-    /// Gets the child component with <see cref="ID"/> equal to the given <paramref name="id"/>.
-    /// </summary>
-    /// <typeparam name="TComponent">The comnponent type.</typeparam>
-    /// <returns>The component.</returns>
-    /// <exception cref="ArgumentException">If the component does not exist.</exception>
-    /// <exception cref="InvalidCastException">If the component was found but with a type not assignable to <typeparamref name="TComponent"/>.</exception>
-    public TComponent GetComponent<TComponent>(string id) where TComponent : UIWidget
-    {
-        var children = GetChildrenNodes().Where(c => c.ID.Value == id);
-        if (!children.Any()) throw new ArgumentException($"Child with ID {id} not found in component with id {ID.Value}");
-        return (TComponent)children.First();
     }
 
     internal void EnsureZIndicesUpdated()

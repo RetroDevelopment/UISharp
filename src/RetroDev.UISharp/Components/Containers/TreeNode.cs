@@ -9,14 +9,11 @@ namespace RetroDev.UISharp.Components.Containers;
 /// <summary>
 /// Displays a node of a <see cref="TreeBox"/>.
 /// </summary>
-public class TreeNode
+public class TreeNode : UINode
 {
-    internal readonly List<TreeNode> _children = [];
     internal TreeBox? _root;
     private int indentation = 0;
 
-    // TODO: pass LifeCycle to property so that you can treat is a UI
-    public UIProperty<UIWidget> Content { get; set; }
     public UIProperty<bool> Collapsed { get; set; }
     public TreeNode? Parent { get; private set; }
 
@@ -40,38 +37,33 @@ public class TreeNode
 
     internal int Indentation => indentation;
 
-    public TreeNode(UIWidget component)
+    public TreeNode(UIWidget component) : base(component)
     {
-        Content = new UIProperty<UIWidget>(component.Application, component);
         Collapsed = new UIProperty<bool>(component.Application, false);
+        Children.ValueAdd.Subscribe(OnChildAdd);
+        Children.ValueRemove.Subscribe(OnChildRemove);
     }
 
-    public void AddChild(TreeNode child)
+    private void OnChildAdd(int index)
     {
-        // TODO: other way to check life cycle when not tree node? For example pass the app as constructor
-        _root?.Application?.LifeCycle?.ThrowIfPropertyCannotBeSet();
+        var child = (TreeNode)Children[index];
         child.indentation = indentation + 1;
-        _children.Add(child);
         _root?.AddTreeNode(child, this);
         child.Parent = this;
         child.Parent.Collapsed.Value = false;
     }
 
-    public void RemoveChild(TreeNode child)
+    private void OnChildRemove(int index)
     {
-        _root?.Application?.LifeCycle?.ThrowIfPropertyCannotBeSet();
-
-        var index = _children.FindIndex(c => c == child);
-        if (index < 0) throw new ArgumentException("Cannod find child node to remove.");
+        var child = (TreeNode)Children[index];
         _root?.InternalRemoveTreeNode(child);
-        _children.RemoveAt(index);
     }
 
     public IEnumerable<TreeNode> GetRecursiveChildren()
     {
         List<TreeNode> children = [];
 
-        foreach (var child in _children)
+        foreach (var child in Children.Cast<TreeNode>())
         {
             children.Add(child);
             children.AddRange(child.GetRecursiveChildren());

@@ -6,14 +6,14 @@ using RetroDev.UISharp.Presentation.Properties;
 namespace RetroDev.UISharp.Components.Base;
 
 /// <summary>
-/// Abstract class for all containers, which lay out multiple <see cref="UIComponent"/> instances.
+/// Abstract class for all containers containing one single element, which lay out multiple <see cref="UIComponent"/> instances.
 /// </summary>
-public abstract class UIContainer : UIWidget, IContainer
+public abstract class UISingleContainer : UIWidget, ISingleContainer
 {
     private readonly Rectangle _backgroundRectangle;
 
     /// <inheritdoc />
-    public UIPropertyCollection<UIWidget> Items { get; }
+    public UIProperty<UIWidget?> Item { get; }
 
     /// <summary>
     /// The control border color.
@@ -30,7 +30,7 @@ public abstract class UIContainer : UIWidget, IContainer
     /// <param name="autoHeight">How to automatically determine this component height.</param>
     /// <param name="horizontalAlignment">The component horizontal alignment (relative to its <see cref="Parent"/>).</param>
     /// <param name="verticalAlignment">The component vertical alignment (relative to its <see cref="Parent"/>).</param>
-    protected UIContainer(Application application,
+    protected UISingleContainer(Application application,
                           ComponentVisibility visibility = ComponentVisibility.Visible,
                           bool isFocusable = false,
                           IAutoSize? autoWidth = null,
@@ -38,7 +38,7 @@ public abstract class UIContainer : UIWidget, IContainer
                           IHorizontalAlignment? horizontalAlignment = null,
                           IVerticalAlignment? verticalAlignment = null) : base(application, visibility, isFocusable, autoWidth, autoHeight, horizontalAlignment, verticalAlignment)
     {
-        Items = new UIPropertyCollection<UIWidget>(application);
+        Item = new UIProperty<UIWidget?>(this, (UIWidget?)null);
         BorderColor = new UIProperty<Color>(this, Color.Transparent);
 
         _backgroundRectangle = new Rectangle(application);
@@ -47,20 +47,6 @@ public abstract class UIContainer : UIWidget, IContainer
         _backgroundRectangle.BorderThickness.Value = 2.0f; // TODO: use styles
         Canvas.Shapes.Add(_backgroundRectangle);
         RenderFrame += UIContainer_RenderFrame;
-    }
-
-    /// <summary>
-    /// Gets the child component with <see cref="ID"/> equal to the given <paramref name="id"/>.
-    /// </summary>
-    /// <typeparam name="TComponent">The component type.</typeparam>
-    /// <returns>The component.</returns>
-    /// <exception cref="ArgumentException">If the component does not exist.</exception>
-    /// <exception cref="InvalidCastException">If the component was found but with a type not assignable to <typeparamref name="TComponent"/>.</exception>
-    public TComponent GetComponent<TComponent>(string id) where TComponent : UIWidget
-    {
-        var children = Items.Where(c => c.ID.Value == id);
-        if (!children.Any()) throw new ArgumentException($"Child with ID {id} not found in component with id {ID.Value}");
-        return (TComponent)children.First();
     }
 
     private void UIContainer_RenderFrame(UIComponent sender, UISharp.Core.Windowing.Events.RenderingEventArgs e)

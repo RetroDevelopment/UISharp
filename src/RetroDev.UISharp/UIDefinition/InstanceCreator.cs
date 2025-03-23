@@ -98,13 +98,13 @@ public class InstanceCreator(Application application, TypeMapper typeMapper, IEA
             var childComponent = component.Components[i];
             if (instance is IContainer multipleContainer)
             {
-                multipleContainer.AddComponent(childInstance);
+                multipleContainer.Items.Add(childInstance);
             }
             else if (instance is ISingleContainer singleContainer)
             {
                 if (component.Components.Count == 1)
                 {
-                    singleContainer.SetComponent(childInstance);
+                    singleContainer.Item.Value = childInstance;
                 }
                 else
                 {

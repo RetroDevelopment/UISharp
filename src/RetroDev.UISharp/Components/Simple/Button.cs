@@ -117,7 +117,7 @@ public class Button : UIWidget
         _buttonTextLabel.HorizontalAlignment.BindSourceToDestination(TextHorizontalAlignment);
         _buttonTextLabel.VerticalAlignment.BindSourceToDestination(TextVerticalAlignment);
         _buttonTextLabel.Margin.BindSourceToDestination(Padding);
-        AddChildNode(_buttonTextLabel);
+        Children.Add(_buttonTextLabel);
 
         KeyPress += Button_KeyPress;
         MousePress += Button_MousePress;
