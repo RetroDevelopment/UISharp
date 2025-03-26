@@ -9,16 +9,16 @@
 public interface IBindingValueConverter<TSource, TDestination>
 {
     /// <summary>
-    /// Converts <paramref name="value"/> into a value of type <typeparamref name="TDestination"/>.
+    /// Converts <paramref name="source"/> into a value of type <typeparamref name="TDestination"/>.
     /// </summary>
-    /// <param name="value">The value to convert.</param>
+    /// <param name="source">The value to convert.</param>
     /// <returns>The converted value of type <typeparamref name="TDestination"/>.</returns>
-    TDestination ConvertSourceToDestination(TSource value);
+    TDestination ConvertSourceToDestination(TSource source);
 
     /// <summary>
-    /// Converts <paramref name="value"/> into a value of type <typeparamref name="TSource"/>.
+    /// Converts <paramref name="destination"/> into a value of type <typeparamref name="TSource"/>.
     /// </summary>
-    /// <param name="value">The value to convert.</param>
+    /// <param name="destination">The value to convert.</param>
     /// <returns>The converted value of type <typeparamref name="TSource"/>.</returns>
-    TSource ConvertDestinationToSource(TDestination value);
+    TSource ConvertDestinationToSource(TDestination destination);
 }

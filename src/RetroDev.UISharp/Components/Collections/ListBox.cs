@@ -56,8 +56,8 @@ public class ListBox : UIContainer
         _scrollView.Item.Value = _verticalLayout;
         _scrollView.AutoWidth.Value = AutoSize.Stretch;
         _scrollView.AutoHeight.Value = AutoSize.Stretch;
-        _scrollView.BackgroundColor.RemoveBinding();
-        _scrollView.BorderColor.RemoveBinding();
+        _scrollView.BackgroundColor.Unbind();
+        _scrollView.BorderColor.Unbind();
         _scrollView.BackgroundColor.Value = Color.Transparent;
         _scrollView.BorderColor.Value = Color.Transparent;
 
@@ -93,7 +93,7 @@ public class ListBox : UIContainer
         {
             var previouslySelectedCell = GetSelectedCell();
             previouslySelectedCell!.BackgroundColor.Value = Color.Transparent;
-            previouslySelectedCell!.BackgroundColor.RemoveBinding();
+            previouslySelectedCell!.BackgroundColor.Unbind();
         }
 
         var selectedPanel = (Panel)sender;
@@ -108,7 +108,7 @@ public class ListBox : UIContainer
         if (GetSelectedCell() != sender)
         {
             var panel = (Panel)sender;
-            panel.BackgroundColor.RemoveBinding();
+            panel.BackgroundColor.Unbind();
             panel.BackgroundColor.Value = Color.Transparent;
         }
     }

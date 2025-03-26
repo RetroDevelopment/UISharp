@@ -6,6 +6,7 @@ internal class UIPropertyCollectionBinder<TSource, TDestination> : IDisposable
 {
     private readonly UIPropertyCollection<TSource> _sourceProperty;
     private readonly UIPropertyCollection<TDestination> _destinationProperty;
+    private readonly IBindingValueConverter<TSource, TDestination> _converter;
     private readonly BindingType _bindingType;
 
     private readonly List<IDisposable> _subscriptions = [];
@@ -18,6 +19,7 @@ internal class UIPropertyCollectionBinder<TSource, TDestination> : IDisposable
     {
         _sourceProperty = sourceProperty;
         _destinationProperty = destinationProperty;
+        _converter = converter;
         _bindingType = bindingType;
 
         CheckValidBinding();
@@ -25,18 +27,18 @@ internal class UIPropertyCollectionBinder<TSource, TDestination> : IDisposable
         switch (bindingType)
         {
             case BindingType.SourceToDestination:
-                BindSourceToDestination(converter);
+                BindSourceToDestination();
                 sourceProperty.IsReadOnly = false;
                 destinationProperty.IsReadOnly = true;
                 break;
             case BindingType.DestinationToSource:
-                BindDestinationToSource(converter);
+                BindDestinationToSource();
                 sourceProperty.IsReadOnly = true;
                 destinationProperty.IsReadOnly = false;
                 break;
             case BindingType.TwoWays:
-                BindSourceToDestination(converter);
-                BindDestinationToSource(converter);
+                BindSourceToDestination();
+                BindDestinationToSource();
                 sourceProperty.IsReadOnly = false;
                 destinationProperty.IsReadOnly = false;
                 break;
@@ -111,32 +113,39 @@ internal class UIPropertyCollectionBinder<TSource, TDestination> : IDisposable
         if (_sourceProperty.IsBindingTarget) throw new UIPropertyValidationException($"Invalid binding {_sourceProperty} <- {_destinationProperty}: source property is already a target of another binding");
     }
 
-    private void BindSourceToDestination(IBindingValueConverter<TSource, TDestination> converter)
+    private void BindSourceToDestination()
     {
         _destinationProperty.IsBindingTarget = true;
 
         SubscribeAllowingEdits(
             _sourceProperty.ValueAdd,
+            _sourceProperty,
             _destinationProperty,
-            i => _destinationProperty.Insert(i, converter.ConvertSourceToDestination(_sourceProperty[i])));
+            i => _destinationProperty.Insert(i, _converter.ConvertSourceToDestination(_sourceProperty[i])));
 
         SubscribeAllowingEdits(
             _sourceProperty.ValueRemove,
+            _sourceProperty,
             _destinationProperty,
-            _destinationProperty.RemoveAt);
+            i =>
+            {
+                _destinationProperty.RemoveAt(i);
+            });
     }
 
-    private void BindDestinationToSource(IBindingValueConverter<TSource, TDestination> converter)
+    private void BindDestinationToSource()
     {
         _sourceProperty.IsBindingTarget = true;
 
         SubscribeAllowingEdits(
             _destinationProperty.ValueAdd,
+            _destinationProperty,
             _sourceProperty,
-            i => _sourceProperty.Insert(i, converter.ConvertDestinationToSource(_destinationProperty[i])));
+            i => _sourceProperty.Insert(i, _converter.ConvertDestinationToSource(_destinationProperty[i])));
 
         SubscribeAllowingEdits(
             _destinationProperty.ValueRemove,
+            _destinationProperty,
             _sourceProperty,
             _sourceProperty.RemoveAt);
     }
@@ -144,14 +153,16 @@ internal class UIPropertyCollectionBinder<TSource, TDestination> : IDisposable
     // This method allow temporarily disabling read only constraints to allow for binding. Usually the binding target is
     // readonly to avoid inconsistencies. For example, when binding list1 -> list2, list2 is readonly to make sure that list2 is always in sync with list1,
     // since keeping a list in sync is not supported for performance reasons and to avoid complexity.
-    private void SubscribeAllowingEdits<TValue>(IObservable<int> observable, UIPropertyCollection<TValue> targetProperty, Action<int> action)
+    private void SubscribeAllowingEdits<TOrigin, TTarget>(IObservable<int> observable, UIPropertyCollection<TOrigin> originProperty, UIPropertyCollection<TTarget> targetProperty, Action<int> action)
     {
         var subscription = observable.Subscribe(i =>
         {
-            var isReadOnly = targetProperty.IsReadOnly;
-            targetProperty.IsReadOnly = false;
+            if (targetProperty._isBinding) return;
+            originProperty._isBinding = true;
+            targetProperty._isBinding = true;
             action(i);
-            targetProperty.IsReadOnly = isReadOnly;
+            targetProperty._isBinding = false;
+            originProperty._isBinding = false;
         });
 
         _subscriptions.Add(subscription);

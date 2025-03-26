@@ -6,6 +6,7 @@ internal class UIPropertyBinder<TSource, TDestination> : IDisposable
 {
     private readonly UIProperty<TSource> _sourceProperty;
     private readonly UIProperty<TDestination> _destinationProperty;
+    private readonly IBindingValueConverter<TSource, TDestination> _converter;
     private readonly BindingType _bindingType;
 
     private readonly List<IDisposable> _subscriptions = [];
@@ -18,6 +19,7 @@ internal class UIPropertyBinder<TSource, TDestination> : IDisposable
     {
         _sourceProperty = sourceProperty;
         _destinationProperty = destinationProperty;
+        _converter = converter;
         _bindingType = bindingType;
 
         CheckValidBinding();
@@ -25,14 +27,14 @@ internal class UIPropertyBinder<TSource, TDestination> : IDisposable
         switch (bindingType)
         {
             case BindingType.SourceToDestination:
-                BindSourceToDestination(converter);
+                BindSourceToDestination();
                 break;
             case BindingType.DestinationToSource:
-                BindDestinationToSource(converter);
+                BindDestinationToSource();
                 break;
             case BindingType.TwoWays:
-                BindSourceToDestination(converter);
-                BindDestinationToSource(converter);
+                BindSourceToDestination();
+                BindDestinationToSource();
                 break;
             default:
                 throw new ArgumentException($"Unhandled binding type {bindingType}");
@@ -105,20 +107,20 @@ internal class UIPropertyBinder<TSource, TDestination> : IDisposable
         if (_sourceProperty.IsBindingTarget) throw new UIPropertyValidationException($"Invalid binding {_sourceProperty} <- {_destinationProperty}: source property is already a target of another binding");
     }
 
-    private void BindSourceToDestination(IBindingValueConverter<TSource, TDestination> converter)
+    private void BindSourceToDestination()
     {
         var subscription = _sourceProperty
             .ValueChange
-            .Subscribe(v => _destinationProperty.Value = converter.ConvertSourceToDestination(v));
+            .Subscribe(v => _destinationProperty.Value = _converter.ConvertSourceToDestination(v));
         _subscriptions.Add(subscription);
         _destinationProperty.IsBindingTarget = true;
     }
 
-    private void BindDestinationToSource(IBindingValueConverter<TSource, TDestination> converter)
+    private void BindDestinationToSource()
     {
         var subscription = _destinationProperty
             .ValueChange
-            .Subscribe(v => _sourceProperty.Value = converter.ConvertDestinationToSource(v));
+            .Subscribe(v => _sourceProperty.Value = _converter.ConvertDestinationToSource(v));
         _subscriptions.Add(subscription);
         _sourceProperty.IsBindingTarget = true;
     }

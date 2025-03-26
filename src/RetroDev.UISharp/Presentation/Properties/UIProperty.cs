@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Numerics;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using RetroDev.UISharp.Components.Core.Base;
@@ -328,9 +329,13 @@ public class UIProperty<TValue>
     /// <summary>
     /// Removes a binding if any.
     /// </summary>
-    public virtual void RemoveBinding()
+    /// <remarks>
+    /// This method does NOT perform deep unbinding but only shallow unbinding.
+    /// This means that it does NOT remove nested binding of properties made inside the bound object.
+    /// </remarks>
+    public virtual void Unbind()
     {
-        Application?.Dispatcher.ThrowIfNotOnUIThread();
+        ThrowIfSetNotAllowed();
         _binder?.Dispose();
     }
 

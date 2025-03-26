@@ -42,8 +42,8 @@ public class TreeBox : UIHierarchicalContainer
         _listBox = new ListBox(application);
         _listBox.AutoWidth.Value = AutoSize.Stretch;
         _listBox.AutoHeight.Value = AutoSize.Stretch;
-        _listBox.BackgroundColor.RemoveBinding();
-        _listBox.BorderColor.RemoveBinding();
+        _listBox.BackgroundColor.Unbind();
+        _listBox.BorderColor.Unbind();
         _listBox.BackgroundColor.Value = Color.Transparent;
         _listBox.BorderColor.Value = Color.Transparent;
         _listBox.Margin.BindSourceToDestination(Padding);

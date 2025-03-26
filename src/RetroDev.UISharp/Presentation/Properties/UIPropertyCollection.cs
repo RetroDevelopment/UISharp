@@ -19,7 +19,8 @@ public class UIPropertyCollection<TValue> : IList<TValue>
     private readonly Subject<int> _valueAddSubject;
     private readonly Subject<int> _valueRemoveSubject;
 
-    IDisposable? _binder;
+    private IDisposable? _binder;
+    internal bool _isBinding = false;
 
     /// <inheritdoc />
     public TValue this[int index]
@@ -227,9 +228,11 @@ public class UIPropertyCollection<TValue> : IList<TValue>
     /// <param name="converter">A converter to convert source and destination property so that they match.</param>
     public virtual void Bind<TSource>(UIPropertyCollection<TSource> sourceProperty, BindingType bindingType, IBindingValueConverter<TSource, TValue> converter)
     {
+        _isBinding = true;
         ThrowIfChangesNotAllowed();
         _binder?.Dispose();
         _binder = new UIPropertyCollectionBinder<TSource, TValue>(sourceProperty, this, bindingType, converter);
+        _isBinding = false;
     }
 
     /// <summary>
@@ -283,9 +286,9 @@ public class UIPropertyCollection<TValue> : IList<TValue>
     /// <param name="sourceProperty">The source property to bind.</param>
     /// <param name="sourceToDestinationConverter">The function converting from source property value to source property value.</param>
     public virtual void BindDestinationToSource<TSource>(UIPropertyCollection<TSource> sourceProperty,
-                                                 Func<TSource, TValue> sourceToDestinationConverter)
+                                                         Func<TValue, TSource> sourceToDestinationConverter)
     {
-        Bind(sourceProperty, BindingType.DestinationToSource, sourceToDestinationConverter, _ => throw new InvalidOperationException());
+        Bind(sourceProperty, BindingType.DestinationToSource, _ => throw new InvalidOperationException(), sourceToDestinationConverter);
     }
 
     /// <summary>
@@ -341,9 +344,15 @@ public class UIPropertyCollection<TValue> : IList<TValue>
     /// <summary>
     /// Removes a binding if any.
     /// </summary>
-    public virtual void RemoveBinding()
+    /// <remarks>
+    /// This method does NOT perform deep unbinding but only shallow unbinding.
+    /// This means that it does NOT remove nested binding of properties made inside the bound object.
+    /// </remarks>
+    public virtual void Unbind()
     {
-        Application?.Dispatcher.ThrowIfNotOnUIThread();
+        _isBinding = true;
+        ThrowIfChangesNotAllowed();
+        _isBinding = false;
         _binder?.Dispose();
     }
 
@@ -351,6 +360,6 @@ public class UIPropertyCollection<TValue> : IList<TValue>
     {
         Application.Dispatcher.ThrowIfNotOnUIThread();
         if (_lockChanges) Application.LifeCycle.ThrowIfPropertyCannotBeSet();
-        if (IsReadOnly) throw new InvalidOperationException("Cannot modify read-only collections");
+        if (IsReadOnly && !_isBinding) throw new InvalidOperationException("Cannot modify read-only collections");
     }
 }

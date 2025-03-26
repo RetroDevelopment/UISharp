@@ -27,13 +27,23 @@ public static class ValueConverterFactory
     public static IBindingValueConverter<TValue, TValue> Identity<TValue>() =>
         new LambdaValueConverter<TValue, TValue>(v => v, v => v);
 
+    /// <summary>
+    /// Flips <paramref name="this"/> converter source and destination types.
+    /// </summary>
+    /// <typeparam name="TSource"><paramref name="this"/> converter source value type.</typeparam>
+    /// <typeparam name="TDestination"><paramref name="this"/> converter destination value type.</typeparam>
+    /// <param name="this">The converter.</param>
+    /// <returns>A converter that converts to and from the opposite values as <paramref name="this"/>.</returns>
+    public static IBindingValueConverter<TDestination, TSource> Flip<TSource, TDestination>(this IBindingValueConverter<TSource, TDestination> @this) =>
+        new LambdaValueConverter<TDestination, TSource>(@this.ConvertDestinationToSource, @this.ConvertSourceToDestination);
+
     private class LambdaValueConverter<TSource, TDestination>(Func<TSource, TDestination> sourceToDestination,
                                                               Func<TDestination, TSource> destinationToSource) : IBindingValueConverter<TSource, TDestination>
     {
-        public TDestination ConvertSourceToDestination(TSource value) =>
-            sourceToDestination(value);
+        public TDestination ConvertSourceToDestination(TSource source) =>
+            sourceToDestination(source);
 
-        public TSource ConvertDestinationToSource(TDestination value) =>
-            destinationToSource(value);
+        public TSource ConvertDestinationToSource(TDestination destination) =>
+            destinationToSource(destination);
     }
 }

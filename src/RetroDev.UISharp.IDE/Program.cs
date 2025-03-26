@@ -1,8 +1,12 @@
-﻿using RetroDev.UISharp.Components.Simple;
+﻿using System.Linq.Expressions;
+using RetroDev.UISharp.Components.Core.Base;
+using RetroDev.UISharp.Components.Simple;
 using RetroDev.UISharp.Core.Graphics;
 using RetroDev.UISharp.Core.Logging;
 using RetroDev.UISharp.IDE.Windows;
 using RetroDev.UISharp.Presentation.Properties;
+using RetroDev.UISharp.Presentation.Properties.Binding;
+using RetroDev.UISharp.UIDefinition.Ast;
 using RetroDev.UISharp.Windows;
 
 namespace RetroDev.UISharp.IDE;
@@ -34,9 +38,47 @@ internal class Program
 
     private static void LoadMain(Application application)
     {
-        UIProperty<int> p1 = new UIProperty<int>(application, 0);
-        UIProperty<int> p2 = new UIProperty<int>(application, 0);
-        p1.BindSourceToDestination(p2);
+        var uiDefinition = new Component(
+            "Root", [],
+            [new("C1", [], []),
+             new("C2", [], []),
+             new("C3", [], [new("C3.1", [], []), new("C3.2", [], []) ])]);
+        var uiRootNode = uiDefinition.ToUITreeNode(application, n => n.Components);
+        var viewModel = new UITreeProperty<Component>(application);
+        var treeView = new UITreeProperty<UIComponent>(application);
+        treeView.Bind(viewModel, BindingType.SourceToDestination,
+            ValueConverterFactory.FromLambda<Component, UIComponent>(vm => new Label(application, vm.Name)));
+        viewModel.Nodes.Add(uiRootNode);
+
+        UITreeProperty<int> itree = new UITreeProperty<int>(application);
+        UITreeProperty<string> stree = new UITreeProperty<string>(application);
+
+        UITreeNode<int> iroot = new UITreeNode<int>(application, 0);
+        UITreeNode<string> sroot = new UITreeNode<string>(application, "");
+
+        itree.Nodes.Add(iroot);
+        stree.Nodes.Add(sroot);
+
+        stree.Bind(
+            itree,
+            BindingType.SourceToDestination,
+            ValueConverterFactory.FromLambda<int, string>(sourceToDestination: x => x.ToString()));
+
+        iroot.Children.Add(new UITreeNode<int>(application, 1));
+        iroot.Children.Add(new UITreeNode<int>(application, 2));
+
+        iroot.Children.Add(new UITreeNode<int>(application, 3));
+        var icomposite = new UITreeNode<int>(application, 4);
+        iroot.Children.Add(icomposite);
+
+        sroot.Unbind();
+        sroot.Bind(
+            iroot,
+            BindingType.SourceToDestination,
+            ValueConverterFactory.FromLambda<int, string>(sourceToDestination: x => x.ToString()));
+
+        icomposite.Children.Add(new UITreeNode<int>(application, 5));
+        icomposite.Children.Add(new UITreeNode<int>(application, 6));
 
         application.ShowWindow<MainWindow>();
     }
