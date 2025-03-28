@@ -1,6 +1,5 @@
 ﻿using RetroDev.UISharp.Components.Core.Base;
 using RetroDev.UISharp.Presentation.Properties.Binding;
-using RetroDev.UISharp.Presentation.Properties.Exceptions;
 
 namespace RetroDev.UISharp.Presentation.Properties;
 
@@ -8,20 +7,12 @@ namespace RetroDev.UISharp.Presentation.Properties;
 /// Represents a tree node in a <see cref="UITreeProperty{TValue}"/>.
 /// </summary>
 /// <typeparam name="TValue">The node content value type.</typeparam>
-public class UITreeNode<TValue>
+public class UITreeNode<TValue> : UIPropertyHierarchy<TValue>
 {
-    internal readonly Application? _application;
-    internal readonly UIComponent? _component;
-
     /// <summary>
     /// The node content.
     /// </summary>
     public UIProperty<TValue> Content { get; }
-
-    /// <summary>
-    /// The node direct children.
-    /// </summary>
-    public UIPropertyCollection<UITreeNode<TValue>> Children { get; }
 
     /// <summary>
     /// Whether the node is collapsed, meaning that all the children are not visible.
@@ -58,13 +49,10 @@ public class UITreeNode<TValue>
     /// <param name="application">The application owning <see langword="this" /> node.</param>
     /// <param name="value">The node initial <see cref="Content"/> value.</param>
     /// <param name="lockSetter ">Whether it is only possible to set <see langword="this" /> <see cref="UINode{TValue}"/> during event handling.</param>
-    public UITreeNode(Application application, TValue value, bool lockSetter = false)
+    public UITreeNode(Application application, TValue value, bool lockSetter = false) : base(application, lockSetter)
     {
-        _application = application;
         Content = new UIProperty<TValue>(application, value, lockSetter: lockSetter);
-        Children = new UIPropertyCollection<UITreeNode<TValue>>(application, lockSetter);
         Collapsed = new UIProperty<bool>(application, false, lockSetter: lockSetter);
-        RegisterChildrenChangeCallbakcs();
     }
 
     /// <summary>
@@ -73,91 +61,80 @@ public class UITreeNode<TValue>
     /// <param name="component">The component owning <see langword="this" /> node.</param>
     /// <param name="value">The node initial <see cref="Content"/> value.</param>
     /// <param name="lockSetter ">Whether it is only possible to set <see langword="this" /> <see cref="UINode{TValue}"/> during event handling.</param>
-    public UITreeNode(UIComponent component, TValue value, bool lockSetter = true)
+    public UITreeNode(UIComponent component, TValue value, bool lockSetter = true) : base(component, lockSetter)
     {
-        _component = component;
         Content = new UIProperty<TValue>(component, value);
-        Children = new UIPropertyCollection<UITreeNode<TValue>>(component, lockSetter);
         Collapsed = new UIProperty<bool>(component, false);
-        RegisterChildrenChangeCallbakcs();
     }
 
     /// <summary>
     /// Collapses <see langword="this" /> node and all its children.
     /// </summary>
-    public void CollapseAll()
+    public override void CollapseAll()
     {
         Collapsed.Value = true;
-        foreach (var child in Children)
-        {
-            child.CollapseAll();
-        }
+        base.CollapseAll();
     }
 
     /// <summary>
     /// Expands <see langword="this" /> node and all its children.
     /// </summary>
-    public void ExpandAll()
+    public override void ExpandAll()
     {
         Collapsed.Value = false;
-        foreach (var child in Children)
-        {
-            child.ExpandAll();
-        }
+        base.CollapseAll();
     }
 
-    public void Bind<TSource>(UITreeNode<TSource> source, BindingType bindingType, IBindingValueConverter<TSource, TValue> converter)
+    /// <summary>
+    /// Bind the given <paramref name="sourceProperty"/> tree to <see langword="this" /> tree.
+    /// </summary>
+    /// <typeparam name="TSource">The <paramref name="sourceProperty"/> nodes content value type.</typeparam>
+    /// <param name="sourceProperty">The binding source.</param>
+    /// <param name="bindingType">
+    /// The <see cref="BindingType"/> (<see langword="this"/> property is the source property and).
+    /// the given <paramref name="sourceProperty" /> is the binding source property.
+    /// </param>
+    /// <param name="converter">A converter to convert source and destination property so that they match.</param>
+    public virtual void Bind<TSource>(UITreeNode<TSource> source, BindingType bindingType, IBindingValueConverter<TSource, TValue> converter)
     {
-        Unbind();
-
-        var nodeConverter = new UITreeNodeConverter<TSource, TValue>(converter, bindingType);
-
+        base.Bind(source, bindingType, converter);
         Content.Bind(source.Content, bindingType, converter);
-        Children.Bind(source.Children, bindingType, nodeConverter);
         Collapsed.Bind(source.Collapsed, bindingType);
-
-        if (Children.Count == 0) return;
-
-        if (Children.Count != source.Children.Count)
-        {
-            throw new UIPropertyValidationException($"Invalid tree binding: source and destination must have the same number of children (source has {source.Children.Count} children and destination has {Children.Count} children)");
-        }
-
-        var childrenCount = source.Children.Count;
-        for (int i = 0; i < childrenCount; i++)
-        {
-            var sourceChild = source.Children[i];
-            var destinationChild = Children[i];
-            destinationChild.Bind(sourceChild, bindingType, converter);
-        }
     }
 
-    public void Unbind()
+    /// <summary>
+    /// Removes a binding if any.
+    /// </summary>
+    /// <remarks>
+    /// This method performs deep unbinding in tree nodes, meaning that it will remove
+    /// all binding recursively made in the tree node descendants.
+    /// However, this method does NOT perform deep unbinding for node content (<see cref="Component"/>) but only shallow unbinding.
+    /// This means that it does NOT remove nested binding of properties made inside the <see cref="Component"/> object.
+    /// </remarks>
+    public override void Unbind()
     {
         Content.Unbind();
-        Children.Unbind();
         Collapsed.Unbind();
-        foreach (var child in Children) child.Unbind();
     }
 
-    private void RegisterChildrenChangeCallbakcs()
+    /// <summary>
+    /// Triggered when adding a child to <see langword="this" /> node.
+    /// </summary>
+    /// <param name="index">The index of the added node in the children list.</param>
+    protected override void OnChildAdd(int index)
     {
-        Children.ValueAdd.Subscribe(OnChildAdd);
-        Children.ValueRemove.Subscribe(OnChildRemove);
-    }
-
-    private void OnChildAdd(int index)
-    {
+        base.OnChildAdd(index);
         var child = Children[index];
-        child.TreeLevel = TreeLevel + 1;
-        child.Parent?.Children?.Remove(child);
+        UpdateTreeLevel(child, TreeLevel + 1);
         child.Parent = this;
     }
 
-    private void OnChildRemove(int index)
+    private void UpdateTreeLevel(UITreeNode<TValue> node, int currentLevel)
     {
-        var child = Children[index];
-        child.TreeLevel = 0;
-        child.Parent = null;
+        node.TreeLevel = currentLevel;
+        foreach (var child in node.Children)
+        {
+            UpdateTreeLevel(child, currentLevel + 1);
+        }
     }
 }

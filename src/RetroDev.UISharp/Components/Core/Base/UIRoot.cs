@@ -71,7 +71,7 @@ public abstract class UIRoot : UIContainer
         RenderProvider = new RenderProvider(Invalidator);
         RenderingEngine = renderingEngine ?? new OpenGLRenderingEngine(application.Dispatcher, application.Logger, new SDLOpenGLRenderingContext(application.Logger));
 
-        Children.BindSourceToDestination(Items);
+        Children.BindTwoWays(Items);
 
         MouseMove += UIRoot_MouseMove;
         MouseRelease += UIRoot_MouseRelease;

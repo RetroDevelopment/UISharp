@@ -1,4 +1,5 @@
-﻿using RetroDev.UISharp.Presentation.Properties.Exceptions;
+﻿using System.Security.Cryptography;
+using RetroDev.UISharp.Presentation.Properties.Exceptions;
 
 namespace RetroDev.UISharp.Presentation.Properties.Binding;
 
@@ -116,6 +117,7 @@ internal class UIPropertyCollectionBinder<TSource, TDestination> : IDisposable
     private void BindSourceToDestination()
     {
         _destinationProperty.IsBindingTarget = true;
+        SynchronizeLists(_sourceProperty, _destinationProperty, _converter.ConvertSourceToDestination);
 
         SubscribeAllowingEdits(
             _sourceProperty.ValueAdd,
@@ -127,15 +129,13 @@ internal class UIPropertyCollectionBinder<TSource, TDestination> : IDisposable
             _sourceProperty.ValueRemove,
             _sourceProperty,
             _destinationProperty,
-            i =>
-            {
-                _destinationProperty.RemoveAt(i);
-            });
+            _destinationProperty.RemoveAt);
     }
 
     private void BindDestinationToSource()
     {
         _sourceProperty.IsBindingTarget = true;
+        SynchronizeLists(_destinationProperty, _sourceProperty, _converter.ConvertDestinationToSource);
 
         SubscribeAllowingEdits(
             _destinationProperty.ValueAdd,
@@ -157,15 +157,26 @@ internal class UIPropertyCollectionBinder<TSource, TDestination> : IDisposable
     {
         var subscription = observable.Subscribe(i =>
         {
-            if (targetProperty._isBinding) return;
-            originProperty._isBinding = true;
-            targetProperty._isBinding = true;
-            action(i);
-            targetProperty._isBinding = false;
-            originProperty._isBinding = false;
+            if (targetProperty.IsBinding) return;
+            using (targetProperty.CreateBindingScope())
+            using (originProperty.CreateBindingScope())
+            {
+                action(i);
+            }
         });
 
         _subscriptions.Add(subscription);
+    }
+
+    private void SynchronizeLists<TOrigin, TTarget>(UIPropertyCollection<TOrigin> originProperty,
+                                                    UIPropertyCollection<TTarget> targetProperty,
+                                                    Func<TOrigin, TTarget> convert)
+    {
+        if (targetProperty.Count != 0) throw new UIPropertyValidationException($"Failed to bind {originProperty} to {targetProperty}: binding target must be empty");
+        foreach (var origin in originProperty)
+        {
+            targetProperty.Add(convert(origin));
+        }
     }
 
     ~UIPropertyCollectionBinder()

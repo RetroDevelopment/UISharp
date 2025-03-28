@@ -1,6 +1,8 @@
 ﻿using System.Collections;
+using System.Dynamic;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using OpenTK.Platform.Windows;
 using RetroDev.UISharp.Components.Core.Base;
 using RetroDev.UISharp.Components.Core.Shapes;
 using RetroDev.UISharp.Presentation.Properties.Binding;
@@ -20,7 +22,12 @@ public class UIPropertyCollection<TValue> : IList<TValue>
     private readonly Subject<int> _valueRemoveSubject;
 
     private IDisposable? _binder;
-    internal bool _isBinding = false;
+    private bool _isBinding = false;
+
+    /// <summary>
+    /// Whether a binding update is in progress.
+    /// </summary>
+    public bool IsBinding => _isBinding;
 
     /// <inheritdoc />
     public TValue this[int index]
@@ -136,10 +143,39 @@ public class UIPropertyCollection<TValue> : IList<TValue>
 
     /// <inheritdoc />
     public void Add(TValue item)
+
     {
         ThrowIfChangesNotAllowed();
         _values.Add(item);
         _valueAddSubject.OnNext(_values.Count - 1);
+    }
+
+    /// <summary>
+    /// Adds all the given <paramref name="items"/> to <see langword="this" /> collection.
+    /// </summary>
+    /// <param name="items">The items to add.</param>
+    public void AddRange(IEnumerable<TValue> items)
+    {
+        foreach (var item in items)
+        {
+            Add(item);
+        }
+    }
+
+    /// <summary>
+    /// Inserts the given <paramref name="items"/> in <see langword="this" /> <see cref="List{T}"/> at the
+    /// specified <paramref name="index"/>.
+    /// </summary>
+    /// <param name="index">The zero-based index at which the elements should be inserted.</param>
+    /// <param name="items">The elements to insert.</param>
+    public void InsertRange(int index, IEnumerable<TValue> items)
+    {
+        ThrowIfChangesNotAllowed();
+        _values.InsertRange(index, items);
+        for (var i = index; i < index + items.Count(); i++)
+        {
+            _valueAddSubject.OnNext(i);
+        }
     }
 
     /// <inheritdoc />
@@ -147,11 +183,11 @@ public class UIPropertyCollection<TValue> : IList<TValue>
     {
         ThrowIfChangesNotAllowed();
         var size = Count;
-        _values.Clear();
         for (var i = 0; i < size; i++)
         {
-            _valueRemoveSubject.OnNext(i);
+            _valueRemoveSubject.OnNext(0);
         }
+        _values.Clear();
     }
 
     /// <inheritdoc />
@@ -195,21 +231,35 @@ public class UIPropertyCollection<TValue> : IList<TValue>
     {
         ThrowIfChangesNotAllowed();
         var index = _values.IndexOf(item);
-        var removed = _values.Remove(item);
         if (index >= 0)
         {
             _valueRemoveSubject.OnNext(index);
         }
 
-        return removed;
+        return _values.Remove(item);
     }
 
     /// <inheritdoc />
     public void RemoveAt(int index)
     {
         ThrowIfChangesNotAllowed();
-        _values.RemoveAt(index);
         _valueRemoveSubject.OnNext(index);
+        _values.RemoveAt(index);
+    }
+
+    /// <summary>
+    /// Removes a range of elements from <see langword="this" /> <see cref="List{T}"/>.
+    /// </summary>
+    /// <param name="start">The zero-base starting index of the range of elements to remove.</param>
+    /// <param name="count">The number of elements to remove.</param>
+    public void RemoveRange(int start, int count)
+    {
+        ThrowIfChangesNotAllowed();
+        for (var i = start; i < start + count; i++)
+        {
+            _valueRemoveSubject.OnNext(start);
+        }
+        _values.RemoveRange(start, count);
     }
 
     /// <inheritdoc />
@@ -228,11 +278,10 @@ public class UIPropertyCollection<TValue> : IList<TValue>
     /// <param name="converter">A converter to convert source and destination property so that they match.</param>
     public virtual void Bind<TSource>(UIPropertyCollection<TSource> sourceProperty, BindingType bindingType, IBindingValueConverter<TSource, TValue> converter)
     {
-        _isBinding = true;
+        using var _ = CreateBindingScope();
         ThrowIfChangesNotAllowed();
         _binder?.Dispose();
         _binder = new UIPropertyCollectionBinder<TSource, TValue>(sourceProperty, this, bindingType, converter);
-        _isBinding = false;
     }
 
     /// <summary>
@@ -350,16 +399,42 @@ public class UIPropertyCollection<TValue> : IList<TValue>
     /// </remarks>
     public virtual void Unbind()
     {
-        _isBinding = true;
+        using var _ = CreateBindingScope();
         ThrowIfChangesNotAllowed();
-        _isBinding = false;
         _binder?.Dispose();
     }
+
+    /// <summary>
+    /// Creates a new <see cref="IDisposable" /> that allows for binding operation (temporarily allowing collection changes even for read-only collection).
+    /// </summary>
+    /// <returns>A disposable scope.</returns>
+    /// <example>
+    /// When performing a binding operation <c>b()</c> requiring temporarily allowing read-only collections to be modified, do
+    /// using (var scope = collection.CreateBindingScope) { ... }
+    /// </example>
+    public IDisposable CreateBindingScope() =>
+        new BindingScope(this);
 
     private void ThrowIfChangesNotAllowed()
     {
         Application.Dispatcher.ThrowIfNotOnUIThread();
         if (_lockChanges) Application.LifeCycle.ThrowIfPropertyCannotBeSet();
         if (IsReadOnly && !_isBinding) throw new InvalidOperationException("Cannot modify read-only collections");
+    }
+
+    private record BindingScope : IDisposable
+    {
+        private readonly UIPropertyCollection<TValue> _collection;
+
+        public BindingScope(UIPropertyCollection<TValue> collection)
+        {
+            _collection = collection;
+            _collection._isBinding = true;
+        }
+
+        public void Dispose()
+        {
+            _collection._isBinding = false;
+        }
     }
 }
