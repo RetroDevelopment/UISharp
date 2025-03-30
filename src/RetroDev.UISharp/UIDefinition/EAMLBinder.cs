@@ -1,12 +1,23 @@
-﻿using System.Reflection;
+﻿using System.Collections.ObjectModel;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using RetroDev.UISharp.Components.Core.Base;
 using RetroDev.UISharp.Presentation.Properties;
 using RetroDev.UISharp.UIDefinition.Exceptions;
 
 // TODO: bindings
-// @dictionaryKey.property
-// $bind(@dictionaryKey.property + @dictionarKey.property2, two-ways, @MyConverter)
+// {dictionaryKey.property}
+// {dictionaryKey.property, TwoWays, MyConverter(...)}
+// or
+// {dictionaryKey.property, TwoWays, converter} -> maybe pass a converter as instance to re use it
+// or
+// {dictionaryKey.Action()} -> invoke a method from the object. But do not pass any argument (at lest for now)
+
+// Examples:
+// <editText text="{this.Name, TwoWays, IdentityConverter()}" /> -> or exceptionally for "this" object
+// <editText text="{Name}" /> -> and TwoWays is automatic (or SourceToDestination if TwoWays is not supported, etc.)
+// <button action="{SaveFile()}" />
+// <treeBox items="{Employees, ItemTemplate('employee.xml')}" />
 
 namespace RetroDev.UISharp.UIDefinition;
 
@@ -25,7 +36,6 @@ namespace RetroDev.UISharp.UIDefinition;
 /// </param>
 public class EAMLBinder(TypeMapper typeMapper) : IEAMLBinder
 {
-
     /// <summary>
     /// A list of variables that can be used in the attribute mapping. This can be used for binding.
     /// </summary>
@@ -38,7 +48,7 @@ public class EAMLBinder(TypeMapper typeMapper) : IEAMLBinder
     /// <param name="propertyInfo">The property set. Its type must be either <see cref="UIProperty{TValue}"/> or <see cref="UICompositeProperty{TValue}"/>.</param>
     /// <param name="attribute">The attribute definition.</param>
     /// <param name="componentInstance">The <see cref="UIComponent"/> owning the property defined by <paramref name="propertyInfo"/>.</param>
-    /// <exception cref="UIDefinitionValidationCompoundException">If something failes during the property assignment.</exception>
+    /// <exception cref="UIDefinitionValidationCompoundException">If something fails during the property assignment.</exception>
     /// <exception cref="InvalidOperationException">If the given <paramref name="propertyInfo"/> is not a valid bindable property.</exception>
     public virtual void SetGenericUIProperty(PropertyInfo propertyInfo, Ast.Attribute attribute, UIComponent componentInstance)
     {
@@ -56,7 +66,7 @@ public class EAMLBinder(TypeMapper typeMapper) : IEAMLBinder
         }
         else
         {
-            throw new InvalidOperationException($"Invalid bindable property {propertyInfo}");
+            throw new InvalidOperationException($"Invalid UI property {propertyInfo}");
         }
     }
 
@@ -67,7 +77,7 @@ public class EAMLBinder(TypeMapper typeMapper) : IEAMLBinder
     /// <param name="propertyInfo">The property set. Its type must be either <see cref="UIProperty{TValue}"/>.</param>
     /// <param name="attribute">The attribute definition.</param>
     /// <param name="componentInstance">The instance owning the property defined by <paramref name="propertyInfo"/>.</param>
-    /// <exception cref="UIDefinitionValidationCompoundException">If something failes during the property assignment.</exception>
+    /// <exception cref="UIDefinitionValidationCompoundException">If something fails during the property assignment.</exception>
     /// <exception cref="InvalidOperationException">If the given <paramref name="propertyInfo"/> is not a valid bindable property.</exception>
     protected virtual void SetUIProperty(PropertyInfo propertyInfo, Ast.Attribute attribute, object componentInstance)
     {
@@ -87,7 +97,7 @@ public class EAMLBinder(TypeMapper typeMapper) : IEAMLBinder
     /// <param name="propertyInfo">The property set. Its type must be either <see cref="UICompositeProperty{TValue}"/>.</param>
     /// <param name="attribute">The attribute definition.</param>
     /// <param name="componentInstance">The <see cref="UIComponent"/> owning the property defined by <paramref name="propertyInfo"/>.</param>
-    /// <exception cref="UIDefinitionValidationCompoundException">If something failes during the property assignment.</exception>
+    /// <exception cref="UIDefinitionValidationCompoundException">If something fails during the property assignment.</exception>
     /// <exception cref="InvalidOperationException">If the given <paramref name="propertyInfo"/> is not a valid bindable property.</exception>
     protected virtual void SetUICompositeProperty(PropertyInfo propertyInfo, Ast.Attribute attribute, UIComponent componentInstance)
     {
@@ -132,7 +142,7 @@ public class EAMLBinder(TypeMapper typeMapper) : IEAMLBinder
         foreach (var attributeStringValue in attributes)
         {
             var attributeName = $"{attribute.Name}[{i}]";
-            var actualValue = ConvertAttributeValueToPropertyValue(new Ast.Attribute(attribute.Name, attributeStringValue), propertyType);
+            var actualValue = ConvertAttributeValueToPropertyValue(new Ast.Attribute(attributeName, attributeStringValue), propertyType);
             addMethod.Invoke(propertyValue, [actualValue]);
             i++;
         }
@@ -141,8 +151,8 @@ public class EAMLBinder(TypeMapper typeMapper) : IEAMLBinder
     /// <summary>
     /// Converts the given AST <paramref name="attribute"/> to an <see cref="object"/>.
     /// </summary>
-    /// <param name="attribute">The attribute AST, containing the text to convert into avalue.</param>
-    /// <param name="propertyType">The target property to assign the converted attribute object.</param>
+    /// <param name="attribute">The attribute AST, containing the text to convert into a value.</param>
+    /// <param name="propertyType">The target property type to assign the converted attribute object.</param>
     /// <returns>
     /// An instance of <see cref="object"/> representing the converted attribute.
     /// The converted object might be <see langword="null" />.
@@ -166,7 +176,7 @@ public class EAMLBinder(TypeMapper typeMapper) : IEAMLBinder
     /// <param name="value">The conversion result.</param>
     /// <param name="attribute">The attribute to convert.</param>
     /// <param name="propertyType">The target property type.</param>
-    /// <exception cref="UIDefinitionValidationException">If the convertion failed with an error.</exception>
+    /// <exception cref="UIDefinitionValidationException">If the conversion failed with an error.</exception>
     /// <returns><see langword="true" /> if it is possible to convert the attribute into a primitive type, otherwise <see langword="false" /></see></returns>
     protected virtual bool TryConvertAttributeToPrimitiveType(out object? value, Ast.Attribute attribute, Type propertyType)
     {
@@ -196,7 +206,7 @@ public class EAMLBinder(TypeMapper typeMapper) : IEAMLBinder
     /// <param name="value">The conversion result.</param>
     /// <param name="attribute">The attribute to convert.</param>
     /// <param name="propertyType">The target property type.</param>
-    /// <exception cref="UIDefinitionValidationException">If the convertion failed with an error.</exception
+    /// <exception cref="UIDefinitionValidationException">If the conversion failed with an error.</exception
     /// <example>
     /// If <paramref name="propertyType"/> is a class <c>C</c> with constructor <c>C(double)</c>
     /// attribute="100.0"
@@ -248,10 +258,19 @@ public class EAMLBinder(TypeMapper typeMapper) : IEAMLBinder
     /// <param name="propertyType">The target property type.</param>
     /// <exception cref="UIDefinitionValidationException">If the conversion failed with an error.</exception
     /// <example>
-    /// Given an interface <c>I</c> and a class <c>C</c> implementing <c>I</c>, then
-    /// attribute="C"
-    /// value=new C()
+    /// Given an interface <c>I</c> and a class <c>C</c> implementing <c>I</c>, then <br />
+    /// attribute="C" <br />
+    /// value=new C() <br />
+    /// </example>
     /// <example>
+    /// Given an interface <c>I</c>, a class <c>C</c> using the <see cref="EAMLMatchAttribute"/> with a regex <c>(?&lt;unit&gt;\d+)units</c>, then <br />
+    /// attribute="100units" <br />
+    /// value=new C(100)
+    /// if C is defined as C(int unit) where using can have any numeric type.
+    /// Note that only regular expression matches with non-numeric named capture group are considered and matched with parameters.
+    /// In the example above, ?&lt;unit&gt; names the respective capture group and the name is used to match the <c>C</c> constructor parameter with the same name: <c>unit</c>.
+    /// Capture group names must all be lower case.
+    /// </example>
     /// <returns><see langword="true" /> if it is possible to convert the attribute into a primitive type, otherwise <see langword="false" /></see></returns>
     protected virtual bool TryConvertAttributeUsingInterfaceHierarchy(out object? value, Ast.Attribute attribute, Type propertyType)
     {
@@ -261,16 +280,29 @@ public class EAMLBinder(TypeMapper typeMapper) : IEAMLBinder
             return false;
         }
 
-        var type = typeMapper.GetAllTypes()
-                             .Where(t => t.IsAssignableTo(propertyType) &&
-                                         !t.IsAbstract &&
-                                         string.Equals(t.Name, attribute.Value, StringComparison.OrdinalIgnoreCase));
-        if (!type.Any()) throw new UIDefinitionValidationException($"Cannot find type {attribute.Value} to match attribute {attribute.Name}. A type with that name assignable to {propertyType} does not exist.", attribute);
+        var implementationTypes = typeMapper
+            .GetAllTypes()
+            .Where(type => !type.IsAbstract && type.IsAssignableTo(propertyType));
 
-        var constructor = type.First().GetConstructors().Where(c => c.GetParameters().Length == 0).FirstOrDefault();
-        if (constructor == null) throw new UIDefinitionValidationException($"Cannot find empty constructor for type {type}, needed to instantiate {attribute.Name}={attribute.Value}", attribute);
+        Type? matchedType = null;
+        Dictionary<string, string> matches = [];
 
-        value = constructor.Invoke([]);
+        foreach (var type in implementationTypes)
+        {
+            var regexMatches = Match(attribute.Value, type);
+            var typeNameMatches = string.Equals(type.Name, attribute.Value, StringComparison.OrdinalIgnoreCase);
+            if (regexMatches is not null || typeNameMatches)
+            {
+                matchedType = type;
+                matches = regexMatches ?? [];
+            }
+        }
+
+        if (matchedType is null) throw new UIDefinitionValidationException($"Cannot find type {attribute.Value} to match attribute {attribute.Name}. A type with that name assignable to {propertyType} does not exist.", attribute);
+        var constructor = matchedType.GetConstructors().Where(c => c.GetParameters().Length == matches.Count).FirstOrDefault();
+        if (constructor == null) throw new UIDefinitionValidationException($"Cannot find empty constructor for type {matchedType}, needed to instantiate {attribute.Name}={attribute.Value}", attribute);
+
+        value = constructor.Invoke(CreateConstructorArgument(constructor, matches, attribute));
         return true;
     }
 
@@ -309,7 +341,7 @@ public class EAMLBinder(TypeMapper typeMapper) : IEAMLBinder
         var constructor = type.GetConstructors()
                               .Where(c => c.GetParameters().Length == argumentCount)
                               .FirstOrDefault();
-        if (constructor == null) throw new UIDefinitionValidationException($"Failed to find a suitable constructor for attribute {attribute.Name}={attribute.Value}", attribute);
+        if (constructor is null) throw new UIDefinitionValidationException($"Failed to find a suitable constructor for attribute {attribute.Name}={attribute.Value}", attribute);
 
         return constructor;
     }
@@ -344,6 +376,38 @@ public class EAMLBinder(TypeMapper typeMapper) : IEAMLBinder
         var removeBindersName = nameof(UIProperty<object>.Unbind);
         var removeBindingsMethod = propertyValueType.GetMethod(removeBindersName) ?? throw new UIDefinitionValidationException($"Missing method {removeBindersName} in property type {propertyValueType.FullName}", attribute);
         removeBindingsMethod.Invoke(propertyValue, []);
+    }
+
+    private Dictionary<string, string>? Match(string value, Type type)
+    {
+        var attribute = type.GetCustomAttribute<EAMLMatchAttribute>();
+        if (attribute is null) return null;
+        var match = attribute.Pattern.Match(value);
+        if (!match.Success) return null;
+        return match
+            .Groups
+            .Cast<Group>()
+            .Skip(1)
+            .Where(group => !int.TryParse(group.Name, out _)) // Skip numeric keys (unnamed groups)
+            .Select(group => KeyValuePair.Create(group.Name, group.Value))
+            .ToDictionary();
+    }
+
+    private object[] CreateConstructorArgument(ConstructorInfo constructor, Dictionary<string, string> matches, Ast.Attribute attribute)
+    {
+        var result = new List<object>();
+        var i = 0;
+
+        foreach (var constructorParameter in constructor.GetParameters())
+        {
+            var type = constructorParameter.ParameterType;
+            var stringValue = matches[constructorParameter.Name.ToLower()];
+            var value = ConvertAttributeValueToPropertyValue(new Ast.Attribute($"{attribute.Name}.{constructorParameter.Name}", stringValue), type);
+            result.Add(value);
+            i++;
+        }
+
+        return result.ToArray();
     }
 
     private IReadOnlyList<string> ToAttributeList(string attribute) =>

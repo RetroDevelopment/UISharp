@@ -1,7 +1,9 @@
 ﻿using RetroDev.UISharp.Components.Containers;
 using RetroDev.UISharp.Components.Core.Base;
+using RetroDev.UISharp.Components.Layouts.GridLayoutHelpers;
 using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Presentation.Properties;
+using RetroDev.UISharp.UIDefinition;
 
 namespace RetroDev.UISharp.Components.Layouts;
 
@@ -10,11 +12,6 @@ namespace RetroDev.UISharp.Components.Layouts;
 /// </summary>
 public class GridLayout : UIContainer
 {
-    public interface IGridSize { }
-    public record AbsoluteSize(PixelUnit Size) : IGridSize;
-    public record RelativeSize(float Size) : IGridSize;
-    public record AutoSize : IGridSize;
-
     /// <summary>
     /// The number of layout rows.
     /// </summary>
@@ -25,14 +22,9 @@ public class GridLayout : UIContainer
     /// </summary>
     public UIProperty<uint> Columns { get; }
 
-    // TODO: Use UIPropertyList to enable binding
-    // Example rowSizes="40px,*" columnSizes="auto,10.1%,*"
     public UIProperty<string> RowSizes { get; }
 
-    // TODO: Use UIPropertyList to enable binding
     public UIProperty<string> ColumnSizes { get; }
-
-    public UIPropertyCollection<string> Prova { get; } // TODO: remove
 
     /// <summary>
     /// Creates a new grid layout.
@@ -42,7 +34,7 @@ public class GridLayout : UIContainer
     /// <param name="columns">The number of layout columns.</param>
     public GridLayout(Application application, uint rows = 0, uint columns = 0) : base(application)
     {
-        Prova = new UIPropertyCollection<string>(application);
+        Prova = new UIPropertyCollection<IGridSize>(application);
         Rows = new UIProperty<uint>(this, rows);
         Columns = new UIProperty<uint>(this, columns);
         RowSizes = new UIProperty<string>(this, string.Empty);
