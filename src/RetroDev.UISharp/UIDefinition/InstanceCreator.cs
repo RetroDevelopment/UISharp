@@ -88,7 +88,7 @@ public class InstanceCreator(Application application, TypeMapper typeMapper, IEA
         foreach (var attribute in component.Attributes)
         {
             var property = _typeMapper.GetBindableProperty(instance.GetType(), attribute.Name) ?? throw new ArgumentException($"Cannot find UI property {attribute.Name}: make sure the property is of type UIProperty");
-            _binder.SetGenericBindableProperty(property, attribute, instance);
+            _binder.SetGenericUIProperty(property, attribute, instance);
         }
 
         var i = 0;

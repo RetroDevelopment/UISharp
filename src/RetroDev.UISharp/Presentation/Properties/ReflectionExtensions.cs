@@ -16,7 +16,7 @@ public static class ReflectionExtensions
     /// <returns>The list of <see cref="PropertyInfo"/> whose property type is a <see cref="UIProperty{TValue}"/>.</returns>
     public static List<PropertyInfo> GetAllUIProperties(this Type @this) =>
         @this.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-             .Where(p => p.IsUIProperty() || p.IsUICompositeProperty())
+             .Where(p => p.IsUIProperty() || p.IsUICompositeProperty() || p.IsUIPropertyCollection())
              .ToList();
 
     /// <summary>
@@ -41,7 +41,7 @@ public static class ReflectionExtensions
         @this.PropertyType.IsUIPropertyType();
 
     /// <summary>
-    /// Check whether <paramref name="this"/> property is a <see cref="UICompositeProperty{TValue}{TValue}"/>.
+    /// Check whether <paramref name="this"/> property is a <see cref="UICompositeProperty{TValue}"/>.
     /// </summary>
     /// <param name="this">The property to check.</param>
     /// <returns>
@@ -50,6 +50,17 @@ public static class ReflectionExtensions
     /// </returns>
     public static bool IsUICompositeProperty(this PropertyInfo @this) =>
         @this.PropertyType.IsCompositeUIPropertyType();
+
+    /// <summary>
+    /// Check whether <paramref name="this"/> property is a <see cref="UIPropertyCollection{TValue}"/>.
+    /// </summary>
+    /// <param name="this">The property to check.</param>
+    /// <returns>
+    /// <see langword="true" /> if the return type of <paramref name="this"/> property is a subtype of
+    /// <see cref="UIPropertyCollection{TValue}"/>, otherwise <see langword="false" />.
+    /// </returns>
+    public static bool IsUIPropertyCollection(this PropertyInfo @this) =>
+        @this.PropertyType.IsPropertyCollectionType();
 
     /// <summary>
     /// Check whether <paramref name="this"/> type is a <see cref="UIProperty{TValue}"/>.
@@ -72,6 +83,17 @@ public static class ReflectionExtensions
     /// </returns>
     public static bool IsCompositeUIPropertyType(this Type @this) =>
         @this.IsGenericType(typeof(UICompositeProperty<>));
+
+    /// <summary>
+    /// Check whether <paramref name="this"/> type is a <see cref="UIPropertyCollection{TValue}"/>.
+    /// </summary>
+    /// <param name="this">The type to check.</param>
+    /// <returns>
+    /// <see langword="true" /> if <paramref name="this"/> type is a subtype of
+    /// <see cref="UIPropertyCollection{TValue}"/>, otherwise <see langword="false" />.
+    /// </returns>
+    public static bool IsPropertyCollectionType(this Type @this) =>
+        @this.IsGenericType(typeof(UIPropertyCollection<>));
 
     private static bool IsGenericType(this Type @this, Type type)
     {

@@ -151,7 +151,6 @@ public class TypeMapper
             }).ToList();
     }
 
-
     private IEnumerable<Type> GetDerivedTypes<TBase>(IEnumerable<Type> types)
     {
         return types.Where(t => t.IsClass && !t.IsAbstract && typeof(TBase).IsAssignableFrom(t));

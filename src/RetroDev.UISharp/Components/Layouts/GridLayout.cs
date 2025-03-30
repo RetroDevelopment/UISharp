@@ -32,6 +32,8 @@ public class GridLayout : UIContainer
     // TODO: Use UIPropertyList to enable binding
     public UIProperty<string> ColumnSizes { get; }
 
+    public UIPropertyCollection<string> Prova { get; } // TODO: remove
+
     /// <summary>
     /// Creates a new grid layout.
     /// </summary>
@@ -40,6 +42,7 @@ public class GridLayout : UIContainer
     /// <param name="columns">The number of layout columns.</param>
     public GridLayout(Application application, uint rows = 0, uint columns = 0) : base(application)
     {
+        Prova = new UIPropertyCollection<string>(application);
         Rows = new UIProperty<uint>(this, rows);
         Columns = new UIProperty<uint>(this, columns);
         RowSizes = new UIProperty<string>(this, string.Empty);

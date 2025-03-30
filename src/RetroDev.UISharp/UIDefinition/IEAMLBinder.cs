@@ -28,5 +28,5 @@ public interface IEAMLBinder
     /// <param name="componentInstance">The <see cref="UIComponent"/> owning the property defined by <paramref name="propertyInfo"/>.</param>
     /// <exception cref="UIDefinitionValidationCompoundException">If something failes during the property assignment.</exception>
     /// <exception cref="InvalidOperationException">If the given <paramref name="propertyInfo"/> is not a valid bindable property.</exception>
-    void SetGenericBindableProperty(PropertyInfo propertyInfo, Ast.Attribute attribute, UIComponent componentInstance);
+    void SetGenericUIProperty(PropertyInfo propertyInfo, Ast.Attribute attribute, UIComponent componentInstance);
 }
