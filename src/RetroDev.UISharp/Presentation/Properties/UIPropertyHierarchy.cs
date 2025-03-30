@@ -76,10 +76,10 @@ public class UIPropertyHierarchy<TValue>
     /// the given <paramref name="sourceProperty" /> is the binding source property.
     /// </param>
     /// <param name="converter">A converter to convert source and destination property so that they match.</param>
-    public virtual void Bind<TSource>(UIPropertyHierarchy<TSource> sourceProperty, BindingType bindingType, IBindingValueConverter<TSource, TValue> converter)
+    public virtual void Bind<TSource>(UIPropertyHierarchy<TSource> sourceProperty, BindingType bindingType, IBindingValueConverter<UITreeNode<TSource>, UITreeNode<TValue>> converter)
     {
         Unbind();
-        var nodeConverter = new UITreeNodeConverter<TSource, TValue>(converter, bindingType);
+        var nodeConverter = new UITreeNodeRecursiveConverter<TSource, TValue>(converter, bindingType);
         Children.Bind(sourceProperty.Children, bindingType, nodeConverter);
     }
 
@@ -93,7 +93,7 @@ public class UIPropertyHierarchy<TValue>
     /// </param>
     public virtual void Bind(UIPropertyHierarchy<TValue> sourceProperty, BindingType bindingType)
     {
-        Bind(sourceProperty, bindingType, ValueConverterFactory.Identity<TValue>());
+        Bind(sourceProperty, bindingType, ValueConverterFactory.Identity<UITreeNode<TValue>>());
     }
 
     /// <summary>
@@ -109,8 +109,8 @@ public class UIPropertyHierarchy<TValue>
     /// <param name="destinationToSourceConverter">The function converting from destination property value to source property value.</param>
     public virtual void Bind<TSource>(UIPropertyHierarchy<TSource> sourceProperty,
                                       BindingType bindingType,
-                                      Func<TSource, TValue> sourceToDestinationConverter,
-                                      Func<TValue, TSource> destinationToSourceConverter)
+                                      Func<UITreeNode<TSource>, UITreeNode<TValue>> sourceToDestinationConverter,
+                                      Func<UITreeNode<TValue>, UITreeNode<TSource>> destinationToSourceConverter)
     {
         Bind(sourceProperty, bindingType, ValueConverterFactory.FromLambda(sourceToDestinationConverter, destinationToSourceConverter));
     }
@@ -134,7 +134,7 @@ public class UIPropertyHierarchy<TValue>
     /// <param name="sourceProperty">The source property to bind.</param>
     /// <param name="sourceToDestinationConverter">The function converting from source property value to source property value.</param>
     public virtual void BindDestinationToSource<TSource>(UIPropertyHierarchy<TSource> sourceProperty,
-                                                         Func<TValue, TSource> sourceToDestinationConverter)
+                                                         Func<UITreeNode<TValue>, UITreeNode<TSource>> sourceToDestinationConverter)
     {
         Bind(sourceProperty, BindingType.DestinationToSource, _ => throw new InvalidOperationException(), sourceToDestinationConverter);
     }
@@ -158,7 +158,7 @@ public class UIPropertyHierarchy<TValue>
     /// <param name="sourceProperty">The source property to bind.</param>
     /// <param name="sourceToDestinationConverter">The function converting from source property value to source property value.</param>
     public virtual void BindSourceToDestination<TSource>(UIPropertyHierarchy<TSource> sourceProperty,
-                                                         Func<TSource, TValue> sourceToDestinationConverter)
+                                                         Func<UITreeNode<TSource>, UITreeNode<TValue>> sourceToDestinationConverter)
     {
         Bind(sourceProperty, BindingType.SourceToDestination, ValueConverterFactory.FromLambda(sourceToDestinationConverter));
     }
@@ -183,8 +183,8 @@ public class UIPropertyHierarchy<TValue>
     /// <param name="sourceToDestinationConverter">The function converting from source property value to destination property value.</param>
     /// <param name="destinationToSourceConverter">The function converting from destination property value to source property value.</param>
     public virtual void BindTwoWays<TSource>(UIPropertyHierarchy<TSource> sourceProperty,
-                                              Func<TSource, TValue> sourceToDestinationConverter,
-                                              Func<TValue, TSource> destinationToSourceConverter)
+                                              Func<UITreeNode<TSource>, UITreeNode<TValue>> sourceToDestinationConverter,
+                                              Func<UITreeNode<TValue>, UITreeNode<TSource>> destinationToSourceConverter)
     {
         Bind(sourceProperty, BindingType.TwoWays, sourceToDestinationConverter, destinationToSourceConverter);
     }
@@ -196,10 +196,12 @@ public class UIPropertyHierarchy<TValue>
     /// <typeparam name="TSource">The collection value type.</typeparam>
     /// <param name="sourceCollection">The source collection in which to flatten <see langword="this" /> <see cref="UIPropertyHierarchy{TValue}"/>.</param>
     /// <param name="converter">A converter to convert source and destination property so that they match.</param>
-    public virtual void FlatBindDestinationToSource<TSource>(UIPropertyCollection<TSource> sourceCollection, IBindingValueConverter<UITreeNode<TValue>, TSource> converter)
+    public virtual UIHierarchyFlattenBinder<TValue, TSource> FlatBindDestinationToSource<TSource>(UIPropertyCollection<TSource> sourceCollection, IBindingValueConverter<UITreeNode<TValue>, TSource> converter)
     {
         Unbind();
-        _flatBinder = new UIHierarchyFlattenBinder<TValue, TSource>(this, sourceCollection, converter);
+        var binder = new UIHierarchyFlattenBinder<TValue, TSource>(this, sourceCollection, converter);
+        _flatBinder = binder;
+        return binder;
     }
 
     /// <summary>
@@ -209,9 +211,9 @@ public class UIPropertyHierarchy<TValue>
     /// <typeparam name="TSource">The collection value type.</typeparam>
     /// <param name="sourceCollection">The source collection in which to flatten <see langword="this" /> <see cref="UIPropertyHierarchy{TValue}"/>.</param>
     /// <param name="converter">A converter to convert source and destination property so that they match.</param>
-    public virtual void FlatBindDestinationToSource<TSource>(UIPropertyCollection<TSource> sourceCollection, Func<UITreeNode<TValue>, TSource> converter)
+    public virtual UIHierarchyFlattenBinder<TValue, TSource> FlatBindDestinationToSource<TSource>(UIPropertyCollection<TSource> sourceCollection, Func<UITreeNode<TValue>, TSource> converter)
     {
-        FlatBindDestinationToSource(sourceCollection, ValueConverterFactory.FromLambda(sourceToDestination: converter));
+        return FlatBindDestinationToSource(sourceCollection, ValueConverterFactory.FromLambda(sourceToDestination: converter));
     }
 
     /// <summary>

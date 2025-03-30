@@ -82,7 +82,7 @@ public class UITreeNode<TValue> : UIPropertyHierarchy<TValue>
     public override void ExpandAll()
     {
         Collapsed.Value = false;
-        base.CollapseAll();
+        base.ExpandAll();
     }
 
     /// <summary>
@@ -95,10 +95,12 @@ public class UITreeNode<TValue> : UIPropertyHierarchy<TValue>
     /// the given <paramref name="sourceProperty" /> is the binding source property.
     /// </param>
     /// <param name="converter">A converter to convert source and destination property so that they match.</param>
-    public virtual void Bind<TSource>(UITreeNode<TSource> source, BindingType bindingType, IBindingValueConverter<TSource, TValue> converter)
+    /// <remarks>
+    /// NOTE that it is responsibility of the <paramref name="converter"/> to bind the <see cref="Content"/>.
+    /// </remarks>
+    public virtual void Bind<TSource>(UITreeNode<TSource> source, BindingType bindingType, IBindingValueConverter<UITreeNode<TSource>, UITreeNode<TValue>> converter)
     {
         base.Bind(source, bindingType, converter);
-        Content.Bind(source.Content, bindingType, converter);
         Collapsed.Bind(source.Collapsed, bindingType);
     }
 

@@ -19,5 +19,5 @@ public interface IHierarchicalContainer
     /// The distinction between actual children and logical children is made to abstract away from implementation details and from those UI children which
     /// must not be publicly exposed.
     /// </remarks>
-    UIPropertyCollection<UINode> Items { get; }
+    UIPropertyHierarchy<UIWidget> Items { get; }
 }

@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Security.Cryptography.X509Certificates;
+using System.Xml.Serialization;
 using RetroDev.UISharp.Components.Containers;
 using RetroDev.UISharp.Components.Core.AutoArea;
 using RetroDev.UISharp.Components.Core.Base;
@@ -7,11 +8,10 @@ using RetroDev.UISharp.Components.Simple;
 using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Graphics;
 using RetroDev.UISharp.Presentation.Properties;
+using RetroDev.UISharp.Presentation.Properties.Binding;
 using RetroDev.UISharp.Presentation.Themes;
 
 namespace RetroDev.UISharp.Components.Collections;
-
-// TODO: optimize. There are too many Linq queries. Cache them.
 
 /// <summary>
 /// A hierarchical list of items.
@@ -26,9 +26,12 @@ public class TreeBox : UIHierarchicalContainer
     private static readonly PixelUnit IndentationSize = 20;
 
     private readonly ListBox _listBox;
-    private readonly List<TreeNode> _nodes = [];
+    private readonly UIHierarchyFlattenBinder<UIWidget, UIWidget> _flattenBinder;
 
-    public UIProperty<TreeNode?> SelectedNode { get; }
+    /// <summary>
+    /// The selected node or <see langword="null" /> if no node is selected.
+    /// </summary>
+    public UIProperty<UITreeNode<UIWidget>?> SelectedNode { get; }
 
     /// <summary>
     /// Creates a new tree box.
@@ -49,10 +52,10 @@ public class TreeBox : UIHierarchicalContainer
         _listBox.Margin.BindSourceToDestination(Padding);
         Children.Add(_listBox);
 
-        Items.ValueAdd.Subscribe(index => AddTreeNode((TreeNode)Items[index]));
-        Items.ValueRemove.Subscribe(index => InternalRemoveTreeNode((TreeNode)Items[index]));
+        _flattenBinder = _listBox.Items.FlatBindSourceToDestination(Items, ConvertNodeToListBoxItem);
 
-        SelectedNode = new UIProperty<TreeNode?>(this, (TreeNode?)null);
+        SelectedNode = new UIProperty<UITreeNode<UIWidget>?>(this, (UITreeNode<UIWidget>?)null);
+
         // TODO SelectedNode can be bound to _listBox.SelectedItem and converters!
         SelectedNode.ValueChange.Subscribe(OnSelectedNodeChange);
         _listBox.SelectedIndex.ValueChange.Subscribe(OnSelectedIndexChange);
@@ -62,91 +65,7 @@ public class TreeBox : UIHierarchicalContainer
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
         childrenSize.First();
 
-    internal void AddTreeNode(TreeNode component, TreeNode? after = null)
-    {
-        component._root = this;
-        var gridLayout = new GridLayout(Application);
-        var foldUnfoldButton = new Button(Application);
-        foldUnfoldButton.Text.Value = "*";
-        foldUnfoldButton.Width.Value = FoldUnfoldButtonSize;
-        foldUnfoldButton.Height.Value = FoldUnfoldButtonSize;
-        // TODO: Unsubscribe these events.
-        foldUnfoldButton.Action += (_, _) =>
-        {
-            component.Collapsed.Value = !component.Collapsed.Value;
-            UpdateCollapseState(component, recursive: true);
-        };
-
-        var panel = new Panel(Application);
-
-        gridLayout.Rows.Value = 1;
-        gridLayout.Columns.Value = 3u;
-        gridLayout.ColumnSizes.Value = $"{IndentationSize * component.Indentation}px,{FoldUnfoldButtonSize}px,*";
-        gridLayout.Items.Add(panel);
-        gridLayout.Items.Add(foldUnfoldButton);
-        gridLayout.Items.Add(component.Component.Value);
-
-        gridLayout.AutoWidth.Value = AutoSize.Wrap;
-        gridLayout.AutoHeight.Value = AutoSize.Wrap;
-        gridLayout.HorizontalAlignment.Value = Alignment.Left;
-        gridLayout.VerticalAlignment.Value = Alignment.Top;
-
-        UIComponent? afterComponent;
-
-        if (after is not null)
-        {
-            afterComponent = after.Component.Value;
-            foreach (var child in after.GetRecursiveChildren())
-            {
-                if (Children.Any(c => c == child.Component.Value))
-                {
-                    afterComponent = child.Component.Value;
-                }
-            }
-
-            var afterGridLayout = _listBox.Items
-                                          .Cast<GridLayout>()
-                                          .First(c => c.Items[2] == afterComponent);
-            var index1 = _listBox.Items.IndexOf(afterGridLayout);
-            _listBox.Items.Insert(index1, gridLayout);
-            var index = _listBox.Items.Cast<GridLayout>().ToList().FindIndex(c => c == afterGridLayout);
-            if (index + 1 < _listBox.Items.Count) _nodes.Insert(index + 1, component);
-            else _nodes.Add(component);
-
-            UpdateCollapseState(after);
-        }
-        else
-        {
-            _listBox.Items.Add(gridLayout);
-            _nodes.Add(component);
-        }
-
-        foreach (var child in component.Children)
-        {
-            AddTreeNode((TreeNode)child, component);
-        }
-
-        component.Collapsed.ValueChange.Subscribe(_ => UpdateCollapseState(component));
-    }
-
-    internal void InternalRemoveTreeNode(TreeNode node)
-    {
-        var elementIndex = Children.ToList().FindIndex(c => c == node.Component.Value);
-        if (elementIndex < 0) throw new ArgumentException("Element not found in tree box");
-        _listBox.Items.RemoveAt(elementIndex);
-        _nodes.Remove(node);
-
-        var childrenCopy = new List<TreeNode>(node.Children.Cast<TreeNode>());
-        foreach (var child in childrenCopy)
-        {
-            node.Children.Remove(child);
-        }
-    }
-
-    public void Clear() =>
-        _nodes.Where(n => n.Parent == null).ToList().ForEach(InternalRemoveTreeNode);
-
-    private void OnSelectedNodeChange(TreeNode? node)
+    private void OnSelectedNodeChange(UITreeNode<UIWidget>? node)
     {
         if (node == null)
         {
@@ -154,8 +73,10 @@ public class TreeBox : UIHierarchicalContainer
         }
         else
         {
-            var selectedIndex = Children.ToList().FindIndex(c => c == node.Component.Value);
-            if (selectedIndex < 0) throw new ArgumentException("Selected node not found");
+            var selectedItem = _flattenBinder.MapNodeToFlatList(node);
+            if (selectedItem is null) throw new ArgumentException($"Selected node {node} not found in this {nameof(TreeBox)} UI component mapping");
+            var selectedIndex = _listBox.Items.IndexOf(selectedItem);
+            if (selectedIndex < 0) throw new ArgumentException($"Selected node {node} not found in this {nameof(TreeBox)}");
             _listBox.SelectedIndex.Value = (uint)selectedIndex;
         }
     }
@@ -168,54 +89,55 @@ public class TreeBox : UIHierarchicalContainer
         }
         else
         {
-            var selectedNode = _nodes[(int)index];
-            SelectedNode.Value = selectedNode;
+            SelectedNode.Value = _flattenBinder.MapFlatListIndexToNode((int)index);
         }
     }
 
-    private void UpdateCollapseState(TreeNode node, bool recursive = false)
+    private UIWidget ConvertNodeToListBoxItem(UITreeNode<UIWidget> node)
     {
-        var gridLayout = _listBox.Items.Cast<GridLayout>().ToList().Find(c => c.Items.ElementAt(2) == node.Component.Value) ?? throw new ArgumentException("Cannot find node to expand in tree box");
-        var collapseButton = (Button)gridLayout.Items[1];
+        var (entry, foldUnfoldButton) = CreateEntry(node);
 
-        // TODO: when using column and row sizes as lists instead of strings no need to use regex
-        var pattern = @"(?<=^.*?,)(\d+)px";
-        var zeroPixelReplacement = "0px";
-        var buttonSizeReplacement = $"{FoldUnfoldButtonSize}px";
+        foldUnfoldButton.Text.BindSourceToDestination(node.Collapsed, collapsed => collapsed ? "+" : "-");
+        foldUnfoldButton.Action += (_, _) => node.Collapsed.Value = !node.Collapsed.Value;
 
-        if (node.Children.Count == 0)
-        {
-            collapseButton.Visibility.Value = ComponentVisibility.Hidden;
-            gridLayout.ColumnSizes.Value = Regex.Replace(gridLayout.ColumnSizes.Value, pattern, zeroPixelReplacement);
-        }
-        else if (node.Collapsed.Value)
-        {
-            collapseButton.Visibility.Value = ComponentVisibility.Visible;
-            collapseButton.Text.Value = "+";
-            gridLayout.ColumnSizes.Value = Regex.Replace(gridLayout.ColumnSizes.Value, pattern, buttonSizeReplacement);
-        }
-        else
-        {
-            collapseButton.Visibility.Value = ComponentVisibility.Visible;
-            collapseButton.Text.Value = "-";
-            gridLayout.ColumnSizes.Value = Regex.Replace(gridLayout.ColumnSizes.Value, pattern, buttonSizeReplacement);
-        }
+        node.Collapsed.ValueChange.Subscribe(_ => UpdateEntryVisibility(entry, node, recursive: true));
+        node.Children.ValueAdd.Subscribe(_ => UpdateEntry(entry, foldUnfoldButton, node));
+        node.Children.ValueRemove.Subscribe(_ => UpdateEntry(entry, foldUnfoldButton, node));
+        UpdateEntry(entry, foldUnfoldButton, node);
 
-        if (node.ShouldDisplay)
-        {
-            gridLayout.Visibility.Value = ComponentVisibility.Visible;
-        }
-        else
-        {
-            gridLayout.Visibility.Value = ComponentVisibility.Collapsed;
-        }
+        return entry;
+    }
 
-        if (recursive)
+    private (GridLayout entry, Button foldUnfoldButton) CreateEntry(UITreeNode<UIWidget> node)
+    {
+        var entry = new GridLayout(Application, 1, 3);
+        var indentation = new Panel(Application);
+        var foldUnfoldButton = new Button(Application, string.Empty);
+        var content = node.Content.Value;
+
+        entry.Items.AddRange([indentation, foldUnfoldButton, content]);
+        entry.ColumnSizes.Value = $"{IndentationSize * node.TreeLevel}px;{FoldUnfoldButtonSize}px;*";
+        entry.HorizontalAlignment.Value = Alignment.Left;
+
+        return (entry, foldUnfoldButton);
+    }
+
+    private void UpdateEntry(UIWidget entry, Button foldUnfoldButton, UITreeNode<UIWidget> node)
+    {
+        UpdateEntryVisibility(entry, node);
+        foldUnfoldButton.Visibility.Value = node.Children.Any() ? ComponentVisibility.Visible : ComponentVisibility.Collapsed;
+    }
+
+    private void UpdateEntryVisibility(UIWidget entry, UITreeNode<UIWidget> node, bool recursive = false)
+    {
+        entry.Visibility.Value = node.AncestorCollapsed ? ComponentVisibility.Collapsed : ComponentVisibility.Visible;
+        if (!recursive) return;
+
+        foreach (var childNode in node.Children)
         {
-            foreach (var child in node.Children)
-            {
-                UpdateCollapseState((TreeNode)child, true);
-            }
+            var childEntry = _flattenBinder.MapNodeToFlatList(childNode);
+            if (childEntry is null) continue;
+            UpdateEntryVisibility(childEntry, childNode, true);
         }
     }
 }

@@ -13,7 +13,7 @@ public abstract class UIHierarchicalContainer : UIWidget, IHierarchicalContainer
     private readonly Rectangle _backgroundRectangle;
 
     /// <inheritdoc />
-    public UIPropertyCollection<UINode> Items { get; }
+    public UIPropertyHierarchy<UIWidget> Items { get; }
 
     /// <summary>
     /// The control border color.
@@ -38,7 +38,7 @@ public abstract class UIHierarchicalContainer : UIWidget, IHierarchicalContainer
                                       IHorizontalAlignment? horizontalAlignment = null,
                                       IVerticalAlignment? verticalAlignment = null) : base(application, visibility, isFocusable, autoWidth, autoHeight, horizontalAlignment, verticalAlignment)
     {
-        Items = new UIPropertyCollection<UINode>(application, lockChanges: true);
+        Items = new UIPropertyHierarchy<UIWidget>(application, lockSetter: true);
         BorderColor = new UIProperty<Color>(this, Color.Transparent);
 
         _backgroundRectangle = new Rectangle(application);

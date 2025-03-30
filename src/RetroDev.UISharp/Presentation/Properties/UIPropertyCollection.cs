@@ -1,8 +1,6 @@
 ﻿using System.Collections;
-using System.Dynamic;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using OpenTK.Platform.Windows;
 using RetroDev.UISharp.Components.Core.Base;
 using RetroDev.UISharp.Components.Core.Shapes;
 using RetroDev.UISharp.Presentation.Properties.Binding;
@@ -20,10 +18,12 @@ public class UIPropertyCollection<TValue> : IList<TValue>
     private readonly List<TValue> _values = [];
     private readonly Subject<int> _valueAddSubject;
     private readonly Subject<int> _valueRemoveSubject;
+    private IDisposable? _flatBinder;
 
     private IDisposable? _binder;
     private bool _isBinding = false;
 
+    private uint _openScopes = 0;
     /// <summary>
     /// Whether a binding update is in progress.
     /// </summary>
@@ -391,6 +391,31 @@ public class UIPropertyCollection<TValue> : IList<TValue>
     }
 
     /// <summary>
+    /// Binds the given <paramref name="sourceHierarchy"/> to the <see langword="this" /> collection by flattening a tree into a list
+    /// using DFS visit (Depth First Search).
+    /// </summary>
+    /// <typeparam name="TSource">The tree content value type.</typeparam>
+    /// <param name="sourceHierarchy">The source collection in which to flatten <see langword="this" /> <see cref="UIPropertyHierarchy{TValue}"/>.</param>
+    /// <param name="converter">A converter to convert source and destination property so that they match.</param>
+    public virtual UIHierarchyFlattenBinder<TSource, TValue> FlatBindSourceToDestination<TSource>(UIPropertyHierarchy<TSource> sourceHierarchy, IBindingValueConverter<UITreeNode<TSource>, TValue> converter)
+    {
+        Unbind();
+        var binder = new UIHierarchyFlattenBinder<TSource, TValue>(sourceHierarchy, this, converter);
+        _flatBinder = binder;
+        return binder;
+    }
+
+    /// <summary>
+    /// Binds the given <paramref name="sourceHierarchy"/> to the <see langword="this" /> collection by flattening a tree into a list
+    /// using DFS visit (Depth First Search).
+    /// </summary>
+    /// <typeparam name="TSource">The tree content value type.</typeparam>
+    /// <param name="sourceHierarchy">The source collection in which to flatten <see langword="this" /> <see cref="UIPropertyHierarchy{TValue}"/>.</param>
+    /// <param name="converter">A converter to convert source and destination property so that they match.</param>
+    public virtual UIHierarchyFlattenBinder<TSource, TValue> FlatBindSourceToDestination<TSource>(UIPropertyHierarchy<TSource> sourceHierarchy, Func<UITreeNode<TSource>, TValue> converter) =>
+        FlatBindSourceToDestination(sourceHierarchy, ValueConverterFactory.FromLambda(sourceToDestination: converter));
+
+    /// <summary>
     /// Removes a binding if any.
     /// </summary>
     /// <remarks>
@@ -402,6 +427,7 @@ public class UIPropertyCollection<TValue> : IList<TValue>
         using var _ = CreateBindingScope();
         ThrowIfChangesNotAllowed();
         _binder?.Dispose();
+        _flatBinder?.Dispose();
     }
 
     /// <summary>
@@ -430,11 +456,13 @@ public class UIPropertyCollection<TValue> : IList<TValue>
         {
             _collection = collection;
             _collection._isBinding = true;
+            _collection._openScopes++;
         }
 
         public void Dispose()
         {
-            _collection._isBinding = false;
+            _collection._openScopes--;
+            if (_collection._openScopes == 0) _collection._isBinding = false;
         }
     }
 }

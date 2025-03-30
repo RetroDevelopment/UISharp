@@ -1,14 +1,11 @@
-﻿using System;
-using RetroDev.UISharp.UIDefinition.Ast;
+﻿namespace RetroDev.UISharp.Presentation.Properties.Binding;
 
-namespace RetroDev.UISharp.Presentation.Properties.Binding;
-
-internal class UIHierarchyFlattenBinder<TSource, TDestination> : IDisposable
+public class UIHierarchyFlattenBinder<TSource, TDestination> : IDisposable
 {
     private readonly UIPropertyHierarchy<TSource> _shourceHierarchy;
     private readonly UIPropertyCollection<TDestination> _destinationCollection;
     private readonly IBindingValueConverter<UITreeNode<TSource>, TDestination> _converter;
-    private readonly Dictionary<UIPropertyHierarchy<TSource>, TDestination> _treeToListMapping = [];
+    private readonly Dictionary<UITreeNode<TSource>, TDestination> _treeToListMapping = [];
     private readonly Dictionary<UIPropertyHierarchy<TSource>, List<IDisposable>> _subscriptions = [];
 
     public UIHierarchyFlattenBinder(UIPropertyHierarchy<TSource> sourceHierarchy,
@@ -32,9 +29,24 @@ internal class UIHierarchyFlattenBinder<TSource, TDestination> : IDisposable
     /// Maps the given <paramref name="node"/> to the respective value in the flatten list.
     /// </summary>
     /// <param name="node">The node to map.</param>
-    /// <returns>The mapped node in the flatten list.</returns>
-    public TDestination Map(UITreeNode<TSource> node) =>
-        _treeToListMapping[node];
+    /// <returns>The mapped node in the flatten list, or <see langword="default" /> if the mapping does not exist.</returns>
+    public TDestination? MapNodeToFlatList(UITreeNode<TSource> node) =>
+        _treeToListMapping.ContainsKey(node) ? _treeToListMapping[node] : default;
+
+    /// <summary>
+    /// Gets the <see cref="UITreeNode{TValue}"/> mapped into the item at the given <paramref name="index"/> in the 
+    /// flatten <see cref="UIPropertyCollection{TValue}"/>.
+    /// </summary>
+    /// <param name="index">The zero-based index of the element in the flatten <see cref="UIPropertyCollection{TValue}"/>.</param>
+    /// <returns>The mapped node, or <see langword="default" /> if the mapping does not exist.</returns>
+    public UITreeNode<TSource>? MapFlatListIndexToNode(int index)
+    {
+        var item = _destinationCollection[index];
+        return _treeToListMapping
+            .Where(mapping => EqualityComparer<TDestination>.Default.Equals(mapping.Value, item))
+            .Select(mapping => mapping.Key)
+            .FirstOrDefault();
+    }
 
     public void Dispose()
     {
@@ -53,15 +65,22 @@ internal class UIHierarchyFlattenBinder<TSource, TDestination> : IDisposable
         var node = root.Children[index];
         var flattenList = Flatten(node);
         var previousNode = index == 0 ? root : root.Children[index - 1];
-        var previousNodeInList = _treeToListMapping[previousNode];
-        var previousNodeListIndex = _destinationCollection.IndexOf(previousNodeInList);
-        if (previousNodeListIndex == _destinationCollection.Count - 1)
+        if (previousNode is UITreeNode<TSource> treeNode)
         {
-            _destinationCollection.AddRange(flattenList);
+            var previousNodeInList = _treeToListMapping[treeNode];
+            var previousNodeListIndex = _destinationCollection.IndexOf(previousNodeInList);
+            if (previousNodeListIndex == _destinationCollection.Count - 1)
+            {
+                _destinationCollection.AddRange(flattenList);
+            }
+            else
+            {
+                _destinationCollection.InsertRange(previousNodeListIndex + 1, flattenList);
+            }
         }
         else
         {
-            _destinationCollection.InsertRange(previousNodeListIndex + 1, flattenList);
+            _destinationCollection.AddRange(flattenList);
         }
     }
 
@@ -98,8 +117,7 @@ internal class UIHierarchyFlattenBinder<TSource, TDestination> : IDisposable
 
         foreach (var child in node.Children)
         {
-            Remove(child);
-            count += 1;
+            count += Remove(child);
         }
 
         return count;

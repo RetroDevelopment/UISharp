@@ -30,7 +30,7 @@ internal class Container : UIComponent
 
 internal class MainWindow : Window
 {
-    private Dictionary<TreeNode, Component> _treeNodeAstMap = [];
+    private Dictionary<UITreeNode<UIWidget>, Component> _treeNodeAstMap = [];
     private Component? _rootNode;
 
     private readonly GridLayout _mainLayout;
@@ -176,7 +176,7 @@ internal class MainWindow : Window
         }
         else
         {
-            _astTreeBox.Items.Remove(selectedNode);
+            _astTreeBox.Items.Children.Remove(selectedNode);
             _rootNode!.Components.Remove(astSelectedNode);
             _treeNodeAstMap.Remove(selectedNode);
         }
@@ -197,7 +197,7 @@ internal class MainWindow : Window
         }
     }
 
-    private void OnTreeNodeChange(TreeNode? node)
+    private void OnTreeNodeChange(UITreeNode<UIWidget>? node)
     {
         var listBox = _propertyList;
         listBox.Items.Clear();
@@ -285,14 +285,17 @@ internal class MainWindow : Window
         _mainLayout.GetComponent<ScrollView>("preview").Item.Value = container;
     }
 
-    private TreeNode CreateNode(string text)
+    private UITreeNode<UIWidget> CreateNode(string text)
     {
         var label = new Label(Application, text);
-        var node = new TreeNode(label);
+        var node = new UITreeNode<UIWidget>(Application, label);
+        label.AutoWidth.Value = AutoSize.Wrap;
+        label.AutoHeight.Value = AutoSize.Wrap;
+        label.HorizontalAlignment.Value = Alignment.Left;
         return node;
     }
 
-    private void AddNode(TreeNode? parent, Component astNode)
+    private void AddNode(UITreeNode<UIWidget>? parent, Component astNode)
     {
         var node = CreateNode(astNode.Name);
         _treeNodeAstMap.Add(node, astNode);
@@ -303,7 +306,7 @@ internal class MainWindow : Window
         }
         else
         {
-            _astTreeBox.Items.Add(node);
+            _astTreeBox.Items.Children.Add(node);
         }
 
         astNode.Components.ForEach(child => { AddNode(node, child); });
@@ -315,7 +318,7 @@ internal class MainWindow : Window
 
         if (_astTreeBox.SelectedNode.Value is not null && _components.SelectedItem.Value is not null)
         {
-            var name = ((Label)(_astTreeBox.SelectedNode.Value.Component.Value)).Text.Value;
+            var name = ((Label)(_astTreeBox.SelectedNode.Value.Content.Value)).Text.Value;
             var type = Application.UIDefinitionManager.TypeMapper.GetUIComponent(name);
             if (type == null) throw new Exception($"Cannot find type for component {name} to add.");
             _addButton.Enabled.Value = (type.GetInterfaces().Contains(typeof(IContainer)));
@@ -332,7 +335,7 @@ internal class MainWindow : Window
 
     private void ClearTreeBox()
     {
-        _astTreeBox.Clear();
+        _astTreeBox.Items.Children.Clear();
         _treeNodeAstMap.Clear();
     }
 }

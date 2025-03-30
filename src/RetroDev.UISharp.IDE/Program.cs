@@ -1,9 +1,11 @@
-﻿using System.Linq.Expressions;
+﻿using System.Runtime;
+using System.Runtime.InteropServices;
+using System.Xml.Linq;
 using RetroDev.UISharp.Components.Collections;
 using RetroDev.UISharp.Components.Core.AutoArea;
 using RetroDev.UISharp.Components.Core.Base;
+using RetroDev.UISharp.Components.Layouts;
 using RetroDev.UISharp.Components.Simple;
-using RetroDev.UISharp.Core.Graphics;
 using RetroDev.UISharp.Core.Logging;
 using RetroDev.UISharp.IDE.Windows;
 using RetroDev.UISharp.Presentation.Properties;
@@ -53,6 +55,91 @@ internal class Program
         tree.Height.Value = 200;
         w.Items.Add(tree);
 
+        var t = new Component("Root", [], Create(4, 3, "C"));
+        var vm = t.ToUIPropertyHierarchy(application, n => n.Components);
+        tree.Items.BindSourceToDestination(vm, Convert(application));
+
+        var add = new Button(application, "Add");
+        var remove = new Button(application, "Remove");
+        var collapseAll = new Button(application, "Collapse all");
+        var expandAll = new Button(application, "Expand all");
+
+        add.X.Value = 0;
+        add.Y.Value = 0;
+        add.AutoWidth.Value = AutoSize.Wrap;
+        add.AutoHeight.Value = AutoSize.Wrap;
+
+        remove.X.Value = 0;
+        remove.Y.Value = 40;
+        remove.AutoWidth.Value = AutoSize.Wrap;
+        remove.AutoHeight.Value = AutoSize.Wrap;
+
+        collapseAll.X.Value = 0;
+        collapseAll.Y.Value = 80;
+        collapseAll.AutoWidth.Value = AutoSize.Wrap;
+        collapseAll.AutoHeight.Value = AutoSize.Wrap;
+
+        expandAll.X.Value = 0;
+        expandAll.Y.Value = 110;
+        expandAll.AutoWidth.Value = AutoSize.Wrap;
+        expandAll.AutoHeight.Value = AutoSize.Wrap;
+
+        int seqNumber = 0;
+        add.Action += (_, _) =>
+        {
+            var c = new Component("Synt " + seqNumber++, [], []);
+            map[tree.SelectedNode.Value].Children.Add(new UITreeNode<Component>(application, c));
+        };
+
+        remove.Action += (_, _) =>
+        {
+            var it = map[tree.SelectedNode.Value];
+            if (it.Parent is not null) it.Parent.Children.Remove(it);
+            else vm.Children.Remove(it);
+        };
+
+        collapseAll.Action += (_, _) => vm.CollapseAll();
+        expandAll.Action += (_, _) => vm.ExpandAll();
+
+        w.Items.Add(add);
+        w.Items.Add(remove);
+        w.Items.Add(expandAll);
+        w.Items.Add(collapseAll);
         w.Show();
+    }
+
+    private static List<Component> Create(int width, int depth, string label)
+    {
+        if (depth == 0) return [];
+
+        var children = new List<Component>();
+        for (int i = 0; i < width; i++)
+        {
+            var cl = $"{label}.{i}";
+            children.Add(new Component(cl, [], Create(width, depth - 1, cl)));
+        }
+
+        return children;
+    }
+
+    private static Dictionary<UITreeNode<UIWidget>, UITreeNode<Component>> map = [];
+
+    private static Func<UITreeNode<Component>, UITreeNode<UIWidget>> Convert(Application app)
+    {
+        return (UITreeNode<Component> node) =>
+        {
+            var rnd = new Random().Next() / (float)int.MaxValue;
+            var gl = new GridLayout(app, 1, 2);
+            var btn = new Button(app, "Check");
+            var lbl = new Label(app, $"{node.Content.Value.Name}");
+            //btn.Height.Value = 90 * rnd;
+            gl.Items.Add(btn);
+            gl.Items.Add(lbl);
+            gl.AutoWidth.Value = AutoSize.Wrap;
+            gl.HorizontalAlignment.Value = Alignment.Left;
+            var nodeW = new UITreeNode<UIWidget>(app, gl);
+            map.Add(nodeW, node);
+            return nodeW;
+        };
     }
 }
