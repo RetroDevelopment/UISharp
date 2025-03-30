@@ -21,6 +21,6 @@
             <treebox id="astTreeBox" autowidth="stretch" autoheight="stretch" margin="5;10;10;10" />
         </gridlayout>
         <scrollview id="preview" autowidth="stretch" autoheight="stretch" margin="10" />
-        <listbox id="propertyList" autowidth="stretch" autoheight="stretch" margin="10" />
+        <listbox id="propertyList" autowidth="stretch" autoheight="stretch" itemsAutoWidth="stretch" margin="10" />
     </gridlayout>
 </mainwindow>

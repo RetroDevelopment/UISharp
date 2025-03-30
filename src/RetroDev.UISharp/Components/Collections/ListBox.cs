@@ -37,6 +37,11 @@ public class ListBox : UIContainer
     public UIProperty<UIWidget?> SelectedItem { get; }
 
     /// <summary>
+    /// The auto width strategy for the <see langword="this" /> <see cref="ListBox"/> items.
+    /// </summary>
+    public UIProperty<IAutoSize> ItemsAutoWidth { get; }
+
+    /// <summary>
     /// Creates a new grid layout.
     /// </summary>
     /// <param name="application">The application owning this component.</param>
@@ -47,6 +52,7 @@ public class ListBox : UIContainer
 
         SelectedIndex = new UIProperty<uint?>(this, (uint?)null);
         SelectedItem = new UIProperty<UIWidget?>(this, (UIWidget?)null);
+        ItemsAutoWidth = new UIProperty<IAutoSize>(this, AutoSize.MaxWrapStretch);
         SelectedIndex.ValueChange.Subscribe(OnSelectedIndexChange);
         SelectedItem.ValueChange.Subscribe(OnSelectedItemChange);
 
@@ -61,11 +67,7 @@ public class ListBox : UIContainer
         _scrollView.BackgroundColor.Value = Color.Transparent;
         _scrollView.BorderColor.Value = Color.Transparent;
 
-        // TODO: add property so user can decide if auto width and height are stretch or wrap for vertical layout.
-        // This changes how the list box is displayed. Also add whether to center or do top left, etc. for inner vertical layout components.
-        // What about adding a new auto size like "MaxWrapStretch" that takes maximum size between wrap and stretch?
-        // That is how many list box look like: they occupy at least the layout plus some more.
-        _verticalLayout.AutoWidth.Value = AutoSize.MaxWrapStretch;
+        _verticalLayout.AutoWidth.BindSourceToDestination(ItemsAutoWidth);
         _verticalLayout.HorizontalAlignment.Value = Alignment.Left;
         _verticalLayout.VerticalAlignment.Value = Alignment.Top;
         _verticalLayout.Margin.BindSourceToDestination(Padding);
