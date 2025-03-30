@@ -76,7 +76,7 @@ public class UIPropertyHierarchy<TValue>
     /// the given <paramref name="sourceProperty" /> is the binding source property.
     /// </param>
     /// <param name="converter">A converter to convert source and destination property so that they match.</param>
-    public virtual void Bind<TSource>(UIPropertyHierarchy<TSource> sourceProperty, BindingType bindingType, IBindingValueConverter<UITreeNode<TSource>, UITreeNode<TValue>> converter)
+    public virtual void Bind<TSource>(UIPropertyHierarchy<TSource> sourceProperty, BindingType bindingType, IHierarchicalBindingValueConverter<TSource, TValue> converter)
     {
         Unbind();
         var nodeConverter = new UITreeNodeRecursiveConverter<TSource, TValue>(converter, bindingType);
@@ -93,26 +93,21 @@ public class UIPropertyHierarchy<TValue>
     /// </param>
     public virtual void Bind(UIPropertyHierarchy<TValue> sourceProperty, BindingType bindingType)
     {
-        Bind(sourceProperty, bindingType, ValueConverterFactory.Identity<UITreeNode<TValue>>());
+        Bind(sourceProperty, bindingType, ValueConverterFactory.HierarchicalIdentity<TValue>());
     }
 
     /// <summary>
-    /// Binds <see langword="this" /> property to the given <paramref name="sourceProperty"/> and removes every existing binding.
+    /// Binds <see langword="this" /> property to the given <paramref name="sourceProperty"/> using <see cref="BindingType.DestinationToSource"/> binding and removes every existing binding.
     /// </summary>
-    /// <typeparam name="TSource">The <paramref name="sourceProperty"/> value type.</typeparam>
+    /// <typeparam name="TSource">The <paramref name="sourceProperty"/> nodes content value type.</typeparam>
     /// <param name="sourceProperty">The source property to bind.</param>
-    /// <param name="bindingType">
     /// The <see cref="BindingType"/> (<see langword="this"/> property is the source property and).
     /// the given <paramref name="sourceProperty" /> is the source property.
     /// </param>
-    /// <param name="sourceToDestinationConverter">The function converting from source property value to destination property value.</param>
-    /// <param name="destinationToSourceConverter">The function converting from destination property value to source property value.</param>
-    public virtual void Bind<TSource>(UIPropertyHierarchy<TSource> sourceProperty,
-                                      BindingType bindingType,
-                                      Func<UITreeNode<TSource>, UITreeNode<TValue>> sourceToDestinationConverter,
-                                      Func<UITreeNode<TValue>, UITreeNode<TSource>> destinationToSourceConverter)
+    /// <param name="converter">A converter to convert source and destination property so that they match.</param>
+    public virtual void BindDestinationToSource<TSource>(UIPropertyHierarchy<TSource> sourceProperty, IHierarchicalBindingValueConverter<TSource, TValue> converter)
     {
-        Bind(sourceProperty, bindingType, ValueConverterFactory.FromLambda(sourceToDestinationConverter, destinationToSourceConverter));
+        Bind(sourceProperty, BindingType.DestinationToSource, converter);
     }
 
     /// <summary>
@@ -128,15 +123,17 @@ public class UIPropertyHierarchy<TValue>
     }
 
     /// <summary>
-    /// Binds <see langword="this" /> property to the given <paramref name="sourceProperty"/> using <see cref="BindingType.DestinationToSource"/> binding and removes every existing binding.
+    /// Binds <see langword="this" /> property to the given <paramref name="sourceProperty"/> using <see cref="BindingType.SourceToDestination"/> binding and removes every existing binding.
     /// </summary>
-    /// <typeparam name="TSource">The <paramref name="sourceProperty"/> value type.</typeparam>
+    /// <typeparam name="TSource">The <paramref name="sourceProperty"/> nodes content value type.</typeparam>
     /// <param name="sourceProperty">The source property to bind.</param>
-    /// <param name="sourceToDestinationConverter">The function converting from source property value to source property value.</param>
-    public virtual void BindDestinationToSource<TSource>(UIPropertyHierarchy<TSource> sourceProperty,
-                                                         Func<UITreeNode<TValue>, UITreeNode<TSource>> sourceToDestinationConverter)
+    /// The <see cref="BindingType"/> (<see langword="this"/> property is the source property and).
+    /// the given <paramref name="sourceProperty" /> is the source property.
+    /// </param>
+    /// <param name="converter">A converter to convert source and destination property so that they match.</param>
+    public virtual void BindSourceToDestination<TSource>(UIPropertyHierarchy<TSource> sourceProperty, IHierarchicalBindingValueConverter<TSource, TValue> converter)
     {
-        Bind(sourceProperty, BindingType.DestinationToSource, _ => throw new InvalidOperationException(), sourceToDestinationConverter);
+        Bind(sourceProperty, BindingType.SourceToDestination, converter);
     }
 
     /// <summary>
@@ -152,15 +149,17 @@ public class UIPropertyHierarchy<TValue>
     }
 
     /// <summary>
-    /// Binds <see langword="this" /> property to the given <paramref name="sourceProperty"/> using <see cref="BindingType.SourceToDestination"/> binding and removes every existing binding.
+    /// Binds <see langword="this" /> property to the given <paramref name="sourceProperty"/> using <see cref="BindingType.TwoWays"/> binding and removes every existing binding.
     /// </summary>
-    /// <typeparam name="TSource">The <paramref name="sourceProperty"/> value type.</typeparam>
+    /// <typeparam name="TSource">The <paramref name="sourceProperty"/> nodes content value type.</typeparam>
     /// <param name="sourceProperty">The source property to bind.</param>
-    /// <param name="sourceToDestinationConverter">The function converting from source property value to source property value.</param>
-    public virtual void BindSourceToDestination<TSource>(UIPropertyHierarchy<TSource> sourceProperty,
-                                                         Func<UITreeNode<TSource>, UITreeNode<TValue>> sourceToDestinationConverter)
+    /// The <see cref="BindingType"/> (<see langword="this"/> property is the source property and).
+    /// the given <paramref name="sourceProperty" /> is the destination property.
+    /// </param>
+    /// <param name="converter">A converter to convert source and destination property so that they match.</param>
+    public virtual void BindTwoWays<TSource>(UIPropertyHierarchy<TSource> sourceProperty, IHierarchicalBindingValueConverter<TSource, TValue> converter)
     {
-        Bind(sourceProperty, BindingType.SourceToDestination, ValueConverterFactory.FromLambda(sourceToDestinationConverter));
+        Bind(sourceProperty, BindingType.TwoWays, converter);
     }
 
     /// <summary>
@@ -173,20 +172,6 @@ public class UIPropertyHierarchy<TValue>
     public virtual void BindTwoWays(UIPropertyHierarchy<TValue> sourceProperty)
     {
         Bind(sourceProperty, BindingType.TwoWays);
-    }
-
-    /// <summary>
-    /// Binds <see langword="this" /> property to the given <paramref name="sourceProperty"/> using <see cref="BindingType.TwoWays"/> binding and removes every existing binding.
-    /// </summary>
-    /// <typeparam name="TSource">The <paramref name="sourceProperty"/> value type.</typeparam>
-    /// <param name="sourceProperty">The destination property to bind.</param>
-    /// <param name="sourceToDestinationConverter">The function converting from source property value to destination property value.</param>
-    /// <param name="destinationToSourceConverter">The function converting from destination property value to source property value.</param>
-    public virtual void BindTwoWays<TSource>(UIPropertyHierarchy<TSource> sourceProperty,
-                                              Func<UITreeNode<TSource>, UITreeNode<TValue>> sourceToDestinationConverter,
-                                              Func<UITreeNode<TValue>, UITreeNode<TSource>> destinationToSourceConverter)
-    {
-        Bind(sourceProperty, BindingType.TwoWays, sourceToDestinationConverter, destinationToSourceConverter);
     }
 
     /// <summary>

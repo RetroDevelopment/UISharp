@@ -1,12 +1,12 @@
 ﻿using RetroDev.UISharp.Presentation.Properties.Binding;
 using RetroDev.UISharp.Presentation.Properties;
 
-internal class UITreeNodeRecursiveConverter<TSource, TDestination> : IBindingValueConverter<UITreeNode<TSource>, UITreeNode<TDestination>>
+internal class UITreeNodeRecursiveConverter<TSource, TDestination> : IHierarchicalBindingValueConverter<TSource, TDestination>
 {
-    private readonly IBindingValueConverter<UITreeNode<TSource>, UITreeNode<TDestination>> _converter;
+    private readonly IHierarchicalBindingValueConverter<TSource, TDestination> _converter;
     private readonly BindingType _bindingType;
 
-    public UITreeNodeRecursiveConverter(IBindingValueConverter<UITreeNode<TSource>, UITreeNode<TDestination>> converter, BindingType bindingType)
+    public UITreeNodeRecursiveConverter(IHierarchicalBindingValueConverter<TSource, TDestination> converter, BindingType bindingType)
     {
         _converter = converter;
         _bindingType = bindingType;
@@ -25,4 +25,10 @@ internal class UITreeNodeRecursiveConverter<TSource, TDestination> : IBindingVal
         sourceNode.Bind(destination, _bindingType, _converter.Flip());
         return sourceNode;
     }
+
+    public TDestination ConvertSourceToDestination(TSource source) =>
+        _converter.ConvertSourceToDestination(source);
+
+    public TSource ConvertDestinationToSource(TDestination destination) =>
+        _converter.ConvertDestinationToSource(destination);
 }

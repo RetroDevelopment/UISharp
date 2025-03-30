@@ -136,5 +136,21 @@ public class UIHierarchyFlattenBinder<TSource, TDestination> : IDisposable
             .Children
             .ValueRemove
             .Subscribe(index => OnNodeRemove(index, node)));
+
+        if (node is UITreeNode<TSource> treeNode)
+        {
+            treeNode.Content.ValueChange.Subscribe(item => OnNodeValueChange(treeNode));
+        }
+    }
+
+    private void OnNodeValueChange(UITreeNode<TSource> node)
+    {
+        using var _ = _destinationCollection.CreateBindingScope();
+        var oldItem = MapNodeToFlatList(node);
+        if (oldItem is null) return;
+        var itemIndex = _destinationCollection.IndexOf(oldItem);
+        var newItem = _converter.ConvertSourceToDestination(node);
+        _destinationCollection[itemIndex] = newItem;
+        _treeToListMapping[node] = newItem;
     }
 }

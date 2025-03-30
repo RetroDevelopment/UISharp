@@ -60,7 +60,7 @@ public class UITreeNode<TValue> : UIPropertyHierarchy<TValue>
     /// </summary>
     /// <param name="component">The component owning <see langword="this" /> node.</param>
     /// <param name="value">The node initial <see cref="Content"/> value.</param>
-    /// <param name="lockSetter ">Whether it is only possible to set <see langword="this" /> <see cref="UINode{TValue}"/> during event handling.</param>
+    /// <param name="lockSetter ">Whether it is only possible to set <see langword="this" /> <see cref="UITreeNode{TValue}"/> during event handling.</param>
     public UITreeNode(UIComponent component, TValue value, bool lockSetter = true) : base(component, lockSetter)
     {
         Content = new UIProperty<TValue>(component, value);
@@ -96,11 +96,12 @@ public class UITreeNode<TValue> : UIPropertyHierarchy<TValue>
     /// </param>
     /// <param name="converter">A converter to convert source and destination property so that they match.</param>
     /// <remarks>
-    /// NOTE that it is responsibility of the <paramref name="converter"/> to bind the <see cref="Content"/>.
+    /// NOTE that the node content is automatically bound, so the given <paramref name="converter"/> is NOT responsible of performing any bindings.
     /// </remarks>
-    public virtual void Bind<TSource>(UITreeNode<TSource> source, BindingType bindingType, IBindingValueConverter<UITreeNode<TSource>, UITreeNode<TValue>> converter)
+    public virtual void Bind<TSource>(UITreeNode<TSource> source, BindingType bindingType, IHierarchicalBindingValueConverter<TSource, TValue> converter)
     {
         base.Bind(source, bindingType, converter);
+        Content.Bind(source.Content, bindingType, converter);
         Collapsed.Bind(source.Collapsed, bindingType);
     }
 

@@ -1,6 +1,4 @@
-﻿using System.Security.Cryptography.X509Certificates;
-using System.Xml.Serialization;
-using RetroDev.UISharp.Components.Containers;
+﻿using RetroDev.UISharp.Components.Containers;
 using RetroDev.UISharp.Components.Core.AutoArea;
 using RetroDev.UISharp.Components.Core.Base;
 using RetroDev.UISharp.Components.Layouts;
@@ -103,6 +101,7 @@ public class TreeBox : UIHierarchicalContainer
         node.Collapsed.ValueChange.Subscribe(_ => UpdateEntryVisibility(entry, node, recursive: true));
         node.Children.ValueAdd.Subscribe(_ => UpdateEntry(entry, foldUnfoldButton, node));
         node.Children.ValueRemove.Subscribe(_ => UpdateEntry(entry, foldUnfoldButton, node));
+
         UpdateEntry(entry, foldUnfoldButton, node);
 
         return entry;
@@ -114,6 +113,8 @@ public class TreeBox : UIHierarchicalContainer
         var indentation = new Panel(Application);
         var foldUnfoldButton = new Button(Application, string.Empty);
         var content = node.Content.Value;
+
+        foldUnfoldButton.AutoHeight.Value = AutoSize.Wrap;
 
         entry.Items.AddRange([indentation, foldUnfoldButton, content]);
         entry.ColumnSizes.Value = $"{IndentationSize * node.TreeLevel}px;{FoldUnfoldButtonSize}px;*";

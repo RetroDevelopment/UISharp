@@ -11,7 +11,12 @@ public static class AutoSize
     public static readonly IAutoSize Stretch = new Stretch();
 
     /// <summary>
-    /// Use the component using the optimal size to display the full component.
+    /// Use the component optimal size to display the full component.
     /// </summary>
     public static readonly IAutoSize Wrap = new Wrap();
+
+    /// <summary>
+    /// Maximum between <see cref="Wrap"/> and <see cref="Stretch"/>. 
+    /// </summary>
+    public static readonly IAutoSize MaxWrapStretch = new MaxWrapStretch();
 }

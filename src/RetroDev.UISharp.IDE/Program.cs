@@ -47,22 +47,23 @@ internal class Program
 
     private static void LoadTest(Application application)
     {
-        Window w = new Window(application);
-        w.Width.Value = 800;
-        w.Height.Value = 600;
+        var window = new Window(application);
+        window.Width.Value = 800;
+        window.Height.Value = 600;
         var tree = new TreeBox(application);
         tree.Width.Value = 200;
         tree.Height.Value = 200;
-        w.Items.Add(tree);
+        window.Items.Add(tree);
 
         var t = new Component("Root", [], Create(4, 3, "C"));
         var vm = t.ToUIPropertyHierarchy(application, n => n.Components);
-        tree.Items.BindSourceToDestination(vm, Convert(application));
+        tree.Items.BindSourceToDestination(vm, new Converter(tree));
 
         var add = new Button(application, "Add");
         var remove = new Button(application, "Remove");
         var collapseAll = new Button(application, "Collapse all");
         var expandAll = new Button(application, "Expand all");
+        var modify = new Button(application, "Modify");
 
         add.X.Value = 0;
         add.Y.Value = 0;
@@ -84,6 +85,11 @@ internal class Program
         expandAll.AutoWidth.Value = AutoSize.Wrap;
         expandAll.AutoHeight.Value = AutoSize.Wrap;
 
+        modify.X.Value = 100;
+        modify.Y.Value = 0;
+        modify.AutoWidth.Value = AutoSize.Wrap;
+        modify.AutoHeight.Value = AutoSize.Wrap;
+
         int seqNumber = 0;
         add.Action += (_, _) =>
         {
@@ -100,12 +106,18 @@ internal class Program
 
         collapseAll.Action += (_, _) => vm.CollapseAll();
         expandAll.Action += (_, _) => vm.ExpandAll();
+        modify.Action += (_, _) =>
+        {
+            var it = map[tree.SelectedNode.Value];
+            it.Content.Value = new Component("Modified", [], []);
+        };
 
-        w.Items.Add(add);
-        w.Items.Add(remove);
-        w.Items.Add(expandAll);
-        w.Items.Add(collapseAll);
-        w.Show();
+        window.Items.Add(add);
+        window.Items.Add(remove);
+        window.Items.Add(expandAll);
+        window.Items.Add(collapseAll);
+        window.Items.Add(modify);
+        window.Show();
     }
 
     private static List<Component> Create(int width, int depth, string label)
@@ -124,22 +136,42 @@ internal class Program
 
     private static Dictionary<UITreeNode<UIWidget>, UITreeNode<Component>> map = [];
 
-    private static Func<UITreeNode<Component>, UITreeNode<UIWidget>> Convert(Application app)
+    private class Converter(UIWidget owner) : IHierarchicalBindingValueConverter<Component, UIWidget>
     {
-        return (UITreeNode<Component> node) =>
+        private UIWidget _owner = owner;
+
+        public Component ConvertDestinationToSource(UIWidget destination)
         {
-            var rnd = new Random().Next() / (float)int.MaxValue;
-            var gl = new GridLayout(app, 1, 2);
-            var btn = new Button(app, "Check");
-            var lbl = new Label(app, $"{node.Content.Value.Name}");
-            //btn.Height.Value = 90 * rnd;
+            throw new NotImplementedException();
+        }
+
+        public UITreeNode<Component> ConvertDestinationToSource(UITreeNode<UIWidget> destination)
+        {
+            throw new NotImplementedException();
+        }
+
+        public UIWidget ConvertSourceToDestination(Component source)
+        {
+            int height = 20;
+            if (source.Name.EndsWith("1")) height += 20;
+            if (source.Name.EndsWith("2")) height += 35;
+
+            var gl = new GridLayout(_owner.Application, 1, 2);
+            var btn = new Button(_owner.Application, "Check");
+            var lbl = new Label(_owner.Application, $"{source.Name}");
+            lbl.Height.Value = height;
             gl.Items.Add(btn);
             gl.Items.Add(lbl);
             gl.AutoWidth.Value = AutoSize.Wrap;
             gl.HorizontalAlignment.Value = Alignment.Left;
-            var nodeW = new UITreeNode<UIWidget>(app, gl);
-            map.Add(nodeW, node);
+            return gl;
+        }
+
+        public UITreeNode<UIWidget> ConvertSourceToDestination(UITreeNode<Component> source)
+        {
+            var nodeW = new UITreeNode<UIWidget>(_owner, ConvertSourceToDestination(source.Content.Value));
+            map.Add(nodeW, source);
             return nodeW;
-        };
+        }
     }
 }

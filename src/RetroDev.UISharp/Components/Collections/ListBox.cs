@@ -65,7 +65,7 @@ public class ListBox : UIContainer
         // This changes how the list box is displayed. Also add whether to center or do top left, etc. for inner vertical layout components.
         // What about adding a new auto size like "MaxWrapStretch" that takes maximum size between wrap and stretch?
         // That is how many list box look like: they occupy at least the layout plus some more.
-        _verticalLayout.AutoWidth.Value = AutoSize.Stretch;
+        _verticalLayout.AutoWidth.Value = AutoSize.MaxWrapStretch;
         _verticalLayout.HorizontalAlignment.Value = Alignment.Left;
         _verticalLayout.VerticalAlignment.Value = Alignment.Top;
         _verticalLayout.Margin.BindSourceToDestination(Padding);
