@@ -2,6 +2,7 @@
 using RetroDev.UISharp.Components.Core.AutoArea;
 using RetroDev.UISharp.Components.Core.Base;
 using RetroDev.UISharp.Components.Layouts;
+using RetroDev.UISharp.Components.Layouts.GridLayoutHelpers;
 using RetroDev.UISharp.Components.Simple;
 using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Graphics;
@@ -117,7 +118,10 @@ public class TreeBox : UIHierarchicalContainer
         foldUnfoldButton.AutoHeight.Value = AutoSize.Wrap;
 
         entry.Items.AddRange([indentation, foldUnfoldButton, content]);
-        entry.ColumnSizes.Value = $"{IndentationSize * node.TreeLevel}px;{FoldUnfoldButtonSize}px;*";
+        entry.ColumnSizes.Clear();
+        entry.ColumnSizes.Add(new GridAbsoluteSize(IndentationSize * node.TreeLevel));
+        entry.ColumnSizes.Add(new GridAbsoluteSize(FoldUnfoldButtonSize));
+        entry.ColumnSizes.Add(new GridAutoSize());
         entry.HorizontalAlignment.Value = Alignment.Left;
 
         return (entry, foldUnfoldButton);

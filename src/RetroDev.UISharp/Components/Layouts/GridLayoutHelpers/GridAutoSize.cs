@@ -6,4 +6,4 @@ namespace RetroDev.UISharp.Components.Layouts.GridLayoutHelpers;
 /// Represents an automatic size (e.g., "*" or "auto").
 /// </summary>
 [EAMLMatch(@"^(\*|auto)$")]
-public record AutoSize : IGridSize;
+public record GridAutoSize : IGridSize;

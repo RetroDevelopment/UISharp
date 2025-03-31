@@ -1,9 +1,9 @@
 ﻿using RetroDev.UISharp.Components.Containers;
+using RetroDev.UISharp.Components.Core.AutoArea;
 using RetroDev.UISharp.Components.Core.Base;
 using RetroDev.UISharp.Components.Layouts.GridLayoutHelpers;
 using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Presentation.Properties;
-using RetroDev.UISharp.UIDefinition;
 
 namespace RetroDev.UISharp.Components.Layouts;
 
@@ -22,9 +22,15 @@ public class GridLayout : UIContainer
     /// </summary>
     public UIProperty<uint> Columns { get; }
 
-    public UIProperty<string> RowSizes { get; }
+    /// <summary>
+    /// A list of row size constraints.
+    /// </summary>
+    public UIPropertyCollection<IGridSize> RowSizes { get; }
 
-    public UIProperty<string> ColumnSizes { get; }
+    /// <summary>
+    /// A list of column size constraint.
+    /// </summary>
+    public UIPropertyCollection<IGridSize> ColumnSizes { get; }
 
     /// <summary>
     /// Creates a new grid layout.
@@ -34,11 +40,10 @@ public class GridLayout : UIContainer
     /// <param name="columns">The number of layout columns.</param>
     public GridLayout(Application application, uint rows = 0, uint columns = 0) : base(application)
     {
-        Prova = new UIPropertyCollection<IGridSize>(application);
         Rows = new UIProperty<uint>(this, rows);
         Columns = new UIProperty<uint>(this, columns);
-        RowSizes = new UIProperty<string>(this, string.Empty);
-        ColumnSizes = new UIProperty<string>(this, string.Empty);
+        RowSizes = new UIPropertyCollection<IGridSize>(this);
+        ColumnSizes = new UIPropertyCollection<IGridSize>(this);
 
         Children.BindSourceToDestination(Items, item => new Panel(Application, item));
     }
@@ -56,10 +61,8 @@ public class GridLayout : UIContainer
         var leftPadding = Padding.Left.Value.IfAuto(PixelUnit.Zero);
         var topPadding = Padding.Top.Value.IfAuto(PixelUnit.Zero);
 
-        var rowSizeDefinitions = Parse(RowSizes.Value, Rows.Value);
-        var columnSizeDefinitions = Parse(ColumnSizes.Value, Columns.Value);
-        var rowSizes = ComputeSizes(availableSpaceAfterPadding.Height, rowSizeDefinitions, Rows.Value);
-        var columnSizes = ComputeSizes(availableSpaceAfterPadding.Width, columnSizeDefinitions, Columns.Value);
+        var rowSizes = ComputeSizes(availableSpaceAfterPadding.Height, RowSizes.Any() ? RowSizes.ToList() : Enumerable.Repeat(new GridAutoSize(), (int)Rows.Value), Rows.Value);
+        var columnSizes = ComputeSizes(availableSpaceAfterPadding.Width, ColumnSizes.Any() ? ColumnSizes.ToList() : Enumerable.Repeat(new GridAutoSize(), (int)Columns.Value), Columns.Value);
 
         var size = Children.Count;
         var i = 0u;
@@ -87,8 +90,8 @@ public class GridLayout : UIContainer
     {
         // TODO: refactor and take into account relative width and height
         var childrenSizeList = childrenSize.ToList();
-        var columnSizeDefinitions = Parse(ColumnSizes.Value, Columns.Value);
-        var rowSizeDefinitions = Parse(RowSizes.Value, Rows.Value);
+        var columnSizeDefinitions = ColumnSizes.Any() ? ColumnSizes.ToList() : Enumerable.Repeat(new GridAutoSize(), (int)Columns.Value).ToList<IGridSize>();
+        var rowSizeDefinitions = RowSizes.Any() ? RowSizes.ToList() : Enumerable.Repeat(new GridAutoSize(), (int)Rows.Value).ToList<IGridSize>();
         var autoColumnCells = 0;
         var maximumColumnWidth = PixelUnit.Zero;
         var cumulativeFixedWidth = PixelUnit.Zero;
@@ -99,7 +102,7 @@ public class GridLayout : UIContainer
 
         foreach (var column in columnSizeDefinitions)
         {
-            if (column is AutoSize || column is RelativeSize)
+            if (column is GridAutoSize || column is GridRelativeSize)
             {
                 for (var rowIndex = 0; rowIndex < Rows.Value; rowIndex++)
                 {
@@ -110,7 +113,7 @@ public class GridLayout : UIContainer
 
                 autoColumnCells++;
             }
-            else if (column is AbsoluteSize size)
+            else if (column is GridAbsoluteSize size)
             {
                 cumulativeFixedWidth += size.Size;
             }
@@ -122,7 +125,7 @@ public class GridLayout : UIContainer
 
         foreach (var row in rowSizeDefinitions)
         {
-            if (row is AutoSize || row is RelativeSize)
+            if (row is GridAutoSize || row is GridRelativeSize)
             {
                 for (var columnIndex = 0; columnIndex < Columns.Value; columnIndex++)
                 {
@@ -133,7 +136,7 @@ public class GridLayout : UIContainer
 
                 autoRowCells++;
             }
-            else if (row is AbsoluteSize size)
+            else if (row is GridAbsoluteSize size)
             {
                 cumulativeFixedHeight += size.Size;
             }
@@ -157,59 +160,21 @@ public class GridLayout : UIContainer
         }
     }
 
-    private static List<IGridSize> Parse(string sizeExpression, uint count)
-    {
-        if (sizeExpression == string.Empty)
-        {
-            return Enumerable.Repeat(new AutoSize(), (int)count).ToList<IGridSize>();
-        }
-
-        var result = new List<IGridSize>();
-        var sizeList = sizeExpression.Replace(';', ',').Split(",");
-
-        foreach (var size in sizeList)
-        {
-            if (size.EndsWith("px"))
-            {
-                var parseSuccess = float.TryParse(size.Substring(0, size.Length - 2), null, out var sizeNumber);
-                if (!parseSuccess) throw new InvalidOperationException($"Failed to convert {size} as number");
-                result.Add(new AbsoluteSize(sizeNumber));
-            }
-            else if (size.EndsWith('%'))
-            {
-                var parseSuccess = float.TryParse(size.Substring(0, size.Length - 1), null, out var sizeNumber);
-                if (!parseSuccess) throw new InvalidOperationException($"Failed to convert {size} as number");
-                if (sizeNumber > 100 || sizeNumber < 0) throw new InvalidOperationException($"Invalid size {size}: relative values must be between 0% to 100%");
-                result.Add(new RelativeSize(sizeNumber / 100.0f));
-            }
-            else if (size == "auto" || size == "*")
-            {
-                result.Add(new AutoSize());
-            }
-            else
-            {
-                throw new InvalidOperationException($"Invalid auto size formula {size}");
-            }
-        }
-
-        return result;
-    }
-
-    private List<PixelUnit> ComputeSizes(PixelUnit maximumSize, List<IGridSize> sizes, uint count)
+    private List<PixelUnit> ComputeSizes(PixelUnit maximumSize, IEnumerable<IGridSize> sizes, uint count)
     {
         var result = new List<PixelUnit>();
 
         var cumulativeKnownSize = ComputeCumulativeKnownSize(maximumSize, sizes);
         if (cumulativeKnownSize > maximumSize) throw new InvalidOperationException($"Cumulative size exceeds the maximum layout size of {maximumSize}");
-        var numberOfAutoSizeElements = sizes.Where(s => s is AutoSize).Count();
+        var numberOfAutoSizeElements = sizes.Where(s => s is GridAutoSize).Count();
         // Use ceiling to calculate grid size because sometimes rounding errors might create 1 pixel gap between grid layout components.
         var autoGridSize = (float)Math.Ceiling((maximumSize - cumulativeKnownSize) / numberOfAutoSizeElements);
 
         foreach (var size in sizes)
         {
-            if (size is AbsoluteSize absoluteSize) result.Add(absoluteSize.Size);
-            else if (size is RelativeSize relateiveSize) result.Add(maximumSize * relateiveSize.Size);
-            else if (size is AutoSize autoSize) result.Add(autoGridSize);
+            if (size is GridAbsoluteSize absoluteSize) result.Add(absoluteSize.Size);
+            else if (size is GridRelativeSize relateiveSize) result.Add(maximumSize * relateiveSize.Size);
+            else if (size is GridAutoSize autoSize) result.Add(autoGridSize);
             else throw new InvalidOperationException($"Unhandled grid layout autosize type {size.GetType()}");
         }
 
@@ -217,14 +182,14 @@ public class GridLayout : UIContainer
         return result;
     }
 
-    private PixelUnit ComputeCumulativeKnownSize(PixelUnit maximumSize, List<IGridSize> sizes)
+    private PixelUnit ComputeCumulativeKnownSize(PixelUnit maximumSize, IEnumerable<IGridSize> sizes)
     {
         PixelUnit cumulativeKnownSize = 0.0f;
 
         foreach (var size in sizes)
         {
-            if (size is AbsoluteSize absoluteSize) cumulativeKnownSize += absoluteSize.Size;
-            if (size is RelativeSize relateiveSize) cumulativeKnownSize += maximumSize * relateiveSize.Size;
+            if (size is GridAbsoluteSize absoluteSize) cumulativeKnownSize += absoluteSize.Size;
+            if (size is GridRelativeSize relateiveSize) cumulativeKnownSize += maximumSize * relateiveSize.Size;
         }
 
         return cumulativeKnownSize;

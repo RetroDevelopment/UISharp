@@ -7,4 +7,4 @@ namespace RetroDev.UISharp.Components.Layouts.GridLayoutHelpers;
 /// Represents an absolute size in pixels (e.g., "100px", "100.123px").
 /// </summary>
 [EAMLMatch(@"^(?<size>\d+(\.\d+)?)px$")]
-public record AbsoluteSize(PixelUnit Size) : IGridSize;
+public record GridAbsoluteSize(PixelUnit Size) : IGridSize;

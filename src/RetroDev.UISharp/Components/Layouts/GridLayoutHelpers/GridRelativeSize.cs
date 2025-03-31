@@ -6,4 +6,7 @@ namespace RetroDev.UISharp.Components.Layouts.GridLayoutHelpers;
 /// Represents a relative size as a percentage (e.g., "1.01%").
 /// </summary>
 [EAMLMatch(@"^(?<size>\d+(\.\d+)?)%$")]
-public record RelativeSize(float Size) : IGridSize;
+public record GridRelativeSize(float size) : IGridSize
+{
+    public float Size { get; } = size / 100.0f;
+}

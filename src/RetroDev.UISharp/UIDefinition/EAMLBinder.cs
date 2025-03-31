@@ -1,5 +1,4 @@
-﻿using System.Collections.ObjectModel;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Text.RegularExpressions;
 using RetroDev.UISharp.Components.Core.Base;
 using RetroDev.UISharp.Presentation.Properties;
@@ -313,7 +312,7 @@ public class EAMLBinder(TypeMapper typeMapper) : IEAMLBinder
     /// <param name="value">The conversion result.</param>
     /// <param name="attribute">The attribute to convert.</param>
     /// <param name="propertyType">The target property type.</param>
-    /// <exception cref="UIDefinitionValidationException">If the convertion failed with an error.</exception
+    /// <exception cref="UIDefinitionValidationException">If the conversion failed with an error.</exception
     /// <returns><see langword="true" /> if it is possible to convert the attribute into a primitive type, otherwise <see langword="false" /></see></returns>
     protected virtual bool TryConvertAttributeUsingEnums(out object? value, Ast.Attribute attribute, Type propertyType)
     {
@@ -401,8 +400,10 @@ public class EAMLBinder(TypeMapper typeMapper) : IEAMLBinder
         foreach (var constructorParameter in constructor.GetParameters())
         {
             var type = constructorParameter.ParameterType;
+            if (constructorParameter.Name is null) throw new ArgumentException($"Parameter name null in constructor {constructor}: make sure no optimization or code obfuscation is enabled for the class.");
             var stringValue = matches[constructorParameter.Name.ToLower()];
             var value = ConvertAttributeValueToPropertyValue(new Ast.Attribute($"{attribute.Name}.{constructorParameter.Name}", stringValue), type);
+            if (value is null) throw new UIDefinitionValidationException($"Failed to assign value {attribute.Value} for attribute {attribute.Name} to constructor parameter {constructorParameter.Name}", null);
             result.Add(value);
             i++;
         }
