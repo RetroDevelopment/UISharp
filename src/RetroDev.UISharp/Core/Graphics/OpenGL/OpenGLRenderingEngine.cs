@@ -442,7 +442,7 @@ public class OpenGLRenderingEngine : IRenderingEngine
     private void Validate(Shape shape, Area area)
     {
         var maximumBorderThickness = Math.Min(area.Size.Width, area.Size.Height);
-        if (shape.BorderThickness != null && shape.BorderThickness.Value > maximumBorderThickness)
+        if (shape.BorderThickness is not null && shape.BorderThickness.Value > maximumBorderThickness)
         {
             //throw new ArgumentException($"Border thickness {shape.BorderThickness} pixels exceed maximum allowed size of {maximumBorderThickness}");
         }
@@ -451,12 +451,12 @@ public class OpenGLRenderingEngine : IRenderingEngine
         if (area.Size.Height < 0.0f) throw new ArgumentException($"Shape negative height ({area.Size.Height}) not allowed");
         if (shape is Rectangle rectangle)
         {
-            if (rectangle.CornerRadiusX != null && rectangle.CornerRadiusX.Value > area.Size.Width / 2.0)
+            if (rectangle.CornerRadiusX is not null && rectangle.CornerRadiusX.Value > area.Size.Width / 2.0)
             {
                 throw new ArgumentException($"Corner radius {rectangle.CornerRadiusX} is too big for rectangle with size {area.Size}");
             }
 
-            if (rectangle.CornerRadiusY != null && rectangle.CornerRadiusY.Value > area.Size.Height / 2.0)
+            if (rectangle.CornerRadiusY is not null && rectangle.CornerRadiusY.Value > area.Size.Height / 2.0)
             {
                 throw new ArgumentException($"Corner radius {rectangle.CornerRadiusY} is too big for rectangle with size {area.Size}");
             }

@@ -176,7 +176,7 @@ public readonly record struct Color(byte RedComponent = 0, byte GreenComponent =
     public Color(string expression) : this(0, 0, 0, 0)
     {
         var colorConstant = FindConstant(expression);
-        if (colorConstant != null)
+        if (colorConstant is not null)
         {
             RedComponent = colorConstant.Value.RedComponent;
             GreenComponent = colorConstant.Value.GreenComponent;

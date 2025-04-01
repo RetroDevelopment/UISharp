@@ -26,7 +26,7 @@ internal static class ExtensionMethods
 
         Vector2 scale;
 
-        if (borderThickness != null)
+        if (borderThickness is not null)
         {
             var maxBorderThickness = Math.Min(renderingArea.Size.Width, renderingArea.Size.Height);
             var cappedBorderThickness = Math.Min(borderThickness.Value, maxBorderThickness);

@@ -13,7 +13,7 @@ public enum FontType
     Regular,
 
     /// <summary>
-    /// Blod font.
+    /// Bold font.
     /// </summary>
     Bold,
 
@@ -116,5 +116,5 @@ public readonly struct Font
     }
 
     public Core.Graphics.Fonts.Font ToGraphicsFont() =>
-        new Core.Graphics.Fonts.Font(Data, $"{Name}-{Type}", Size);
+        new(Data, $"{Name}-{Type}", Size);
 }

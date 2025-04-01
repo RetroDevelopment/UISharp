@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using RetroDev.UISharp.Presentation.Properties;
-using RetroDev.UISharp.Components.Base;
 using RetroDev.UISharp.UIDefinition.Exceptions;
+using RetroDev.UISharp.Components.Core.Base;
 
 namespace RetroDev.UISharp.UIDefinition;
 
@@ -23,10 +23,10 @@ public interface IEAMLBinder
     /// Sets the bindable property defined by the given <paramref name="propertyInfo"/> to the
     /// value defined by the given <paramref name="attribute"/>.
     /// </summary>
-    /// <param name="propertyInfo">The property set. Its type must be either <see cref="BindableProperty{TValue}"/> or <see cref="CompositeBindableProperty{TValue}"/>.</param>
+    /// <param name="propertyInfo">The property set. Its type must be either <see cref="UIProperty{TValue}"/> or <see cref="UICompositeProperty{TValue}"/>.</param>
     /// <param name="attribute">The attribute definition.</param>
     /// <param name="componentInstance">The <see cref="UIComponent"/> owning the property defined by <paramref name="propertyInfo"/>.</param>
     /// <exception cref="UIDefinitionValidationCompoundException">If something failes during the property assignment.</exception>
     /// <exception cref="InvalidOperationException">If the given <paramref name="propertyInfo"/> is not a valid bindable property.</exception>
-    void SetGenericBindableProperty(PropertyInfo propertyInfo, Ast.Attribute attribute, UIComponent componentInstance);
+    void SetGenericUIProperty(PropertyInfo propertyInfo, Ast.Attribute attribute, UIComponent componentInstance);
 }

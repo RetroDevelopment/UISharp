@@ -14,7 +14,7 @@ public class Wrap : IAutoSize
     /// <param name="wrapSize">The component wrap size.</param>
     /// <returns>The parent width.</returns>
     public PixelUnit ComputeWidth(Size parentSize, Size wrapSize) =>
-        wrapSize.Fill().Size.Width;
+        wrapSize.Width;
 
     /// <summary>
     /// Computes a component height so that it the minimal optimal size allowing to display the full component.
@@ -23,5 +23,5 @@ public class Wrap : IAutoSize
     /// <param name="wrapSize">The component wrap size.</param>
     /// <returns>The component height.</returns>
     public PixelUnit ComputeHeight(Size parentSize, Size wrapSize) =>
-        wrapSize.Fill().Size.Height;
+        wrapSize.Height;
 }

@@ -1,6 +1,6 @@
-﻿using RetroDev.UISharp.Components.Base;
-using RetroDev.UISharp.Components.Core;
+﻿using RetroDev.UISharp.Components.Core;
 using RetroDev.UISharp.Components.Core.AutoArea;
+using RetroDev.UISharp.Components.Core.Base;
 using RetroDev.UISharp.Core.Coordinates;
 
 namespace RetroDev.UISharp.IDE.Components;
@@ -10,10 +10,8 @@ internal class UIPreview : UIContainer
 {
     public UIPreview(Application application, List<UIWidget> children) : base(application, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
     {
-        children.ForEach(c => AddChildNode(c));
+        children.ForEach(Children.Add);
     }
-
-    public override IEnumerable<UIWidget> Children => base.GetChildrenNodes();
 
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize)
     {

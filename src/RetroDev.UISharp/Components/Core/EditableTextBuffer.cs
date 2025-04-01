@@ -25,14 +25,14 @@ public class EditableTextBuffer
     /// <summary>
     /// The buffer text.
     /// </summary>
-    public BindableProperty<string> Text { get; }
+    public UIProperty<string> Text { get; }
 
     /// <summary>
     /// Determines the caret position by identifying the index of the character that will be inserted
     /// by pressing a key.
     /// If the index is 0, the caret is before the first character, or at the neutral position if <see cref="Text"/> is empty.
     /// </summary>
-    public BindableProperty<uint> CaretIndex { get; }
+    public UIProperty<uint> CaretIndex { get; }
 
     /// <summary>
     /// Determines the text selection number of characters. If 0, no selection will be displayed,
@@ -41,7 +41,7 @@ public class EditableTextBuffer
     /// and it will spawn <see cref="SelectionLength"/> characters towards the right (if length is positive)
     /// or towards the left (if length is negative).
     /// </summary>
-    public BindableProperty<int> SelectionLength { get; }
+    public UIProperty<int> SelectionLength { get; }
 
     /// <summary>
     /// Creates a new instance of <see cref="EditableTextBuffer"/>.
@@ -49,11 +49,11 @@ public class EditableTextBuffer
     /// <param name="application">The application owning this buffer.</param>
     public EditableTextBuffer(Application application)
     {
-        Text = new BindableProperty<string>(string.Empty, application);
-        CaretIndex = new BindableProperty<uint>(0, application);
-        SelectionLength = new BindableProperty<int>(0, application);
+        Text = new UIProperty<string>(application, string.Empty);
+        CaretIndex = new UIProperty<uint>(application, 0);
+        SelectionLength = new UIProperty<int>(application, 0);
 
-        Text.ValueChange += Text_ValueChange;
+        Text.ValueChange.Subscribe(OnTextValueChange);
         _history.Add(Text.Value);
         _historyIndex = 0;
     }
@@ -332,10 +332,10 @@ public class EditableTextBuffer
         }
     }
 
-    private void Text_ValueChange(BindableProperty<string> sender, ValueChangeEventArgs<string> e)
+    private void OnTextValueChange(string text)
     {
-        CaretIndex.Value = (uint)Math.Clamp(CaretIndex.Value, 0, Text.Value.Length);
-        SelectionLength.Value = Math.Clamp(SelectionLength.Value, -(int)CaretIndex.Value, Text.Value.Length - (int)CaretIndex.Value);
+        CaretIndex.Value = (uint)Math.Clamp(CaretIndex.Value, 0, text.Length);
+        SelectionLength.Value = Math.Clamp(SelectionLength.Value, -(int)CaretIndex.Value, text.Length - (int)CaretIndex.Value);
         RefreshTokenList();
     }
 }

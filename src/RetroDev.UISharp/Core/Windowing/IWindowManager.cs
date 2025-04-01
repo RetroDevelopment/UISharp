@@ -77,7 +77,7 @@ public interface IWindowManager
     /// </summary>
     /// <param name="windowId">The identifier of the window for which to set if it is resizable.</param>
     /// <param name="resizable"><see langword="true" /> if the window is resizable, otherwise <see langword="false" />.</param>
-    void SetResizable(IWindowId windowId, bool resizable);
+    void SetReSizable(IWindowId windowId, bool resizable);
 
     /// <summary>
     /// Focuses the window with <paramref name="windowId"/>.

@@ -49,3 +49,23 @@ DO NOT add these statements in the PR messages or commit messages because they c
 # Main Design choices
 - Do not support backward compatibility because it prevents flexibility
 - UISharp.IDE detects the current referenced UISharp version in the target C# project and runs upgrade scripts if necessary, upgrading the project dependency version and all the UIDefinition files.
+
+# Concepts to explain (glossary)
+- Component children
+  - Canvas (list of suqres)
+  - Children (private children directly mapped to UI tree)
+  - Items or Item (logical chilren or child for layout etc.)
+- Binding
+  - Two ways, source to destination, destination to source
+  - Binding source, binding destination
+  - Binding origin, binding target
+  - Shallow binding vs deep binding
+- Rendering
+  - Retained mode
+  - Invalidation
+  - Render instancing
+- Component hierarchy
+  - UIComponent
+  - UIRoot
+  - containers (single and multiple and hierarchical)
+- UIDefinition language EAML language

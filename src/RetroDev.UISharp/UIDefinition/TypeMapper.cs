@@ -1,4 +1,4 @@
-﻿using RetroDev.UISharp.Components.Base;
+﻿using RetroDev.UISharp.Components.Core.Base;
 using RetroDev.UISharp.Presentation.Properties;
 using System.Reflection;
 
@@ -37,7 +37,7 @@ public class TypeMapper
     /// <param name="name">The name of the type to find. It is case-insensitive and it can be either <see cref="Type.Name"/> or <see cref="Type.FullName"/>.</param>
     /// <returns><see langword="true" /> if the type exists, otherwise <see langword="false" />.</returns>
     public bool UIComponentExists(string name) =>
-        GetUIComponent(name) != null;
+        GetUIComponent(name) is not null;
 
     /// <summary>
     /// Gets the <see cref="Type"/> derived from <see cref="UIComponent"/> with the given <paramref name="name"/> if such component exists in the loaded assembiles.
@@ -127,7 +127,7 @@ public class TypeMapper
 
         foreach (var type in uiComponentTypes)
         {
-            var uiProperties = type.GetAllBindableProperties();
+            var uiProperties = type.GetAllUIProperties();
             result[type] = uiProperties;
         }
 
@@ -146,11 +146,10 @@ public class TypeMapper
                 }
                 catch (ReflectionTypeLoadException ex)
                 {
-                    return ex.Types.Where(t => t != null).Cast<Type>();
+                    return ex.Types.Where(t => t is not null).Cast<Type>();
                 }
             }).ToList();
     }
-
 
     private IEnumerable<Type> GetDerivedTypes<TBase>(IEnumerable<Type> types)
     {

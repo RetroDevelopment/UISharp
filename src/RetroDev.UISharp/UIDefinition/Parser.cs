@@ -1,5 +1,6 @@
 ﻿using System.Xml;
 using System.Xml.Linq;
+using RetroDev.UISharp.Components.Collections;
 using RetroDev.UISharp.UIDefinition.Ast;
 using RetroDev.UISharp.UIDefinition.Exceptions;
 using Attribute = RetroDev.UISharp.UIDefinition.Ast.Attribute;

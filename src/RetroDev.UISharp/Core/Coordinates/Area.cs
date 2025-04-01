@@ -1,6 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Reflection;
-using RetroDev.UISharp.Components.Base;
 
 namespace RetroDev.UISharp.Core.Coordinates;
 
@@ -46,7 +44,7 @@ public record Area(Point TopLeft, Size Size)
     /// <param name="container">The area containing this area.</param>
     /// <returns>The absolute area realtive to the given <paramref name="container"/>.</returns>
     public Area ToAbsolute(Area? container) =>
-        container != null ? new(container.TopLeft + TopLeft, Size) : this;
+        container is not null ? new(container.TopLeft + TopLeft, Size) : this;
 
     /// <summary>
     /// Clips this area so that it fits in the given <paramref name="container"/> area.

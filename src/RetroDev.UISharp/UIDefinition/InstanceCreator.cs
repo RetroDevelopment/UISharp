@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
-using RetroDev.UISharp.Components;
-using RetroDev.UISharp.Components.Base;
+using RetroDev.UISharp.Components.Core.Base;
 using RetroDev.UISharp.UIDefinition.Exceptions;
+using RetroDev.UISharp.Windows;
 using Component = RetroDev.UISharp.UIDefinition.Ast.Component;
 
 namespace RetroDev.UISharp.UIDefinition;
@@ -59,7 +59,7 @@ public class InstanceCreator(Application application, TypeMapper typeMapper, IEA
             {
                 var matchArgument = components.Where(c => c.GetType() == parameter.ParameterType && c.ID.Value.ToLower() == parameter.Name?.ToLower())
                                               .FirstOrDefault();
-                if (matchArgument != null)
+                if (matchArgument is not null)
                 {
                     arguments[i] = matchArgument;
                 }
@@ -88,7 +88,7 @@ public class InstanceCreator(Application application, TypeMapper typeMapper, IEA
         foreach (var attribute in component.Attributes)
         {
             var property = _typeMapper.GetBindableProperty(instance.GetType(), attribute.Name) ?? throw new ArgumentException($"Cannot find UI property {attribute.Name}: make sure the property is of type UIProperty");
-            _binder.SetGenericBindableProperty(property, attribute, instance);
+            _binder.SetGenericUIProperty(property, attribute, instance);
         }
 
         var i = 0;
@@ -98,13 +98,13 @@ public class InstanceCreator(Application application, TypeMapper typeMapper, IEA
             var childComponent = component.Components[i];
             if (instance is IContainer multipleContainer)
             {
-                multipleContainer.AddComponent(childInstance);
+                multipleContainer.Items.Add(childInstance);
             }
             else if (instance is ISingleContainer singleContainer)
             {
                 if (component.Components.Count == 1)
                 {
-                    singleContainer.SetComponent(childInstance);
+                    singleContainer.Item.Value = childInstance;
                 }
                 else
                 {

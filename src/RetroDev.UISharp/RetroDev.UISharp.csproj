@@ -25,6 +25,7 @@
     </PackageReference>
     <PackageReference Include="OpenTK.Graphics" Version="4.9.1" />
     <PackageReference Include="ppy.SDL2-CS" Version="1.0.82" />
+    <PackageReference Include="System.Reactive" Version="6.0.1" />
   </ItemGroup>
 
 </Project>

@@ -1,5 +1,4 @@
-﻿using RetroDev.UISharp.Components.Shapes;
-using RetroDev.UISharp.Core.Coordinates;
+﻿using RetroDev.UISharp.Core.Coordinates;
 
 namespace RetroDev.UISharp.Core.Windowing.Events;
 

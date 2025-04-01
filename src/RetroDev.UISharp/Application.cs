@@ -1,5 +1,4 @@
-﻿using RetroDev.UISharp.Components;
-using RetroDev.UISharp.Components.Base;
+﻿using RetroDev.UISharp.Components.Core.Base;
 using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Exceptions;
 using RetroDev.UISharp.Core.Logging;
@@ -11,6 +10,7 @@ using RetroDev.UISharp.Presentation.Properties;
 using RetroDev.UISharp.Presentation.Resources;
 using RetroDev.UISharp.Presentation.Themes;
 using RetroDev.UISharp.UIDefinition;
+using RetroDev.UISharp.Windows;
 
 namespace RetroDev.UISharp;
 
@@ -78,7 +78,7 @@ public class Application : IDisposable
     /// The default font for this application.
     /// </summary>
     // TODO: Consider using styles for default properties
-    public BindableProperty<Font> DefaultFont { get; }
+    public UIProperty<Font> DefaultFont { get; }
 
     /// <summary>
     /// The list of all windows managed by <see langword="this" /> <see cref="Application"/>.
@@ -117,7 +117,7 @@ public class Application : IDisposable
         ThemeManager = new ThemeManager(this, ResourceManager.Themes);
         LifeCycle.CurrentState = LifeCycle.State.INIT;
         var font = new Font(this, "LiberationSans", 16, FontType.Regular);
-        DefaultFont = new BindableProperty<Font>(font, this, BindingType.SourceToDestination);
+        DefaultFont = new UIProperty<Font>(this, font, canReceiveBindingUpdates: false);
 
         ThemeManager.LoadTheme("uisharp-dark");
         WindowManager.Initialize();
@@ -156,7 +156,7 @@ public class Application : IDisposable
 
     /// <summary>
     /// Creates and shows the window with type <typeparamref name="TWindow"/>.
-    /// If <typeparamref name="TWindow"/> is FooWindow, creates an insteance of FooWindow and initializes it
+    /// If <typeparamref name="TWindow"/> is FooWindow, creates an instance of FooWindow and initializes it
     /// with the value provided in ResourceManager["foo"], which is expected to start with the fooWindow tag.
     /// </summary>
     /// <typeparam name="TWindow">The type of the window to show.</typeparam>

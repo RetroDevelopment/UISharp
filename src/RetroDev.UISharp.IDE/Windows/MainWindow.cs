@@ -1,14 +1,16 @@
 ﻿using System.Reflection;
-using RetroDev.UISharp.Components;
-using RetroDev.UISharp.Components.Base;
+using RetroDev.UISharp.Components.Collections;
 using RetroDev.UISharp.Components.Containers;
 using RetroDev.UISharp.Components.Core;
 using RetroDev.UISharp.Components.Core.AutoArea;
+using RetroDev.UISharp.Components.Core.Base;
+using RetroDev.UISharp.Components.Layouts;
 using RetroDev.UISharp.Components.Simple;
 using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.IDE.Components;
 using RetroDev.UISharp.Presentation.Properties;
 using RetroDev.UISharp.UIDefinition.Ast;
+using RetroDev.UISharp.Windows;
 using Attribute = RetroDev.UISharp.UIDefinition.Ast.Attribute;
 
 namespace RetroDev.UISharp.IDE.Windows;
@@ -20,7 +22,7 @@ internal class Container : UIComponent
 {
     public Container(Application application, List<UIWidget> children) : base(application)
     {
-        children.ForEach(c => AddChildNode(c));
+        children.ForEach(Children.Add);
     }
 
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) => new(100, 100);
@@ -28,7 +30,7 @@ internal class Container : UIComponent
 
 internal class MainWindow : Window
 {
-    private Dictionary<TreeNode, Component> _treeNodeAstMap = [];
+    private Dictionary<UITreeNode<UIWidget>, Component> _treeNodeAstMap = [];
     private Component? _rootNode;
 
     private readonly GridLayout _mainLayout;
@@ -74,8 +76,8 @@ internal class MainWindow : Window
     {
         InitializeComponentListBox();
         InitializeButtons();
-        _astTreeBox.SelectedNode.ValueChange += SelectedNode_ValueChange;
-        _components.SelectedItem.ValueChange += SelectedItem_ValueChange;
+        _astTreeBox.SelectedNode.ValueChange.Subscribe(OnTreeNodeChange);
+        _components.SelectedItem.ValueChange.Subscribe(_ => UpdateAddRemoveButtonState());
         InitializeTitle();
     }
 
@@ -91,7 +93,7 @@ internal class MainWindow : Window
             label.AutoHeight.Value = AutoSize.Wrap;
             label.HorizontalAlignment.Value = Alignment.Left;
             label.VerticalAlignment.Value = Alignment.Top;
-            _components.AddComponent(label);
+            _components.Items.Add(label);
         }
     }
 
@@ -102,7 +104,7 @@ internal class MainWindow : Window
         _refreshButton.Action += RefreshButton_Action;
         _addButton.Action += AddButton_Action;
         _removeButton.Action += RemoveButton_Action;
-        _darkMode.Checked.ValueChange += Checked_ValueChange;
+        _darkMode.Checked.ValueChange.Subscribe(OnCheckedChange);
     }
 
     private void InitializeTitle()
@@ -144,7 +146,7 @@ internal class MainWindow : Window
         var childNode = CreateNode(componentName);
         var astChildNode = new Component(componentName, [], []);
         var parent = selectedNode.Value;
-        if (parent != null)
+        if (parent is not null)
         {
             var astParent = _treeNodeAstMap[parent];
             astParent.Components.Add(astChildNode);
@@ -166,15 +168,15 @@ internal class MainWindow : Window
         var parent = selectedNode!.Parent;
         var astSelectedNode = _treeNodeAstMap[selectedNode];
 
-        if (parent != null)
+        if (parent is not null)
         {
             var astParent = _treeNodeAstMap[parent];
             astParent.Components.Remove(astSelectedNode);
-            parent.RemoveChild(selectedNode);
+            parent.Children.Remove(selectedNode);
         }
         else
         {
-            _astTreeBox.RemoveTreeNode(selectedNode);
+            _astTreeBox.Items.Children.Remove(selectedNode);
             _rootNode!.Components.Remove(astSelectedNode);
             _treeNodeAstMap.Remove(selectedNode);
         }
@@ -183,9 +185,9 @@ internal class MainWindow : Window
         CreateComponentInstance();
     }
 
-    private void Checked_ValueChange(BindableProperty<bool> sender, ValueChangeEventArgs<bool> e)
+    private void OnCheckedChange(bool @checked)
     {
-        if (e.CurrentValue)
+        if (@checked)
         {
             Application.ThemeManager.LoadTheme("uisharp-dark");
         }
@@ -195,18 +197,18 @@ internal class MainWindow : Window
         }
     }
 
-    private void SelectedNode_ValueChange(BindableProperty<TreeNode?> sender, ValueChangeEventArgs<TreeNode?> e)
+    private void OnTreeNodeChange(UITreeNode<UIWidget>? node)
     {
         var listBox = _propertyList;
-        listBox.Clear();
+        listBox.Items.Clear();
 
-        if (e.CurrentValue == null)
+        if (node == null)
         {
             UpdateAddRemoveButtonState();
             return;
         }
 
-        var selectedAstNode = _treeNodeAstMap[e.CurrentValue];
+        var selectedAstNode = _treeNodeAstMap[node];
         var typeMapper = Application.UIDefinitionManager.TypeMapper;
         var type = typeMapper.GetUIComponent(selectedAstNode.Name);
         var properties = typeMapper.GetProperties(type!);
@@ -225,7 +227,7 @@ internal class MainWindow : Window
             editBox.AutoWidth.Value = AutoSize.Stretch;
 
             var attribute = selectedAstNode.Attributes.Where(c => c.Name.Equals(property.Name, StringComparison.CurrentCultureIgnoreCase)).FirstOrDefault();
-            if (attribute != null)
+            if (attribute is not null)
             {
                 editBox.Text.Value = attribute.Value;
             }
@@ -234,19 +236,14 @@ internal class MainWindow : Window
                 attribute = new Attribute(property.Name, string.Empty);
             }
 
-            editBox.Text.ValueChange += (_, e) => OnAttributeChange(selectedAstNode, attribute, e.CurrentValue);
+            editBox.Text.ValueChange.Subscribe(text => OnAttributeChange(selectedAstNode, attribute, text));
 
-            gridLayout.AddComponent(header);
-            gridLayout.AddComponent(editBox);
+            gridLayout.Items.Add(header);
+            gridLayout.Items.Add(editBox);
             gridLayout.Height.Value = 30;
-            listBox.AddComponent(gridLayout);
+            listBox.Items.Add(gridLayout);
         }
 
-        UpdateAddRemoveButtonState();
-    }
-
-    private void SelectedItem_ValueChange(BindableProperty<UIWidget?> sender, ValueChangeEventArgs<UIWidget?> e)
-    {
         UpdateAddRemoveButtonState();
     }
 
@@ -285,28 +282,31 @@ internal class MainWindow : Window
     {
         var components = _rootNode!.Components.Select(Application.UIDefinitionManager.InstanceCreator.CreateUIComponent).Cast<UIWidget>().ToList();
         var container = new UIPreview(Application, components);
-        _mainLayout.GetComponent<ScrollView>("preview").SetComponent(container);
+        _mainLayout.GetComponent<ScrollView>("preview").Item.Value = container;
     }
 
-    private TreeNode CreateNode(string text)
+    private UITreeNode<UIWidget> CreateNode(string text)
     {
         var label = new Label(Application, text);
-        var node = new TreeNode(label);
+        var node = new UITreeNode<UIWidget>(Application, label);
+        label.AutoWidth.Value = AutoSize.Wrap;
+        label.AutoHeight.Value = AutoSize.Wrap;
+        label.HorizontalAlignment.Value = Alignment.Left;
         return node;
     }
 
-    private void AddNode(TreeNode? parent, Component astNode)
+    private void AddNode(UITreeNode<UIWidget>? parent, Component astNode)
     {
         var node = CreateNode(astNode.Name);
         _treeNodeAstMap.Add(node, astNode);
 
-        if (parent != null)
+        if (parent is not null)
         {
-            parent.AddChild(node);
+            parent.Children.Add(node);
         }
         else
         {
-            _astTreeBox.AddTreeNode(node);
+            _astTreeBox.Items.Children.Add(node);
         }
 
         astNode.Components.ForEach(child => { AddNode(node, child); });
@@ -314,14 +314,14 @@ internal class MainWindow : Window
 
     private void UpdateAddRemoveButtonState()
     {
-        _removeButton.Enabled.Value = _astTreeBox.SelectedNode.Value != null;
+        _removeButton.Enabled.Value = _astTreeBox.SelectedNode.Value is not null;
 
-        if (_astTreeBox.SelectedNode.Value != null && _components.SelectedItem.Value != null)
+        if (_astTreeBox.SelectedNode.Value is not null && _components.SelectedItem.Value is not null)
         {
             var name = ((Label)(_astTreeBox.SelectedNode.Value.Content.Value)).Text.Value;
             var type = Application.UIDefinitionManager.TypeMapper.GetUIComponent(name);
             if (type == null) throw new Exception($"Cannot find type for component {name} to add.");
-            _addButton.Enabled.Value = (type.GetInterfaces().Contains(typeof(IGenericContainer)));
+            _addButton.Enabled.Value = (type.GetInterfaces().Contains(typeof(IContainer)));
         }
     }
 
@@ -335,7 +335,7 @@ internal class MainWindow : Window
 
     private void ClearTreeBox()
     {
-        _astTreeBox.Clear();
+        _astTreeBox.Items.Children.Clear();
         _treeNodeAstMap.Clear();
     }
 }

@@ -12,7 +12,7 @@ using ColorDictionary = Dictionary<string, Color>;
 /// <summary>
 /// Manages themes.
 /// This class allows dynamically changing themes in the whole application by updating the respective
-/// color bindings via <see cref="BindableProperty{TValue}"/>.
+/// color bindings via <see cref="UIProperty{TValue}"/>.
 /// </summary>
 /// <param name="application">The application owning <see langword="this" /> <see cref="ThemeManager"/>.</param>
 /// <param name="themeResources">The object that loads theme xml files.</param>
@@ -40,7 +40,7 @@ public class ThemeManager(Application application, ITextResources themeResources
     private const string LinkAttribute = "link";
 
     private readonly Application _application = application;
-    private readonly Dictionary<string, BindableProperty<Color>> _colorProperties = [];
+    private readonly Dictionary<string, UIProperty<Color>> _colorProperties = [];
     private ColorDictionary _currentTheme = [];
 
     /// <summary>
@@ -86,19 +86,19 @@ public class ThemeManager(Application application, ITextResources themeResources
     }
 
     /// <summary>
-    /// Gets the color <see cref="BindableProperty{TValue}"/> bound to the given <paramref name="id"/>.
-    /// There is one <see cref="BindableProperty{TValue}" /> for each theme id, which is the same
+    /// Gets the color <see cref="UIProperty{TValue}"/> bound to the given <paramref name="id"/>.
+    /// There is one <see cref="UIProperty{TValue}" /> for each theme id, which is the same
     /// even if the theme changes. This means that it is possible to change theme and instantly update
     /// the whole UI via bindings.
     /// </summary>
     /// <param name="id">The color identifier. In the xml this is a color tag name.</param>
-    /// <returns>The <see cref="BindableProperty{TValue}"/> for this color.</returns>
+    /// <returns>The <see cref="UIProperty{TValue}"/> for this color.</returns>
     /// <exception cref="ArgumentException">If a color with the given <paramref name="id"/> does not exist in the current theme.</exception>
     /// <remarks>
     /// DO NOT assign the returned property to a UI component directly as this property is used to define a theme binding.
     /// If you want to create a new color property for a UI component bound to a theme, use <see cref="ThemeExtensions.CreateNewColorPropertyFor{TComponent}(TComponent, string)"/> instead.
     /// </remarks>
-    public BindableProperty<Color> GetColorProperty(string id)
+    public UIProperty<Color> GetColorProperty(string id)
     {
         if (_currentTheme.Count == 0) throw new ArgumentException($"Color id {id} does not exist in current theme: current theme is empty.");
         if (!_currentTheme.ContainsKey(id)) throw new ArgumentException($"Color id {id} does not exist in current theme");
@@ -116,7 +116,7 @@ public class ThemeManager(Application application, ITextResources themeResources
             var include = document.Root.GetAttributeIgnoreCase(IncludeAttribute);
             ColorDictionary themeDictionary = [];
 
-            if (include != null)
+            if (include is not null)
             {
                 var includedXml = ThemeResources[include];
                 themeDictionary = InternalParseTheme(includedXml, links);
@@ -138,12 +138,12 @@ public class ThemeManager(Application application, ITextResources themeResources
         var hexColor = element.GetAttributeIgnoreCase(ColorAttribute);
         var link = element.GetAttributeIgnoreCase(LinkAttribute);
 
-        if (link != null)
+        if (link is not null)
         {
             links.Add(key, link);
             return new KeyValuePair<string, Color>(key, Color.Transparent);
         }
-        else if (hexColor != null)
+        else if (hexColor is not null)
         {
             links.Remove(key);
             return new KeyValuePair<string, Color>(key, new Color(hexColor));
@@ -167,7 +167,7 @@ public class ThemeManager(Application application, ITextResources themeResources
         {
             if (!_colorProperties.ContainsKey(idColorBinding.Key))
             {
-                _colorProperties.Add(idColorBinding.Key, new BindableProperty<Color>(idColorBinding.Value, _application, BindingType.SourceToDestination));
+                _colorProperties.Add(idColorBinding.Key, new UIProperty<Color>(_application, idColorBinding.Value, canReceiveBindingUpdates: false));
             }
             else
             {
