@@ -1,4 +1,6 @@
-﻿namespace RetroDev.UISharp.Presentation.Properties.Binding;
+﻿using System.Reactive.Disposables;
+
+namespace RetroDev.UISharp.Presentation.Properties.Binding;
 
 public class UIHierarchyFlattenBinder<TSource, TDestination> : IDisposable
 {
@@ -6,7 +8,7 @@ public class UIHierarchyFlattenBinder<TSource, TDestination> : IDisposable
     private readonly UIPropertyCollection<TDestination> _destinationCollection;
     private readonly IBindingValueConverter<UITreeNode<TSource>, TDestination> _converter;
     private readonly Dictionary<UITreeNode<TSource>, TDestination> _treeToListMapping = [];
-    private readonly Dictionary<UIPropertyHierarchy<TSource>, List<IDisposable>> _subscriptions = [];
+    private readonly Dictionary<UIPropertyHierarchy<TSource>, CompositeDisposable> _subscriptions = [];
 
     public UIHierarchyFlattenBinder(UIPropertyHierarchy<TSource> sourceHierarchy,
                                     UIPropertyCollection<TDestination> destinationCollection,
@@ -110,7 +112,7 @@ public class UIHierarchyFlattenBinder<TSource, TDestination> : IDisposable
 
     private int Remove(UITreeNode<TSource> node)
     {
-        _subscriptions[node].ForEach(subscription => subscription.Dispose());
+        _subscriptions[node].Dispose();
         _subscriptions.Remove(node);
         _treeToListMapping.Remove(node);
         var count = 1;

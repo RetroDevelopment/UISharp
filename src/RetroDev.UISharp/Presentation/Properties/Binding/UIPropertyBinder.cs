@@ -1,4 +1,5 @@
-﻿using RetroDev.UISharp.Presentation.Properties.Exceptions;
+﻿using System.Reactive.Disposables;
+using RetroDev.UISharp.Presentation.Properties.Exceptions;
 
 namespace RetroDev.UISharp.Presentation.Properties.Binding;
 
@@ -9,7 +10,7 @@ internal class UIPropertyBinder<TSource, TDestination> : IDisposable
     private readonly IBindingValueConverter<TSource, TDestination> _converter;
     private readonly BindingType _bindingType;
 
-    private readonly List<IDisposable> _subscriptions = [];
+    private readonly CompositeDisposable _subscriptions = [];
     private bool _disposedValue;
 
     public UIPropertyBinder(UIProperty<TSource> sourceProperty,
@@ -69,8 +70,7 @@ internal class UIPropertyBinder<TSource, TDestination> : IDisposable
                         throw new ArgumentException($"Unhandled binding type {_bindingType}");
                 }
 
-                _subscriptions.ForEach(subscription => subscription.Dispose());
-                _subscriptions.Clear();
+                _subscriptions.Dispose();
             }
 
             _disposedValue = true;
