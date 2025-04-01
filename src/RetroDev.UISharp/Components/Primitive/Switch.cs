@@ -134,11 +134,11 @@ public class Switch : UIWidget
     private void UpdateSelectionCirclePosition(RenderingEventArgs args)
     {
         var padding = Padding.ToMarginStruct();
-        var maxPadding = Math.Max(padding.Top.IsAuto ? PixelUnit.Min : padding.Top,
-                                  Math.Max(padding.Right.IsAuto ? PixelUnit.Min : padding.Right,
-                                  Math.Max(padding.Bottom.IsAuto ? padding.Bottom : PixelUnit.Min,
-                                           padding.Left.IsAuto ? padding.Left : PixelUnit.Min)));
-        if (padding.IsAuto) maxPadding = PixelUnit.Zero;
+        List<PixelUnit> paddings = [padding.Top.IfAuto(PixelUnit.Min),
+                                    padding.Right.IfAuto(PixelUnit.Min),
+                                    padding.Bottom.IfAuto(PixelUnit.Min),
+                                    padding.Left.IfAuto(PixelUnit.Min)];
+        var maxPadding = padding.IsAuto ? PixelUnit.Zero : paddings.Max()!;
 
         var height = args.RenderingAreaSize.Height - maxPadding * 2.0f;
         var width = height;

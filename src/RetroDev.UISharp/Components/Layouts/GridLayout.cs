@@ -49,10 +49,21 @@ public class GridLayout : UIContainer
     }
 
     /// <inheritdoc />
+    public override void Validate()
+    {
+        base.Validate();
+        var numberOfItems = Children.Count;
+        var maximumNumberOfItems = Rows.Value * Columns.Value;
+
+        if (numberOfItems > maximumNumberOfItems)
+        {
+            throw new InvalidOperationException($"Grid layout with {Rows.Value} rows and {Columns.Value} columns can contain at most {maximumNumberOfItems} items, but {numberOfItems} provided");
+        }
+    }
+
+    /// <inheritdoc />
     protected override List<Area?> RepositionChildren(Size availableSpace, IEnumerable<Size> childrenSize)
     {
-        EnsureRowsColumnFitNumberOfChildren();
-
         var areas = new List<Area?>();
 
         var availableSpaceAfterPadding = availableSpace.Deflate(Padding.ToMarginStruct());
@@ -63,17 +74,17 @@ public class GridLayout : UIContainer
         var columnSizes = ColumnSizes.ComputeSizes(availableSpaceAfterPadding.Width, Columns.Value);
 
         var size = childrenSize.Count();
-        var i = 0u;
+        var i = 0;
 
         foreach (var child in childrenSize)
         {
-            var row = i / Columns.Value;
-            var column = i % Columns.Value;
+            var row = (int)(i / Columns.Value);
+            var column = (int)(i % Columns.Value);
 
-            var width = columnSizes.ElementAt((int)column);
-            var height = rowSizes.ElementAt((int)row);
-            var x = column == 0 ? 0.0f : columnSizes.Take((int)column).Sum(p => p.Value);
-            var y = row == 0 ? 0.0f : rowSizes.Take((int)row).Sum(p => p.Value);
+            var width = columnSizes.ElementAt(column);
+            var height = rowSizes.ElementAt(row);
+            var x = columnSizes.Take(column).Sum(p => p.Value);
+            var y = rowSizes.Take(row).Sum(p => p.Value);
 
             areas.Add(new Area(new Point(x + leftPadding, y + topPadding), new Size(width, height)));
             i++;
@@ -82,78 +93,12 @@ public class GridLayout : UIContainer
         return areas;
     }
 
-    // TODO: Smart auto size that fits exactly all children
+    /// <inheritdoc />
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize)
     {
-        // TODO: refactor and take into account relative width and height
-        var childrenSizeList = childrenSize.ToList();
-        var columnSizeDefinitions = ColumnSizes.Any() ? ColumnSizes.ToList() : Enumerable.Repeat(new GridAutoSize(), (int)Columns.Value).ToList<IGridSize>();
-        var rowSizeDefinitions = RowSizes.Any() ? RowSizes.ToList() : Enumerable.Repeat(new GridAutoSize(), (int)Rows.Value).ToList<IGridSize>();
-        var autoColumnCells = 0;
-        var maximumColumnWidth = PixelUnit.Zero;
-        var cumulativeFixedWidth = PixelUnit.Zero;
-        var autoRowCells = 0;
-        var maximumRowHeight = PixelUnit.Zero;
-        var cumulativeFixedHeight = PixelUnit.Zero;
-        var index = 0;
-
-        foreach (var column in columnSizeDefinitions)
-        {
-            if (column is GridAutoSize || column is GridRelativeSize)
-            {
-                for (var rowIndex = 0; rowIndex < Rows.Value; rowIndex++)
-                {
-                    var childIndex = rowIndex * (int)Columns.Value + index;
-                    if (childIndex >= childrenSizeList.Count) break;
-                    maximumColumnWidth = Math.Max(maximumColumnWidth, childrenSizeList[childIndex].Width);
-                }
-
-                autoColumnCells++;
-            }
-            else if (column is GridAbsoluteSize size)
-            {
-                cumulativeFixedWidth += size.Size;
-            }
-
-            index++;
-        }
-
-        index = 0;
-
-        foreach (var row in rowSizeDefinitions)
-        {
-            if (row is GridAutoSize || row is GridRelativeSize)
-            {
-                for (var columnIndex = 0; columnIndex < Columns.Value; columnIndex++)
-                {
-                    var childIndex = index * (int)Columns.Value + columnIndex;
-                    if (childIndex >= childrenSizeList.Count) break;
-                    maximumRowHeight = Math.Max(maximumRowHeight, childrenSizeList[childIndex].Height);
-                }
-
-                autoRowCells++;
-            }
-            else if (row is GridAbsoluteSize size)
-            {
-                cumulativeFixedHeight += size.Size;
-            }
-
-            index++;
-        }
-
-        var optimalCellWidth = maximumColumnWidth * autoColumnCells + cumulativeFixedWidth;
-        var optimalCellHeight = maximumRowHeight * autoRowCells + cumulativeFixedHeight;
-        return new Size(optimalCellWidth, optimalCellHeight);
-    }
-
-    private void EnsureRowsColumnFitNumberOfChildren()
-    {
-        var numberOfItems = Children.Count;
-        var maximumNumberOfItems = Rows.Value * Columns.Value;
-
-        if (numberOfItems > maximumNumberOfItems)
-        {
-            throw new InvalidOperationException($"Grid layout with {Rows.Value} rows and {Columns.Value} columns can contain at most {maximumNumberOfItems} items, but {numberOfItems} provided");
-        }
+        (var rowSizes, var columnSizes) = childrenSize.ComputeOptimalCellSizes(Rows.Value, Columns.Value);
+        var optimalWidth = ColumnSizes.ComputeOptimalSize(columnSizes);
+        var optimalHeight = RowSizes.ComputeOptimalSize(rowSizes);
+        return new Size(optimalWidth, optimalHeight);
     }
 }

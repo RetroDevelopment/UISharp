@@ -10,11 +10,13 @@ namespace RetroDev.UISharp.Components.Layouts.GridLayoutHelpers;
 /// Note that the percentage is of total available space, without taking into account other layout constraints.
 /// For example, if the layout height is 1000px, 50% for a row will 500px will be allocated.
 /// </remarks>
-[EAMLMatch(@"^(?<size>\d+(\.\d+)?)%$")]
-public record GridRelativeSize(PixelUnit Size) : IGridSize
+[EAMLMatch(@"^(?<percentage>\d+(\.\d+)?)%$")]
+public record GridRelativeSize(PixelUnit Percentage) : IGridSize
 {
     /// <inheritdoc />
     public bool IsFixed => true;
+
+    public PixelUnit NormalizedPercentage => Percentage / 100.0f;
 
     /// <summary>
     /// Gets the absolute size based of the given <paramref name="totalAvailableSpace"/>.
@@ -22,7 +24,7 @@ public record GridRelativeSize(PixelUnit Size) : IGridSize
     /// <param name="totalAvailableSpace">The total available space (width or height) for a component.</param>
     /// <returns>The absolute size.</returns>
     public PixelUnit ToAbsolute(PixelUnit totalAvailableSpace) =>
-        totalAvailableSpace * (this.Size / 100.0f);
+        totalAvailableSpace * NormalizedPercentage;
 
     /// <summary>
     /// Invokes <see cref="IGridSizeVisitor{TValue}.Visit(GridRelativeSize)"/> from the given <paramref name="visitor"/>.

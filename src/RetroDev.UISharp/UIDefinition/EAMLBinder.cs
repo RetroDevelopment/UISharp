@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using System.Text.RegularExpressions;
 using RetroDev.UISharp.Components.Core.Base;
+using RetroDev.UISharp.Core.Logging;
 using RetroDev.UISharp.Presentation.Properties;
 using RetroDev.UISharp.UIDefinition.Exceptions;
 
@@ -298,8 +299,10 @@ public class EAMLBinder(TypeMapper typeMapper) : IEAMLBinder
         }
 
         if (matchedType is null) throw new UIDefinitionValidationException($"Cannot find type {attribute.Value} to match attribute {attribute.Name}. A type with that name assignable to {propertyType} does not exist.", attribute);
-        var constructor = matchedType.GetConstructors().Where(c => c.GetParameters().Length == matches.Count).FirstOrDefault();
-        if (constructor == null) throw new UIDefinitionValidationException($"Cannot find empty constructor for type {matchedType}, needed to instantiate {attribute.Name}={attribute.Value}", attribute);
+        var matchedConstructors = matchedType.GetConstructors().Where(c => c.GetParameters().Length == matches.Count);
+        if (!matchedConstructors.Any()) throw new UIDefinitionValidationException($"Cannot find empty constructor for type {matchedType}, needed to instantiate {attribute.Name}={attribute.Value}", attribute);
+        if (matchedConstructors.Count() > 1) throw new UIDefinitionValidationException($"More than one constructor with {matches.Count} parameters found. Only one constructor with the same number of parameters as regex matches must be specified as multiple constructor matching is not supported.", attribute);
+        var constructor = matchedConstructors.First();
 
         value = constructor.Invoke(CreateConstructorArgument(constructor, matches, attribute));
         return true;

@@ -7,6 +7,7 @@ using RetroDev.UISharp.Components.Core.Base;
 using RetroDev.UISharp.Components.Layouts;
 using RetroDev.UISharp.Components.Layouts.GridLayoutHelpers;
 using RetroDev.UISharp.Components.Simple;
+using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Logging;
 using RetroDev.UISharp.IDE.Windows;
 using RetroDev.UISharp.Presentation.Properties;
