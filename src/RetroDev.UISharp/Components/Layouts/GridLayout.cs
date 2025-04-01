@@ -53,30 +53,27 @@ public class GridLayout : UIContainer
     {
         EnsureRowsColumnFitNumberOfChildren();
 
-        if (availableSpace == Size.Zero) return Enumerable.Repeat<Area?>(Area.Empty, childrenSize.Count()).ToList();
-
         var areas = new List<Area?>();
 
         var availableSpaceAfterPadding = availableSpace.Deflate(Padding.ToMarginStruct());
         var leftPadding = Padding.Left.Value.IfAuto(PixelUnit.Zero);
         var topPadding = Padding.Top.Value.IfAuto(PixelUnit.Zero);
 
-        var rowSizes = ComputeSizes(availableSpaceAfterPadding.Height, RowSizes.Any() ? RowSizes.ToList() : Enumerable.Repeat(new GridAutoSize(), (int)Rows.Value), Rows.Value);
-        var columnSizes = ComputeSizes(availableSpaceAfterPadding.Width, ColumnSizes.Any() ? ColumnSizes.ToList() : Enumerable.Repeat(new GridAutoSize(), (int)Columns.Value), Columns.Value);
+        var rowSizes = RowSizes.ComputeSizes(availableSpaceAfterPadding.Height, Rows.Value);
+        var columnSizes = ColumnSizes.ComputeSizes(availableSpaceAfterPadding.Width, Columns.Value);
 
-        var size = Children.Count;
+        var size = childrenSize.Count();
         var i = 0u;
 
-        // TODO: no need to iterate over children.
-        foreach (var child in Children)
+        foreach (var child in childrenSize)
         {
             var row = i / Columns.Value;
             var column = i % Columns.Value;
 
-            var width = columnSizes[(int)column];
-            var height = rowSizes[(int)row];
-            var x = column == 0 ? 0.0f : columnSizes[..(int)column].Sum(p => p.Value);
-            var y = row == 0 ? 0.0f : rowSizes[..(int)row].Sum(p => p.Value);
+            var width = columnSizes.ElementAt((int)column);
+            var height = rowSizes.ElementAt((int)row);
+            var x = column == 0 ? 0.0f : columnSizes.Take((int)column).Sum(p => p.Value);
+            var y = row == 0 ? 0.0f : rowSizes.Take((int)row).Sum(p => p.Value);
 
             areas.Add(new Area(new Point(x + leftPadding, y + topPadding), new Size(width, height)));
             i++;
@@ -158,40 +155,5 @@ public class GridLayout : UIContainer
         {
             throw new InvalidOperationException($"Grid layout with {Rows.Value} rows and {Columns.Value} columns can contain at most {maximumNumberOfItems} items, but {numberOfItems} provided");
         }
-    }
-
-    private List<PixelUnit> ComputeSizes(PixelUnit maximumSize, IEnumerable<IGridSize> sizes, uint count)
-    {
-        var result = new List<PixelUnit>();
-
-        var cumulativeKnownSize = ComputeCumulativeKnownSize(maximumSize, sizes);
-        if (cumulativeKnownSize > maximumSize) throw new InvalidOperationException($"Cumulative size exceeds the maximum layout size of {maximumSize}");
-        var numberOfAutoSizeElements = sizes.Where(s => s is GridAutoSize).Count();
-        // Use ceiling to calculate grid size because sometimes rounding errors might create 1 pixel gap between grid layout components.
-        var autoGridSize = (float)Math.Ceiling((maximumSize - cumulativeKnownSize) / numberOfAutoSizeElements);
-
-        foreach (var size in sizes)
-        {
-            if (size is GridAbsoluteSize absoluteSize) result.Add(absoluteSize.Size);
-            else if (size is GridRelativeSize relateiveSize) result.Add(maximumSize * relateiveSize.Size);
-            else if (size is GridAutoSize autoSize) result.Add(autoGridSize);
-            else throw new InvalidOperationException($"Unhandled grid layout autosize type {size.GetType()}");
-        }
-
-        if (result.Count != count) throw new InvalidOperationException($"Grid layout size pattern must be {count} but {result.Count} elements found");
-        return result;
-    }
-
-    private PixelUnit ComputeCumulativeKnownSize(PixelUnit maximumSize, IEnumerable<IGridSize> sizes)
-    {
-        PixelUnit cumulativeKnownSize = 0.0f;
-
-        foreach (var size in sizes)
-        {
-            if (size is GridAbsoluteSize absoluteSize) cumulativeKnownSize += absoluteSize.Size;
-            if (size is GridRelativeSize relateiveSize) cumulativeKnownSize += maximumSize * relateiveSize.Size;
-        }
-
-        return cumulativeKnownSize;
     }
 }

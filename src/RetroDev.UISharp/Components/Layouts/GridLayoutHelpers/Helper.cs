@@ -37,9 +37,11 @@ public static class Helper
     /// </summary>
     /// <param name="this">The list of grid size constraints.</param>
     /// <param name="totalAvailableSize">The total available size for a layout.</param>
+    /// <param name="numberOfCells">The total number of cells.</param>
     /// <returns>The list where an element at index <c>i</c> represents the size (width or height) of the <c>i</c>-th column or row respectively.</returns>
-    public static IEnumerable<PixelUnit> ComputeSizes(this IEnumerable<IGridSize> @this, PixelUnit totalAvailableSize)
+    public static IEnumerable<PixelUnit> ComputeSizes(this IEnumerable<IGridSize> @this, PixelUnit totalAvailableSize, uint numberOfCells)
     {
+        if (!@this.Any()) return Enumerable.Repeat<PixelUnit>(totalAvailableSize / numberOfCells, (int)numberOfCells);
         var totalFixedSize = @this.ComputeTotalFixedSize(totalAvailableSize);
         var exceedingFactor = Math.Clamp(totalFixedSize / totalAvailableSize, 1.0f, PixelUnit.Max);
         var totalNonFixedSize = (totalAvailableSize - totalFixedSize / exceedingFactor);
@@ -49,9 +51,10 @@ public static class Helper
 
         foreach (var size in @this)
         {
-            sizeList.Add(size.Accept<PixelUnit>(absoluteSize => absoluteSize.Size / exceedingFactor,
-                                                relativeSize => relativeSize.ToAbsolute(totalAvailableSize) / exceedingFactor,
-                                                _ => sizePerCell));
+            var cellSize = size.Accept<PixelUnit>(absoluteSize => absoluteSize.Size / exceedingFactor,
+                                                  relativeSize => relativeSize.ToAbsolute(totalAvailableSize) / exceedingFactor,
+                                                  _ => sizePerCell);
+            sizeList.Add(Math.Clamp(cellSize, PixelUnit.Zero, totalAvailableSize));
         }
 
         return sizeList;
