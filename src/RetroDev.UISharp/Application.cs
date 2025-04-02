@@ -35,7 +35,7 @@ public class Application : IDisposable
 
     /// <summary>
     /// Triggered before calling <see cref="Window.Measure()"/> for the second time.
-    /// This is an opportunity to change <see cref="UIComponent"/> properties when all sizes are known and before rendering (using <see cref="UIComponent.ActualSize"/>).
+    /// This is an opportunity to change <see cref="UIObject"/> properties when all sizes are known and before rendering (using <see cref="UIObject.ActualSize"/>).
     /// </summary>
     public event TypeSafeEventHandler<Application, EventArgs>? SecondPassMeasure;
 
@@ -189,7 +189,7 @@ public class Application : IDisposable
         var component = UIDefinitionManager.CreateUIComponent(windowXmlDefinition);
         if (component is not TWindow) throw new InvalidOperationException($"Expected a window of type {typeof(TWindow)} but type {component.GetType()} found instead");
         var window = (TWindow)component;
-        window.Visibility.Value = UIComponent.ComponentVisibility.Visible;
+        window.Visibility.Value = UIObject.ComponentVisibility.Visible;
         return window;
     }
 
@@ -248,7 +248,7 @@ public class Application : IDisposable
 
     private void Render()
     {
-        var visibleWindows = _windows.Where(w => w.Visibility.Value == UIComponent.ComponentVisibility.Visible).ToList();
+        var visibleWindows = _windows.Where(w => w.Visibility.Value == UIObject.ComponentVisibility.Visible).ToList();
         LifeCycle.CurrentState = LifeCycle.State.MEASURE;
         visibleWindows.ForEach(w => w.Measure());
         LifeCycle.CurrentState = LifeCycle.State.EVENT_POLL;

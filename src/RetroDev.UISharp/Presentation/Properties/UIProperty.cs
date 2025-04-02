@@ -131,7 +131,7 @@ public class UIProperty<TValue>
     /// <summary>
     /// Creates a new property.
     /// </summary>
-    /// <param name="parent">The <see cref="UIComponent"/> owning this property.</param>
+    /// <param name="parent">The <see cref="UIObject"/> owning this property.</param>
     /// <param name="value">The property value.</param>
     /// <param name="canReceiveBindingUpdates">
     /// Whether<see langword = "this" /> < see cref="UIProperty{TValue}"/> can receive binding updates, meaning that
@@ -139,7 +139,7 @@ public class UIProperty<TValue>
     /// source, <see cref="BindingType.DestinationToSource"/> is allowed. If <see langword="false" /> the mentioned bindings will result in
     /// a <see cref="UIPropertyValidationException"/>.
     /// </param>
-    public UIProperty(UIComponent parent, TValue value, bool canReceiveBindingUpdates = true) : this(parent.Application, value, canReceiveBindingUpdates, lockSetter: true)
+    public UIProperty(UIObject parent, TValue value, bool canReceiveBindingUpdates = true) : this(parent.Application, value, canReceiveBindingUpdates, lockSetter: true)
     {
         ValueChange.Subscribe(v => parent.Invalidate());
     }
@@ -147,7 +147,7 @@ public class UIProperty<TValue>
     /// <summary>
     /// Creates a new property.
     /// </summary>
-    /// <param name="parent">The <see cref="UIComponent"/> owning this property.</param>
+    /// <param name="parent">The <see cref="UIObject"/> owning this property.</param>
     /// <param name="destinationProperty">The destination property to bind.</param>
     /// <param name="bindingType">
     /// The <see cref="BindingType"/> (<see langword="this"/> property is the source property and).
@@ -159,7 +159,7 @@ public class UIProperty<TValue>
     /// source, <see cref="BindingType.DestinationToSource"/> is allowed. If <see langword="false" /> the mentioned bindings will result in
     /// a <see cref="UIPropertyValidationException"/>.
     /// </param>
-    public UIProperty(UIComponent parent, UIProperty<TValue> destinationProperty, BindingType bindingType = BindingType.TwoWays, bool canReceiveBindingUpdates = true) : this(parent, destinationProperty.Value, canReceiveBindingUpdates)
+    public UIProperty(UIObject parent, UIProperty<TValue> destinationProperty, BindingType bindingType = BindingType.TwoWays, bool canReceiveBindingUpdates = true) : this(parent, destinationProperty.Value, canReceiveBindingUpdates)
     {
         Bind(destinationProperty, bindingType);
     }

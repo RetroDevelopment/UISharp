@@ -12,12 +12,12 @@ public interface ISingleContainer
     /// The container logical child.
     /// </summary>
     /// <remarks>
-    /// A logical child differs from an actual child stored in <see cref="UIComponent.Children"/>. The former is an element publicly exposed that is contained
+    /// A logical child differs from an actual child stored in <see cref="UIObject.Children"/>. The former is an element publicly exposed that is contained
     /// by a container, the latter is an actual child in the UI tree.
-    /// For example a <see cref="ScrollView"/> has scroll bars and the component to scroll as actual children (<see cref="UIComponent.Children"/>) but
+    /// For example a <see cref="ScrollView"/> has scroll bars and the component to scroll as actual children (<see cref="UIObject.Children"/>) but
     /// only the component to scroll is a logical child (<see cref="Item"/>).
     /// The distinction between actual children and logical children is made to abstract away from implementation details and from those UI children which
     /// must not be publicly exposed.
     /// </remarks>
-    UIProperty<UIWidget?> Item { get; }
+    UIProperty<UIControl?> Item { get; }
 }

@@ -12,23 +12,23 @@ namespace RetroDev.UISharp.Components.Core.Base;
 /// The root of a UI component hierarchy. This is typically a rendering unit, such as, a window or a mobile
 /// device activity.
 /// </summary>
-public abstract class UIRoot : UIContainer
+public abstract class UISurface : UIContainer
 {
     /// <summary>
-    /// The object that manages <see cref="UIComponent"/> invalidation for the component tree rooted by <see langword="this" />
+    /// The object that manages <see cref="UIObject"/> invalidation for the component tree rooted by <see langword="this" />
     /// component.
     /// </summary>
     protected internal Invalidator Invalidator { get; }
 
     /// <summary>
-    /// The object that measures all <see cref="UIComponent"/> measure calculation for the component tree rooted by <see langword="this" />
+    /// The object that measures all <see cref="UIObject"/> measure calculation for the component tree rooted by <see langword="this" />
     /// component.
     /// </summary>
 
     protected MeasureProvider MeasureProvider { get; }
 
     /// <summary>
-    /// The object that performs retained mode rendering of all <see cref="UIComponent"/> components in the component tree rooted by <see langword="this" />
+    /// The object that performs retained mode rendering of all <see cref="UIObject"/> components in the component tree rooted by <see langword="this" />
     /// component.
     /// </summary>
     protected RenderProvider RenderProvider { get; }
@@ -57,7 +57,7 @@ public abstract class UIRoot : UIContainer
     /// <param name="autoHeight">How to automatically determine this component height.</param>
     /// <param name="horizontalAlignment">The component horizontal alignment (relative to its <see cref="Parent"/>).</param>
     /// <param name="verticalAlignment">The component vertical alignment (relative to its <see cref="Parent"/>).</param>
-    protected UIRoot(Application application,
+    protected UISurface(Application application,
                      IRenderingEngine? renderingEngine = null,
                      ComponentVisibility visibility = ComponentVisibility.Visible,
                      bool isFocusable = true,
@@ -86,7 +86,7 @@ public abstract class UIRoot : UIContainer
         }
     }
 
-    private void UIRoot_MouseMove(UIComponent sender, MouseEventArgs e)
+    private void UIRoot_MouseMove(UIObject sender, MouseEventArgs e)
     {
         foreach (var node in GlobalEventInformation.DraggingComponents)
         {
@@ -94,7 +94,7 @@ public abstract class UIRoot : UIContainer
         }
     }
 
-    private void UIRoot_MouseRelease(UIComponent sender, MouseEventArgs e)
+    private void UIRoot_MouseRelease(UIObject sender, MouseEventArgs e)
     {
         if (e.Button == MouseButton.Left)
         {

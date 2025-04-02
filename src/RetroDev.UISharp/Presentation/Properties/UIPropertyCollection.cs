@@ -122,9 +122,9 @@ public class UIPropertyCollection<TValue> : IList<TValue>
     /// <summary>
     /// Creates a new collection.
     /// </summary>
-    /// <param name="component">The <see cref="UIComponent"/> owning <see langword="this" /> <see cref="UIPropertyCollection{TValue}"/>.</param>
+    /// <param name="component">The <see cref="UIObject"/> owning <see langword="this" /> <see cref="UIPropertyCollection{TValue}"/>.</param>
     /// <param name="lockChanges ">Whether it is only possible to change the collection state during event handling.</param>
-    public UIPropertyCollection(UIComponent component, bool lockChanges = true) : this(component.Application, lockChanges)
+    public UIPropertyCollection(UIObject component, bool lockChanges = true) : this(component.Application, lockChanges)
     {
         ValueAdd.Subscribe(_ => component.Invalidate());
         ValueRemove.Subscribe(_ => component.Invalidate());

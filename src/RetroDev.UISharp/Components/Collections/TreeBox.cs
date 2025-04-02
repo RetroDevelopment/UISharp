@@ -17,7 +17,7 @@ namespace RetroDev.UISharp.Components.Collections;
 /// </summary>
 /// <remarks>
 /// Although list boxes are typically used to list text in order to allow selecting one or more options,
-/// the <see cref="TreeBox"/> class allows to list not only text but any <see cref="UIComponent"/>.
+/// the <see cref="TreeBox"/> class allows to list not only text but any <see cref="UIObject"/>.
 /// </remarks>
 public class TreeBox : UIHierarchicalContainer
 {
@@ -25,12 +25,12 @@ public class TreeBox : UIHierarchicalContainer
     private static readonly PixelUnit IndentationSize = 20;
 
     private readonly ListBox _listBox;
-    private readonly UIHierarchyFlattenBinder<UIWidget, UIWidget> _flattenBinder;
+    private readonly UIHierarchyFlattenBinder<UIControl, UIControl> _flattenBinder;
 
     /// <summary>
     /// The selected node or <see langword="null" /> if no node is selected.
     /// </summary>
-    public UIProperty<UITreeNode<UIWidget>?> SelectedNode { get; }
+    public UIProperty<UITreeNode<UIControl>?> SelectedNode { get; }
 
     /// <summary>
     /// Creates a new tree box.
@@ -53,7 +53,7 @@ public class TreeBox : UIHierarchicalContainer
 
         _flattenBinder = _listBox.Items.FlatBindSourceToDestination(Items, ConvertNodeToListBoxItem);
 
-        SelectedNode = new UIProperty<UITreeNode<UIWidget>?>(this, (UITreeNode<UIWidget>?)null);
+        SelectedNode = new UIProperty<UITreeNode<UIControl>?>(this, (UITreeNode<UIControl>?)null);
 
         // TODO SelectedNode can be bound to _listBox.SelectedItem and converters!
         SelectedNode.ValueChange.Subscribe(OnSelectedNodeChange);
@@ -64,7 +64,7 @@ public class TreeBox : UIHierarchicalContainer
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
         childrenSize.First();
 
-    private void OnSelectedNodeChange(UITreeNode<UIWidget>? node)
+    private void OnSelectedNodeChange(UITreeNode<UIControl>? node)
     {
         if (node == null)
         {
@@ -92,7 +92,7 @@ public class TreeBox : UIHierarchicalContainer
         }
     }
 
-    private UIWidget ConvertNodeToListBoxItem(UITreeNode<UIWidget> node)
+    private UIControl ConvertNodeToListBoxItem(UITreeNode<UIControl> node)
     {
         var (entry, foldUnfoldButton) = CreateEntry(node);
 
@@ -108,7 +108,7 @@ public class TreeBox : UIHierarchicalContainer
         return entry;
     }
 
-    private (GridLayout entry, Button foldUnfoldButton) CreateEntry(UITreeNode<UIWidget> node)
+    private (GridLayout entry, Button foldUnfoldButton) CreateEntry(UITreeNode<UIControl> node)
     {
         var entry = new GridLayout(Application, 1, 3);
         var indentation = new Panel(Application);
@@ -127,13 +127,13 @@ public class TreeBox : UIHierarchicalContainer
         return (entry, foldUnfoldButton);
     }
 
-    private void UpdateEntry(UIWidget entry, Button foldUnfoldButton, UITreeNode<UIWidget> node)
+    private void UpdateEntry(UIControl entry, Button foldUnfoldButton, UITreeNode<UIControl> node)
     {
         UpdateEntryVisibility(entry, node);
         foldUnfoldButton.Visibility.Value = node.Children.Any() ? ComponentVisibility.Visible : ComponentVisibility.Collapsed;
     }
 
-    private void UpdateEntryVisibility(UIWidget entry, UITreeNode<UIWidget> node, bool recursive = false)
+    private void UpdateEntryVisibility(UIControl entry, UITreeNode<UIControl> node, bool recursive = false)
     {
         entry.Visibility.Value = node.AncestorCollapsed ? ComponentVisibility.Collapsed : ComponentVisibility.Visible;
         if (!recursive) return;

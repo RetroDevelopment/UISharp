@@ -13,7 +13,7 @@ public class Panel : UISingleContainer
     /// </summary>
     /// <param name="application">The application owning this component.</param>
     /// <param name="component">The component to be inserted in <see langword="this" /> <see cref="Panel"/>.</param>
-    public Panel(Application application, UIWidget? component = null) : base(application)
+    public Panel(Application application, UIControl? component = null) : base(application)
     {
         Item.Value = component;
         Item.ValueChange.Subscribe(OnChildChange);
@@ -30,7 +30,7 @@ public class Panel : UISingleContainer
         return Size.Zero;
     }
 
-    private void OnChildChange(UIWidget? child)
+    private void OnChildChange(UIControl? child)
     {
         Children.Clear();
         if (child is not null) Children.Add(child);

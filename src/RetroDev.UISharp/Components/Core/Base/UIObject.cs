@@ -18,7 +18,7 @@ namespace RetroDev.UISharp.Components.Core.Base;
 /// <summary>
 /// The abstract class for all UI components (windows, buttons, etc.).
 /// </summary>
-public abstract class UIComponent
+public abstract class UIObject
 {
     /// <summary>
     /// Defines visibility rules.
@@ -44,7 +44,7 @@ public abstract class UIComponent
     // The visual children, part of the actual hierarchy.
     // TODO: use a UIComponentCollection<UINode> to manage bindings etc.
     internal int _level = 0;
-    private UIComponent? _focusedComponent;
+    private UIObject? _focusedComponent;
 
     // Event information
     private bool _hasMouse = false;
@@ -57,101 +57,101 @@ public abstract class UIComponent
     private Area _clipArea; // Absolute clipping area. Each pixel with absolute coordinates outside of the area are clipped.
 
     /// <summary>
-    /// Mouse button press inside <<see langword="this" /> <see cref="UIComponent"/>.
+    /// Mouse button press inside <<see langword="this" /> <see cref="UIObject"/>.
     /// </summary>
-    public event TypeSafeEventHandler<UIComponent, MouseEventArgs>? MousePress;
+    public event TypeSafeEventHandler<UIObject, MouseEventArgs>? MousePress;
 
     /// <summary>
-    /// Mouse button release inside <see langword="this" /> <see cref="UIComponent"/>.
+    /// Mouse button release inside <see langword="this" /> <see cref="UIObject"/>.
     /// </summary>
-    public event TypeSafeEventHandler<UIComponent, MouseEventArgs>? MouseRelease;
+    public event TypeSafeEventHandler<UIObject, MouseEventArgs>? MouseRelease;
 
     /// <summary>
     /// Mouse position changed inside <see cref="this"/> window.
     /// </summary>
-    public event TypeSafeEventHandler<UIComponent, MouseEventArgs>? MouseMove;
+    public event TypeSafeEventHandler<UIObject, MouseEventArgs>? MouseMove;
 
     /// <summary>
-    /// Mouse has entered <see langword="this" /> <see cref="UIComponent"/>.
+    /// Mouse has entered <see langword="this" /> <see cref="UIObject"/>.
     /// </summary>
-    public event TypeSafeEventHandler<UIComponent, EventArgs>? MouseEnter;
+    public event TypeSafeEventHandler<UIObject, EventArgs>? MouseEnter;
 
     /// <summary>
-    /// Mouse has left <see langword="this" /> <see cref="UIComponent"/>.
+    /// Mouse has left <see langword="this" /> <see cref="UIObject"/>.
     /// </summary>
-    public event TypeSafeEventHandler<UIComponent, EventArgs>? MouseLeave;
+    public event TypeSafeEventHandler<UIObject, EventArgs>? MouseLeave;
 
     /// <summary>
     /// The mouse drag has started because the left click button has been pressed on
-    /// <see langword="this" /> <see cref="UIComponent"/>.
+    /// <see langword="this" /> <see cref="UIObject"/>.
     /// </summary>
     /// <seealso cref="MouseDrag"/>.
-    public event TypeSafeEventHandler<UIComponent, MouseEventArgs>? MouseDragBegin;
+    public event TypeSafeEventHandler<UIObject, MouseEventArgs>? MouseDragBegin;
 
     /// <summary>
     /// The mouse is moving while the left button is being hold.
     /// Unlike the <see cref="MouseMove"/> event, this event is triggered even when the
-    /// mouse is outside <see langword="this" /> <see cref="UIComponent"/>.
+    /// mouse is outside <see langword="this" /> <see cref="UIObject"/>.
     /// </summary>
-    public event TypeSafeEventHandler<UIComponent, MouseEventArgs>? MouseDrag;
+    public event TypeSafeEventHandler<UIObject, MouseEventArgs>? MouseDrag;
 
     /// <summary>
     /// The mouse drag is over because the left mouse button has been released.
     /// </summary>
     /// <seealso cref="MouseDrag"/>.
-    public event TypeSafeEventHandler<UIComponent, EventArgs>? MouseDragEnd;
+    public event TypeSafeEventHandler<UIObject, EventArgs>? MouseDragEnd;
 
     /// <summary>
-    /// Key is pressed inside <see cref="this"/> <see cref="UIComponent"/>.
+    /// Key is pressed inside <see cref="this"/> <see cref="UIObject"/>.
     /// </summary>
-    public event TypeSafeEventHandler<UIComponent, KeyEventArgs>? KeyPress;
+    public event TypeSafeEventHandler<UIObject, KeyEventArgs>? KeyPress;
 
     /// <summary>
-    /// Key is released inside <see langword="this"/> <see cref="UIComponent"/>.
+    /// Key is released inside <see langword="this"/> <see cref="UIObject"/>.
     /// </summary>
-    public event TypeSafeEventHandler<UIComponent, KeyEventArgs>? KeyRelease;
+    public event TypeSafeEventHandler<UIObject, KeyEventArgs>? KeyRelease;
 
     /// <summary>
-    /// Text is inserted in <see langword="this"/> <see cref="UIComponent"/>.
+    /// Text is inserted in <see langword="this"/> <see cref="UIObject"/>.
     /// </summary>
-    public event TypeSafeEventHandler<UIComponent, TextInputEventArgs>? TextInput;
+    public event TypeSafeEventHandler<UIObject, TextInputEventArgs>? TextInput;
 
     /// <summary>
     /// Mouse wheel has been moved.
     /// </summary>
-    public event TypeSafeEventHandler<UIComponent, MouseWheelEventArgs>? MouseWheel;
+    public event TypeSafeEventHandler<UIObject, MouseWheelEventArgs>? MouseWheel;
 
     /// <summary>
-    /// Triggered when <see langword="this" /> <see cref="UIComponent"/> drawing area changes.
+    /// Triggered when <see langword="this" /> <see cref="UIObject"/> drawing area changes.
     /// </summary>
-    public event TypeSafeEventHandler<UIComponent, RenderingAreaEventArgs>? RenderingAreaChange;
+    public event TypeSafeEventHandler<UIObject, RenderingAreaEventArgs>? RenderingAreaChange;
 
     /// <summary>
     /// A frame need to be rendered. Use this event to render at the bottom of the children.
     /// </summary>
-    public event TypeSafeEventHandler<UIComponent, RenderingEventArgs>? RenderFrame;
+    public event TypeSafeEventHandler<UIObject, RenderingEventArgs>? RenderFrame;
 
     /// <summary>
-    /// The application in which <see langword="this"/> <see cref="UIComponent"/> runs.
+    /// The application in which <see langword="this"/> <see cref="UIObject"/> runs.
     /// </summary>
     public Application Application { get; }
 
     /// <summary>
-    /// The parent <see cref="UIComponent"/> containing <see langword="this" /> <see cref="UIComponent"/>.
+    /// The parent <see cref="UIObject"/> containing <see langword="this" /> <see cref="UIObject"/>.
     /// </summary>
-    public UIComponent? Parent { get; private set; }
+    public UIObject? Parent { get; private set; }
 
     /// <summary>
-    /// The drawing area of <see langword="this" /> <see cref="UIComponent"/>.
+    /// The drawing area of <see langword="this" /> <see cref="UIObject"/>.
     /// </summary>
     public Canvas Canvas { get; }
 
     /// <summary>
-    /// Gets the <see cref="UIRoot"/> that contain <see langword="this" /> <see cref="UIComponent"/>.
-    /// If <see langword="this" /> <see cref="UIComponent"/> has not been attached to a <see cref="UIRoot"/>,
+    /// Gets the <see cref="UISurface"/> that contain <see langword="this" /> <see cref="UIObject"/>.
+    /// If <see langword="this" /> <see cref="UIObject"/> has not been attached to a <see cref="UISurface"/>,
     /// the value is <see langword="null" />.
     /// </summary>
-    public UIRoot? Root => Parent?.Root ?? this as UIRoot;
+    public UISurface? Root => Parent?.Root ?? this as UISurface;
 
     /// <summary>
     /// The actual component size as it was after the latest rendering.
@@ -235,47 +235,47 @@ public abstract class UIComponent
     public UIProperty<Color> BackgroundColor { get; }
 
     /// <summary>
-    /// The <see cref="UIWidget"/> margin.
+    /// The <see cref="UIControl"/> margin.
     /// </summary>
     public MarginGroup Margin { get; }
 
     /// <summary>
-    /// The <see cref="UIWidget"/> padding.
+    /// The <see cref="UIControl"/> padding.
     /// </summary>
     public PaddingGroup Padding { get; }
 
     /// <summary>
-    /// The minimum width for <see langword="this" /> <see cref="UIComponent"/>.
+    /// The minimum width for <see langword="this" /> <see cref="UIObject"/>.
     /// This property takes priority over the <see cref="Width"/>, meaning that even if
     /// <see cref="Width"/> is not <see cref="PixelUnit.Auto"/> the minimum width will still be <see cref="MinimumWidth"/>.
     /// </summary>
     public UIProperty<PixelUnit> MinimumWidth { get; }
 
     /// <summary>
-    /// The minimum height for <see langword="this" /> <see cref="UIComponent"/>.
+    /// The minimum height for <see langword="this" /> <see cref="UIObject"/>.
     /// This property takes priority over the <see cref="Height"/>, meaning that even if
     /// <see cref="Height"/> is not <see cref="PixelUnit.Auto"/> the minimum height will still be <see cref="MinimumHeight"/>.
     /// </summary>
     public UIProperty<PixelUnit> MinimumHeight { get; }
 
     /// <summary>
-    /// The maximum width for <see langword="this" /> <see cref="UIComponent"/>.
+    /// The maximum width for <see langword="this" /> <see cref="UIObject"/>.
     /// This property takes priority over the <see cref="Width"/>, meaning that even if
     /// <see cref="Width"/> is not <see cref="PixelUnit.Auto"/> the maximum width will still be <see cref="MaximumWidth"/>.
     /// </summary>
     public UIProperty<PixelUnit> MaximumWidth { get; }
 
     /// <summary>
-    /// The maximum height for <see langword="this" /> <see cref="UIComponent"/>.
+    /// The maximum height for <see langword="this" /> <see cref="UIObject"/>.
     /// This property takes priority over the <see cref="Height"/>, meaning that even if
     /// <see cref="Height"/> is not <see cref="PixelUnit.Auto"/> the maximum height will still be <see cref="MaximumHeight"/>.
     /// </summary>
     public UIProperty<PixelUnit> MaximumHeight { get; }
 
     /// <summary>
-    /// The list of children of <see langword="this" /> <see cref="UIComponent"/>.
+    /// The list of children of <see langword="this" /> <see cref="UIObject"/>.
     /// </summary>
-    protected UIPropertyCollection<UIWidget> Children { get; }
+    protected UIPropertyCollection<UIControl> Children { get; }
 
     /// <summary>
     /// Creates a new component.
@@ -287,7 +287,7 @@ public abstract class UIComponent
     /// <param name="autoHeight">How to automatically determine this component height.</param>
     /// <param name="horizontalAlignment">The component horizontal alignment (relative to its <see cref="Parent"/>).</param>
     /// <param name="verticalAlignment">The component vertical alignment (relative to its <see cref="Parent"/>).</param>
-    protected UIComponent(Application application,
+    protected UIObject(Application application,
                           ComponentVisibility visibility = ComponentVisibility.Visible,
                           bool isFocusable = true,
                           IAutoSize? autoWidth = null,
@@ -325,7 +325,7 @@ public abstract class UIComponent
         MaximumHeight = new UIProperty<PixelUnit>(this, PixelUnit.Auto);
 
         Canvas = new Canvas(this);
-        Children = new UIPropertyCollection<UIWidget>(application, lockChanges: true);
+        Children = new UIPropertyCollection<UIControl>(application, lockChanges: true);
         Children.ValueAdd.Subscribe(OnChildAdd);
         Children.ValueRemove.Subscribe(OnChildRemove);
 
@@ -342,7 +342,7 @@ public abstract class UIComponent
     }
 
     /// <summary>
-    /// Invalidates <see langword="this" /> <see cref="UIComponent"/>. An invalidate component is
+    /// Invalidates <see langword="this" /> <see cref="UIObject"/>. An invalidate component is
     /// a components that needs to be redrawn.
     /// Invalidation is done automatically whenever a <see cref="UIProperty{TComponent, TValue}"/> changes,
     /// but it is possible to manually invalidate if needed.
@@ -353,7 +353,7 @@ public abstract class UIComponent
     }
 
     /// <summary>
-    /// Marks <see langword="this" /> <see cref="UIComponent"/> as no longer invalidated.
+    /// Marks <see langword="this" /> <see cref="UIObject"/> as no longer invalidated.
     /// It is usually not necessary to cancel invalidation because it is done automatically by the framework,
     /// but it is possible to manually override the behavior if needed.
     /// </summary>
@@ -382,12 +382,12 @@ public abstract class UIComponent
     }
 
     /// <summary>
-    /// Captures the position of <see langword="this" /> <see cref="UIComponent"/> during the latest
+    /// Captures the position of <see langword="this" /> <see cref="UIObject"/> during the latest
     /// frame rendering or the position of the next frame rendering is this is called inside <see cref="Application.SecondPassMeasure"/> and
     /// writes the values into <see cref="X"/> and <see cref="Y"/>.
     /// </summary>
     /// <remarks>
-    /// This method is useful when using drag-and-drop, because that usually implies that the <see cref="UIComponent"/> position is incremented or decremented as the object is dragged.
+    /// This method is useful when using drag-and-drop, because that usually implies that the <see cref="UIObject"/> position is incremented or decremented as the object is dragged.
     /// Doing that when <see cref="X"/> and <see cref="Y"/> are set to <see cref="PixelUnit.Auto"/> would be impossible, so the first step is to capture the actual positions and then using 
     /// manual positioning.
     /// </remarks>
@@ -399,12 +399,12 @@ public abstract class UIComponent
     }
 
     /// <summary>
-    /// Captures the size of <see langword="this" /> <see cref="UIComponent"/> during the latest
+    /// Captures the size of <see langword="this" /> <see cref="UIObject"/> during the latest
     /// frame rendering or the position of the next frame rendering is this is called inside <see cref="Application.SecondPassMeasure"/> and
     /// writes the values into <see cref="Width"/> and <see cref="Height"/>.
     /// </summary>
     /// <remarks>
-    /// This method is useful when using drag-and-drop, because that usually implies that the <see cref="UIComponent"/> size is incremented or decremented as the object is dragged.
+    /// This method is useful when using drag-and-drop, because that usually implies that the <see cref="UIObject"/> size is incremented or decremented as the object is dragged.
     /// Doing that when <see cref="Width"/> and <see cref="Height"/> are set to <see cref="PixelUnit.Auto"/> would be impossible, so the first step is to capture the actual positions and then using 
     /// manual size.
     /// </remarks>
@@ -589,13 +589,13 @@ public abstract class UIComponent
     /// <returns>The <see cref="UIProperty{TComponent, TValue}"/> bound to the theme color with the given <paramref name="id"/>.</returns>
     /// <exception cref="ArgumentException">If a color with the given <paramref name="id"/> does not exist in the current theme.</exception>
     /// <typeparam name="TComponent">The component type.</typeparam>
-    protected UIProperty<Color> CreateNewColorPropertyFor<TComponent>(string id) where TComponent : UIComponent
+    protected UIProperty<Color> CreateNewColorPropertyFor<TComponent>(string id) where TComponent : UIObject
     {
         var themeProperty = Application.ThemeManager.GetColorProperty(id);
         return new UIProperty<Color>(this, themeProperty, BindingType.SourceToDestination);
     }
 
-    internal IEnumerable<UIComponent> GetComponentTreeNodesDepthFirstSearch() =>
+    internal IEnumerable<UIObject> GetComponentTreeNodesDepthFirstSearch() =>
         Children.Union(Children.SelectMany(c => c.GetComponentTreeNodesDepthFirstSearch()));
 
     internal void OnRenderFrame()
@@ -719,7 +719,7 @@ public abstract class UIComponent
     }
 
     // Ensure that only one child component has focus.
-    private void RequestFocusFor(UIComponent component)
+    private void RequestFocusFor(UIObject component)
     {
         if (Root == null) throw new InvalidOperationException("Cannot request focus for a component not attached to a window");
 

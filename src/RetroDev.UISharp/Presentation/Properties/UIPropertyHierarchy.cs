@@ -13,7 +13,7 @@ public class UIPropertyHierarchy<TValue>
 {
     private IDisposable? _flatBinder;
     internal readonly Application? _application;
-    internal readonly UIComponent? _component;
+    internal readonly UIObject? _component;
 
     /// <summary>
     /// The node direct children.
@@ -37,7 +37,7 @@ public class UIPropertyHierarchy<TValue>
     /// </summary>
     /// <param name="component">The component owning <see langword="this" /> node.</param>
     /// <param name="lockSetter ">Whether it is only possible to set <see langword="this" /> <see cref="UINode{TValue}"/> during event handling.</param>
-    public UIPropertyHierarchy(UIComponent component, bool lockSetter = true)
+    public UIPropertyHierarchy(UIObject component, bool lockSetter = true)
     {
         _component = component;
         Children = new UIPropertyCollection<UITreeNode<TValue>>(component, lockSetter);

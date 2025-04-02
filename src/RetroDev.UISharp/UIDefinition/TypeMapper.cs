@@ -32,7 +32,7 @@ public class TypeMapper
     }
 
     /// <summary>
-    /// Checks whether a type derived from <see cref="UIComponent"/> with the given <paramref name="name"/> exists in the loaded assemblies.
+    /// Checks whether a type derived from <see cref="UIObject"/> with the given <paramref name="name"/> exists in the loaded assemblies.
     /// </summary>
     /// <param name="name">The name of the type to find. It is case-insensitive and it can be either <see cref="Type.Name"/> or <see cref="Type.FullName"/>.</param>
     /// <returns><see langword="true" /> if the type exists, otherwise <see langword="false" />.</returns>
@@ -40,7 +40,7 @@ public class TypeMapper
         GetUIComponent(name) is not null;
 
     /// <summary>
-    /// Gets the <see cref="Type"/> derived from <see cref="UIComponent"/> with the given <paramref name="name"/> if such component exists in the loaded assembiles.
+    /// Gets the <see cref="Type"/> derived from <see cref="UIObject"/> with the given <paramref name="name"/> if such component exists in the loaded assembiles.
     /// </summary>
     /// <param name="name">The name of the type to find. It is case-insensitive and it can be either <see cref="Type.Name"/> or <see cref="Type.FullName"/>.</param>
     /// <returns>The found type if any, otherwise <see langword="null" /></returns>
@@ -58,7 +58,7 @@ public class TypeMapper
     }
 
     /// <summary>
-    /// Gets the constructor needed to create a new instance of a <see cref="UIComponent"/> of the given <paramref name="componentType"/>.
+    /// Gets the constructor needed to create a new instance of a <see cref="UIObject"/> of the given <paramref name="componentType"/>.
     /// </summary>
     /// <param name="componentType">The type of the constructor to search for.</param>
     /// <returns>The found constructor.</returns>
@@ -78,7 +78,7 @@ public class TypeMapper
         }
 
         var parameters = constructor.GetParameters();
-        if (parameters.TakeLast(parameters.Count() - 1).Any(p => !p.IsOptional && !p.ParameterType.IsAssignableTo(typeof(UIComponent))))
+        if (parameters.TakeLast(parameters.Count() - 1).Any(p => !p.IsOptional && !p.ParameterType.IsAssignableTo(typeof(UIObject))))
         {
             throw new ArgumentException($"Constructor for {componentType.FullName} must have all optional parameters except for the first parameter which must mandatory and of type Application, and for possibly parameters derived from UIComponent");
         }
@@ -89,27 +89,27 @@ public class TypeMapper
     /// <summary>
     /// Finds an instance of <see cref="UIProperty{TParent, TValue}"/> with the given <paramref name="name"/> in the given <see cref="Type"/>.
     /// </summary>
-    /// <param name="component">The component type. It must be a type assignable to <see cref="UIComponent"/>.</param>
+    /// <param name="component">The component type. It must be a type assignable to <see cref="UIObject"/>.</param>
     /// <param name="name">The name of the property to look for.</param>
     /// <returns>The property reflection information.</returns>
     public PropertyInfo? GetBindableProperty(Type component, string name)
     {
-        if (!component.IsAssignableTo(typeof(UIComponent))) throw new ArgumentException($"Component type {component.FullName} is not assignable to {nameof(UIComponent)}");
+        if (!component.IsAssignableTo(typeof(UIObject))) throw new ArgumentException($"Component type {component.FullName} is not assignable to {nameof(UIObject)}");
         if (!_uiComponents.ContainsKey(component)) throw new ArgumentException($"Cannot find UIComponent with name {name}");
         return _uiComponents[component].Where(p => p.Name.ToLower() == name.ToLower()).FirstOrDefault();
     }
 
     /// <summary>
-    /// Gets the list of all types derived from <see cref="UIComponent"/>.
+    /// Gets the list of all types derived from <see cref="UIObject"/>.
     /// </summary>
-    /// <returns>The list of all types derived from <see cref="UIComponent"/>.</returns>
+    /// <returns>The list of all types derived from <see cref="UIObject"/>.</returns>
     public IEnumerable<Type> GetComponentTypes() =>
         _uiComponents.Keys;
 
     /// <summary>
     /// Gets the list of all proporties (derived from <see cref="UIProperty{TParent, TValue}") in the given component <paramref name="type"/>.
     /// </summary>
-    /// <param name="type">The UI component type for which to get the properties. It must be derived from <see cref="UIComponent"/>.</param>
+    /// <param name="type">The UI component type for which to get the properties. It must be derived from <see cref="UIObject"/>.</param>
     /// <returns>The list of all found property reflection infromation.</returns>
     public IEnumerable<PropertyInfo> GetProperties(Type type) =>
         _uiComponents[type];
@@ -123,7 +123,7 @@ public class TypeMapper
     private Dictionary<Type, List<PropertyInfo>> LoadUIComponents()
     {
         var result = new Dictionary<Type, List<PropertyInfo>>();
-        var uiComponentTypes = GetDerivedTypes<UIComponent>(_allTypes);
+        var uiComponentTypes = GetDerivedTypes<UIObject>(_allTypes);
 
         foreach (var type in uiComponentTypes)
         {

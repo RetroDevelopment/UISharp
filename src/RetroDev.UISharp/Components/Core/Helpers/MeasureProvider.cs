@@ -3,7 +3,7 @@
 namespace RetroDev.UISharp.Components.Core.Helpers;
 
 /// <summary>
-/// Class that performs optimized measurement of <see cref="UIComponent"/> rendering areas, meaning that 
+/// Class that performs optimized measurement of <see cref="UIObject"/> rendering areas, meaning that 
 /// where only invalidated elements will be measured.
 /// </summary>
 /// <param name="invalidator"></param>
@@ -37,7 +37,7 @@ public class MeasureProvider(Invalidator invalidator)
         if (_invalidator.TreeDepth == 0) return;
 
         var level = _invalidator.TreeDepth - 1;
-        var processQueue = new UniqueQueue<UIComponent>();
+        var processQueue = new UniqueQueue<UIObject>();
         _invalidator.AddInvalidatedComponentsToQueue(level, processQueue);
 
         while (level >= 0)
@@ -66,7 +66,7 @@ public class MeasureProvider(Invalidator invalidator)
     public void RecomputeDrawingAreas()
     {
         var level = 0;
-        var processQueue = new UniqueQueue<UIComponent>();
+        var processQueue = new UniqueQueue<UIObject>();
 
         while (level != -1)
         {
@@ -82,10 +82,10 @@ public class MeasureProvider(Invalidator invalidator)
         }
     }
 
-    private bool ShouldChangeLevel(UniqueQueue<UIComponent> processQueue, int level) =>
+    private bool ShouldChangeLevel(UniqueQueue<UIObject> processQueue, int level) =>
         processQueue.Empty || processQueue.Peek()._level != level;
 
-    private int ChangeLevel(UniqueQueue<UIComponent> processQueue, int level)
+    private int ChangeLevel(UniqueQueue<UIObject> processQueue, int level)
     {
         if (level == 0) return -1;
 

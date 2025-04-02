@@ -6,10 +6,10 @@ using RetroDev.UISharp.Windows;
 namespace RetroDev.UISharp.Components.Core.Helpers;
 
 /// <summary>
-/// Iterates over a <see cref="UIComponent"/> hierarchy to call <see cref="UIComponent.OnRenderFrame(RenderingEventArgs)"/>
+/// Iterates over a <see cref="UIObject"/> hierarchy to call <see cref="UIObject.OnRenderFrame(RenderingEventArgs)"/>
 /// for each component to redraw, but it only draws elements that need to be redrawn.
 /// </summary>
-/// <param name="invalidator">The invalidator that contains the list of invalidated <see cref="UIComponent"/> to render.</param>
+/// <param name="invalidator">The invalidator that contains the list of invalidated <see cref="UIObject"/> to render.</param>
 public class RenderProvider(Invalidator invalidator)
 {
     private readonly Invalidator _invalidator = invalidator;
@@ -19,7 +19,7 @@ public class RenderProvider(Invalidator invalidator)
     /// renders components that need a redraw.
     /// </summary>
     /// <param name="root">The root component to render, usually a <see cref="Window"/>.</param>
-    public void Render(UIComponent root, IRenderingEngine renderingEngine)
+    public void Render(UIObject root, IRenderingEngine renderingEngine)
     {
         if (!_invalidator.HasInvalidatedNodes) return;
 

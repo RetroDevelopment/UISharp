@@ -34,7 +34,7 @@ public class PaddingGroup : UICompositeProperty<PixelUnit>
     /// </summary>
     /// <param name="application">The application in which the given <paramref name="parent"/> component is running.</param>
     /// <param name="parent">The component owning <see langword="this" /> <see cref="PaddingGroup"/>.</param>
-    public PaddingGroup(Application application, UIComponent parent) : base(application)
+    public PaddingGroup(Application application, UIObject parent) : base(application)
     {
         Top = new UIProperty<PixelUnit>(parent, PixelUnit.Auto);
         Right = new UIProperty<PixelUnit>(parent, PixelUnit.Auto);

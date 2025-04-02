@@ -4,10 +4,10 @@ namespace RetroDev.UISharp.Components.Core.Helpers;
 
 internal class GlobalEventInformation
 {
-    private List<UIComponent> _draggingComponents = [];
-    public IEnumerable<UIComponent> DraggingComponents => _draggingComponents;
+    private List<UIObject> _draggingComponents = [];
+    public IEnumerable<UIObject> DraggingComponents => _draggingComponents;
 
-    public void MarkComponentAsDragged(UIComponent component)
+    public void MarkComponentAsDragged(UIObject component)
     {
         _draggingComponents.Add(component);
     }
