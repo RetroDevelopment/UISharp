@@ -4,7 +4,7 @@ using RetroDev.UISharp.Components.Core.AutoArea;
 namespace RetroDev.UISharp.Components.Core.Base;
 
 /// <summary>
-/// Represents a widget that is part of the UI tree but it is not a root.
+/// Represents a control that is part of the UI tree but it is not a root.
 /// For example, it can be a label, button or a layout, but not a window (or a <see cref="UISurface"/>).
 /// </summary>
 /// <remarks>

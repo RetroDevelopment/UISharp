@@ -151,7 +151,7 @@ public abstract class UIObject
     /// If <see langword="this" /> <see cref="UIObject"/> has not been attached to a <see cref="UISurface"/>,
     /// the value is <see langword="null" />.
     /// </summary>
-    public UISurface? Root => Parent?.Root ?? this as UISurface;
+    public UISurface? Surface => Parent?.Surface ?? this as UISurface;
 
     /// <summary>
     /// The actual component size as it was after the latest rendering.
@@ -278,6 +278,11 @@ public abstract class UIObject
     protected UIPropertyCollection<UIControl> Children { get; }
 
     /// <summary>
+    /// The list of overlays attached to <see langword="this" /> <see cref="UIObject"/>.
+    /// </summary>
+    protected UIPropertyCollection<UIOverlay> Overlays { get; }
+
+    /// <summary>
     /// Creates a new component.
     /// </summary>
     /// <param name="application">The application owning this component.</param>
@@ -326,8 +331,12 @@ public abstract class UIObject
 
         Canvas = new Canvas(this);
         Children = new UIPropertyCollection<UIControl>(application, lockChanges: true);
+        Overlays = new UIPropertyCollection<UIOverlay>(application, lockChanges: true);
+
         Children.ValueAdd.Subscribe(OnChildAdd);
         Children.ValueRemove.Subscribe(OnChildRemove);
+        Overlays.ValueAdd.Subscribe(OnOverlayAdd);
+        Overlays.ValueRemove.Subscribe(OnOverlayRemove);
 
         _wrapSize = Size.Zero;
         _relativeDrawingArea = Area.Empty;
@@ -349,7 +358,7 @@ public abstract class UIObject
     /// </summary>
     public void Invalidate()
     {
-        Root?.Invalidator?.Invalidate(this);
+        Surface?.Invalidator?.Invalidate(this);
     }
 
     /// <summary>
@@ -359,7 +368,7 @@ public abstract class UIObject
     /// </summary>
     public void CancelInvalidation()
     {
-        Root?.Invalidator?.CancelInvalidation(this);
+        Surface?.Invalidator?.CancelInvalidation(this);
     }
 
     /// <summary>
@@ -455,7 +464,7 @@ public abstract class UIObject
         if (mouseEventArgs.Button == MouseButton.Left)
         {
             MouseDragBegin?.Invoke(this, mouseEventArgs);
-            Root?.GlobalEventInformation.MarkComponentAsDragged(this);
+            Surface?.GlobalEventInformation.MarkComponentAsDragged(this);
         }
 
         foreach (var child in Children.Reverse())
@@ -721,13 +730,13 @@ public abstract class UIObject
     // Ensure that only one child component has focus.
     private void RequestFocusFor(UIObject component)
     {
-        if (Root == null) throw new InvalidOperationException("Cannot request focus for a component not attached to a window");
+        if (Surface == null) throw new InvalidOperationException("Cannot request focus for a component not attached to a window");
 
         // Only the root component can manage focus, because only one object can be focusable at a time in a window.
         // TODO: When implementing focus groups, just change the logic here to not delegate this to the parent.
         if (Parent is not null)
         {
-            Root?.RequestFocusFor(component);
+            Surface?.RequestFocusFor(component);
             return;
         }
 
@@ -797,12 +806,63 @@ public abstract class UIObject
         return result;
     }
 
+    private void OnChildAdd(int index)
+    {
+        Application.LifeCycle.ThrowIfPropertyCannotBeSet();
+        var component = Children[index];
+        if (Surface is not null)
+        {
+            Surface.Invalidator.NeedZIndexUpdate = true;
+        }
+
+        component.Parent?.Children.Remove(component);
+        component.Parent = this;
+        component.RecomputeLevel();
+        component.InvalidateAll();
+        component.AttachCanvas();
+        component.AttachOverlays();
+        Invalidate();
+        UpdateVisibility();
+    }
+
+    private void OnChildRemove(int index)
+    {
+        Application.LifeCycle.ThrowIfPropertyCannotBeSet();
+        var component = Children[index];
+        if (component.Parent != this) throw new InvalidOperationException($"Cannot remove child at index {index}: Parent is not set to this component.");
+        if (Surface is not null)
+        {
+            foreach (var overlay in component.Overlays) Surface.DetachOverlay(overlay);
+            Surface.Invalidator.NeedZIndexUpdate = true;
+        }
+
+        Invalidate();
+        component.Cleanup();
+        component.Parent = null;
+    }
+
+    private void OnOverlayAdd(int index)
+    {
+        Application.LifeCycle.ThrowIfPropertyCannotBeSet();
+        var overlay = Overlays[index];
+        overlay.AttachOwner(this);
+        Surface?.AttachOverlay(overlay);
+    }
+
+    private void OnOverlayRemove(int index)
+    {
+        Application.LifeCycle.ThrowIfPropertyCannotBeSet();
+        var overlay = Overlays[index];
+        overlay.DetachOwner(this);
+        Surface?.DetachOverlay(overlay);
+    }
+
     // Recompute the level of this component in the UI hierarchy tree.
     private void RecomputeLevel()
     {
         CancelInvalidation(); // Invalidation is based on _level, which will be wrong if kept where it is. A re-invalidation will be necessary.
 
-        if (Parent is not null && Root is not null)
+        if (Parent is not null && Surface is not null)
         {
             _level = Parent._level + 1;
         }
@@ -816,29 +876,31 @@ public abstract class UIObject
 
     private void InvalidateAll()
     {
-        if (Root == null) return;
+        if (Surface == null) return;
         Invalidate();
         foreach (var child in Children) child.InvalidateAll();
     }
 
     private void CancelInvalidationAll()
     {
-        if (Root == null) return;
+        if (Surface == null) return;
         CancelInvalidation();
         foreach (var child in Children) child.CancelInvalidationAll();
     }
 
     private void AttachCanvas()
     {
-        var renderingEngine = Root?.RenderingEngine;
-        if (renderingEngine is not null)
-        {
-            Canvas.Attach(renderingEngine);
-            foreach (var child in Children)
-            {
-                child.AttachCanvas();
-            }
-        }
+        var renderingEngine = Surface?.RenderingEngine;
+        if (renderingEngine is null) return;
+        Canvas.Attach(renderingEngine);
+        foreach (var child in Children) child.AttachCanvas();
+    }
+
+    private void AttachOverlays()
+    {
+        if (Surface is null) return;
+        foreach (var overlay in Overlays) Surface.AttachOverlay(overlay);
+        foreach (var child in Children) child.AttachOverlays();
     }
 
     private void Cleanup()
@@ -878,32 +940,4 @@ public abstract class UIObject
 
     private bool ShouldPropagateMouseEvent(Point mouseAbsoluteLocation) =>
         mouseAbsoluteLocation.IsWithin(_absoluteDrawingArea) && Visibility.Value == ComponentVisibility.Visible && Enabled.Value;
-
-    private void OnChildAdd(int index)
-    {
-        var component = Children[index];
-        Application.LifeCycle.ThrowIfPropertyCannotBeSet();
-        if (Root is not null) Root.Invalidator.NeedZIndexUpdate = true;
-        component.Parent?.Children.Remove(component);
-        component.Parent = this;
-        component.RecomputeLevel();
-        component.InvalidateAll();
-        component.AttachCanvas();
-        Invalidate();
-        UpdateVisibility();
-    }
-
-    private void OnChildRemove(int index)
-    {
-        var component = Children[index];
-        Application.LifeCycle.ThrowIfPropertyCannotBeSet();
-        if (Root is not null) Root.Invalidator.NeedZIndexUpdate = true;
-        Invalidate();
-
-        if (component.Parent == this)
-        {
-            component.Cleanup();
-            component.Parent = null;
-        }
-    }
 }

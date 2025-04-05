@@ -14,6 +14,8 @@ namespace RetroDev.UISharp.Components.Core.Base;
 /// </summary>
 public abstract class UISurface : UIContainer
 {
+    private int? _overlayStartIndex = null;
+
     /// <summary>
     /// The object that manages <see cref="UIObject"/> invalidation for the component tree rooted by <see langword="this" />
     /// component.
@@ -71,7 +73,8 @@ public abstract class UISurface : UIContainer
         RenderProvider = new RenderProvider(Invalidator);
         RenderingEngine = renderingEngine ?? new OpenGLRenderingEngine(application.Dispatcher, application.Logger, new SDLOpenGLRenderingContext(application.Logger));
 
-        Children.BindTwoWays(Items);
+        Items.ValueAdd.Subscribe(OnItemAdd);
+        Items.ValueRemove.Subscribe(OnItemRemove);
 
         MouseMove += UIRoot_MouseMove;
         MouseRelease += UIRoot_MouseRelease;
@@ -83,6 +86,28 @@ public abstract class UISurface : UIContainer
         {
             UpdateZIndices(1);
             Invalidator.NeedZIndexUpdate = false;
+        }
+    }
+
+    internal void AttachOverlay(UIOverlay overlay)
+    {
+        Children.Add(overlay.Control);
+
+        if (_overlayStartIndex is null)
+        {
+            _overlayStartIndex = Children.Count - 1;
+        }
+    }
+
+    internal void DetachOverlay(UIOverlay overlay)
+    {
+        var overlayIndex = Children.IndexOf(overlay.Control);
+        if (overlayIndex == -1) throw new ArgumentException($"Failed to detach overlay {overlay}: cannot detach overlays that are not attached");
+        Children.Remove(overlay.Control);
+        if (overlayIndex == _overlayStartIndex)
+        {
+            if (overlayIndex + 1 < Children.Count) _overlayStartIndex++;
+            else _overlayStartIndex = null;
         }
     }
 
@@ -105,5 +130,16 @@ public abstract class UISurface : UIContainer
 
             GlobalEventInformation.ClearDraggedComponents();
         }
+    }
+
+    private void OnItemAdd(int index)
+    {
+        var item = Items[index];
+        Children.Insert(index, item);
+    }
+
+    private void OnItemRemove(int index)
+    {
+        Children.RemoveAt(index);
     }
 }

@@ -52,9 +52,10 @@ DO NOT add these statements in the PR messages or commit messages because they c
 
 # Concepts to explain (glossary)
 - Component children
-  - Canvas (list of suqres)
-  - Children (private children directly mapped to UI tree)
-  - Items or Item (logical chilren or child for layout etc.)
+  - Canvas (list of shapes)
+  - Children (private children directly mapped to UI tree). When deriving a UIObject to not mess up with children unless necessary.
+  - Items or Item (logical children or child for layout etc.)
+  - Overlays (rendered after Children, they do not contribute to layout calculation so they are separated from Children)
 - Binding
   - Two ways, source to destination, destination to source
   - Binding source, binding destination
@@ -78,4 +79,4 @@ UIObject -> base class for all UI components
      |- UISingleContainer -> controls with one Item
      |- UIContainer -> controls with Items property to add children (e.g. layouts and collections)
      |- UIHierarchicalContainer -> control with hierarchy Items
-   |- UIOverlay -> base class for all overlays (popup, tooltip, etc.) and cannot be inserted as Items in windows or layout
+UIOverlay -> base class for all overlays (popup, tooltip, etc.) and cannot be inserted as Items in windows or layout

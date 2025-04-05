@@ -191,7 +191,7 @@ public class EditBox : UIControl
     /// <inheritdoc />
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize)
     {
-        if (Root == null) return Size.Zero;
+        if (Surface == null) return Size.Zero;
         var height = _inputText.ComputeTextMaximumHeight();
         var estimatedNumberOfCharacters = 10;
         return new Size(height * estimatedNumberOfCharacters, height);
