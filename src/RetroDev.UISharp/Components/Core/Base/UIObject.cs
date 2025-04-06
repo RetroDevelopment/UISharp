@@ -280,7 +280,7 @@ public abstract class UIObject
     /// <summary>
     /// The list of overlays attached to <see langword="this" /> <see cref="UIObject"/>.
     /// </summary>
-    protected UIPropertyCollection<UIOverlay> Overlays { get; }
+    protected internal UIPropertyCollection<UIOverlay> Overlays { get; }
 
     /// <summary>
     /// Creates a new component.

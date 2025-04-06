@@ -20,5 +20,6 @@
             <button text="=" />
             <button text="+" />
         </gridlayout>
+        <Dropdown  />
     </verticallayout>
 </window>

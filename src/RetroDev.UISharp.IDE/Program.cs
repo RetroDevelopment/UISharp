@@ -38,7 +38,7 @@ internal class Program
     {
         using var application = new Application();
         application.Logger.Verbosity = Verbosity.Verbose;
-        application.ApplicationStarted += (_, _) => LoadMain(application);
+        application.ApplicationStarted += (_, _) => LoadTest(application);
         application.Run();
     }
 
@@ -50,6 +50,14 @@ internal class Program
     private static void LoadTest(Application application)
     {
         var window = new Window(application);
+        var drop = new DropDown(application);
+        var data = new UIPropertyCollection<string>(application);
+        data.AddRange(["First", "Second", "Third"]);
+        drop.Items.BindSourceToDestination(data, x => new Label(application, x));
+        drop.SelectedIndex.Value = 0;
+        window.Items.Add(drop);
+        window.Width.Value = 200;
+        window.Height.Value = 200;
         window.Show();
     }
 }

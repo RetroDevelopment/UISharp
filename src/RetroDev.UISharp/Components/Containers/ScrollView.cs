@@ -140,7 +140,7 @@ public class ScrollView : UISingleContainer
     {
         var child = Item.Value;
 
-        if (child == null)
+        if (child is null)
         {
             _horizontalScrollBar.Visibility.Value = ComponentVisibility.Hidden;
             _verticalScrollBar.Visibility.Value = ComponentVisibility.Hidden;

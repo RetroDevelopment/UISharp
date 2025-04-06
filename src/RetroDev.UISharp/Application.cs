@@ -93,7 +93,7 @@ public class Application : IDisposable
     /// <summary>
     /// Manages the UI thread and dispatches UI operations from other thread to the UI thread.
     /// </summary>
-    public ThreadDispatcher Dispatcher { get; } = new();
+    public ThreadDispatcher Dispatcher { get; }
 
     /// <summary>
     /// Whether <see langword="this" /> <see cref="Application"/> is ready to run and receive events.
@@ -115,6 +115,7 @@ public class Application : IDisposable
         WindowManager = windowManager ?? new SDLWindowManager(Dispatcher, Logger);
         ResourceManager = resourceManager ?? new EmbeddedResourceManager();
         ThemeManager = new ThemeManager(this, ResourceManager.Themes);
+        Dispatcher = new ThreadDispatcher(LifeCycle);
         LifeCycle.CurrentState = LifeCycle.State.INIT;
         var font = new Font(this, "LiberationSans", 16, FontType.Regular);
         DefaultFont = new UIProperty<Font>(this, font, canReceiveBindingUpdates: false);
