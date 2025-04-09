@@ -243,7 +243,7 @@ public class Window : UISurface
     /// <summary>
     /// Prepares the window for the second pass layout.
     /// </summary>
-    public void PrepareSecondPass() => MeasureProvider.PrepareSecondPass();
+    public void Prepare(bool allPasses) => MeasureProvider.Prepare(allPasses);
 
     /// <summary>
     /// Shows <see langword="this" /> <see cref="Window"/>.
@@ -313,9 +313,10 @@ public class Window : UISurface
 
     internal void Render()
     {
-        Invalidator.Swap();
+        Invalidator.SelectCurrentInvalidatedItems(allPasses: true);
         var renderingEngine = RenderingEngine;
         RenderProvider.Render(this, renderingEngine);
+        Invalidator.ResetAll();
     }
 
     internal void OnRenderDone()

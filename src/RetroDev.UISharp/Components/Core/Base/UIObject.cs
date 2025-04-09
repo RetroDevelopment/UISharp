@@ -669,8 +669,7 @@ public abstract class UIObject
             throw new InvalidOperationException($"{nameof(RepositionChildren)} must return the same number of elements as the number of children or be empty: {childrenAreas.Count()} provided but {Children.Count} exist");
         }
 
-        // If rendering area has changed, ensure the component is invalidated.
-        Invalidate();
+        if (renderingAreaChanged) Invalidate();
 
         if (childrenAreas.Count != 0)
         {
@@ -690,7 +689,10 @@ public abstract class UIObject
         }
 
         Validate();
-        RenderingAreaChange?.Invoke(this, new RenderingAreaEventArgs(_relativeDrawingArea));
+        if (renderingAreaChanged)
+        {
+            RenderingAreaChange?.Invoke(this, new RenderingAreaEventArgs(_relativeDrawingArea));
+        }
     }
 
     internal MouseEventArgs CreateEventWithRelativeLocation(MouseEventArgs mouseEventArgs) =>

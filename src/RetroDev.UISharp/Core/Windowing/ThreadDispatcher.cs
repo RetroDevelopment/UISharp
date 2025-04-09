@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using RetroDev.UISharp.Core.Exceptions;
+using RetroDev.UISharp.Core.Windowing.Events;
 
 namespace RetroDev.UISharp.Core.Windowing;
 
@@ -18,9 +19,14 @@ public class ThreadDispatcher
     private readonly LifeCycle _lifeCycle;
 
     /// <summary>
+    /// Triggered when schedule a callback calling <see cref="Schedule(DispatchCallback)"/> or <see cref="RunOnUIThread(DispatchCallback)"/>.
+    /// </summary>
+    public event TypeSafeEventHandler<ThreadDispatcher, EventArgs>? CallbackScheduled;
+
+    /// <summary>
     /// Creates a new <see cref="ThreadDispatcher"/>.
     /// </summary>
-    /// <param name="lifeCycle">The application lifecycle.</param>
+    /// <param name="lifeCycle">The application life-cycle.</param>
     /// <exception cref="InvalidUIThreadException">If the dispatcher is created on a thread pool thread.</exception>
     public ThreadDispatcher(LifeCycle lifeCycle)
     {
@@ -62,6 +68,7 @@ public class ThreadDispatcher
         if (Thread.CurrentThread != _uiThread || _lifeCycle.CurrentState != LifeCycle.State.EVENT_POLL)
         {
             _dispatcherQueue.Enqueue(callback);
+            CallbackScheduled?.Invoke(this, EventArgs.Empty);
         }
         else
         {
@@ -77,13 +84,16 @@ public class ThreadDispatcher
         Schedule(callback);
     }
 
-    internal void ProcessEventQueue()
+    internal bool ProcessEventQueue()
     {
         ThrowIfNotOnUIThread();
+        if (_dispatcherQueue.IsEmpty) return false;
 
         while (_dispatcherQueue.TryDequeue(out var callback))
         {
             callback();
         }
+
+        return !_dispatcherQueue.IsEmpty;
     }
 }

@@ -67,8 +67,6 @@ public class ScrollView : UISingleContainer
         Item.ValueChange.Subscribe(OnChildChange);
 
         MouseWheel += ScrollView_MouseWheel;
-        application.SecondPassMeasure += Application_SecondPassMeasure;
-        application.ApplicationQuit += Application_ApplicationQuit;
     }
 
     /// <inheritdoc />
@@ -136,27 +134,9 @@ public class ScrollView : UISingleContainer
         if (verticalMetrics.ShouldDisplay) child.Y.Value += (e.VerticalMovement / 30.0f) * childSize.Height;
     }
 
-    private void Application_SecondPassMeasure(Application sender, EventArgs e)
+    private void Child_RenderingAreaChange(UIObject sender, RenderingAreaEventArgs e)
     {
-        var child = Item.Value;
-
-        if (child is null)
-        {
-            _horizontalScrollBar.Visibility.Value = ComponentVisibility.Hidden;
-            _verticalScrollBar.Visibility.Value = ComponentVisibility.Hidden;
-            return;
-        }
-
-        child.CaptureActualPosition();
-        AdjustChildHorizontalPosition();
-        AdjustChildVerticalPosition();
-        UpdateHorizontalScrollBarSizeAndPosition();
-        UpdateVerticalScrollBarSizeAndPosition();
-    }
-
-    private void Application_ApplicationQuit(Application sender, EventArgs e)
-    {
-        Application.SecondPassMeasure -= Application_SecondPassMeasure;
+        Application.Dispatcher.Schedule(UpdateScrollBars);
     }
 
     private void AdjustChildHorizontalPosition()
@@ -257,9 +237,38 @@ public class ScrollView : UISingleContainer
 
     private void OnChildChange(UIControl? child)
     {
-        if (_hasChild) Children.RemoveAt(0);
-        if (child is not null) Children.Insert(0, child);
+        if (_hasChild)
+        {
+            Children[0].RenderingAreaChange -= Child_RenderingAreaChange;
+            Children.RemoveAt(0);
+        }
+
+        if (child is not null)
+        {
+            Children.Insert(0, child);
+            child.RenderingAreaChange += Child_RenderingAreaChange;
+        }
+
         _hasChild = child is not null;
+        UpdateScrollBars();
+    }
+
+    private void UpdateScrollBars()
+    {
+        var child = Item.Value;
+
+        if (child is null)
+        {
+            _horizontalScrollBar.Visibility.Value = ComponentVisibility.Hidden;
+            _verticalScrollBar.Visibility.Value = ComponentVisibility.Hidden;
+            return;
+        }
+
+        child.CaptureActualPosition();
+        AdjustChildHorizontalPosition();
+        AdjustChildVerticalPosition();
+        UpdateHorizontalScrollBarSizeAndPosition();
+        UpdateVerticalScrollBarSizeAndPosition();
     }
 
     private class ScrollBar : UIControl

@@ -8,15 +8,9 @@ namespace RetroDev.UISharp.Core.Windowing;
 public interface IEventSystem
 {
     /// <summary>
-    /// The time in milliseconds after which this method must exit even if there are still events to process.
-    /// This guarantee that a frame is rendered even when the queue is pumped with too many events.
-    /// </summary>
-    long TimeoutMilliseconds { get; set; }
-
-    /// <summary>
     /// An event that indicates to quit the application.
     /// The only way to trigger this event is that there is a call to <see cref="Quit"/>, because
-    /// quitting the application must be managed by the <see cref="Application"/> class and not implicity by
+    /// quitting the application must be managed by the <see cref="Application"/> class and not implicitly by
     /// the event system underneath, unless there are specific needs or interrupts.
     /// </summary>
     event TypeSafeEventHandler<IEventSystem, EventArgs> ApplicationQuit;
@@ -115,7 +109,8 @@ public interface IEventSystem
     void ProcessEvents();
 
     /// <summary>
-    /// Awakes the current thread if it is blocked by <see cref="ProcessEvents(long)"/>.
+    /// Awakes the main UI thread if it is blocked by <see cref="ProcessEvents"/>.
+    /// This method is thread safe.
     /// </summary>
     void Signal();
 

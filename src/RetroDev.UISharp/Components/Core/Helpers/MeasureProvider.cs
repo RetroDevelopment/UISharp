@@ -14,10 +14,10 @@ public class MeasureProvider(Invalidator invalidator)
     /// <summary>
     /// Prepares for the second pass layout.
     /// </summary>
-    public void PrepareSecondPass()
+    public void Prepare(bool allPasses)
     {
-        _invalidator.Reset(secondPass: true);
-        _invalidator.Swap();
+        _invalidator.SelectCurrentInvalidatedItems(allPasses);
+        _invalidator.Reset();
     }
 
     /// <summary>
@@ -25,6 +25,7 @@ public class MeasureProvider(Invalidator invalidator)
     /// </summary>
     public void Measure()
     {
+        if (_invalidator.TreeDepth == 0) return;
         RecomputeWrapSizes();
         RecomputeDrawingAreas();
     }
@@ -34,8 +35,6 @@ public class MeasureProvider(Invalidator invalidator)
     /// </summary>
     public void RecomputeWrapSizes()
     {
-        if (_invalidator.TreeDepth == 0) return;
-
         var level = _invalidator.TreeDepth - 1;
         var processQueue = new UniqueQueue<UIObject>();
         _invalidator.AddInvalidatedComponentsToQueue(level, processQueue);
