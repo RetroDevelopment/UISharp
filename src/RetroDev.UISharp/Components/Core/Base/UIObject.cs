@@ -5,6 +5,7 @@ using RetroDev.UISharp.Components.Core.Shapes;
 using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Exceptions;
 using RetroDev.UISharp.Core.Graphics;
+using RetroDev.UISharp.Core.Windowing;
 using RetroDev.UISharp.Core.Windowing.Events;
 using RetroDev.UISharp.Presentation.Properties;
 using RetroDev.UISharp.Presentation.Properties.Binding;
@@ -123,6 +124,9 @@ public abstract class UIObject
 
     /// <summary>
     /// Triggered when <see langword="this" /> <see cref="UIObject"/> drawing area changes.
+    /// Note that this event is triggered during the <see cref="LifeCycle.State.MEASURE"/> phase, not during
+    /// the regular event polling, so it is not possible to modify UI component property values.
+    /// Make sure you wrap any UI property change logic by calling <see cref="ThreadDispatcher.Schedule(Action)"/>.
     /// </summary>
     public event TypeSafeEventHandler<UIObject, RenderingAreaEventArgs>? RenderingAreaChange;
 
@@ -154,8 +158,17 @@ public abstract class UIObject
     public UISurface? Surface => Parent?.Surface ?? this as UISurface;
 
     /// <summary>
+    /// The actual component top-left location (relative to its container) as it was after the latest rendering.
+    /// </summary>
+    public Point ActualRelativeLocation => _relativeDrawingArea.TopLeft;
+
+    /// <summary>
+    /// The actual component top-left location (relative the window) as it was after the latest rendering.
+    /// </summary>
+    public Point ActualAbsoluteLocation => _absoluteDrawingArea.TopLeft;
+
+    /// <summary>
     /// The actual component size as it was after the latest rendering.
-    /// Inside <see cref="Application.SecondPassMeasure"/>, this is the expected component size before rendering the next fame.
     /// </summary>
     public Size ActualSize => _relativeDrawingArea.Size;
 
@@ -817,7 +830,8 @@ public abstract class UIObject
             Surface.Invalidator.NeedZIndexUpdate = true;
         }
 
-        component.Parent?.Children.Remove(component);
+        if (component.Parent is not null) throw new InvalidOperationException($"Cannot add child {component} at index {index}: component is already attached to another component, remove it first.");
+
         component.Parent = this;
         component.RecomputeLevel();
         component.InvalidateAll();

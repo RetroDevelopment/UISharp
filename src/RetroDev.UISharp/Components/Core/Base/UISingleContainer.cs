@@ -31,12 +31,12 @@ public abstract class UISingleContainer : UIControl, ISingleContainer
     /// <param name="horizontalAlignment">The component horizontal alignment (relative to its <see cref="Parent"/>).</param>
     /// <param name="verticalAlignment">The component vertical alignment (relative to its <see cref="Parent"/>).</param>
     protected UISingleContainer(Application application,
-                          ComponentVisibility visibility = ComponentVisibility.Visible,
-                          bool isFocusable = false,
-                          IAutoSize? autoWidth = null,
-                          IAutoSize? autoHeight = null,
-                          IHorizontalAlignment? horizontalAlignment = null,
-                          IVerticalAlignment? verticalAlignment = null) : base(application, visibility, isFocusable, autoWidth, autoHeight, horizontalAlignment, verticalAlignment)
+                                ComponentVisibility visibility = ComponentVisibility.Visible,
+                                bool isFocusable = false,
+                                IAutoSize? autoWidth = null,
+                                IAutoSize? autoHeight = null,
+                                IHorizontalAlignment? horizontalAlignment = null,
+                                IVerticalAlignment? verticalAlignment = null) : base(application, visibility, isFocusable, autoWidth, autoHeight, horizontalAlignment, verticalAlignment)
     {
         Item = new UIProperty<UIControl?>(this, (UIControl?)null);
         BorderColor = new UIProperty<Color>(this, Color.Transparent);

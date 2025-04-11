@@ -1,6 +1,7 @@
 ﻿using RetroDev.UISharp.Components.Containers;
 using RetroDev.UISharp.Components.Core.AutoArea;
 using RetroDev.UISharp.Components.Core.Base;
+using RetroDev.UISharp.Components.Core.Overlays;
 using RetroDev.UISharp.Components.Layouts;
 using RetroDev.UISharp.Components.Layouts.GridLayoutHelpers;
 using RetroDev.UISharp.Components.Simple;
@@ -34,6 +35,8 @@ public class DropDown : UIContainer
     /// </summary>
     public UIProperty<IAutoSize> ItemsAutoWidth { get; }
 
+    private UIOverlayProperty<FlatMenu> DropDownMenu { get; }
+
     /// <summary>
     /// Creates a new drop-down item.
     /// </summary>
@@ -43,6 +46,10 @@ public class DropDown : UIContainer
         SelectedIndex = new UIProperty<uint?>(this, (uint?)null);
         SelectedItem = new UIProperty<UIControl?>(this, (UIControl?)null);
         ItemsAutoWidth = new UIProperty<IAutoSize>(this, AutoSize.MaxWrapStretch);
+        DropDownMenu = new UIOverlayProperty<FlatMenu>(this);
+        DropDownMenu.Value = new FlatMenu(application);
+
+        DropDownMenu.Value.Items.BindSourceToDestination(Items);
 
         _selectedItemPanel = new Panel(application);
 
