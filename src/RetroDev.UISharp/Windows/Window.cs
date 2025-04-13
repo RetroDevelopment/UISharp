@@ -18,7 +18,7 @@ namespace RetroDev.UISharp.Windows;
 /// </summary>
 // TODO: add disposable or shutdown method to call renderingEngine.Shutdown();
 [EditorSettings(allow: false)]
-public class Window : UIRoot
+public class Window : UISurface
 {
     /// <summary>
     /// The default behavior when closing the window.
@@ -69,7 +69,7 @@ public class Window : UIRoot
 
     /// <summary>
     /// Raised when <see langword="this" /> <see cref="Window"/> has been initialized.
-    /// This happens when all the initial <see cref="UIComponent"/> have been added to the window.
+    /// This happens when all the initial <see cref="UIObject"/> have been added to the window.
     /// </summary>
     public event TypeSafeEventHandler<Window, EventArgs>? Initialized;
 
@@ -91,7 +91,7 @@ public class Window : UIRoot
     /// <summary>
     /// Raised when the window manager requests that the window is closed.
     /// Note that this does not necessarily mean that the window will be closed (see <see cref="CloseBehavior"/>).
-    /// If you want to be notified when a window is actually closed (meaning hidden) use the <see cref="UIComponent.Visibility"/> <see cref="UIProperty{TValue}.ValueChange"/>
+    /// If you want to be notified when a window is actually closed (meaning hidden) use the <see cref="UIObject.Visibility"/> <see cref="UIProperty{TValue}.ValueChange"/>
     /// event.
     /// </summary>
     public event TypeSafeEventHandler<Window, EventArgs>? WindowCloseRequest;
@@ -243,7 +243,7 @@ public class Window : UIRoot
     /// <summary>
     /// Prepares the window for the second pass layout.
     /// </summary>
-    public void PrepareSecondPass() => MeasureProvider.PrepareSecondPass();
+    public void Prepare(bool allPasses) => MeasureProvider.Prepare(allPasses);
 
     /// <summary>
     /// Shows <see langword="this" /> <see cref="Window"/>.
@@ -313,9 +313,10 @@ public class Window : UIRoot
 
     internal void Render()
     {
-        Invalidator.Swap();
+        Invalidator.SelectCurrentInvalidatedItems(allPasses: true);
         var renderingEngine = RenderingEngine;
         RenderProvider.Render(this, renderingEngine);
+        Invalidator.ResetAll();
     }
 
     internal void OnRenderDone()
@@ -334,7 +335,8 @@ public class Window : UIRoot
     {
         if (ShouldPropagateEvent(windowArgs))
         {
-            OnMousePress(windowArgs.Args);
+            var anyChildCapturedPressEvent = OnMousePress(windowArgs.Args);
+            if (!anyChildCapturedPressEvent) Focus.Value = true;
         }
     }
 
@@ -383,7 +385,6 @@ public class Window : UIRoot
         var topLeft = windowArgs.Args.TopLeft;
         if (topLeft.X == X.Value && topLeft.Y == Y.Value) return;
 
-        // TODO: remove the lifecycle check once using dispatcher
         if (ShouldPropagateEvent(windowArgs) && !HasModal(windowArgs))
         {
             X.Value = topLeft.X;
@@ -493,7 +494,7 @@ public class Window : UIRoot
         }
     }
 
-    private void Window_RenderingAreaChange(UIComponent sender, RenderingAreaEventArgs e)
+    private void Window_RenderingAreaChange(UIObject sender, RenderingAreaEventArgs e)
     {
         Application.WindowManager.SetWindowRenderingArea(_windowId, e.RenderingArea);
         RenderingEngine.ViewportSize = e.RenderingArea.Size;

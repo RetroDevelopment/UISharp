@@ -21,9 +21,9 @@ public class Canvas
     public UIPropertyCollection<UIShape> Shapes { get; }
 
     /// <summary>
-    /// The <see cref="UIComponent"/> owning <see langword="this" /> <see cref="Canvas"/>.
+    /// The <see cref="UIObject"/> owning <see langword="this" /> <see cref="Canvas"/>.
     /// </summary>
-    public UIComponent Component { get; set; }
+    public UIObject Component { get; set; }
 
     /// <summary>
     /// The size of the area where <see cref="Component"/> is rendered.
@@ -39,8 +39,8 @@ public class Canvas
     /// <summary>
     /// Creates a new canvas.
     /// </summary>
-    /// <param name="component">The <see cref="UIComponent"/> where <see langword="this" /> <see cref="Canvas"/> is rendering.</param>
-    internal Canvas(UIComponent component)
+    /// <param name="component">The <see cref="UIObject"/> where <see langword="this" /> <see cref="Canvas"/> is rendering.</param>
+    internal Canvas(UIObject component)
     {
         Component = component;
         Shapes = new UIPropertyCollection<UIShape>(component.Application);

@@ -8,7 +8,7 @@ namespace RetroDev.UISharp.IDE.Components;
 [EditorSettings(allow: false)]
 internal class UIPreview : UIContainer
 {
-    public UIPreview(Application application, List<UIWidget> children) : base(application, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
+    public UIPreview(Application application, List<UIControl> children) : base(application, autoWidth: AutoSize.Wrap, autoHeight: AutoSize.Wrap)
     {
         children.ForEach(Children.Add);
     }

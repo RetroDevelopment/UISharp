@@ -121,11 +121,12 @@ public static class Helper
         if (rows == 0) throw new ArgumentException("Row number cannot be zero");
         if (columns == 0) throw new ArgumentException("Column number cannot be zero");
         var count = rows * columns;
-        if (count != @this.Count()) throw new ArgumentException($"Number of rows {rows} and columns {columns} does not match optimal sizes {@this.Count()}, expected {count} elements in list");
+        if (count < @this.Count()) throw new ArgumentException($"Number of rows {rows} and columns {columns} does not match optimal sizes {@this.Count()}, expected at most {count} elements in list");
+        var actualCount = @this.Count();
         var rowOptimalSizes = Enumerable.Repeat(PixelUnit.Zero, (int)rows).ToList();
         var columnsOptimalSizes = Enumerable.Repeat(PixelUnit.Zero, (int)columns).ToList();
 
-        for (int i = 0; i < count; i++)
+        for (int i = 0; i < actualCount; i++)
         {
             var cellSize = @this.ElementAt(i);
             var row = (int)(i / columns);

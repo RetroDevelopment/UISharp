@@ -15,7 +15,7 @@ public class UIPropertyValidationException(string message, object? target = null
     {
         if (target == null) return message;
 
-        if (target is UIComponent component)
+        if (target is UIObject component)
         {
             return $"{message}; (target={target.GetType().FullName}, id={component.ID.Value})";
         }

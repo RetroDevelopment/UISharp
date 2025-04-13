@@ -13,7 +13,7 @@ namespace RetroDev.UISharp.Components.Simple;
 /// <summary>
 /// A label displaying text.
 /// </summary>
-public class Label : UIWidget
+public class Label : UIControl
 {
     private readonly Rectangle _backgroundRectangle;
     private readonly Text _text;
@@ -86,7 +86,7 @@ public class Label : UIWidget
     /// <inheritdoc/>
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) => _text.ComputeTextSize();
 
-    private void Label_RenderFrame(UIComponent sender, UISharp.Core.Windowing.Events.RenderingEventArgs e)
+    private void Label_RenderFrame(UIObject sender, UISharp.Core.Windowing.Events.RenderingEventArgs e)
     {
         _backgroundRectangle.RelativeRenderingArea.Value = e.RenderingAreaSize.Fill();
 

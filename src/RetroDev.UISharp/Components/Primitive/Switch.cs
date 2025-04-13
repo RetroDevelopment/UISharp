@@ -12,7 +12,7 @@ namespace RetroDev.UISharp.Components.Simple;
 /// <summary>
 /// A toggle button switch to mark with a tick if something is checked.
 /// </summary>
-public class Switch : UIWidget
+public class Switch : UIControl
 {
     private readonly Rectangle _backgroundRectangle;
     private readonly Circle _selectionCircle;
@@ -84,14 +84,14 @@ public class Switch : UIWidget
         return new Size(size * 3, size);
     }
 
-    private void Switch_MousePress(UIComponent sender, MouseEventArgs e)
+    private void Switch_MousePress(UIObject sender, MouseEventArgs e)
     {
         if (e.Button != MouseButton.Left) return;
         Checked.Value = !Checked.Value;
         Focus.Value = true;
     }
 
-    private void Switch_RenderFrame(UIComponent sender, RenderingEventArgs e)
+    private void Switch_RenderFrame(UIObject sender, RenderingEventArgs e)
     {
         var cornerRadius = _backgroundRectangle.ComputeCornerRadius(1.0f, e.RenderingAreaSize);
 

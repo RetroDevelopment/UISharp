@@ -6,14 +6,14 @@ using RetroDev.UISharp.Presentation.Properties;
 namespace RetroDev.UISharp.Components.Core.Base;
 
 /// <summary>
-/// Abstract class for all containers containing one single element, which lay out multiple <see cref="UIComponent"/> instances.
+/// Abstract class for all containers containing one single element, which lay out multiple <see cref="UIObject"/> instances.
 /// </summary>
-public abstract class UISingleContainer : UIWidget, ISingleContainer
+public abstract class UISingleContainer : UIControl, ISingleContainer
 {
     private readonly Rectangle _backgroundRectangle;
 
     /// <inheritdoc />
-    public UIProperty<UIWidget?> Item { get; }
+    public UIProperty<UIControl?> Item { get; }
 
     /// <summary>
     /// The control border color.
@@ -31,14 +31,14 @@ public abstract class UISingleContainer : UIWidget, ISingleContainer
     /// <param name="horizontalAlignment">The component horizontal alignment (relative to its <see cref="Parent"/>).</param>
     /// <param name="verticalAlignment">The component vertical alignment (relative to its <see cref="Parent"/>).</param>
     protected UISingleContainer(Application application,
-                          ComponentVisibility visibility = ComponentVisibility.Visible,
-                          bool isFocusable = false,
-                          IAutoSize? autoWidth = null,
-                          IAutoSize? autoHeight = null,
-                          IHorizontalAlignment? horizontalAlignment = null,
-                          IVerticalAlignment? verticalAlignment = null) : base(application, visibility, isFocusable, autoWidth, autoHeight, horizontalAlignment, verticalAlignment)
+                                ComponentVisibility visibility = ComponentVisibility.Visible,
+                                bool isFocusable = false,
+                                IAutoSize? autoWidth = null,
+                                IAutoSize? autoHeight = null,
+                                IHorizontalAlignment? horizontalAlignment = null,
+                                IVerticalAlignment? verticalAlignment = null) : base(application, visibility, isFocusable, autoWidth, autoHeight, horizontalAlignment, verticalAlignment)
     {
-        Item = new UIProperty<UIWidget?>(this, (UIWidget?)null);
+        Item = new UIProperty<UIControl?>(this, (UIControl?)null);
         BorderColor = new UIProperty<Color>(this, Color.Transparent);
 
         _backgroundRectangle = new Rectangle(application);
@@ -49,7 +49,7 @@ public abstract class UISingleContainer : UIWidget, ISingleContainer
         RenderFrame += UIContainer_RenderFrame;
     }
 
-    private void UIContainer_RenderFrame(UIComponent sender, UISharp.Core.Windowing.Events.RenderingEventArgs e)
+    private void UIContainer_RenderFrame(UIObject sender, UISharp.Core.Windowing.Events.RenderingEventArgs e)
     {
         _backgroundRectangle.RelativeRenderingArea.Value = e.RenderingAreaSize.Fill();
     }

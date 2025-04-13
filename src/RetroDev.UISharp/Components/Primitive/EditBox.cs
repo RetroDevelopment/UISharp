@@ -17,7 +17,7 @@ namespace RetroDev.UISharp.Components.Simple;
 /// <summary>
 /// A box that allows to enter text.
 /// </summary>
-public class EditBox : UIWidget
+public class EditBox : UIControl
 {
     private readonly EditableTextBuffer _textBuffer;
 
@@ -191,13 +191,13 @@ public class EditBox : UIWidget
     /// <inheritdoc />
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize)
     {
-        if (Root == null) return Size.Zero;
+        if (Surface == null) return Size.Zero;
         var height = _inputText.ComputeTextMaximumHeight();
         var estimatedNumberOfCharacters = 10;
         return new Size(height * estimatedNumberOfCharacters, height);
     }
 
-    private void EditBox_KeyPress(UIComponent sender, KeyEventArgs e)
+    private void EditBox_KeyPress(UIObject sender, KeyEventArgs e)
     {
         var key = e.Button;
 
@@ -275,7 +275,7 @@ public class EditBox : UIWidget
         }
     }
 
-    private void EditBox_KeyRelease(UIComponent sender, KeyEventArgs e)
+    private void EditBox_KeyRelease(UIObject sender, KeyEventArgs e)
     {
         var key = e.Button;
         if (key == KeyButton.LeftShift || key == KeyButton.RightShift)
@@ -288,34 +288,34 @@ public class EditBox : UIWidget
         }
     }
 
-    private void EditBox_TextInput(UIComponent sender, TextInputEventArgs e)
+    private void EditBox_TextInput(UIObject sender, TextInputEventArgs e)
     {
         _textBuffer.AddText(e.Text);
     }
 
-    private void EditBox_MouseDragBegin(UIComponent sender, MouseEventArgs e)
+    private void EditBox_MouseDragBegin(UIObject sender, MouseEventArgs e)
     {
         _dragStartIndex = ConvertPointToCharacterIndex(e.RelativeLocation);
     }
 
-    private void EditBox_MouseDrag(UIComponent sender, MouseEventArgs e)
+    private void EditBox_MouseDrag(UIObject sender, MouseEventArgs e)
     {
         if (_dragStartIndex == null) _dragStartIndex = ConvertPointToCharacterIndex(e.RelativeLocation);
         var caretIndex = ConvertPointToCharacterIndex(e.RelativeLocation);
         _textBuffer.SetSelectionDragInterval(_dragStartIndex!.Value, caretIndex, _multiTokenSelection);
     }
 
-    private void EditBox_MouseEnter(UIComponent sender, EventArgs e)
+    private void EditBox_MouseEnter(UIObject sender, EventArgs e)
     {
         Application.WindowManager.Cursor = MouseCursor.Edit;
     }
 
-    private void EditBox_MouseLeave(UIComponent sender, EventArgs e)
+    private void EditBox_MouseLeave(UIObject sender, EventArgs e)
     {
         Application.WindowManager.Cursor = MouseCursor.Default;
     }
 
-    private void EditBox_MousePress(UIComponent sender, MouseEventArgs e)
+    private void EditBox_MousePress(UIObject sender, MouseEventArgs e)
     {
         if (e.Button == MouseButton.Left)
         {
@@ -356,7 +356,7 @@ public class EditBox : UIWidget
         }
     }
 
-    private void EditBox_RenderFrame(UIComponent sender, RenderingEventArgs e)
+    private void EditBox_RenderFrame(UIObject sender, RenderingEventArgs e)
     {
         UpdateBackgroundRectangle(e.RenderingAreaSize);
         UpdateInputText(e.RenderingAreaSize);

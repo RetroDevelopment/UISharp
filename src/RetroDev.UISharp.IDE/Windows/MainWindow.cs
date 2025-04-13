@@ -18,9 +18,9 @@ namespace RetroDev.UISharp.IDE.Windows;
 // TODO: check for unique ids
 
 [EditorSettings(allow: false)]
-internal class Container : UIComponent
+internal class Container : UIObject
 {
-    public Container(Application application, List<UIWidget> children) : base(application)
+    public Container(Application application, List<UIControl> children) : base(application)
     {
         children.ForEach(Children.Add);
     }
@@ -30,7 +30,7 @@ internal class Container : UIComponent
 
 internal class MainWindow : Window
 {
-    private Dictionary<UITreeNode<UIWidget>, Component> _treeNodeAstMap = [];
+    private Dictionary<UITreeNode<UIControl>, Component> _treeNodeAstMap = [];
     private Component? _rootNode;
 
     private readonly GridLayout _mainLayout;
@@ -197,7 +197,7 @@ internal class MainWindow : Window
         }
     }
 
-    private void OnTreeNodeChange(UITreeNode<UIWidget>? node)
+    private void OnTreeNodeChange(UITreeNode<UIControl>? node)
     {
         var listBox = _propertyList;
         listBox.Items.Clear();
@@ -280,22 +280,22 @@ internal class MainWindow : Window
 
     private void CreateComponentInstance()
     {
-        var components = _rootNode!.Components.Select(Application.UIDefinitionManager.InstanceCreator.CreateUIComponent).Cast<UIWidget>().ToList();
+        var components = _rootNode!.Components.Select(Application.UIDefinitionManager.InstanceCreator.CreateUIComponent).Cast<UIControl>().ToList();
         var container = new UIPreview(Application, components);
         _mainLayout.GetComponent<ScrollView>("preview").Item.Value = container;
     }
 
-    private UITreeNode<UIWidget> CreateNode(string text)
+    private UITreeNode<UIControl> CreateNode(string text)
     {
         var label = new Label(Application, text);
-        var node = new UITreeNode<UIWidget>(Application, label);
+        var node = new UITreeNode<UIControl>(Application, label);
         label.AutoWidth.Value = AutoSize.Wrap;
         label.AutoHeight.Value = AutoSize.Wrap;
         label.HorizontalAlignment.Value = Alignment.Left;
         return node;
     }
 
-    private void AddNode(UITreeNode<UIWidget>? parent, Component astNode)
+    private void AddNode(UITreeNode<UIControl>? parent, Component astNode)
     {
         var node = CreateNode(astNode.Name);
         _treeNodeAstMap.Add(node, astNode);

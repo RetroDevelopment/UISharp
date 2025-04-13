@@ -66,7 +66,7 @@ public class UIHierarchyFlattenBinder<TSource, TDestination> : IDisposable
         using var _ = _destinationCollection.CreateBindingScope();
         var node = root.Children[index];
         var flattenList = Flatten(node);
-        var previousNode = index == 0 ? root : root.Children[index - 1];
+        var previousNode = index == 0 ? root : LastChildOf(root.Children[index - 1]);
         if (previousNode is UITreeNode<TSource> treeNode)
         {
             var previousNodeInList = _treeToListMapping[treeNode];
@@ -154,5 +154,11 @@ public class UIHierarchyFlattenBinder<TSource, TDestination> : IDisposable
         var newItem = _converter.ConvertSourceToDestination(node);
         _destinationCollection[itemIndex] = newItem;
         _treeToListMapping[node] = newItem;
+    }
+
+    private UITreeNode<TSource> LastChildOf(UITreeNode<TSource> node)
+    {
+        if (node.Children.Count == 0) return node;
+        return LastChildOf(node.Children.Last());
     }
 }

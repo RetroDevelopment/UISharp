@@ -6,14 +6,14 @@ using RetroDev.UISharp.Presentation.Properties;
 namespace RetroDev.UISharp.Components.Core.Base;
 
 /// <summary>
-/// Abstract class for all containers, which lay out multiple <see cref="UIComponent"/> instances.
+/// Abstract class for all containers, which lay out multiple <see cref="UIObject"/> instances.
 /// </summary>
-public abstract class UIContainer : UIWidget, IContainer
+public abstract class UIContainer : UIControl, IContainer
 {
     private readonly Rectangle _backgroundRectangle;
 
     /// <inheritdoc />
-    public UIPropertyCollection<UIWidget> Items { get; }
+    public UIPropertyCollection<UIControl> Items { get; }
 
     /// <summary>
     /// The control border color.
@@ -38,7 +38,7 @@ public abstract class UIContainer : UIWidget, IContainer
                           IHorizontalAlignment? horizontalAlignment = null,
                           IVerticalAlignment? verticalAlignment = null) : base(application, visibility, isFocusable, autoWidth, autoHeight, horizontalAlignment, verticalAlignment)
     {
-        Items = new UIPropertyCollection<UIWidget>(application);
+        Items = new UIPropertyCollection<UIControl>(application);
         BorderColor = new UIProperty<Color>(this, Color.Transparent);
 
         _backgroundRectangle = new Rectangle(application);
@@ -56,14 +56,14 @@ public abstract class UIContainer : UIWidget, IContainer
     /// <returns>The component.</returns>
     /// <exception cref="ArgumentException">If the component does not exist.</exception>
     /// <exception cref="InvalidCastException">If the component was found but with a type not assignable to <typeparamref name="TComponent"/>.</exception>
-    public TComponent GetComponent<TComponent>(string id) where TComponent : UIWidget
+    public TComponent GetComponent<TComponent>(string id) where TComponent : UIControl
     {
         var children = Items.Where(c => c.ID.Value == id);
         if (!children.Any()) throw new ArgumentException($"Child with ID {id} not found in component with id {ID.Value}");
         return (TComponent)children.First();
     }
 
-    private void UIContainer_RenderFrame(UIComponent sender, UISharp.Core.Windowing.Events.RenderingEventArgs e)
+    private void UIContainer_RenderFrame(UIObject sender, UISharp.Core.Windowing.Events.RenderingEventArgs e)
     {
         _backgroundRectangle.RelativeRenderingArea.Value = e.RenderingAreaSize.Fill();
     }

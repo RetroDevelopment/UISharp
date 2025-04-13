@@ -61,7 +61,7 @@ public class UITreeNode<TValue> : UIPropertyHierarchy<TValue>
     /// <param name="component">The component owning <see langword="this" /> node.</param>
     /// <param name="value">The node initial <see cref="Content"/> value.</param>
     /// <param name="lockSetter ">Whether it is only possible to set <see langword="this" /> <see cref="UITreeNode{TValue}"/> during event handling.</param>
-    public UITreeNode(UIComponent component, TValue value, bool lockSetter = true) : base(component, lockSetter)
+    public UITreeNode(UIObject component, TValue value, bool lockSetter = true) : base(component, lockSetter)
     {
         Content = new UIProperty<TValue>(component, value);
         Collapsed = new UIProperty<bool>(component, false);

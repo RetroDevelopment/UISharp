@@ -26,7 +26,7 @@ namespace RetroDev.UISharp.Presentation.Properties;
 /// The former creates a property with an initial value, the latter creates a property bound to <c>AnotherProperty</c>.
 /// </remarks>
 [DebuggerDisplay("{Value}")]
-public class UIProperty<TValue>
+public class UIProperty<TValue> : IProperty
 {
     private readonly bool _lockSetter;
     private readonly BehaviorSubject<TValue> _valueChangeSubject;
@@ -38,6 +38,17 @@ public class UIProperty<TValue>
     /// Allows to be notified whenever the <see cref="Value"/> property changes.
     /// </summary>
     public IObservable<TValue> ValueChange { get; }
+
+    /// <summary>
+    /// The value <see langword="this" /> <see cref="UIProperty{TValue}"/> had before assigning a new
+    /// <see cref="Value"/>. If no previous value was assigned, <see langword="default" /> is returned.
+    /// </summary>
+    public TValue? PreviousValue { get; private set; } = default;
+
+    /// <summary>
+    /// <see langword="true" /> if the property <see cref="Value"/> has been changed from its initial value, otherwise <see langword="false" />.
+    /// </summary>
+    public bool HasPreviousValue { get; private set; } = false;
 
     /// <summary>
     /// The application owing <see langword="this" /> <see cref="UIProperty{TValue}"/>.
@@ -55,6 +66,8 @@ public class UIProperty<TValue>
 
             if (!EqualityComparer<TValue>.Default.Equals(_value, value))
             {
+                PreviousValue = _value;
+                HasPreviousValue = true;
                 _value = value;
                 _valueChangeSubject.OnNext(value);
             }
@@ -131,7 +144,7 @@ public class UIProperty<TValue>
     /// <summary>
     /// Creates a new property.
     /// </summary>
-    /// <param name="parent">The <see cref="UIComponent"/> owning this property.</param>
+    /// <param name="parent">The <see cref="UIObject"/> owning this property.</param>
     /// <param name="value">The property value.</param>
     /// <param name="canReceiveBindingUpdates">
     /// Whether<see langword = "this" /> < see cref="UIProperty{TValue}"/> can receive binding updates, meaning that
@@ -139,7 +152,7 @@ public class UIProperty<TValue>
     /// source, <see cref="BindingType.DestinationToSource"/> is allowed. If <see langword="false" /> the mentioned bindings will result in
     /// a <see cref="UIPropertyValidationException"/>.
     /// </param>
-    public UIProperty(UIComponent parent, TValue value, bool canReceiveBindingUpdates = true) : this(parent.Application, value, canReceiveBindingUpdates, lockSetter: true)
+    public UIProperty(UIObject parent, TValue value, bool canReceiveBindingUpdates = true) : this(parent.Application, value, canReceiveBindingUpdates, lockSetter: true)
     {
         ValueChange.Subscribe(v => parent.Invalidate());
     }
@@ -147,7 +160,7 @@ public class UIProperty<TValue>
     /// <summary>
     /// Creates a new property.
     /// </summary>
-    /// <param name="parent">The <see cref="UIComponent"/> owning this property.</param>
+    /// <param name="parent">The <see cref="UIObject"/> owning this property.</param>
     /// <param name="destinationProperty">The destination property to bind.</param>
     /// <param name="bindingType">
     /// The <see cref="BindingType"/> (<see langword="this"/> property is the source property and).
@@ -159,7 +172,7 @@ public class UIProperty<TValue>
     /// source, <see cref="BindingType.DestinationToSource"/> is allowed. If <see langword="false" /> the mentioned bindings will result in
     /// a <see cref="UIPropertyValidationException"/>.
     /// </param>
-    public UIProperty(UIComponent parent, UIProperty<TValue> destinationProperty, BindingType bindingType = BindingType.TwoWays, bool canReceiveBindingUpdates = true) : this(parent, destinationProperty.Value, canReceiveBindingUpdates)
+    public UIProperty(UIObject parent, UIProperty<TValue> destinationProperty, BindingType bindingType = BindingType.TwoWays, bool canReceiveBindingUpdates = true) : this(parent, destinationProperty.Value, canReceiveBindingUpdates)
     {
         Bind(destinationProperty, bindingType);
     }

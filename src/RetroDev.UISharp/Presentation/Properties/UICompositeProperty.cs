@@ -10,7 +10,7 @@ namespace RetroDev.UISharp.Presentation.Properties;
 /// The properties value type.
 /// All <see cref="UIProperty{TValue}"/> value type must be equal to<typeparamref name="TValue"/>.
 /// </typeparam>
-public abstract class UICompositeProperty<TValue>
+public abstract class UICompositeProperty<TValue> : IProperty
 {
     private readonly Application _application;
     private readonly IEnumerable<UIProperty<TValue>> _properties;
@@ -105,7 +105,7 @@ public abstract class UICompositeProperty<TValue>
     /// The <see cref="BindingType"/> (<see langword="this"/> property is the source property and).
     /// the given <paramref name="destinationProperty" /> is the destination property.
     /// </param>
-    public void BindDestinationToSrouce(UICompositeProperty<TValue> destinationProperty)
+    public void BindDestinationToSource(UICompositeProperty<TValue> destinationProperty)
     {
         Bind(destinationProperty, BindingType.DestinationToSource);
     }
@@ -120,5 +120,17 @@ public abstract class UICompositeProperty<TValue>
     public void BindTwoWays(UICompositeProperty<TValue> destinationProperty)
     {
         Bind(destinationProperty, BindingType.TwoWays);
+    }
+
+    /// <inheitdoc />
+    public void Unbind()
+    {
+        var nestedProperties = GetType().GetUIProperties();
+        foreach (var property in nestedProperties)
+        {
+            var value = property.GetValue(this);
+            if (value is null) continue;
+            ((IProperty)value).Unbind();
+        }
     }
 }

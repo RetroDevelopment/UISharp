@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
-using RetroDev.UISharp.Components;
 using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Logging;
 using RetroDev.UISharp.Core.Windowing.Events;
@@ -24,14 +23,9 @@ internal class SDLEventSystem : IEventSystem
     private readonly Stopwatch _stopwatch;
     private readonly ILogger _logger;
     private readonly SDL_EventFilter _eventFilter;
+    private readonly object _signalLock = new();
     private bool _signaled = false;
-    private bool _prepareRender = false;
-
-    /// <summary>
-    /// The time in milliseconds after which this method must exit even if there are still events to process.
-    /// This guarantee that a frame is rendered even when the queue is pumped with too many events.
-    /// </summary>
-    public long TimeoutMilliseconds { get; set; } = 10;
+    private bool _isRendering = false;
 
     /// <summary>
     /// An event that indicates to quit the application.
@@ -157,16 +151,19 @@ internal class SDLEventSystem : IEventSystem
     }
 
     /// <summary>
-    /// Awakes the current thread if it is blocked by <see cref="ProcessEvents(long)"/>.
+    /// Awakes the main UI thread if it is blocked by <see cref="ProcessEvents"/>.
+    /// This method is thread safe.
     /// </summary>
     public void Signal()
     {
-        _dispatcher.ThrowIfNotOnUIThread(); // TODO: this should probably be thread safe as called from non UI thread to actually wake up the event queue?
-        if (_signaled) return;
-        var signalEvent = new SDL_Event();
-        signalEvent.type = (SDL_EventType)SDL_CustomEventType.SDL_SIGNAL;
-        SDL_PushEvent(ref signalEvent);
-        _signaled = true;
+        lock (_signalLock)
+        {
+            if (_signaled) return;
+            _signaled = true;
+            var signalEvent = new SDL_Event();
+            signalEvent.type = (SDL_EventType)SDL_CustomEventType.SDL_SIGNAL;
+            SDL_PushEvent(ref signalEvent);
+        }
     }
 
     /// <summary>
@@ -185,16 +182,14 @@ internal class SDLEventSystem : IEventSystem
 
     private int EventCallback(nint userdata, nint sdlevent)
     {
-        _dispatcher.ThrowIfNotOnUIThread(); // TODO: use dispatcher to decide whether to push to event queue or not
-        SDL_Event currentEvent = Marshal.PtrToStructure<SDL_Event>(sdlevent);
+        var currentEvent = Marshal.PtrToStructure<SDL_Event>(sdlevent);
+        _dispatcher.Schedule(() => HandleEvent(currentEvent));
+        return 1;
+    }
 
-        if (_prepareRender)
-        {
-            _logger.LogWarning($"Discarding event {currentEvent} - TODO: push it into dispatcher");
-            return 1; // TODO: do not discard events when rendering, queue them instead (once dispatcher is implemented)
-        }
-
-        if ((int)currentEvent.type == (int)SDL_CustomEventType.SDL_QUIT) return 1;
+    private void HandleEvent(SDL_Event currentEvent)
+    {
+        if ((int)currentEvent.type == (int)SDL_CustomEventType.SDL_QUIT) return;
 
         switch (currentEvent.type)
         {
@@ -263,8 +258,6 @@ internal class SDLEventSystem : IEventSystem
                 textInputArgs.Log("textInput", _logger);
                 break;
             case SDL_EventType.SDL_WINDOWEVENT:
-                // TODO: fix issue that UI thread freezes while resizing window. Either use a thread to constantly
-                // poll the window size or use platform specific solutions.
                 var windowEvent = currentEvent.window;
                 var windowId = GetWindowIdFromWindowEvent(windowEvent);
 
@@ -332,15 +325,19 @@ internal class SDLEventSystem : IEventSystem
                 break;
         }
 
-        if (_signaled && !_prepareRender)
+        if (!_isRendering)
         {
-            _prepareRender = true; // Avoid loops if an event is triggered inside the RenderNeeded handler.
+            _isRendering = true; // Avoid loops if an event is triggered inside the RenderNeeded handler.
             RenderNeeded?.Invoke(this, EventArgs.Empty);
-            _stopwatch.Restart();
-            _prepareRender = false;
+            _isRendering = false;
+            lock (_signalLock)
+            {
+                _signaled = false;
+            }
+            // Make sure the queue is empty (it the queue is filled e.g. during rendering)
+            // The queue must be empty before exiting this event handling method because there is no guarantee on when next event handling call will be.
+            _dispatcher.ProcessEventQueue();
         }
-
-        return 1;
     }
 
     private static string GetString(SDL_TextInputEvent textInputEvent)

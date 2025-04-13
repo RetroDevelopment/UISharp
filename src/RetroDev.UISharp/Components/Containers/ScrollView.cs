@@ -67,22 +67,20 @@ public class ScrollView : UISingleContainer
         Item.ValueChange.Subscribe(OnChildChange);
 
         MouseWheel += ScrollView_MouseWheel;
-        application.SecondPassMeasure += Application_SecondPassMeasure;
-        application.ApplicationQuit += Application_ApplicationQuit;
     }
 
     /// <inheritdoc />
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
         childrenSize.FirstOrDefault() ?? Size.Zero;
 
-    private void VerticalScrollBar_MouseDragBegin(UIComponent sender, MouseEventArgs e)
+    private void VerticalScrollBar_MouseDragBegin(UIObject sender, MouseEventArgs e)
     {
         var child = Item.Value;
         if (child == null) return;
         _childVerticalPositionDragBegin = child.Y.Value;
     }
 
-    private void VerticalScrollBar_MouseDrag(UIComponent sender, MouseEventArgs e)
+    private void VerticalScrollBar_MouseDrag(UIObject sender, MouseEventArgs e)
     {
         var child = Item.Value;
         if (child == null) return;
@@ -93,19 +91,19 @@ public class ScrollView : UISingleContainer
         child.Y.Value = _childVerticalPositionDragBegin! - delta * childSizeScrollViewRatio;
     }
 
-    private void VerticalScrollBar_MouseDragEnd(UIComponent sender, EventArgs e)
+    private void VerticalScrollBar_MouseDragEnd(UIObject sender, EventArgs e)
     {
         _childVerticalPositionDragBegin = null;
     }
 
-    private void HorizontalScrollBar_MouseDragBegin(UIComponent sender, MouseEventArgs e)
+    private void HorizontalScrollBar_MouseDragBegin(UIObject sender, MouseEventArgs e)
     {
         var child = Item.Value;
         if (child == null) return;
         _childHorizontalPositionDragBegin = child.X.Value;
     }
 
-    private void HorizontalScrollBar_MouseDrag(UIComponent sender, MouseEventArgs e)
+    private void HorizontalScrollBar_MouseDrag(UIObject sender, MouseEventArgs e)
     {
         var child = Item.Value;
         if (child == null) return;
@@ -116,12 +114,12 @@ public class ScrollView : UISingleContainer
         child.X.Value = _childHorizontalPositionDragBegin! - delta * childSizeScrollViewRatio;
     }
 
-    private void HorizontalScrollBar_MouseDragEnd(UIComponent sender, EventArgs e)
+    private void HorizontalScrollBar_MouseDragEnd(UIObject sender, EventArgs e)
     {
         _childHorizontalPositionDragBegin = null;
     }
 
-    private void ScrollView_MouseWheel(UIComponent sender, MouseWheelEventArgs e)
+    private void ScrollView_MouseWheel(UIObject sender, MouseWheelEventArgs e)
     {
         var child = Item.Value;
 
@@ -136,27 +134,9 @@ public class ScrollView : UISingleContainer
         if (verticalMetrics.ShouldDisplay) child.Y.Value += (e.VerticalMovement / 30.0f) * childSize.Height;
     }
 
-    private void Application_SecondPassMeasure(Application sender, EventArgs e)
+    private void Child_RenderingAreaChange(UIObject sender, RenderingAreaEventArgs e)
     {
-        var child = Item.Value;
-
-        if (child == null)
-        {
-            _horizontalScrollBar.Visibility.Value = ComponentVisibility.Hidden;
-            _verticalScrollBar.Visibility.Value = ComponentVisibility.Hidden;
-            return;
-        }
-
-        child.CaptureActualPosition();
-        AdjustChildHorizontalPosition();
-        AdjustChildVerticalPosition();
-        UpdateHorizontalScrollBarSizeAndPosition();
-        UpdateVerticalScrollBarSizeAndPosition();
-    }
-
-    private void Application_ApplicationQuit(Application sender, EventArgs e)
-    {
-        Application.SecondPassMeasure -= Application_SecondPassMeasure;
+        Application.Dispatcher.Schedule(UpdateScrollBars);
     }
 
     private void AdjustChildHorizontalPosition()
@@ -255,14 +235,43 @@ public class ScrollView : UISingleContainer
         return (shouldDisplay, barStart, barSize);
     }
 
-    private void OnChildChange(UIWidget? child)
+    private void OnChildChange(UIControl? child)
     {
-        if (_hasChild) Children.RemoveAt(0);
-        if (child is not null) Children.Insert(0, child);
+        if (_hasChild)
+        {
+            Children[0].RenderingAreaChange -= Child_RenderingAreaChange;
+            Children.RemoveAt(0);
+        }
+
+        if (child is not null)
+        {
+            Children.Insert(0, child);
+            child.RenderingAreaChange += Child_RenderingAreaChange;
+        }
+
         _hasChild = child is not null;
+        UpdateScrollBars();
     }
 
-    private class ScrollBar : UIWidget
+    private void UpdateScrollBars()
+    {
+        var child = Item.Value;
+
+        if (child is null)
+        {
+            _horizontalScrollBar.Visibility.Value = ComponentVisibility.Hidden;
+            _verticalScrollBar.Visibility.Value = ComponentVisibility.Hidden;
+            return;
+        }
+
+        child.CaptureActualPosition();
+        AdjustChildHorizontalPosition();
+        AdjustChildVerticalPosition();
+        UpdateHorizontalScrollBarSizeAndPosition();
+        UpdateVerticalScrollBarSizeAndPosition();
+    }
+
+    private class ScrollBar : UIControl
     {
         private readonly Rectangle _barRectangle;
         private Point? _mouseDragPosition;
@@ -282,7 +291,7 @@ public class ScrollView : UISingleContainer
             RenderFrame += ScrollBar_RenderFrame;
         }
 
-        private void ScrollBar_RenderFrame(UIComponent sender, RenderingEventArgs e)
+        private void ScrollBar_RenderFrame(UIObject sender, RenderingEventArgs e)
         {
             var cornerRadius = _barRectangle.ComputeCornerRadius(1.0f, e.RenderingAreaSize);
             _barRectangle.RelativeRenderingArea.Value = e.RenderingAreaSize.Fill();
@@ -290,17 +299,17 @@ public class ScrollView : UISingleContainer
             _barRectangle.CornerRadiusY.Value = cornerRadius;
         }
 
-        private void ScrollBar_MouseDragBegin(UIComponent sender, MouseEventArgs e)
+        private void ScrollBar_MouseDragBegin(UIObject sender, MouseEventArgs e)
         {
             _mouseDragPosition = e.AbsoluteLocation;
         }
 
-        private void ScrollBar_MouseDrag(UIComponent sender, MouseEventArgs e)
+        private void ScrollBar_MouseDrag(UIObject sender, MouseEventArgs e)
         {
             _delta = e.AbsoluteLocation - _mouseDragPosition!;
         }
 
-        private void ScrollBar_MouseDragEnd(UIComponent sender, EventArgs e)
+        private void ScrollBar_MouseDragEnd(UIObject sender, EventArgs e)
         {
             _mouseDragPosition = null;
             _delta = null;

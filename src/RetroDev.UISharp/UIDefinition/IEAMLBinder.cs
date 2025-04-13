@@ -25,8 +25,8 @@ public interface IEAMLBinder
     /// </summary>
     /// <param name="propertyInfo">The property set. Its type must be either <see cref="UIProperty{TValue}"/> or <see cref="UICompositeProperty{TValue}"/>.</param>
     /// <param name="attribute">The attribute definition.</param>
-    /// <param name="componentInstance">The <see cref="UIComponent"/> owning the property defined by <paramref name="propertyInfo"/>.</param>
+    /// <param name="componentInstance">The <see cref="UIObject"/> owning the property defined by <paramref name="propertyInfo"/>.</param>
     /// <exception cref="UIDefinitionValidationCompoundException">If something failes during the property assignment.</exception>
     /// <exception cref="InvalidOperationException">If the given <paramref name="propertyInfo"/> is not a valid bindable property.</exception>
-    void SetGenericUIProperty(PropertyInfo propertyInfo, Ast.Attribute attribute, UIComponent componentInstance);
+    void SetGenericUIProperty(PropertyInfo propertyInfo, Ast.Attribute attribute, UIObject componentInstance);
 }

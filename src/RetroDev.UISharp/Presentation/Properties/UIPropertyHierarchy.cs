@@ -9,11 +9,11 @@ namespace RetroDev.UISharp.Presentation.Properties;
 /// hierarchical objects (e.g. a directory tree).
 /// </summary>
 /// <typeparam name="TValue">The node content value type.</typeparam>
-public class UIPropertyHierarchy<TValue>
+public class UIPropertyHierarchy<TValue> : IProperty
 {
     private IDisposable? _flatBinder;
     internal readonly Application? _application;
-    internal readonly UIComponent? _component;
+    internal readonly UIObject? _component;
 
     /// <summary>
     /// The node direct children.
@@ -37,7 +37,7 @@ public class UIPropertyHierarchy<TValue>
     /// </summary>
     /// <param name="component">The component owning <see langword="this" /> node.</param>
     /// <param name="lockSetter ">Whether it is only possible to set <see langword="this" /> <see cref="UINode{TValue}"/> during event handling.</param>
-    public UIPropertyHierarchy(UIComponent component, bool lockSetter = true)
+    public UIPropertyHierarchy(UIObject component, bool lockSetter = true)
     {
         _component = component;
         Children = new UIPropertyCollection<UITreeNode<TValue>>(component, lockSetter);
@@ -225,7 +225,7 @@ public class UIPropertyHierarchy<TValue>
     {
         var child = Children[index];
         child.TreeLevel = 0;
-        child.Parent?.Children?.Remove(child);
+        if (child.Parent is not null) throw new InvalidOperationException($"The tree node {child} is already attached to another parent. Remove it from the parent first.");
         child.Parent = null;
     }
 

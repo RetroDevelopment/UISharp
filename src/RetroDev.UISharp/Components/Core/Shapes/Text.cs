@@ -77,7 +77,7 @@ public class Text : UIShape
     /// </param>
     /// <returns>
     /// The text size, which is <see cref="Size.Zero"/> if the text has not yet been attached to a <see cref="Canvas"/> or
-    /// the <see cref="UIComponent"/> owning <see langword="this" /> text is not yet assigned to a window or a component with a rendering viewport.
+    /// the <see cref="UIObject"/> owning <see langword="this" /> text is not yet assigned to a window or a component with a rendering viewport.
     /// </returns>
     public Size ComputeTextSize(uint? index = null)
     {
@@ -117,7 +117,7 @@ public class Text : UIShape
     /// </summary>
     /// <returns>
     /// The text height, which is <see cref="PixelUnit.Zero"/> if the text has not yet been attached to a <see cref="Canvas"/> or
-    /// the <see cref="UIComponent"/> owning <see langword="this" /> text is not yet assigned to a window or a component with a rendering viewport.
+    /// the <see cref="UIObject"/> owning <see langword="this" /> text is not yet assigned to a window or a component with a rendering viewport.
     /// </returns>
     public PixelUnit ComputeTextMaximumHeight() =>
         RenderingEngine?.ComputeTextMaximumHeight(Font.Value.ToGraphicsFont()) ?? PixelUnit.Zero;

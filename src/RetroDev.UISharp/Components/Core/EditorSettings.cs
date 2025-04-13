@@ -3,7 +3,7 @@
 namespace RetroDev.UISharp.Components.Core;
 
 /// <summary>
-/// Specify UISharp IDE editor settings for a <see cref="UIComponent"/>.
+/// Specify UISharp IDE editor settings for a <see cref="UIObject"/>.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface)]
 public class EditorSettingsAttribute : Attribute

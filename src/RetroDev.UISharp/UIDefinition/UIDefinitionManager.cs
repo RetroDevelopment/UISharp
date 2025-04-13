@@ -52,11 +52,11 @@ public class UIDefinitionManager
     }
 
     /// <summary>
-    /// Creates the <see cref="UIComponent"/> instance as defined in the given UIDefinition <paramref name="xml"/> text.
+    /// Creates the <see cref="UIObject"/> instance as defined in the given UIDefinition <paramref name="xml"/> text.
     /// </summary>
     /// <param name="xml">The UIDefinition xml containing the instance to create.</param>
     /// <returns>The comonent instance as defined in the given <paramref name="xml"/>.</returns>
-    public UIComponent CreateUIComponent(string xml)
+    public UIObject CreateUIComponent(string xml)
     {
         var parser = new Parser();
         var validator = new Validator(TypeMapper);

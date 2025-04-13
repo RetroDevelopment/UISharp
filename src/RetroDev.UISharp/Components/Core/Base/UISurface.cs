@@ -12,23 +12,25 @@ namespace RetroDev.UISharp.Components.Core.Base;
 /// The root of a UI component hierarchy. This is typically a rendering unit, such as, a window or a mobile
 /// device activity.
 /// </summary>
-public abstract class UIRoot : UIContainer
+public abstract class UISurface : UIContainer
 {
+    private int? _overlayStartIndex = null;
+
     /// <summary>
-    /// The object that manages <see cref="UIComponent"/> invalidation for the component tree rooted by <see langword="this" />
+    /// The object that manages <see cref="UIObject"/> invalidation for the component tree rooted by <see langword="this" />
     /// component.
     /// </summary>
     protected internal Invalidator Invalidator { get; }
 
     /// <summary>
-    /// The object that measures all <see cref="UIComponent"/> measure calculation for the component tree rooted by <see langword="this" />
+    /// The object that measures all <see cref="UIObject"/> measure calculation for the component tree rooted by <see langword="this" />
     /// component.
     /// </summary>
 
     protected MeasureProvider MeasureProvider { get; }
 
     /// <summary>
-    /// The object that performs retained mode rendering of all <see cref="UIComponent"/> components in the component tree rooted by <see langword="this" />
+    /// The object that performs retained mode rendering of all <see cref="UIObject"/> components in the component tree rooted by <see langword="this" />
     /// component.
     /// </summary>
     protected RenderProvider RenderProvider { get; }
@@ -57,7 +59,7 @@ public abstract class UIRoot : UIContainer
     /// <param name="autoHeight">How to automatically determine this component height.</param>
     /// <param name="horizontalAlignment">The component horizontal alignment (relative to its <see cref="Parent"/>).</param>
     /// <param name="verticalAlignment">The component vertical alignment (relative to its <see cref="Parent"/>).</param>
-    protected UIRoot(Application application,
+    protected UISurface(Application application,
                      IRenderingEngine? renderingEngine = null,
                      ComponentVisibility visibility = ComponentVisibility.Visible,
                      bool isFocusable = true,
@@ -71,7 +73,8 @@ public abstract class UIRoot : UIContainer
         RenderProvider = new RenderProvider(Invalidator);
         RenderingEngine = renderingEngine ?? new OpenGLRenderingEngine(application.Dispatcher, application.Logger, new SDLOpenGLRenderingContext(application.Logger));
 
-        Children.BindTwoWays(Items);
+        Items.ValueAdd.Subscribe(OnItemAdd);
+        Items.ValueRemove.Subscribe(OnItemRemove);
 
         MouseMove += UIRoot_MouseMove;
         MouseRelease += UIRoot_MouseRelease;
@@ -86,7 +89,29 @@ public abstract class UIRoot : UIContainer
         }
     }
 
-    private void UIRoot_MouseMove(UIComponent sender, MouseEventArgs e)
+    internal void AttachOverlay(UIOverlay overlay)
+    {
+        Children.Add(overlay.Control);
+
+        if (_overlayStartIndex is null)
+        {
+            _overlayStartIndex = Children.Count - 1;
+        }
+    }
+
+    internal void DetachOverlay(UIOverlay overlay)
+    {
+        var overlayIndex = Children.IndexOf(overlay.Control);
+        if (overlayIndex == -1) throw new ArgumentException($"Failed to detach overlay {overlay}: cannot detach overlays that are not attached");
+        Children.Remove(overlay.Control);
+        if (overlayIndex == _overlayStartIndex)
+        {
+            if (overlayIndex + 1 < Children.Count) _overlayStartIndex++;
+            else _overlayStartIndex = null;
+        }
+    }
+
+    private void UIRoot_MouseMove(UIObject sender, MouseEventArgs e)
     {
         foreach (var node in GlobalEventInformation.DraggingComponents)
         {
@@ -94,7 +119,7 @@ public abstract class UIRoot : UIContainer
         }
     }
 
-    private void UIRoot_MouseRelease(UIComponent sender, MouseEventArgs e)
+    private void UIRoot_MouseRelease(UIObject sender, MouseEventArgs e)
     {
         if (e.Button == MouseButton.Left)
         {
@@ -105,5 +130,16 @@ public abstract class UIRoot : UIContainer
 
             GlobalEventInformation.ClearDraggedComponents();
         }
+    }
+
+    private void OnItemAdd(int index)
+    {
+        var item = Items[index];
+        Children.Insert(index, item);
+    }
+
+    private void OnItemRemove(int index)
+    {
+        Children.RemoveAt(index);
     }
 }

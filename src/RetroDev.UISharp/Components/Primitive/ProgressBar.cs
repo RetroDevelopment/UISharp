@@ -12,7 +12,7 @@ namespace RetroDev.UISharp.Components.Simple;
 /// <summary>
 /// A bar displaying progress.
 /// </summary>
-public class ProgressBar : UIWidget
+public class ProgressBar : UIControl
 {
     private readonly Rectangle _backgroundRectangle;
     private readonly Rectangle _progressRectangle;
@@ -75,7 +75,7 @@ public class ProgressBar : UIWidget
     /// <inheritdoc/>
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) => new(100, 20); // TODO: 20 is the common text size, 100 is some value to be big enough. Make sure that the size fits the screen.
 
-    private void ProgressBar_RenderFrame(UIComponent sender, RenderingEventArgs e)
+    private void ProgressBar_RenderFrame(UIObject sender, RenderingEventArgs e)
     {
         var padding = Padding.ToMarginStruct();
 

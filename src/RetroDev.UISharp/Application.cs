@@ -1,4 +1,5 @@
 ﻿using RetroDev.UISharp.Components.Core.Base;
+using RetroDev.UISharp.Components.Core.Helpers;
 using RetroDev.UISharp.Core.Coordinates;
 using RetroDev.UISharp.Core.Exceptions;
 using RetroDev.UISharp.Core.Logging;
@@ -32,12 +33,6 @@ public class Application : IDisposable
     /// Triggered when the application is terminating.
     /// </summary>
     public event TypeSafeEventHandler<Application, EventArgs>? ApplicationQuit;
-
-    /// <summary>
-    /// Triggered before calling <see cref="Window.Measure()"/> for the second time.
-    /// This is an opportunity to change <see cref="UIComponent"/> properties when all sizes are known and before rendering (using <see cref="UIComponent.ActualSize"/>).
-    /// </summary>
-    public event TypeSafeEventHandler<Application, EventArgs>? SecondPassMeasure;
 
     /// <summary>
     /// The window manager interacting with the OS to create and manage systems.
@@ -93,7 +88,7 @@ public class Application : IDisposable
     /// <summary>
     /// Manages the UI thread and dispatches UI operations from other thread to the UI thread.
     /// </summary>
-    public ThreadDispatcher Dispatcher { get; } = new();
+    public ThreadDispatcher Dispatcher { get; }
 
     /// <summary>
     /// Whether <see langword="this" /> <see cref="Application"/> is ready to run and receive events.
@@ -112,6 +107,7 @@ public class Application : IDisposable
                        ILogger? logger = null)
     {
         Logger = logger ?? new ConsoleLogger();
+        Dispatcher = new ThreadDispatcher(LifeCycle);
         WindowManager = windowManager ?? new SDLWindowManager(Dispatcher, Logger);
         ResourceManager = resourceManager ?? new EmbeddedResourceManager();
         ThemeManager = new ThemeManager(this, ResourceManager.Themes);
@@ -134,11 +130,11 @@ public class Application : IDisposable
     public void Run()
     {
         Dispatcher.ThrowIfNotOnUIThread();
-        EventSystem.TimeoutMilliseconds = 10; // TODO: probably set this according to frame rate
 
         Logger.LogInfo("Application started");
         EventSystem.ApplicationQuit += (_, _) => _shoudQuit = true;
         EventSystem.RenderNeeded += (_, _) => Render();
+        Dispatcher.CallbackScheduled += (_, _) => EventSystem.Signal();
         Started = true;
         ApplicationStarted?.Invoke(this, EventArgs.Empty);
         EventSystem.Signal();
@@ -189,7 +185,7 @@ public class Application : IDisposable
         var component = UIDefinitionManager.CreateUIComponent(windowXmlDefinition);
         if (component is not TWindow) throw new InvalidOperationException($"Expected a window of type {typeof(TWindow)} but type {component.GetType()} found instead");
         var window = (TWindow)component;
-        window.Visibility.Value = UIComponent.ComponentVisibility.Visible;
+        window.Visibility.Value = UIObject.ComponentVisibility.Visible;
         return window;
     }
 
@@ -248,14 +244,20 @@ public class Application : IDisposable
 
     private void Render()
     {
-        var visibleWindows = _windows.Where(w => w.Visibility.Value == UIComponent.ComponentVisibility.Visible).ToList();
-        LifeCycle.CurrentState = LifeCycle.State.MEASURE;
-        visibleWindows.ForEach(w => w.Measure());
-        LifeCycle.CurrentState = LifeCycle.State.EVENT_POLL;
-        visibleWindows.ForEach(w => w.PrepareSecondPass());
-        SecondPassMeasure?.Invoke(this, EventArgs.Empty);
-        LifeCycle.CurrentState = LifeCycle.State.MEASURE;
-        visibleWindows.ForEach(w => w.Measure());
+        var visibleWindows = _windows.Where(w => w.Visibility.Value == UIObject.ComponentVisibility.Visible).ToList();
+        var shouldMeasure = true;
+        while (shouldMeasure)
+        {
+            Dispatcher.ProcessEventQueue();
+            LifeCycle.CurrentState = LifeCycle.State.MEASURE;
+            visibleWindows.ForEach(w => w.Measure());
+            visibleWindows.ForEach(w => w.Prepare(allPasses: false));
+            LifeCycle.CurrentState = LifeCycle.State.EVENT_POLL;
+            var queueNotEmpty = Dispatcher.ProcessEventQueue();
+            var invalidatedWindows = visibleWindows.Any(window => window.Invalidator.HasInvalidatedNodes);
+            shouldMeasure = queueNotEmpty || invalidatedWindows;
+        }
+
         LifeCycle.CurrentState = LifeCycle.State.RENDERING;
         visibleWindows.ForEach(w => w.EnsureZIndicesUpdated());
         visibleWindows.ForEach(w => w.Render());

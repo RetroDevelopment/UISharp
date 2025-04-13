@@ -5,9 +5,9 @@ namespace RetroDev.UISharp.Components.Core.Helpers;
 public class Invalidator
 {
     private readonly Application _application;
-    private readonly SortedDictionary<int, HashSet<UIComponent>> _firstPassInvalidatedItems = [];
-    private readonly SortedDictionary<int, HashSet<UIComponent>> _secondPassInvalidatedItems = [];
-    private SortedDictionary<int, HashSet<UIComponent>> _invalidatedItems;
+    private readonly SortedDictionary<int, HashSet<UIObject>> _allInvalidateItems = [];
+    private readonly SortedDictionary<int, HashSet<UIObject>> _currentPassInvalidatedItems = [];
+    private SortedDictionary<int, HashSet<UIObject>> _invalidatedItems;
 
     internal bool NeedZIndexUpdate { get; set; } = true;
     public int TreeDepth => _invalidatedItems.Keys.LastOrDefault(-1) + 1;
@@ -16,20 +16,19 @@ public class Invalidator
     public Invalidator(Application application)
     {
         _application = application;
-        _invalidatedItems = _firstPassInvalidatedItems;
+        _invalidatedItems = _allInvalidateItems;
     }
 
-    public void Invalidate(UIComponent component)
+    public void Invalidate(UIObject component)
     {
-        Invalidate(component, _firstPassInvalidatedItems);
-        Invalidate(component, _secondPassInvalidatedItems);
-        _application.EventSystem.Signal();
+        Invalidate(component, _allInvalidateItems);
+        Invalidate(component, _currentPassInvalidatedItems);
     }
 
-    public void CancelInvalidation(UIComponent component)
+    public void CancelInvalidation(UIObject component)
     {
-        CancelInvalidation(component, _firstPassInvalidatedItems);
-        CancelInvalidation(component, _secondPassInvalidatedItems);
+        CancelInvalidation(component, _allInvalidateItems);
+        CancelInvalidation(component, _currentPassInvalidatedItems);
     }
 
     public int GetUpperInvalidatedLevel(int level) =>
@@ -38,7 +37,7 @@ public class Invalidator
     public int GetLowerInvalidatedLevel(int level) =>
         _invalidatedItems.Keys.FirstOrDefault(k => k > level, -1);
 
-    public UIComponent? GetNextInvalidatedComponent()
+    public UIObject? GetNextInvalidatedComponent()
     {
         if (_invalidatedItems.Count == 0) return null;
 
@@ -46,7 +45,7 @@ public class Invalidator
         return _invalidatedItems[topMostLevel].First();
     }
 
-    public void AddInvalidatedComponentsToQueue(int level, UniqueQueue<UIComponent> queue)
+    public void AddInvalidatedComponentsToQueue(int level, UniqueQueue<UIObject> queue)
     {
         if (!_invalidatedItems.ContainsKey(level)) return;
 
@@ -56,33 +55,30 @@ public class Invalidator
         }
     }
 
-    // TODO: remove this once implementing instancing
-    public void Reset(bool secondPass = false)
+    public void Reset()
     {
-        _secondPassInvalidatedItems.Clear();
-        if (!secondPass) _firstPassInvalidatedItems.Clear();
+        _invalidatedItems.Clear();
     }
 
-    public void Swap()
+    public void ResetAll()
     {
-        if (_invalidatedItems == _firstPassInvalidatedItems)
-        {
-            _invalidatedItems = _secondPassInvalidatedItems;
-        }
-        else
-        {
-            _invalidatedItems = _firstPassInvalidatedItems;
-        }
+        _allInvalidateItems.Clear();
+        _currentPassInvalidatedItems.Clear();
     }
 
-    private void Invalidate(UIComponent component, SortedDictionary<int, HashSet<UIComponent>> invalidatedItems)
+    public void SelectCurrentInvalidatedItems(bool allPasses)
+    {
+        _invalidatedItems = allPasses ? _allInvalidateItems : _currentPassInvalidatedItems;
+    }
+
+    private void Invalidate(UIObject component, SortedDictionary<int, HashSet<UIObject>> invalidatedItems)
     {
         var level = component._level;
         invalidatedItems.TryAdd(level, []);
         invalidatedItems[level].Add(component);
     }
 
-    private void CancelInvalidation(UIComponent component, SortedDictionary<int, HashSet<UIComponent>> invalidatedItems)
+    private void CancelInvalidation(UIObject component, SortedDictionary<int, HashSet<UIObject>> invalidatedItems)
     {
         var level = component._level;
         // No need to cancel invalidation if the componet has not been invalidated

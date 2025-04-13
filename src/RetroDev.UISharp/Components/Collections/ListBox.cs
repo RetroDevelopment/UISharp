@@ -19,12 +19,22 @@ namespace RetroDev.UISharp.Components.Collections;
 /// </summary>
 /// <remarks>
 /// Although list boxes are typically used to list text in order to allow selecting one or more options,
-/// the <see cref="ListBox"/> class allows to list not only text but any <see cref="UIComponent"/>.
+/// the <see cref="ListBox"/> class allows to list not only text but any <see cref="UIObject"/>.
 /// </remarks>
 public class ListBox : UIContainer
 {
     private readonly VerticalLayout _verticalLayout;
     private readonly ScrollView _scrollView;
+
+    /// <summary>
+    /// Raised when an item is selected.
+    /// <remarks>
+    /// There is no need to use this event to detect when a selection changes, use <see cref="SelectedItem"/> or <see cref="SelectedIndex"/>
+    /// <see cref="UIProperty{TValue}.ValueChange"/> instead.
+    /// This event is only to detect when the user selects an item INCLUDING the already selected item.
+    /// </remarks>
+    /// </summary>
+    public event TypeSafeEventHandler<ListBox, EventArgs>? ItemSelected;
 
     /// <summary>
     /// The index of the selected element in the list, or <see langword="null" /> if no element is selected.
@@ -34,7 +44,7 @@ public class ListBox : UIContainer
     /// <summary>
     /// The selected element in the list, or <see langword="null" /> if no element is selected.
     /// </summary>
-    public UIProperty<UIWidget?> SelectedItem { get; }
+    public UIProperty<UIControl?> SelectedItem { get; }
 
     /// <summary>
     /// The auto width strategy for the <see langword="this" /> <see cref="ListBox"/> items.
@@ -51,7 +61,7 @@ public class ListBox : UIContainer
         _scrollView = new ScrollView(application);
 
         SelectedIndex = new UIProperty<uint?>(this, (uint?)null);
-        SelectedItem = new UIProperty<UIWidget?>(this, (UIWidget?)null);
+        SelectedItem = new UIProperty<UIControl?>(this, (UIControl?)null);
         ItemsAutoWidth = new UIProperty<IAutoSize>(this, AutoSize.MaxWrapStretch);
         SelectedIndex.ValueChange.Subscribe(OnSelectedIndexChange);
         SelectedItem.ValueChange.Subscribe(OnSelectedItemChange);
@@ -89,23 +99,16 @@ public class ListBox : UIContainer
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
         childrenSize.FirstOrDefault() ?? Size.Zero;
 
-    private void Container_MousePress(UIComponent sender, MouseEventArgs e)
+    private void Container_MousePress(UIObject sender, MouseEventArgs e)
     {
-        if (SelectedIndex.Value is not null)
-        {
-            var previouslySelectedCell = GetSelectedCell();
-            previouslySelectedCell!.BackgroundColor.Value = Color.Transparent;
-            previouslySelectedCell!.BackgroundColor.Unbind();
-        }
-
         var selectedPanel = (Panel)sender;
         var index = _verticalLayout.Cells.IndexOf(selectedPanel);
         if (index < 0) throw new ArgumentException($"Cannot find element in list box: make sure the element has not been deleted");
         SelectedIndex.Value = (uint)index;
-        selectedPanel.BackgroundColor.BindTheme(UISharpColorNames.ListSelection);
+        ItemSelected?.Invoke(this, EventArgs.Empty);
     }
 
-    private void Container_MouseLeave(UIComponent sender, EventArgs e)
+    private void Container_MouseLeave(UIObject sender, EventArgs e)
     {
         if (GetSelectedCell() != sender)
         {
@@ -115,7 +118,7 @@ public class ListBox : UIContainer
         }
     }
 
-    private void Container_MouseEnter(UIComponent sender, EventArgs e)
+    private void Container_MouseEnter(UIObject sender, EventArgs e)
     {
         if (GetSelectedCell() != sender)
         {
@@ -135,9 +138,9 @@ public class ListBox : UIContainer
         SelectedItem.Value = index is not null ? Items[(int)index] : null;
     }
 
-    private void OnSelectedItemChange(UIWidget? item)
+    private void OnSelectedItemChange(UIControl? item)
     {
-        if (item == null)
+        if (item is null)
         {
             SelectedIndex.Value = null;
             return;
@@ -146,15 +149,25 @@ public class ListBox : UIContainer
         var selectedIndex = Items.IndexOf(item);
         if (selectedIndex == -1) throw new InvalidOperationException("ListBox selected element not found");
         SelectedIndex.Value = (uint)selectedIndex;
+        UpdateSelectionGraphics();
     }
 
-    private Panel? GetSelectedCell()
+    private void UpdateSelectionGraphics()
     {
-        if (SelectedIndex.Value is not null)
+        if (SelectedItem.PreviousValue is not null)
         {
-            return _verticalLayout.Cells[(int)SelectedIndex.Value];
+            var previouslySelectedCell = SelectedItem.PreviousValue.Parent;
+            previouslySelectedCell!.BackgroundColor.Value = Color.Transparent;
+            previouslySelectedCell!.BackgroundColor.Unbind();
         }
 
-        return null;
+        if (SelectedItem.Value is not null)
+        {
+            var selectedPanel = SelectedItem.Value.Parent;
+            selectedPanel!.BackgroundColor.BindTheme(UISharpColorNames.ListSelection);
+        }
     }
+
+    private Panel? GetSelectedCell() =>
+        SelectedItem?.Value?.Parent as Panel;
 }

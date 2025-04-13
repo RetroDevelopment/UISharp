@@ -6,14 +6,14 @@ using RetroDev.UISharp.Presentation.Properties;
 namespace RetroDev.UISharp.Components.Core.Base;
 
 /// <summary>
-/// Abstract class for all containers, which lay out multiple <see cref="UIComponent"/> instances.
+/// Abstract class for all containers, which lay out multiple <see cref="UIObject"/> instances.
 /// </summary>
-public abstract class UIHierarchicalContainer : UIWidget, IHierarchicalContainer
+public abstract class UIHierarchicalContainer : UIControl, IHierarchicalContainer
 {
     private readonly Rectangle _backgroundRectangle;
 
     /// <inheritdoc />
-    public UIPropertyHierarchy<UIWidget> Items { get; }
+    public UIPropertyHierarchy<UIControl> Items { get; }
 
     /// <summary>
     /// The control border color.
@@ -38,7 +38,7 @@ public abstract class UIHierarchicalContainer : UIWidget, IHierarchicalContainer
                                       IHorizontalAlignment? horizontalAlignment = null,
                                       IVerticalAlignment? verticalAlignment = null) : base(application, visibility, isFocusable, autoWidth, autoHeight, horizontalAlignment, verticalAlignment)
     {
-        Items = new UIPropertyHierarchy<UIWidget>(application, lockSetter: true);
+        Items = new UIPropertyHierarchy<UIControl>(application, lockSetter: true);
         BorderColor = new UIProperty<Color>(this, Color.Transparent);
 
         _backgroundRectangle = new Rectangle(application);
@@ -56,14 +56,14 @@ public abstract class UIHierarchicalContainer : UIWidget, IHierarchicalContainer
     /// <returns>The component.</returns>
     /// <exception cref="ArgumentException">If the component does not exist.</exception>
     /// <exception cref="InvalidCastException">If the component was found but with a type not assignable to <typeparamref name="TComponent"/>.</exception>
-    public TComponent GetComponent<TComponent>(string id) where TComponent : UIWidget
+    public TComponent GetComponent<TComponent>(string id) where TComponent : UIControl
     {
         var children = Children.Where(c => c.ID.Value == id);
         if (!children.Any()) throw new ArgumentException($"Child with ID {id} not found in component with id {ID.Value}");
         return (TComponent)children.First();
     }
 
-    private void UIContainer_RenderFrame(UIComponent sender, UISharp.Core.Windowing.Events.RenderingEventArgs e)
+    private void UIContainer_RenderFrame(UIObject sender, UISharp.Core.Windowing.Events.RenderingEventArgs e)
     {
         _backgroundRectangle.RelativeRenderingArea.Value = e.RenderingAreaSize.Fill();
     }

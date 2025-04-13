@@ -14,7 +14,7 @@ namespace RetroDev.UISharp.Components.Simple;
 /// <summary>
 /// A clickable button.
 /// </summary>
-public class Button : UIWidget
+public class Button : UIControl
 {
     private readonly Rectangle _backgroundRectangle;
     private readonly Label _buttonTextLabel;
@@ -140,7 +140,7 @@ public class Button : UIWidget
     protected override Size ComputeMinimumOptimalSize(IEnumerable<Size> childrenSize) =>
         childrenSize.First();
 
-    private void Button_KeyPress(UIComponent sender, KeyEventArgs e)
+    private void Button_KeyPress(UIObject sender, KeyEventArgs e)
     {
         if (e.Button == KeyButton.Return || e.Button == KeyButton.KeyPadEnter)
         {
@@ -148,7 +148,7 @@ public class Button : UIWidget
         }
     }
 
-    private void Button_MousePress(UIComponent sender, MouseEventArgs e)
+    private void Button_MousePress(UIObject sender, MouseEventArgs e)
     {
         if (e.Button == MouseButton.Left)
         {
@@ -157,17 +157,17 @@ public class Button : UIWidget
         }
     }
 
-    private void Button_MouseEnter(UIComponent sender, EventArgs e)
+    private void Button_MouseEnter(UIObject sender, EventArgs e)
     {
         _isMouseHover.Value = true;
     }
 
-    private void Button_MouseLeave(UIComponent sender, EventArgs e)
+    private void Button_MouseLeave(UIObject sender, EventArgs e)
     {
         _isMouseHover.Value = false;
     }
 
-    private void Button_MouseDragEnd(UIComponent sender, EventArgs e)
+    private void Button_MouseDragEnd(UIObject sender, EventArgs e)
     {
         if (_isMouseHover.Value)
         {
@@ -177,7 +177,7 @@ public class Button : UIWidget
         _isAction.Value = false;
     }
 
-    private void Button_RenderFrame(UIComponent sender, RenderingEventArgs e)
+    private void Button_RenderFrame(UIObject sender, RenderingEventArgs e)
     {
         _backgroundRectangle.RelativeRenderingArea.Value = e.RenderingAreaSize.Fill();
         var cornerRadius = _backgroundRectangle.ComputeCornerRadius(0.5f, e.RenderingAreaSize);
