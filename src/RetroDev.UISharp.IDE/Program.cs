@@ -40,7 +40,7 @@ internal class Program
     {
         using var application = new Application();
         application.Logger.Verbosity = Verbosity.Verbose;
-        application.ApplicationStarted += (_, _) => LoadTest(application);
+        application.ApplicationStarted += (_, _) => LoadMain(application);
         application.Run();
     }
 
@@ -52,30 +52,6 @@ internal class Program
     private static void LoadTest(Application application)
     {
         var window = new Window(application);
-        var drop = new DropDown(application);
-        var data = new UIPropertyCollection<string>(application);
-        data.AddRange(["First", "Second", "Third"]);
-        drop.Items.BindSourceToDestination(data, x =>
-        {
-            if (x.StartsWith("Complex"))
-            {
-                var lay = new GridLayout(application, 2, 2);
-                lay.Items.Add(new Label(application, x));
-                lay.Items.Add(new Button(application, x));
-                lay.Items.Add(new ProgressBar(application, 50));
-                lay.Items.Add(new Switch(application));
-                return lay;
-            }
-            else return new Label(application, x);
-        });
-        data.Remove("First");
-        data.Insert(0, "First");
-        data.Add("Fourth");
-        data.AddRange(["Complex_01", "Sixth", "Complex_02"]);
-        drop.SelectedIndex.Value = 0;
-        window.Items.Add(drop);
-        window.Width.Value = 200;
-        window.Height.Value = 200;
         window.Show();
     }
 }

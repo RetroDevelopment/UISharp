@@ -7,11 +7,6 @@ using System.Reflection.Metadata.Ecma335;
 
 namespace RetroDev.UISharp.Components.Collections.DropDownHelpers;
 
-interface IPreviewRenderer
-{
-    TObject Clone<TObject>(TObject item) where TObject : UIObject;
-}
-
 /// <summary>
 /// Clones <see cref="UIObject"/> components to be displayed as preview.
 /// </summary>
@@ -19,6 +14,7 @@ public class UIObjectCloner(Application application) : IPreviewRenderer
 {
     public Application Application { get; } = application;
 
+    /// <inheritdoc >
     public virtual TObject Clone<TObject>(TObject item) where TObject : UIObject
     {
         var itemType = item.GetType();
@@ -29,6 +25,7 @@ public class UIObjectCloner(Application application) : IPreviewRenderer
     }
 
     // TODO: just call Dispose()?
+    /// <inheritdoc />
     public virtual void Unbind(UIObject item)
     {
         var itemType = item.GetType();

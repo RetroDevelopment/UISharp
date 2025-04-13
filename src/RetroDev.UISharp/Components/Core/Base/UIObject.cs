@@ -479,8 +479,9 @@ public abstract class UIObject
     /// </returns>
     protected virtual List<Area?> RepositionChildren(Size availableSpace, IEnumerable<Size> sizeHints) => [];
 
-    protected void OnMousePress(MouseEventArgs mouseEventArgs)
+    protected bool OnMousePress(MouseEventArgs mouseEventArgs)
     {
+        var anyChildCapturedPressEvent = false;
         MousePress?.Invoke(this, mouseEventArgs);
         if (mouseEventArgs.Button == MouseButton.Left)
         {
@@ -492,12 +493,15 @@ public abstract class UIObject
         {
             if (child.ShouldPropagateMouseEvent(mouseEventArgs.AbsoluteLocation))
             {
+                anyChildCapturedPressEvent = true;
                 child.OnMousePress(child.CreateEventWithRelativeLocation(mouseEventArgs));
                 // The first child where to propagate this event will end the loop. This avoid event propagation on multiple overlapping children.
                 // The first child where the event is propagated is also the latest in the list, meaning the one rendered on top.
                 break;
             }
         }
+
+        return anyChildCapturedPressEvent;
     }
 
     protected void OnMouseRelease(MouseEventArgs mouseEventArgs)

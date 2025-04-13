@@ -27,6 +27,16 @@ public class ListBox : UIContainer
     private readonly ScrollView _scrollView;
 
     /// <summary>
+    /// Raised when an item is selected.
+    /// <remarks>
+    /// There is no need to use this event to detect when a selection changes, use <see cref="SelectedItem"/> or <see cref="SelectedIndex"/>
+    /// <see cref="UIProperty{TValue}.ValueChange"/> instead.
+    /// This event is only to detect when the user selects an item INCLUDING the already selected item.
+    /// </remarks>
+    /// </summary>
+    public event TypeSafeEventHandler<ListBox, EventArgs>? ItemSelected;
+
+    /// <summary>
     /// The index of the selected element in the list, or <see langword="null" /> if no element is selected.
     /// </summary>
     public UIProperty<uint?> SelectedIndex { get; }
@@ -95,6 +105,7 @@ public class ListBox : UIContainer
         var index = _verticalLayout.Cells.IndexOf(selectedPanel);
         if (index < 0) throw new ArgumentException($"Cannot find element in list box: make sure the element has not been deleted");
         SelectedIndex.Value = (uint)index;
+        ItemSelected?.Invoke(this, EventArgs.Empty);
     }
 
     private void Container_MouseLeave(UIObject sender, EventArgs e)

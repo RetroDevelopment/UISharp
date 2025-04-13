@@ -335,7 +335,8 @@ public class Window : UISurface
     {
         if (ShouldPropagateEvent(windowArgs))
         {
-            OnMousePress(windowArgs.Args);
+            var anyChildCapturedPressEvent = OnMousePress(windowArgs.Args);
+            if (!anyChildCapturedPressEvent) Focus.Value = true;
         }
     }
 

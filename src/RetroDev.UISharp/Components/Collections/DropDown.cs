@@ -2,7 +2,6 @@
 using RetroDev.UISharp.Components.Containers;
 using RetroDev.UISharp.Components.Core.AutoArea;
 using RetroDev.UISharp.Components.Core.Base;
-using RetroDev.UISharp.Components.Core.Helpers;
 using RetroDev.UISharp.Components.Core.Overlays;
 using RetroDev.UISharp.Components.Layouts;
 using RetroDev.UISharp.Components.Layouts.GridLayoutHelpers;
@@ -37,25 +36,33 @@ public class DropDown : UIContainer
     /// </summary>
     public UIProperty<IAutoSize> ItemsAutoWidth { get; }
 
+    /// <summary>
+    /// Allows customizing the render logic in the <see cref="DropDown"/> preview of the selected item.
+    /// </summary>
+    public UIProperty<IPreviewRenderer> PreviewRenderer { get; }
+
     private UIOverlayProperty<FlatMenu> DropDownMenu { get; }
 
     /// <summary>
-    /// Creates a new drop-down item.
+    /// Creates a new <see cref="DropDown"/> item.
     /// </summary>
     /// <param name="application">The application owning this component.</param>
-    public DropDown(Application application) : base(application, autoHeight: AutoSize.Wrap)
+    public DropDown(Application application) : base(application, autoHeight: AutoSize.Wrap, isFocusable: true)
     {
         SelectedIndex = new UIProperty<uint?>(this, (uint?)null);
         SelectedItem = new UIProperty<UIControl?>(this, (UIControl?)null);
-        ItemsAutoWidth = new UIProperty<IAutoSize>(this, AutoSize.MaxWrapStretch); // TODO: bind
+        ItemsAutoWidth = new UIProperty<IAutoSize>(this, AutoSize.MaxWrapStretch);
         DropDownMenu = new UIOverlayProperty<FlatMenu>(this);
         DropDownMenu.Value = new FlatMenu(application);
+        DropDownMenu.Value.ItemsAutoWidth.BindSourceToDestination(ItemsAutoWidth);
+        PreviewRenderer = new UIProperty<IPreviewRenderer>(this, new UIObjectCloner(application));
+
+        _selectedItemPanel = new Panel(application);
 
         DropDownMenu.Value.Items.BindSourceToDestination(Items);
         DropDownMenu.Value.SelectedItem.ValueChange.Subscribe(item => SelectedItem.Value = item);
         SelectedItem.ValueChange.Subscribe(item => DropDownMenu.Value.SelectedItem.Value = item);
-
-        _selectedItemPanel = new Panel(application);
+        PreviewRenderer.ValueChange.Subscribe(OnPreviewRenderValueChange);
 
         _dropdownPreview = new GridLayout(application, 1, 2);
         _dropdownPreview.ColumnSizes.Add(new GridAutoSize());
@@ -68,6 +75,10 @@ public class DropDown : UIContainer
 
         SelectedIndex.ValueChange.Subscribe(OnSelectedIndexChange);
         SelectedItem.ValueChange.Subscribe(OnSelectedItemChange);
+
+        MousePress += DropDown_MousePress;
+
+        Focus.ValueChange.Subscribe(focus => DropDownMenu.Value.Visible.Value = focus);
 
         Children.Add(_dropdownPreview);
     }
@@ -99,7 +110,25 @@ public class DropDown : UIContainer
         if (selectedIndex == -1) throw new InvalidOperationException("DropDown selected element not found");
         SelectedIndex.Value = (uint)selectedIndex;
         var cloner = new UIObjectCloner(Application);
-        if (_selectedItemPanel.Item.Value is not null) cloner.Unbind(_selectedItemPanel.Item.Value);
-        _selectedItemPanel.Item.Value = cloner.Clone(item);
+        if (_selectedItemPanel.Item.Value is not null) PreviewRenderer.Value.Unbind(_selectedItemPanel.Item.Value);
+        _selectedItemPanel.Item.Value = PreviewRenderer.Value.Clone(item);
+    }
+
+    private void OnPreviewRenderValueChange(IPreviewRenderer renderer)
+    {
+        if (_selectedItemPanel.Item.Value is not null &&
+            PreviewRenderer.HasPreviousValue &&
+            PreviewRenderer.PreviousValue is not null &&
+            SelectedItem.Value is not null)
+        {
+            PreviewRenderer.PreviousValue.Unbind(_selectedItemPanel.Item.Value);
+            _selectedItemPanel.Item.Value = PreviewRenderer.Value.Clone(SelectedItem.Value);
+        }
+    }
+
+    private void DropDown_MousePress(UIObject sender, UISharp.Core.Windowing.Events.MouseEventArgs e)
+    {
+        Focus.Value = true;
+        DropDownMenu.Value!.Visible.Value = true;
     }
 }
