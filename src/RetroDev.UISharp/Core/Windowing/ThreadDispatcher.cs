@@ -63,9 +63,10 @@ public class ThreadDispatcher
     /// the UI thread in the <see cref="LifeCycle.State.EVENT_POLL"/> state.
     /// </summary>
     /// <param name="callback">The callback to execute.</param>
-    public void Schedule(DispatchCallback callback)
+    /// <param name="force">Force to push the given <paramref name="callback"/> to the event queue for next event polling iteration.</param>
+    public void Schedule(DispatchCallback callback, bool force = false)
     {
-        if (Thread.CurrentThread != _uiThread || _lifeCycle.CurrentState != LifeCycle.State.EVENT_POLL)
+        if (Thread.CurrentThread != _uiThread || _lifeCycle.CurrentState != LifeCycle.State.EVENT_POLL || force)
         {
             _dispatcherQueue.Enqueue(callback);
             CallbackScheduled?.Invoke(this, EventArgs.Empty);

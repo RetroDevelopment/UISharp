@@ -12,7 +12,7 @@ namespace RetroDev.UISharp.Presentation.Properties;
 /// Wraps a collection providing collection change notifications and bindings.
 /// </summary>
 /// <typeparam name="TValue">The collection elements value type.</typeparam>
-public class UIPropertyCollection<TValue> : IList<TValue>
+public class UIPropertyCollection<TValue> : IList<TValue>, IProperty
 {
     private readonly bool _lockChanges;
     private readonly List<TValue> _values = [];

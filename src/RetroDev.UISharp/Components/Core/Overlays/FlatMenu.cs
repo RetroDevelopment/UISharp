@@ -2,6 +2,7 @@
 using RetroDev.UISharp.Components.Collections;
 using RetroDev.UISharp.Components.Core.AutoArea;
 using RetroDev.UISharp.Components.Core.Base;
+using RetroDev.UISharp.Components.Core.Events;
 using RetroDev.UISharp.Core.Windowing.Events;
 using RetroDev.UISharp.Presentation.Properties;
 
@@ -18,6 +19,12 @@ public class FlatMenu : UIOverlay
     public UIPropertyCollection<UIControl> Items { get; }
 
     /// <summary>
+    /// The item selected in the menu.
+    /// </summary>
+    public UIProperty<UIControl?> SelectedItem { get; }
+
+    /// <summary>
+    /// <summary>
     /// Creates a new flat menu.
     /// </summary>
     /// <param name="application">The application owning this component.</param>
@@ -25,7 +32,10 @@ public class FlatMenu : UIOverlay
     {
         _menuContent = (ListBox)Control;
         Items = new UIPropertyCollection<UIControl>(_menuContent);
+        SelectedItem = new UIProperty<UIControl?>(_menuContent, (UIControl?)null);
+
         _menuContent.Items.BindSourceToDestination(Items);
+        _menuContent.SelectedItem.BindTwoWays(SelectedItem);
     }
 
     /// <inheritdoc />
@@ -49,6 +59,7 @@ public class FlatMenu : UIOverlay
 
     private void Owner_MousePress(UIObject sender, MouseEventArgs e)
     {
+        if (e.Button != MouseButton.Left) return;
         RepositionListBox(sender);
         _menuContent.Visibility.Value = UIObject.ComponentVisibility.Visible;
     }

@@ -1,4 +1,5 @@
 ﻿using RetroDev.UISharp.Components.Core.AutoArea;
+using RetroDev.UISharp.Components.Core.Events;
 using RetroDev.UISharp.Components.Core.Helpers;
 using RetroDev.UISharp.Components.Core.Layout;
 using RetroDev.UISharp.Components.Core.Shapes;
@@ -123,6 +124,11 @@ public abstract class UIObject
     public event TypeSafeEventHandler<UIObject, MouseWheelEventArgs>? MouseWheel;
 
     /// <summary>
+    /// The <see cref="Surface"/> in which <see langword="this" /> <see cref="UIObject"/> is attached has changed.
+    /// </summary>
+    public event TypeSafeEventHandler<UIObject, SurfaceChangeEventArgs>? SurfaceChange;
+
+    /// <summary>
     /// Triggered when <see langword="this" /> <see cref="UIObject"/> drawing area changes.
     /// Note that this event is triggered during the <see cref="LifeCycle.State.MEASURE"/> phase, not during
     /// the regular event polling, so it is not possible to modify UI component property values.
@@ -155,7 +161,7 @@ public abstract class UIObject
     /// If <see langword="this" /> <see cref="UIObject"/> has not been attached to a <see cref="UISurface"/>,
     /// the value is <see langword="null" />.
     /// </summary>
-    public UISurface? Surface => Parent?.Surface ?? this as UISurface;
+    public UISurface? Surface { get; private set; }
 
     /// <summary>
     /// The actual component top-left location (relative to its container) as it was after the latest rendering.
@@ -345,6 +351,8 @@ public abstract class UIObject
         Canvas = new Canvas(this);
         Children = new UIPropertyCollection<UIControl>(application, lockChanges: true);
         Overlays = new UIPropertyCollection<UIOverlay>(application, lockChanges: true);
+
+        Surface = this as UISurface;
 
         Children.ValueAdd.Subscribe(OnChildAdd);
         Children.ValueRemove.Subscribe(OnChildRemove);
@@ -745,7 +753,7 @@ public abstract class UIObject
     // Ensure that only one child component has focus.
     private void RequestFocusFor(UIObject component)
     {
-        if (Surface == null) throw new InvalidOperationException("Cannot request focus for a component not attached to a window");
+        if (Surface is null) throw new InvalidOperationException("Cannot request focus for a component not attached to a window");
 
         // Only the root component can manage focus, because only one object can be focusable at a time in a window.
         // TODO: When implementing focus groups, just change the logic here to not delegate this to the parent.
@@ -833,11 +841,11 @@ public abstract class UIObject
         if (component.Parent is not null) throw new InvalidOperationException($"Cannot add child {component} at index {index}: component is already attached to another component, remove it first.");
 
         component.Parent = this;
+        component.UpdateSurface();
         component.RecomputeLevel();
-        component.InvalidateAll();
         component.AttachCanvas();
         component.AttachOverlays();
-        Invalidate();
+        component.InvalidateAll();
         UpdateVisibility();
     }
 
@@ -855,6 +863,8 @@ public abstract class UIObject
         Invalidate();
         component.Cleanup();
         component.Parent = null;
+        component.UpdateSurface();
+        component.RecomputeLevel();
     }
 
     private void OnOverlayAdd(int index)
@@ -917,6 +927,18 @@ public abstract class UIObject
         if (Surface is null) return;
         foreach (var overlay in Overlays) Surface.AttachOverlay(overlay);
         foreach (var child in Children) child.AttachOverlays();
+    }
+
+    private void UpdateSurface()
+    {
+        var parentSurface = Parent?.Surface;
+        if (parentSurface != Surface)
+        {
+            SurfaceChange?.Invoke(this, new SurfaceChangeEventArgs(Surface, parentSurface));
+            Surface = parentSurface;
+        }
+
+        foreach (var child in Children) child.UpdateSurface();
     }
 
     private void Cleanup()

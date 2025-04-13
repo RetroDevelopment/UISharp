@@ -1,6 +1,8 @@
-﻿using RetroDev.UISharp.Components.Containers;
+﻿using RetroDev.UISharp.Components.Collections.DropDownHelpers;
+using RetroDev.UISharp.Components.Containers;
 using RetroDev.UISharp.Components.Core.AutoArea;
 using RetroDev.UISharp.Components.Core.Base;
+using RetroDev.UISharp.Components.Core.Helpers;
 using RetroDev.UISharp.Components.Core.Overlays;
 using RetroDev.UISharp.Components.Layouts;
 using RetroDev.UISharp.Components.Layouts.GridLayoutHelpers;
@@ -17,7 +19,7 @@ namespace RetroDev.UISharp.Components.Collections;
 public class DropDown : UIContainer
 {
     private readonly PixelUnit ArrowSize = 20.0f;
-    private readonly GridLayout _dropdownContent;
+    private readonly GridLayout _dropdownPreview;
     private readonly Panel _selectedItemPanel;
 
     /// <summary>
@@ -45,19 +47,21 @@ public class DropDown : UIContainer
     {
         SelectedIndex = new UIProperty<uint?>(this, (uint?)null);
         SelectedItem = new UIProperty<UIControl?>(this, (UIControl?)null);
-        ItemsAutoWidth = new UIProperty<IAutoSize>(this, AutoSize.MaxWrapStretch);
+        ItemsAutoWidth = new UIProperty<IAutoSize>(this, AutoSize.MaxWrapStretch); // TODO: bind
         DropDownMenu = new UIOverlayProperty<FlatMenu>(this);
         DropDownMenu.Value = new FlatMenu(application);
 
         DropDownMenu.Value.Items.BindSourceToDestination(Items);
+        DropDownMenu.Value.SelectedItem.ValueChange.Subscribe(item => SelectedItem.Value = item);
+        SelectedItem.ValueChange.Subscribe(item => DropDownMenu.Value.SelectedItem.Value = item);
 
         _selectedItemPanel = new Panel(application);
 
-        _dropdownContent = new GridLayout(application, 1, 2);
-        _dropdownContent.ColumnSizes.Add(new GridAutoSize());
-        _dropdownContent.ColumnSizes.Add(new GridAbsoluteSize(ArrowSize));
-        _dropdownContent.Items.Add(_selectedItemPanel);
-        _dropdownContent.Items.Add(new Label(application, "▼"));
+        _dropdownPreview = new GridLayout(application, 1, 2);
+        _dropdownPreview.ColumnSizes.Add(new GridAutoSize());
+        _dropdownPreview.ColumnSizes.Add(new GridAbsoluteSize(ArrowSize));
+        _dropdownPreview.Items.Add(_selectedItemPanel);
+        _dropdownPreview.Items.Add(new Label(application, "▼")); // TODO: use icons
 
         BackgroundColor.BindTheme(UISharpColorNames.ListBackground);
         BorderColor.BindTheme(UISharpColorNames.ListBorder);
@@ -65,7 +69,7 @@ public class DropDown : UIContainer
         SelectedIndex.ValueChange.Subscribe(OnSelectedIndexChange);
         SelectedItem.ValueChange.Subscribe(OnSelectedItemChange);
 
-        Children.Add(_dropdownContent);
+        Children.Add(_dropdownPreview);
     }
 
     /// <inheritdoc />
@@ -94,6 +98,8 @@ public class DropDown : UIContainer
         var selectedIndex = Items.IndexOf(item);
         if (selectedIndex == -1) throw new InvalidOperationException("DropDown selected element not found");
         SelectedIndex.Value = (uint)selectedIndex;
-        _selectedItemPanel.Item.Value = item;
+        var cloner = new UIObjectCloner(Application);
+        if (_selectedItemPanel.Item.Value is not null) cloner.Unbind(_selectedItemPanel.Item.Value);
+        _selectedItemPanel.Item.Value = cloner.Clone(item);
     }
 }

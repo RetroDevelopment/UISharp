@@ -384,7 +384,6 @@ public class Window : UISurface
         var topLeft = windowArgs.Args.TopLeft;
         if (topLeft.X == X.Value && topLeft.Y == Y.Value) return;
 
-        // TODO: remove the lifecycle check once using dispatcher
         if (ShouldPropagateEvent(windowArgs) && !HasModal(windowArgs))
         {
             X.Value = topLeft.X;

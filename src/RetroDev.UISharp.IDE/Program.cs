@@ -1,4 +1,5 @@
-﻿using System.Runtime;
+﻿using System.Data;
+using System.Runtime;
 using System.Runtime.InteropServices;
 using System.Xml.Linq;
 using RetroDev.UISharp.Components.Collections;
@@ -54,7 +55,23 @@ internal class Program
         var drop = new DropDown(application);
         var data = new UIPropertyCollection<string>(application);
         data.AddRange(["First", "Second", "Third"]);
-        drop.Items.BindSourceToDestination(data, x => new Label(application, x));
+        drop.Items.BindSourceToDestination(data, x =>
+        {
+            if (x.StartsWith("Complex"))
+            {
+                var lay = new GridLayout(application, 2, 2);
+                lay.Items.Add(new Label(application, x));
+                lay.Items.Add(new Button(application, x));
+                lay.Items.Add(new ProgressBar(application, 50));
+                lay.Items.Add(new Switch(application));
+                return lay;
+            }
+            else return new Label(application, x);
+        });
+        data.Remove("First");
+        data.Insert(0, "First");
+        data.Add("Fourth");
+        data.AddRange(["Complex_01", "Sixth", "Complex_02"]);
         drop.SelectedIndex.Value = 0;
         window.Items.Add(drop);
         window.Width.Value = 200;

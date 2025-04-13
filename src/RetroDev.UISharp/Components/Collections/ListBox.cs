@@ -91,18 +91,10 @@ public class ListBox : UIContainer
 
     private void Container_MousePress(UIObject sender, MouseEventArgs e)
     {
-        if (SelectedIndex.Value is not null)
-        {
-            var previouslySelectedCell = GetSelectedCell();
-            previouslySelectedCell!.BackgroundColor.Value = Color.Transparent;
-            previouslySelectedCell!.BackgroundColor.Unbind();
-        }
-
         var selectedPanel = (Panel)sender;
         var index = _verticalLayout.Cells.IndexOf(selectedPanel);
         if (index < 0) throw new ArgumentException($"Cannot find element in list box: make sure the element has not been deleted");
         SelectedIndex.Value = (uint)index;
-        selectedPanel.BackgroundColor.BindTheme(UISharpColorNames.ListSelection);
     }
 
     private void Container_MouseLeave(UIObject sender, EventArgs e)
@@ -137,7 +129,7 @@ public class ListBox : UIContainer
 
     private void OnSelectedItemChange(UIControl? item)
     {
-        if (item == null)
+        if (item is null)
         {
             SelectedIndex.Value = null;
             return;
@@ -146,15 +138,25 @@ public class ListBox : UIContainer
         var selectedIndex = Items.IndexOf(item);
         if (selectedIndex == -1) throw new InvalidOperationException("ListBox selected element not found");
         SelectedIndex.Value = (uint)selectedIndex;
+        UpdateSelectionGraphics();
     }
 
-    private Panel? GetSelectedCell()
+    private void UpdateSelectionGraphics()
     {
-        if (SelectedIndex.Value is not null)
+        if (SelectedItem.PreviousValue is not null)
         {
-            return _verticalLayout.Cells[(int)SelectedIndex.Value];
+            var previouslySelectedCell = SelectedItem.PreviousValue.Parent;
+            previouslySelectedCell!.BackgroundColor.Value = Color.Transparent;
+            previouslySelectedCell!.BackgroundColor.Unbind();
         }
 
-        return null;
+        if (SelectedItem.Value is not null)
+        {
+            var selectedPanel = SelectedItem.Value.Parent;
+            selectedPanel!.BackgroundColor.BindTheme(UISharpColorNames.ListSelection);
+        }
     }
+
+    private Panel? GetSelectedCell() =>
+        SelectedItem?.Value?.Parent as Panel;
 }

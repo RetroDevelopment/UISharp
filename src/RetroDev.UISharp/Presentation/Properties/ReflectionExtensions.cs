@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using RetroDev.UISharp.Components.Core.Base;
 using RetroDev.UISharp.Presentation.Properties.Exceptions;
 
 namespace RetroDev.UISharp.Presentation.Properties;
@@ -150,5 +151,51 @@ public static class ReflectionExtensions
         var valueProperty = @this.PropertyType.GetProperty(nameof(UIProperty<object>.Value));
         if (valueProperty == null) throw new ArgumentException($"Cannot find value property");
         return valueProperty.PropertyType;
+    }
+
+    /// <summary>
+    /// Creates a new instance of a class deriving <see cref="UIObject"/>.
+    /// </summary>
+    /// <param name="this">
+    /// The type of the object to create. It must derive from <see cref="UIObject"/> and define a constructor
+    /// with one mandatory parameter that is of type <see cref="Application"/>.
+    /// </param>
+    /// <param name="application">The application owning the <see cref="UIObject"/> to create.</param>
+    /// <returns>The new instance created.</returns>
+    /// <exception cref="ArgumentException">If <paramref name="this"/> is not a <see cref="UIObject"/>.</exception>
+    /// <exception cref="MissingMethodException">If a constructor with one mandatory parameter of type <see cref="Application"/> does not exist.</exception>
+    public static TObject CreateInstance<TObject>(this Type @this, Application application) where TObject : UIObject
+    {
+        // Ensure type is assignable to UIObject
+        if (!typeof(UIObject).IsAssignableFrom(@this))
+            throw new ArgumentException("Type must be assignable to UIObject", nameof(@this));
+
+        // Find a suitable constructor
+        var ctor = @this.GetConstructors()
+            .FirstOrDefault(c =>
+            {
+                var parameters = c.GetParameters();
+                if (parameters.Length == 0 || parameters[0].ParameterType != typeof(Application))
+                    return false;
+
+                // All parameters after the first must be optional
+                return parameters.Skip(1).All(p => p.IsOptional);
+            });
+
+        if (ctor == null)
+            throw new MissingMethodException($"No suitable constructor found for type {@this.Name}");
+
+        // Build arguments: application + default values for optional parameters
+        var parameterInfos = ctor.GetParameters();
+        object[] args = new object[parameterInfos.Length];
+        args[0] = application;
+
+        for (int i = 1; i < parameterInfos.Length; i++)
+        {
+            args[i] = parameterInfos[i].DefaultValue;
+        }
+
+        // Invoke the constructor with full argument list
+        return (TObject)ctor.Invoke(args);
     }
 }

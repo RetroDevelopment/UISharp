@@ -8,8 +8,6 @@ namespace RetroDev.UISharp.Components.Containers;
 /// </summary>
 public class Panel : UISingleContainer
 {
-    private bool _disableRemoval = false;
-
     /// <summary>
     /// Creates a new panel.
     /// </summary>
@@ -19,12 +17,6 @@ public class Panel : UISingleContainer
     {
         Item.Value = component;
         Item.ValueChange.Subscribe(OnChildChange);
-        Children.ValueRemove.Subscribe(_ =>
-        {
-            _disableRemoval = true;
-            Item.Value = null;
-            _disableRemoval = false;
-        });
     }
 
     /// <inheritdoc />
@@ -40,7 +32,6 @@ public class Panel : UISingleContainer
 
     private void OnChildChange(UIControl? child)
     {
-        if (_disableRemoval) return;
         Children.Clear();
         if (child is not null) Children.Add(child);
     }
