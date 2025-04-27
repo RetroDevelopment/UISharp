@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mainwindow width="800" height="600" title="UISharp IDE">
+<mainwindow width="800" height="600" title="UIForge">
     <gridlayout id="mainLayout" rows="1" columns="3" columnsizes="200px;*;250px">
         <gridlayout id="controlLayout" rows="8" columns="1" rowsizes="40px;40px;30px;30px;30px;200px;50px;*">
             <gridlayout id="fileInput" rows="1" columns="2" columnsizes="50px;*" margin="0;10;0;5">

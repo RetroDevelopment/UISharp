@@ -21,7 +21,6 @@ public class ProgressBar : UIControl
     /// The current progress value.
     /// The progress bar will be filled on the percentage that <see cref="Value"/> is with respect to <see cref="MinimumValue"/> and <see cref="MaximumValue"/>.
     /// </summary>
-    /// <exception cref="InvalidOperationException">If <see cref="Value"/> is not in the [<see cref="MinimumValue"/>, <see cref="MaximumValue"/>] interval.</exception>
     public UIProperty<int> Value { get; }
 
     /// <summary>
@@ -40,7 +39,7 @@ public class ProgressBar : UIControl
     public UIProperty<Color> ForegroundColor { get; }
 
     /// <summary>
-    /// Creates a new label.
+    /// Creates a new progress bar.
     /// </summary>
     /// <param name="application">The application that contain this progress bar.</param>
     /// <param name="value">The initial progress value.</param>
