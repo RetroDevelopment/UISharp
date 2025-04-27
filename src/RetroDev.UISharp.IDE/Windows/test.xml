@@ -5,6 +5,6 @@
         <button text="2" autowidth="stretch" autoheight="stretch" />
         <button text="3" autowidth="stretch" autoheight="stretch" />
         <button text="4" autowidth="stretch" autoheight="stretch" />
-        <ProgressBar minimumvalue="0" maximumvalue="100" value="2" />
+        <slider backgroundcolor="gold" />
     </gridlayout>
 </window>
