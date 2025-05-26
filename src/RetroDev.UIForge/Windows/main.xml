@@ -13,14 +13,14 @@
             <button id="load" text="Load" autowidth="stretch" autoheight="stretch" margin="0;10;5;10" />
             <button id="save" text="Save" autowidth="stretch" autoheight="stretch" enabled="false" margin="0;10;5;10" />
             <button id="refresh" text="Refresh" autowidth="stretch" autoheight="stretch" enabled="false" margin="0;10;5;10" />
-            <listbox id="components" autowidth="stretch" autoheight="stretch" margin="5;10;5;10" />
+            <listbox id="components" autowidth="stretch" autoheight="stretch" margin="5;10;5;10" padding="10" />
             <gridlayout id="addremove" rows="1" columns="2">
                 <button id="add" text="Add" autowidth="stretch" autoheight="stretch" enabled="false" margin="10;5;10;5" />
                 <button id="remove" text="Remove" autowidth="stretch" autoheight="stretch" enabled="false" margin="10;5;10;5" />
             </gridlayout>
-            <treebox id="astTreeBox" autowidth="stretch" autoheight="stretch" margin="5;10;10;10" />
+            <treebox id="astTreeBox" autowidth="stretch" autoheight="stretch" margin="5;10;10;10" padding="10" />
         </gridlayout>
         <scrollview id="preview" autowidth="stretch" autoheight="stretch" margin="10" />
-        <listbox id="propertyList" autowidth="stretch" autoheight="stretch" itemsAutoWidth="stretch" margin="10" />
+        <listbox id="propertyList" autowidth="stretch" autoheight="stretch" itemsautowidth="stretch" margin="10" padding="10" />
     </gridlayout>
 </mainwindow>
