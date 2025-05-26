@@ -17,8 +17,6 @@ UISharp is currently a minimal viable product (MVP), and will be continuously ex
 - [Glossary](#glossary)
 - [UI Class Hierarchy](#ui-class-hierarchy)
 
----
-
 ## Features
 
 1. WPF-inspired UI development with simplified architecture. Supports UI creation directly in C# (like WinForms) or with a custom XML UI definition language.
@@ -28,8 +26,6 @@ UISharp is currently a minimal viable product (MVP), and will be continuously ex
 5. Built on OpenGL for rendering and SDL for input/events. Low-level systems are wrapped in interfaces, enabling mock testing and alternate backends like Vulkan or DirectX.
 6. Integrates well with OpenGL-powered applications, allowing game scenes or 3D animations as part of the UI.
 7. Designed for efficient retained-mode rendering using OpenGL instancing (WIP). Shapes are drawn as VAOs; instance rendering and batching will follow.
-
----
 
 ## UIForge: the UISharp Editor
 
@@ -44,8 +40,6 @@ UIForge is a visual editor for UISharp’s XML UI definitions. Although in early
 ![Light Theme](doc/DemoLight.png)
 
 UISharp and UIForge support customizable themes and allows developers to add or create new themes easily.
-
----
 
 ## Example
 
@@ -123,8 +117,6 @@ internal class CalculatorWindow : Window
 }
 ```
 
----
-
 ## Branching Strategy
 
 The branches are as follows:
@@ -155,13 +147,9 @@ pull request messages
 "References #100" to link issue to PR.
 DO NOT add these statements in the PR messages or commit messages because they cause confusion. Add them in the description of PRs.
 
----
-
 ## Design choices
 - Do not support backward compatibility because it prevents flexibility
 - UISharp.IDE detects the current referenced UISharp version in the target C# project and runs upgrade scripts if necessary, upgrading the project dependency version and all the UIDefinition files.
-
----
 
 ## Glossary
 
@@ -184,8 +172,6 @@ DO NOT add these statements in the PR messages or commit messages because they c
   - UIRoot
   - containers (single and multiple and hierarchical)
 - UIDefinition language EAML language
-
----
 
 ## UI Class Hierarchy
 
