@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <window id="calculatorWindow" width="800" height="600">
-    <verticallayout backgroundcolor="gold">
+    <verticallayout backgroundcolor="gray">
         <editbox text="0" margin="10;0;0;0" width="162" />
         <gridlayout rows="4" columns="4" autowidth="wrap" margin="10">
             <button text="7" padding="10" margin="5" />
