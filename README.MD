@@ -149,7 +149,7 @@ DO NOT add these statements in the PR messages or commit messages because they c
 
 ## Design choices
 - Do not support backward compatibility because it prevents flexibility
-- UISharp.IDE detects the current referenced UISharp version in the target C# project and runs upgrade scripts if necessary, upgrading the project dependency version and all the UIDefinition files.
+- UIForge detects the current referenced UISharp version in the target C# project and runs upgrade scripts if necessary, upgrading the project dependency version and all the UIDefinition files.
 
 ## Glossary
 
