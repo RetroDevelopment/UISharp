@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<window id="w" width="800" height="600">
+    <gridlayout columns="3" rows="2">
+        <button text="1" autowidth="stretch" autoheight="stretch" width="auto" height="auto" />
+        <button text="2" autowidth="stretch" autoheight="stretch" />
+        <button text="3" autowidth="stretch" autoheight="stretch" />
+        <button text="4" autowidth="stretch" autoheight="stretch" />
+        <slider backgroundcolor="gold" />
+    </gridlayout>
+</window>

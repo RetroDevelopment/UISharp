@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<window id="calculatorWindow" width="800" height="600">
+    <verticallayout backgroundcolor="gray">
+        <editbox text="0" margin="10;0;0;0" width="162" />
+        <gridlayout rows="4" columns="4" autowidth="wrap" margin="10">
+            <button text="7" padding="10" margin="5" />
+            <button text="8" margin="5" padding="10" />
+            <button text="9" margin="5" padding="10" />
+            <button text=":" margin="5" padding="10" />
+            <button text="4" margin="5" padding="10" />
+            <button text="5" margin="5" padding="10" />
+            <button text="6" margin="5" padding="10" />
+            <button text="X" margin="5" padding="10" />
+            <button text="1" margin="5" padding="10" />
+            <button text="2" margin="5" padding="10" />
+            <button text="3" margin="5" padding="10" />
+            <button text="-" margin="5" padding="10" />
+            <button text="C" margin="5" padding="10" />
+            <button text="0" margin="5" padding="10" />
+            <button text="=" margin="5" padding="10" />
+            <button text="+" margin="5" padding="10" />
+        </gridlayout>
+    </verticallayout>
+</window>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mainwindow width="800" height="600" title="UIForge">
+    <gridlayout id="mainLayout" rows="1" columns="3" columnsizes="200px;*;250px">
+        <gridlayout id="controlLayout" rows="8" columns="1" rowsizes="40px;40px;30px;30px;30px;200px;50px;*">
+            <gridlayout id="fileInput" rows="1" columns="2" columnsizes="50px;*" margin="0;10;0;5">
+                <label text="File:" />
+                <editbox id="file" autowidth="stretch" text="calculator.xml" />
+            </gridlayout>
+            <gridlayout id="theme" rows="1" columns="2" columnsizes="80px;*" margin="0;15;0;15">
+                <label id="darkModeText" text="Dark mode:" />
+                <switch id="darkMode" checked="true" />
+            </gridlayout>
+            <button id="load" text="Load" autowidth="stretch" autoheight="stretch" margin="0;10;5;10" />
+            <button id="save" text="Save" autowidth="stretch" autoheight="stretch" enabled="false" margin="0;10;5;10" />
+            <button id="refresh" text="Refresh" autowidth="stretch" autoheight="stretch" enabled="false" margin="0;10;5;10" />
+            <listbox id="components" autowidth="stretch" autoheight="stretch" margin="5;10;5;10" padding="10" />
+            <gridlayout id="addremove" rows="1" columns="2">
+                <button id="add" text="Add" autowidth="stretch" autoheight="stretch" enabled="false" margin="10;5;10;5" />
+                <button id="remove" text="Remove" autowidth="stretch" autoheight="stretch" enabled="false" margin="10;5;10;5" />
+            </gridlayout>
+            <treebox id="astTreeBox" autowidth="stretch" autoheight="stretch" margin="5;10;10;10" padding="10" />
+        </gridlayout>
+        <scrollview id="preview" autowidth="stretch" autoheight="stretch" margin="10" />
+        <listbox id="propertyList" autowidth="stretch" autoheight="stretch" itemsautowidth="stretch" margin="10" />
+    </gridlayout>
+</mainwindow>
